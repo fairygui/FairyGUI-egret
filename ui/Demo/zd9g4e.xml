@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="640,400">
+  <displayList>
+    <text id="n0" name="n0" xy="15,19" size="614,39" fontSize="16" autoSize="height" text="滑动条(Silder)是对组件的一种扩展，开发中我们常使用滑动条来调节声音或者颜色等。按照展示方式，滑动条可以分为两种:一种是为水平滑动条，另一种是垂直滑动条"/>
+    <component id="n1" name="n1" src="suiz4i" xy="68,100">
+      <Slider value="50" max="100"/>
+    </component>
+    <component id="n2" name="n2" src="suiz4o" xy="265,87">
+      <Slider value="50" max="100"/>
+    </component>
+    <component id="n3" name="n3" src="eut94u" xy="41,273">
+      <Slider value="50" max="100"/>
+    </component>
+  </displayList>
+</component>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="640,313">
+  <displayList>
+    <text id="n1" name="n1" xy="9,10" size="614,20" fontSize="16" autoSize="height" text="标签(Label)是对组件的一种扩展，使其具有标题和图标属性"/>
+    <component id="n3" name="frame" src="rt103l" xy="25,62" size="223,226">
+      <Label title="背包"/>
+    </component>
+    <component id="n4" name="n4" src="rt103r" xy="271,89">
+      <Label title="好好学习" icon="ui://9leh0eyfrpmbg"/>
+    </component>
+    <component id="n5" name="n5" src="rt103r" xy="272,184">
+      <Label title="天天向上" titleColor="#ffcc33" icon="ui://9leh0eyfhixt1v"/>
+    </component>
+  </displayList>
+</component>

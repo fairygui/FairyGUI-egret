@@ -1,0 +1,29 @@
+{
+	"close":false,
+	"publishSetting":
+	{
+		"compile":false,
+		"password":"",
+		"runtime":"html5",
+		"version":""
+	},
+	"resourcePlugin":
+	{
+		"configs":[
+		{
+			"configPath":"resource/resource.json",
+			"relativePath":"resource/"
+		}],
+		"id":"org.egret-labs.resource",
+		"library":
+		{
+			"children":[
+			{
+				"isFolder":false,
+				"key":"demo@atlas0",
+				"name":"demo@atlas0"
+			}]
+		}
+	},
+	"theme":"resource/theme.thm"
+}

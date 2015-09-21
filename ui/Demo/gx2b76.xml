@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="640,890">
+  <displayList>
+    <component id="n0" name="n0" src="rpmbz" xy="60,75">
+      <Button title="点我"/>
+    </component>
+    <text id="n1" name="n1" xy="15,18" size="389,16" fontSize="12" text="点击按钮弹出菜单，或者右键点击空白区域弹出菜单（运行时才看得到）"/>
+  </displayList>
+</component>

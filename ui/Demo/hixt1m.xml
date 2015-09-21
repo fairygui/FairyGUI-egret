@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="640,433">
+  <displayList>
+    <text id="n0" name="n0" xy="31,30" size="453,20" fontSize="16" text="可以使用简单的图形，但要注意，圆角和圆形仅部分平台支持。"/>
+    <graph id="n1" name="n1" xy="31,73" size="100,100" type="rect"/>
+    <graph id="n2" name="n2" xy="169,71" size="100,100" type="rect" lineSize="5" lineColor="#ffffff66" fillColor="#ffcc9933"/>
+    <graph id="n3" name="n3" xy="313,71" size="100,100" type="rect" lineSize="5" lineColor="#ff663333" fillColor="#ff33cccc" corner="40,0,0,40"/>
+    <graph id="n4" name="n4" xy="377,110" size="100,100" type="eclipse" lineSize="2" fillColor="#6866cc33"/>
+    <graph id="n5" name="n5" xy="27,256" size="206,113" type="rect" lineSize="0" fillColor="#ff006600"/>
+    <graph id="n6" name="n6" xy="297,252" size="206,113" type="eclipse" lineSize="0" fillColor="#ff336699"/>
+    <graph id="n7" name="n7" xy="553,86" size="46,256" grayed="true" type="rect" lineSize="15" lineColor="#ffff99ff" fillColor="#ffff6600"/>
+  </displayList>
+</component>

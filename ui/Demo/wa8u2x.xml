@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="640,747">
+  <controller name="c1" pages="0,,1," selected="0"/>
+  <displayList>
+    <text id="n0" name="n0" xy="18,30" size="591,63" fontSize="16" autoSize="none" text="“关联”是FairyGUI核心特色功能之一。“关联”定义元件之间的位置和大小关系。尝试改变c1控制器（通过点击顶部的控制器，或点击下面的按钮），观察不同效果。"/>
+    <graph id="n2" name="n2" xy="176,212" size="100,100" type="rect" fillColor="#ff009900">
+      <relation target="n1" sidePair="left-left,top-top"/>
+    </graph>
+    <text id="n4" name="n4" xy="19,174" size="352,24" fontSize="16" autoSize="none" text="例1：白色方块移动时，绿色方块也随着移动"/>
+    <graph id="n1" name="n1" xy="40,212" size="100,100" type="rect">
+      <gearXY controller="c1" pages="0,1" values="-|340,212" default="40,212" tween="true"/>
+    </graph>
+    <component id="n5" name="n5" src="rpmb12" xy="38,102">
+      <Button controller="c1" page="1"/>
+    </component>
+    <text id="n6" name="n6" xy="18,330" size="352,24" fontSize="16" autoSize="none" text="例2：白色方块大小改变时，绿色方块也随着改变大小"/>
+    <graph id="n7" name="n7" xy="279,374" size="100,100" type="rect" fillColor="#ff009900">
+      <relation target="n8" sidePair="width-width,height-height"/>
+    </graph>
+    <graph id="n8" name="n8" xy="49,374" size="100,100" type="rect">
+      <gearSize controller="c1" pages="0,1" values="-|188,165,1.00,1.00" default="100,100,1.00,1.00" tween="true"/>
+    </graph>
+    <graph id="n9" name="n9" xy="284,613" size="98,100" type="rect" fillColor="#ff009900">
+      <relation target="n10" sidePair="leftext-right"/>
+    </graph>
+    <graph id="n10" name="n10" xy="155,613" size="100,100" type="rect">
+      <gearXY controller="c1" pages="0,1" values="155,613|30,615" default="153,546" tween="true"/>
+    </graph>
+    <text id="n11" name="n11" xy="24,560" size="352,24" fontSize="16" autoSize="none" text="例3：白色方块位置改变时，绿色方块也随着被拉长"/>
+  </displayList>
+</component>

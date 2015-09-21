@@ -1,0 +1,18 @@
+{
+	"file_list": [
+		"events/ResourceEvent.ts",
+		"core/ResourceItem.ts",
+		"core/ResourceConfig.ts",
+		"core/ResourceLoader.ts",
+		"analyzer/AnalyzerBase.ts",
+		"analyzer/BinAnalyzer.ts",
+		"analyzer/ImageAnalyzer.ts",
+		"analyzer/JsonAnalyzer.ts",
+		"analyzer/TextAnalyzer.ts",
+		"analyzer/SheetAnalyzer.ts",
+		"analyzer/FontAnalyzer.ts",
+		"analyzer/SoundAnalyzer.ts",
+		"analyzer/XMLAnalyzer.ts",
+		"Resource.ts"
+	]
+}

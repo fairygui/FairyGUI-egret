@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="640,400">
+  <displayList>
+    <text id="n0" name="n0" xy="16,15" size="614,20" fontSize="16" autoSize="height" text="进度条(ProgressBar)是对组件的一种扩展，用于显示一个进度"/>
+    <component id="n1" name="n1" src="t9fj50" xy="38,75">
+      <ProgressBar value="50" max="100"/>
+    </component>
+    <component id="n2" name="n2" src="t9fj53" xy="211,70">
+      <ProgressBar value="78" max="100"/>
+    </component>
+    <component id="n3" name="n3" src="t9fj57" xy="21,186">
+      <ProgressBar value="80" max="100"/>
+    </component>
+    <component id="n4" name="n4" src="t9fj5b" xy="28,305">
+      <ProgressBar value="75" max="100"/>
+    </component>
+    <component id="n6" name="n6" src="t9fj5g" xy="327,184">
+      <ProgressBar value="80" max="100"/>
+    </component>
+    <text id="n7" name="n7" xy="10,123" size="614,39" fontSize="16" autoSize="height" text="bar的伸缩默认是直接缩放，也可以利用组件的溢出隐藏特性实现截断的效果。另外，进度条可以设置为反向。"/>
+    <text id="n8" name="n8" xy="21,254" size="614,20" fontSize="16" autoSize="height" text="利用关联可以使滚动条表现更丰富的效果"/>
+  </displayList>
+</component>

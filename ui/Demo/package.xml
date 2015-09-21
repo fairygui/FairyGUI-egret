@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="9leh0eyf" jpegQuality="80" compressPNG="true">
+  <resources>
+    <folder id="rpmb0" name="素材" folder=""/>
+    <image id="rpmb1" name="VIP按钮.png" folder="rpmb0" qualityOption="source" file="rpmb1.png" size="181,70"/>
+    <image id="rpmb2" name="a1.png" folder="rpmb0" file="rpmb2.png" size="13,13" qualityOption="source"/>
+    <image id="rpmb3" name="a2.png" folder="rpmb0" file="rpmb3.png" size="13,13" qualityOption="source"/>
+    <image id="rpmb4" name="a3.png" folder="rpmb0" file="rpmb4.png" size="13,13" qualityOption="source"/>
+    <image id="rpmb5" name="a4.png" folder="rpmb0" file="rpmb5.png" size="13,13" qualityOption="source"/>
+    <image id="rpmb6" name="angry_smile.png" folder="rpmb0" qualityOption="source" file="rpmb6.png" size="32,32"/>
+    <image id="rpmb7" name="b1.png" folder="rpmb0" qualityOption="source" file="rpmb7.jpg" size="13,13"/>
+    <image id="rpmb8" name="b12.png" folder="rpmb0" qualityOption="source" file="rpmb8.png" size="100,40"/>
+    <image id="rpmb9" name="b13.png" folder="rpmb0" qualityOption="source" file="rpmb9.png" size="100,40"/>
+    <image id="rpmba" name="b2.png" folder="rpmb0" qualityOption="source" file="rpmba.jpg" size="13,13"/>
+    <image id="rpmbb" name="b3.png" folder="rpmb0" qualityOption="source" file="rpmbb.jpg" size="13,13"/>
+    <image id="rpmbc" name="b4.png" folder="rpmb0" qualityOption="source" file="rpmbc.jpg" size="13,13"/>
+    <image id="rpmbd" name="b5.png" folder="rpmb0" file="rpmbd.png" size="85,25" scale="9grid" scale9grid="12,7,61,14" qualityOption="source"/>
+    <image id="rpmbe" name="b6.png" folder="rpmb0" file="rpmbe.png" size="85,25" scale="9grid" scale9grid="9,5,66,16" qualityOption="source"/>
+    <image id="rpmbf" name="b7.png" folder="rpmb0" qualityOption="source" file="rpmbf.png" size="85,25" scale="9grid" scale9grid="8,7,66,14"/>
+    <image id="rpmbg" name="long_dead.png" folder="rpmb0" qualityOption="source" file="rpmbg.png" size="32,32"/>
+    <image id="rpmbh" name="plus_smile.png" folder="rpmb0" qualityOption="source" file="rpmbh.png" size="32,32"/>
+    <image id="rpmbi" name="按钮_货币切换_常态.png" folder="rpmb0" qualityOption="source" file="rpmbi.png" size="70,52"/>
+    <image id="rpmbj" name="二级按钮_按下.png" folder="rpmb0" qualityOption="source" file="rpmbj.png" size="62,34" scale="9grid" scale9grid="16,9,32,6"/>
+    <image id="rpmbk" name="二级按钮_不可用.png" folder="rpmb0" qualityOption="source" file="rpmbk.png" size="66,44"/>
+    <image id="rpmbl" name="二级按钮_普通.png" folder="rpmb0" qualityOption="source" file="rpmbl.png" size="66,44"/>
+    <image id="rpmbm" name="二级按钮_选中.png" folder="rpmb0" file="rpmbm.png" size="62,41" scale="9grid" scale9grid="16,11,32,7" qualityOption="source"/>
+    <image id="rpmbn" name="更换按钮_down.png" folder="rpmb0" qualityOption="source" file="rpmbn.png" size="69,62"/>
+    <image id="rpmbo" name="更换按钮_up.png" folder="rpmb0" qualityOption="source" file="rpmbo.png" size="69,62"/>
+    <image id="rpmbp" name="勾选.png" folder="rpmb0" qualityOption="source" file="rpmbp.png" size="55,46"/>
+    <image id="rpmbq" name="勾选框.png" folder="rpmb0" qualityOption="source" file="rpmbq.png" size="49,49"/>
+    <image id="rpmbr" name="购买按钮_按下.png" folder="rpmb0" file="rpmbr.png" size="159,52" scale="9grid" scale9grid="40,19,80,18" qualityOption="source"/>
+    <image id="rpmbs" name="购买按钮_普通.png" folder="rpmb0" file="rpmbs.png" size="159,52" scale="9grid" scale9grid="40,13,80,26" qualityOption="source"/>
+    <image id="rpmbt" name="购买按钮_选中.png" folder="rpmb0" file="rpmbt.png" size="159,52" scale="9grid" scale9grid="40,13,80,26" qualityOption="source"/>
+    <image id="rpmbu" name="领取奖励.png" folder="rpmb0" qualityOption="source" file="rpmbu.png" size="110,27"/>
+    <image id="rpmbv" name="切换货币_背景.png" folder="rpmb0" qualityOption="source" file="rpmbv.png" size="131,45"/>
+    <image id="rpmbw" name="图标_银两.png" folder="rpmb0" qualityOption="source" file="rpmbw.png" size="36,24"/>
+    <image id="rpmbx" name="图标_元宝.png" folder="rpmb0" qualityOption="source" file="rpmbx.png" size="37,24"/>
+    <folder id="rpmby" name="组件" folder=""/>
+    <component id="rpmbz" name="Button" folder="rpmby" file="rpmbz.xml"/>
+    <component id="rpmb10" name="Button2" folder="rpmby" file="rpmb10.xml"/>
+    <component id="rpmb11" name="Button3" folder="rpmby" file="rpmb11.xml"/>
+    <component id="rpmb12" name="Button4" folder="rpmby" file="rpmb12.xml"/>
+    <component id="rpmb13" name="Button5" folder="rpmby" file="rpmb13.xml"/>
+    <component id="rpmb14" name="Button6" folder="rpmby" file="rpmb14.xml"/>
+    <component id="rpmb15" name="Button7" folder="rpmby" file="rpmb15.xml"/>
+    <component id="rpmb16" name="Button8" folder="rpmby" file="rpmb16.xml"/>
+    <component id="rpmb17" name="Button9" folder="rpmby" file="rpmb17.xml"/>
+    <component id="rpmb18" name="Checkbox" folder="rpmby" file="rpmb18.xml"/>
+    <component id="rpmb19" name="OnOffButton" folder="rpmby" file="rpmb19.xml"/>
+    <component id="rpmb1a" name="RadioButton" folder="rpmby" file="rpmb1a.xml"/>
+    <component id="rpmb1b" name="Demo_Button" folder="" file="rpmb1b.xml" exported="true"/>
+    <component id="rpmb1c" name="Demo" folder="" file="rpmb1c.xml" exported="true"/>
+    <image id="sner1h" name="pic" folder="rpmb0" qualityOption="source" file="sner1h.png" size="179,386"/>
+    <component id="sner1i" name="Demo_Image" folder="" file="sner1i.xml" exported="true"/>
+    <component id="hixt1j" name="Button10" folder="rpmby" file="hixt1j.xml"/>
+    <image id="hixt1k" name="按钮样式1_OFF.png" folder="rpmb0" file="hixt1k.png" size="173,74" scale="9grid" scale9grid="40,17,80,34" qualityOption="source"/>
+    <image id="hixt1l" name="按钮样式1_ON.png" folder="rpmb0" file="hixt1l.png" size="163,69" scale="9grid" scale9grid="40,17,80,34" qualityOption="source"/>
+    <component id="hixt1m" name="Demo_Graph" folder="" file="hixt1m.xml" exported="true"/>
+    <component id="hixt1n" name="Demo_MovieClip" folder="" file="hixt1n.xml" exported="true"/>
+    <jta id="hixt1v" name="nlge1k" folder="rpmb0" origin="30,29" file="hixt1v.jta" size="59,59"/>
+    <component id="nz0z1z" name="Demo_Text" folder="" file="nz0z1z.xml" exported="true"/>
+    <image id="nz0z20" name="long_dead2.png" folder="rpmb0" file="nz0z20.png" size="32,32" scale="tile" qualityOption="source"/>
+    <image id="h5p722" name="i256" folder="rpmb0" qualityOption="source" file="h5p722.png" size="90,90"/>
+    <folder id="scfj23" name="字体" folder=""/>
+    <image id="wa8u2q" name="文字_vip.png" folder="rpmb0" qualityOption="source" file="wa8u2q.png" size="50,24"/>
+    <font id="wa8u2r" name="BMFont示例" folder="scfj23" file="wa8u2r.fnt" atlasSize="254,57" exported="true"/>
+    <component id="wa8u2s" name="Demo_Loader" folder="" file="wa8u2s.xml" exported="true"/>
+    <image id="wa8u2t" name="r3" folder="rpmb0" qualityOption="source" file="wa8u2t.png" size="90,90" exported="true"/>
+    <image id="wa8u2u" name="r4" folder="rpmb0" qualityOption="source" file="wa8u2u.png" size="89,90" exported="true"/>
+    <component id="wa8u2v" name="Demo_Controller" folder="" file="wa8u2v.xml" exported="true"/>
+    <swf id="wa8u2w" name="qtm01d" folder="rpmb0" file="wa8u2w.swf" size="176,176"/>
+    <component id="wa8u2x" name="Demo_Relation" folder="" file="wa8u2x.xml" exported="true"/>
+    <component id="es412y" name="Demo_Clip&amp;Scroll" folder="" file="es412y.xml" exported="true"/>
+    <component id="es412z" name="组件1" folder="rpmby" file="es412z.xml"/>
+    <image id="es4130" name="嫦娥" folder="rpmb0" qualityOption="source" file="es4130.png" size="282,500"/>
+    <component id="smv731" name="组件12" folder="rpmby" file="smv731.xml"/>
+    <folder id="smv73e" name="滚动条" folder=""/>
+    <component id="smv73f" name="组件2" folder="rpmby" file="smv73f.xml"/>
+    <component id="smv73g" name="组件13" folder="rpmby" file="smv73g.xml"/>
+    <component id="smv73h" name="组件22" folder="rpmby" file="smv73h.xml"/>
+    <component id="smv73i" name="组件222" folder="rpmby" file="smv73i.xml"/>
+    <component id="w42o3j" name="Demo_Label" folder="" file="w42o3j.xml" exported="true"/>
+    <component id="rt103l" name="WindowFrame" folder="rpmby" file="rt103l.xml"/>
+    <image id="rt103m" name="6.png" folder="rpmb0" qualityOption="source" file="rt103m.png" size="157,202" scale="9grid" scale9grid="40,40,80,142"/>
+    <component id="rt103n" name="WindowCloseButton" folder="rpmby" file="rt103n.xml"/>
+    <image id="rt103o" name="10.png" folder="rpmb0" qualityOption="source" file="rt103o.png" size="19,19"/>
+    <image id="rt103p" name="9.png" folder="rpmb0" qualityOption="source" file="rt103p.png" size="19,19"/>
+    <image id="rt103q" name="8.png" folder="rpmb0" qualityOption="source" file="rt103q.png" size="19,19"/>
+    <component id="rt103r" name="组件3" folder="rpmby" file="rt103r.xml"/>
+    <component id="rt103s" name="Demo_ComboBox" folder="" file="rt103s.xml" exported="true"/>
+    <component id="rt103t" name="ComboBox" folder="rpmby" file="rt103t.xml"/>
+    <image id="rt103u" name="c1.png" folder="rpmb0" file="rt103u.png" size="93,21" scale="9grid" scale9grid="7,5,73,10" qualityOption="source"/>
+    <image id="rt103v" name="c3.png" folder="rpmb0" file="rt103v.png" size="93,21" scale="9grid" scale9grid="11,5,71,10" qualityOption="source"/>
+    <image id="rt103w" name="c2.png" folder="rpmb0" file="rt103w.png" size="93,21" scale="9grid" scale9grid="8,5,73,10" qualityOption="source"/>
+    <image id="rt103x" name="b7(2).png" folder="rpmb0" qualityOption="source" file="rt103x.png" size="15,16"/>
+    <component id="rt103y" name="ComboBoxPopup" folder="rpmby" file="rt103y.xml"/>
+    <image id="rt103z" name="p1.png" folder="rpmb0" file="rt103z.png" size="162,63" scale="9grid" scale9grid="7,4,144,49" qualityOption="source"/>
+    <component id="rt1040" name="ComboBoxItem" folder="rpmby" file="rt1040.xml"/>
+    <component id="zd9g41" name="下拉框" folder="rpmby" file="zd9g41.xml"/>
+    <component id="zd9g42" name="下拉框按钮" folder="rpmby" file="zd9g42.xml"/>
+    <image id="zd9g43" name="下拉框_普通.png" folder="rpmb0" file="zd9g43.png" size="132,40" scale="9grid" scale9grid="33,10,57,20" qualityOption="source"/>
+    <image id="zd9g44" name="下拉框_按下.png" folder="rpmb0" file="zd9g44.png" size="132,40" scale="9grid" scale9grid="33,10,55,20" qualityOption="source"/>
+    <image id="zd9g45" name="下拉框_选中.png" folder="rpmb0" file="zd9g45.png" size="132,40" scale="9grid" scale9grid="33,10,55,20" qualityOption="source"/>
+    <image id="zd9g46" name="下拉框_不可用.png" folder="rpmb0" file="zd9g46.png" size="132,40" scale="9grid" scale9grid="33,10,53,20" qualityOption="source"/>
+    <component id="zd9g47" name="下拉列表" folder="rpmby" file="zd9g47.xml"/>
+    <image id="zd9g48" name="显示框.png" folder="rpmb0" qualityOption="source" file="zd9g48.png" size="104,42" scale="9grid" scale9grid="26,11,52,22"/>
+    <component id="zd9g49" name="下拉列表子按钮" folder="rpmby" file="zd9g49.xml"/>
+    <image id="zd9g4a" name="输入框_普通.png" folder="rpmb0" file="zd9g4a.png" size="102,40" scale="9grid" scale9grid="26,10,52,20" qualityOption="source"/>
+    <image id="zd9g4b" name="输入框_按下.png" folder="rpmb0" file="zd9g4b.png" size="102,40" scale="9grid" scale9grid="11,7,82,26" qualityOption="source"/>
+    <image id="zd9g4c" name="输入框_选中.png" folder="rpmb0" file="zd9g4c.png" size="102,40" scale="9grid" scale9grid="26,10,52,20" qualityOption="source"/>
+    <image id="zd9g4d" name="输入框_不可用.png" folder="rpmb0" file="zd9g4d.png" size="102,40" scale="9grid" scale9grid="26,10,52,20" qualityOption="source"/>
+    <component id="zd9g4e" name="Demo_Slider" folder="" file="zd9g4e.xml" exported="true"/>
+    <component id="zd9g4f" name="Demo_ProgressBar" folder="" file="zd9g4f.xml" exported="true"/>
+    <component id="zd9g4g" name="Demo_List" folder="" file="zd9g4g.xml" exported="true"/>
+    <component id="zd9g4h" name="Demo_Transition" folder="" file="zd9g4h.xml" exported="true"/>
+    <component id="suiz4i" name="Slider_HZ" folder="rpmby" file="suiz4i.xml"/>
+    <image id="suiz4j" name="p10.png" folder="rpmb0" file="suiz4j.png" size="112,23" qualityOption="source"/>
+    <image id="suiz4k" name="p11.png" folder="rpmb0" qualityOption="source" file="suiz4k.png" size="62,3"/>
+    <component id="suiz4l" name="SliderArrow_HZ" folder="rpmby" file="suiz4l.xml"/>
+    <image id="suiz4m" name="p14.png" folder="rpmb0" file="suiz4m.png" size="10,19" qualityOption="source"/>
+    <image id="suiz4n" name="p15.png" folder="rpmb0" file="suiz4n.png" size="10,19" qualityOption="source"/>
+    <component id="suiz4o" name="Slider_VT" folder="rpmby" file="suiz4o.xml"/>
+    <image id="suiz4p" name="p13.png" folder="rpmb0" file="suiz4p.png" size="23,112" qualityOption="source"/>
+    <image id="suiz4q" name="p12.png" folder="rpmb0" qualityOption="source" file="suiz4q.png" size="3,62"/>
+    <component id="suiz4r" name="SliderArrow_VT" folder="rpmby" file="suiz4r.xml"/>
+    <image id="suiz4s" name="p8.png" folder="rpmb0" file="suiz4s.png" size="19,10" qualityOption="source"/>
+    <image id="suiz4t" name="p9.png" folder="rpmb0" file="suiz4t.png" size="19,10" qualityOption="source"/>
+    <component id="eut94u" name="音量设置" folder="rpmby" file="eut94u.xml"/>
+    <image id="eut94v" name="音量_背景条.png" folder="rpmb0" qualityOption="source" file="eut94v.png" size="480,26"/>
+    <image id="eut94w" name="音量_进度条.png" folder="rpmb0" qualityOption="source" file="eut94w.png" size="420,15" scale="9grid" scale9grid="41,4,342,5"/>
+    <component id="eut94x" name="指示按钮" folder="rpmby" file="eut94x.xml"/>
+    <image id="eut94y" name="按钮_指示_常态.png" folder="rpmb0" qualityOption="source" file="eut94y.png" size="25,22"/>
+    <image id="eut94z" name="按钮_指示_按下.png" folder="rpmb0" qualityOption="source" file="eut94z.png" size="25,22"/>
+    <component id="t9fj50" name="ProgressBar" folder="rpmby" file="t9fj50.xml"/>
+    <image id="t9fj51" name="p2.png" folder="rpmb0" file="t9fj51.png" size="145,12" scale="9grid" scale9grid="10,4,121,4" qualityOption="source"/>
+    <image id="t9fj52" name="p3.png" folder="rpmb0" file="t9fj52.png" size="53,6" qualityOption="source"/>
+    <component id="t9fj53" name="绿色进度条" folder="rpmby" file="t9fj53.xml"/>
+    <image id="t9fj54" name="进度条底板缩短版.png" folder="rpmb0" file="t9fj54.png" size="105,21" scale="9grid" scale9grid="27,9,54,2" qualityOption="source"/>
+    <image id="t9fj55" name="进度条.png" folder="rpmb0" file="t9fj55.jpg" size="32,11" scale="9grid" scale9grid="8,5,16,2" qualityOption="source"/>
+    <image id="t9fj56" name="高光.png" folder="rpmb0" qualityOption="source" file="t9fj56.png" size="89,26"/>
+    <component id="t9fj57" name="采集进度条" folder="rpmby" file="t9fj57.xml"/>
+    <image id="t9fj58" name="采集条.png" folder="rpmb0" qualityOption="source" file="t9fj58.png" size="277,32"/>
+    <component id="t9fj59" name="采集进度bar" folder="rpmby" file="t9fj59.xml"/>
+    <image id="t9fj5a" name="采集条进度.png" folder="rpmb0" qualityOption="source" file="t9fj5a.png" size="227,30"/>
+    <component id="t9fj5b" name="加载进度条" folder="rpmby" file="t9fj5b.xml"/>
+    <image id="t9fj5c" name="loading条亮.png" folder="rpmb0" qualityOption="source" file="t9fj5c.jpg" size="4,16"/>
+    <image id="t9fj5d" name="huawen1.png" folder="rpmb0" qualityOption="source" file="t9fj5d.png" size="85,59"/>
+    <image id="t9fj5e" name="huawen2.png" folder="rpmb0" qualityOption="source" file="t9fj5e.png" size="88,59"/>
+    <jta id="t9fj5f" name="加载小宠物.jta" folder="rpmb0" origin="59,61" file="t9fj5f.jta" size="84,74"/>
+    <component id="t9fj5g" name="采集进度条2" folder="rpmby" file="t9fj5g.xml"/>
+    <component id="t9fj5h" name="采集进度bar2" folder="rpmby" file="t9fj5h.xml"/>
+    <component id="i3s65i" name="ScrollBar_HZ" folder="smv73e" file="i3s65i.xml" exported="true"/>
+    <image id="i3s65j" name="s10.png" folder="rpmb0" qualityOption="source" file="i3s65j.jpg" size="17,20" smoothing="false"/>
+    <component id="i3s65k" name="ScrollUpButton" folder="smv73e" file="i3s65k.xml"/>
+    <image id="i3s65l" name="s6.png" folder="rpmb0" qualityOption="source" file="i3s65l.jpg" size="11,7" smoothing="false"/>
+    <image id="i3s65m" name="s4.png" folder="rpmb0" qualityOption="source" file="i3s65m.jpg" size="11,7" smoothing="false"/>
+    <image id="i3s65n" name="s5.png" folder="rpmb0" qualityOption="source" file="i3s65n.jpg" size="11,7" smoothing="false"/>
+    <component id="i3s65o" name="ScrollDownButton" folder="smv73e" file="i3s65o.xml"/>
+    <image id="i3s65p" name="s9.png" folder="rpmb0" qualityOption="source" file="i3s65p.jpg" size="11,7" smoothing="false"/>
+    <image id="i3s65q" name="s7.png" folder="rpmb0" qualityOption="source" file="i3s65q.jpg" size="11,7" smoothing="false"/>
+    <image id="i3s65r" name="s8.png" folder="rpmb0" qualityOption="source" file="i3s65r.jpg" size="11,7" smoothing="false"/>
+    <component id="i3s65s" name="GripButton_HZ" folder="smv73e" file="i3s65s.xml"/>
+    <image id="i3s65t" name="s1.png" folder="rpmb0" qualityOption="source" file="i3s65t.jpg" size="9,20" smoothing="false"/>
+    <image id="i3s65u" name="s2.png" folder="rpmb0" qualityOption="source" file="i3s65u.jpg" size="9,20" smoothing="false"/>
+    <image id="i3s65v" name="s3.png" folder="rpmb0" qualityOption="source" file="i3s65v.jpg" size="9,20" smoothing="false"/>
+    <component id="i3s65w" name="ScrollBar_VT" folder="smv73e" file="i3s65w.xml" exported="true"/>
+    <component id="i3s65x" name="GripButton_VT" folder="smv73e" file="i3s65x.xml"/>
+    <component id="kpev60" name="BagGridSub" folder="rpmby" file="kpev60.xml"/>
+    <image id="kpev61" name="道具框底.png" folder="rpmb0" qualityOption="source" file="kpev61.png" size="90,91"/>
+    <image id="kpev62" name="道具图标外框.png" folder="rpmb0" qualityOption="source" file="kpev62.png" size="100,100"/>
+    <image id="kpev63" name="道具框点击.png" folder="rpmb0" file="kpev63.png" size="108,108" scale="9grid" scale9grid="17,16,74,73" qualityOption="source"/>
+    <image id="kpev64" name="破冰诀书" folder="rpmb0" qualityOption="source" file="kpev64.png" size="90,90"/>
+    <component id="duef65" name="Demo_Transition1" folder="rpmby" file="duef65.xml"/>
+    <image id="duef66" name="15_icon_zhanbaoxx" folder="rpmb0" qualityOption="source" file="duef66.png" size="65,59"/>
+    <image id="duef67" name="15_icon_zhanbaoxx_2" folder="rpmb0" qualityOption="source" file="duef67.png" size="10,23"/>
+    <component id="duef68" name="Demo_Transition2" folder="rpmby" file="duef68.xml"/>
+    <image id="duef69" name="打击坡墨底.png" folder="rpmb0" qualityOption="source" file="duef69.png" size="227,163"/>
+    <image id="duef6a" name="棒极了" folder="rpmb0" qualityOption="source" file="duef6a.png" size="242,123"/>
+    <font id="duef6m" name="连击数字" folder="scfj23" file="duef6m.fnt" exported="true"/>
+    <image id="duef6n" name="打击数字_0.png" folder="rpmb0" qualityOption="source" file="duef6n.png" size="50,50"/>
+    <image id="duef6o" name="打击数字_1.png" folder="rpmb0" qualityOption="source" file="duef6o.png" size="50,50"/>
+    <image id="duef6p" name="打击数字_2.png" folder="rpmb0" qualityOption="source" file="duef6p.png" size="50,50"/>
+    <image id="duef6q" name="打击数字_3.png" folder="rpmb0" qualityOption="source" file="duef6q.png" size="50,50"/>
+    <image id="duef6r" name="打击数字_4.png" folder="rpmb0" qualityOption="source" file="duef6r.png" size="50,50"/>
+    <image id="duef6s" name="打击数字_5.png" folder="rpmb0" qualityOption="source" file="duef6s.png" size="50,50"/>
+    <image id="duef6t" name="打击数字_6.png" folder="rpmb0" qualityOption="source" file="duef6t.png" size="50,50"/>
+    <image id="duef6u" name="打击数字_7.png" folder="rpmb0" qualityOption="source" file="duef6u.png" size="50,50"/>
+    <image id="duef6v" name="打击数字_8.png" folder="rpmb0" qualityOption="source" file="duef6v.png" size="50,50"/>
+    <image id="duef6w" name="打击数字_9.png" folder="rpmb0" qualityOption="source" file="duef6w.png" size="50,50"/>
+    <component id="l6f46x" name="PopupMenu" folder="gx2b75" file="l6f46x.xml" exported="true"/>
+    <image id="l6f46y" name="p16.png" folder="rpmb0" file="l6f46y.png" size="162,63" scale="9grid" scale9grid="7,4,144,49" qualityOption="source"/>
+    <component id="l6f46z" name="PopupMenuItem" folder="gx2b75" file="l6f46z.xml"/>
+    <image id="l6f470" name="a8.png" folder="rpmb0" file="l6f470.png" size="88,20" scale="9grid" scale9grid="8,5,70,10" qualityOption="source"/>
+    <image id="l6f471" name="VtSeperator" folder="rpmb0" file="l6f471.jpg" size="2,22" qualityOption="source"/>
+    <image id="l6f472" name="a18.png" folder="rpmb0" qualityOption="source" file="l6f472.png" size="12,9"/>
+    <component id="l6f473" name="WindowA" folder="" file="l6f473.xml" exported="true"/>
+    <component id="f2ax74" name="组件4" folder="rpmby" file="f2ax74.xml"/>
+    <folder id="gx2b75" name="弹出菜单" folder=""/>
+    <component id="gx2b76" name="Demo_PopupMenu" folder="" file="gx2b76.xml" exported="true"/>
+    <component id="gx2b77" name="Demo_Window" folder="" file="gx2b77.xml" exported="true"/>
+    <component id="gx2b78" name="Demo_Drag&amp;Drop" folder="" file="gx2b78.xml" exported="true"/>
+    <component id="gx2b79" name="BagGridSub2" folder="rpmby" file="gx2b79.xml"/>
+    <component id="796x7a" name="WindowB" folder="" file="796x7a.xml" exported="true"/>
+    <component id="niii7b" name="关闭按钮" folder="rpmby" file="niii7b.xml"/>
+    <image id="niii7c" name="close.png" folder="rpmb0" qualityOption="source" file="niii7c.png" size="40,43"/>
+    <component id="niii7d" name="WindowFrameB" folder="rpmby" file="niii7d.xml"/>
+    <image id="fubf7e" name="loading条暗" folder="rpmb0" qualityOption="source" file="fubf7e.png" size="4,16"/>
+    <component id="k8qi7f" name="按钮1" folder="rpmby" file="k8qi7f.xml"/>
+    <component id="t24n7f" name="Demo_Component" folder="" file="t24n7f.xml" exported="true"/>
+    <component id="t24n7g" name="组件5" folder="rpmby" file="t24n7g.xml"/>
+    <component id="qa477h" name="组件6" folder="rpmby" file="qa477h.xml"/>
+  </resources>
+  <publish name="demo" singlePackage="true">
+    <atlas name="Default" index="0"/>
+  </publish>
+</packageDescription>

@@ -1,0 +1,11 @@
+{
+	"file_list": [
+		"devices/NativeDeviceContext.ts",
+		"renderer/NativeRendererContext.ts",
+		"interactive/NativeTouchContext.ts",
+		"net/NativeNetContext.ts",
+		"display/NativeStageText.ts",
+		"net/NativeResourceLoader.ts",
+		"audio/NativeAudio.ts"
+	]
+}

@@ -1,0 +1,20 @@
+{
+	"resources": [
+		{
+			"name": "demo",
+			"type": "json",
+			"url": "assets/demo.json"
+		},
+		{
+			"name": "demo@atlas0",
+			"type": "image",
+			"url": "assets/demo@atlas0.png"
+		}
+	],
+	"groups": [
+		{
+			"name": "preload",
+			"keys": "demo,demo@atlas0"
+		}
+	]
+}

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="640,400">
+  <displayList>
+    <component id="n0" name="n0" src="gx2b79" xy="61,49">
+      <Button title="A" icon="ui://9leh0eyfwa8u2t"/>
+    </component>
+    <component id="n1" name="n1" src="gx2b79" xy="63,223">
+      <Button title="B" icon="ui://9leh0eyfwa8u2t"/>
+    </component>
+    <component id="n2" name="n2" src="gx2b79" xy="442,221">
+      <Button title="C"/>
+    </component>
+    <text id="n3" name="n3" xy="49,19" size="109,20" fontSize="16" text="A可以随意拖动"/>
+    <text id="n4" name="n4" xy="50,190" size="261,20" fontSize="16" text="拖动B到C的位置可以将B的图标赋予C"/>
+  </displayList>
+</component>

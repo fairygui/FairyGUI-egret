@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<projectDescription name="FairyGUI-demo" type="Egret" id="42eb7038a35576a032d8aba97f9a18ff">
+  <packages>
+    <package id="9leh0eyf" name="Demo"/>
+  </packages>
+  <textSetting font="宋体" size="12" color="#000000"/>
+  <scrollBars vertical="ui://9leh0eyfi3s65w" horizontal="ui://9leh0eyfi3s65i" defaultDisplay="visible"/>
+</projectDescription>
