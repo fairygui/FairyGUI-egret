@@ -116,7 +116,7 @@ class Main extends egret.DisplayObjectContainer {
         fairygui.UIConfig.defaultScrollTouchEffect = true;
         
         this.stage.addChild(fairygui.GRoot.inst.displayObject);
-        fairygui.GRoot.inst.setContentScaleFactor(640,960);
+
         this.mainPanel = new MainPanel();
     }
 
