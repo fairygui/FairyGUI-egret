@@ -2,8 +2,8 @@
 	"resources": [
 		{
 			"name": "demo",
-			"type": "json",
-			"url": "assets/demo.json"
+			"type": "bin",
+			"url": "assets/demo.zip"
 		},
 		{
 			"name": "demo@atlas0",

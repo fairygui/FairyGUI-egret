@@ -6836,6 +6836,12 @@ var fairygui;
                 }
             }
         );
+        d(p, "textWidth"
+            ,function () {
+                this.ensureSizeCorrect();
+                return Math.ceil(this._textWidth / fairygui.GRoot.contentScaleFactor);
+            }
+        );
         p.ensureSizeCorrect = function () {
             if (this._sizeDirty && this._requireRender)
                 this.renderNow();
@@ -10561,8 +10567,8 @@ var fairygui;
         p.loadPackage = function () {
             var str;
             var arr;
-            this._resData = RES.getRes(this._resKey);
-            str = this._resData["sprites.bytes"];
+            this.decompressPackage(RES.getRes(this._resKey));
+            str = this.getDesc("sprites.bytes");
             arr = str.split(UIPackage.sep1);
             var cnt = arr.length;
             for (var i = 1; i < cnt; i++) {
@@ -10589,7 +10595,7 @@ var fairygui;
                 sprite.rotated = arr2[6] == "1";
                 this._sprites[itemId] = sprite;
             }
-            str = this._resData["package.xml"];
+            str = this.getDesc("package.xml");
             var xml = egret.XML.parse(str);
             this._id = xml.attributes.id;
             this._name = xml.attributes.name;
@@ -10647,6 +10653,28 @@ var fairygui;
                     this.loadFont(pi);
                     UIPackage._bitmapFonts[pi.bitmapFont.id] = pi.bitmapFont;
                 }
+            }
+        };
+        p.decompressPackage = function (buf) {
+            this._resData = {};
+            var inflater = new Zlib.RawInflate(buf);
+            var data = inflater.decompress();
+            var tmp = new egret.ByteArray();
+            var source = tmp["decodeUTF8"](data);
+            var curr = 0;
+            var fn;
+            var size;
+            while (true) {
+                var pos = source.indexOf("|", curr);
+                if (pos == -1)
+                    break;
+                fn = source.substring(curr, pos);
+                curr = pos + 1;
+                pos = source.indexOf("|", curr);
+                size = parseInt(source.substring(curr, pos));
+                curr = pos + 1;
+                this._resData[fn] = source.substr(curr, size);
+                curr += size;
             }
         };
         p.dispose = function () {
@@ -10765,13 +10793,16 @@ var fairygui;
                 case 4 /* Component */:
                     if (!item.decoded) {
                         item.decoded = true;
-                        var str = this._resData[item.id + ".xml"];
+                        var str = this.getDesc(item.id + ".xml");
                         item.componentData = egret.XML.parse(str);
                     }
                     return item.componentData;
                 default:
                     return RES.getRes(this._resKey + "@" + item.id);
             }
+        };
+        p.getDesc = function (fn) {
+            return this._resData[fn];
         };
         p.createSpriteTexture = function (sprite) {
             var atlasItem = this._itemsById[sprite.atlas];
@@ -10792,7 +10823,7 @@ var fairygui;
             return texture;
         };
         p.loadMovieClip = function (item) {
-            var xml = egret.XML.parse(this._resData[item.id + ".xml"]);
+            var xml = egret.XML.parse(this.getDesc(item.id + ".xml"));
             item.pivot = new egret.Point();
             var str = xml.attributes.pivot;
             if (str) {
@@ -10831,7 +10862,7 @@ var fairygui;
         p.loadFont = function (item) {
             var font = new fairygui.BitmapFont();
             font.id = "ui://" + this.id + item.id;
-            var str = this._resData[item.id + ".fnt"];
+            var str = this.getDesc(item.id + ".fnt");
             var lines = str.split(UIPackage.sep1);
             var lineCount = lines.length;
             var i = 0;
