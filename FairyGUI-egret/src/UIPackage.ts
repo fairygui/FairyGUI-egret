@@ -51,44 +51,44 @@ module fairygui {
             var pkg: UIPackage = UIPackage._packageInstById[packageId];
             pkg.dispose();
             delete UIPackage._packageInstById[pkg.id];
-            if (pkg._customId != null)
+            if(pkg._customId != null)
                 delete UIPackage._packageInstById[pkg._customId];
         }
 
-        public static createObject(pkgName: string, resName: string, userClass: any= null): GObject {
+        public static createObject(pkgName: string,resName: string,userClass: any = null): GObject {
             var pkg: UIPackage = UIPackage.getByName(pkgName);
-            if (pkg)
-                return pkg.createObject(resName, userClass);
+            if(pkg)
+                return pkg.createObject(resName,userClass);
             else
                 return null;
         }
 
-        public static createObjectFromURL(url: string, userClass: any= null): GObject {
+        public static createObjectFromURL(url: string,userClass: any = null): GObject {
             var pi: PackageItem = UIPackage.getItemByURL(url);
-            if (pi)
-                return pi.owner.createObject2(pi, userClass);
+            if(pi)
+                return pi.owner.createObject2(pi,userClass);
             else
                 return null;
         }
 
-        public static getItemURL(pkgName: string, resName: string): string {
+        public static getItemURL(pkgName: string,resName: string): string {
             var pkg: UIPackage = UIPackage.getByName(pkgName);
-            if (!pkg)
+            if(!pkg)
                 return null;
 
             var pi: PackageItem = pkg._itemsByName[resName];
-            if (!pi)
+            if(!pi)
                 return null;
 
             return "ui://" + pkg.id + pi.id;
         }
 
         public static getItemByURL(url: string): PackageItem {
-            if (ToolSet.startsWith(url, "ui://")) {
-                var pkgId: string = url.substr(5, 8);
+            if(ToolSet.startsWith(url,"ui://")) {
+                var pkgId: string = url.substr(5,8);
                 var srcId: string = url.substr(13);
                 var pkg: UIPackage = UIPackage.getById(pkgId);
-                if (pkg)
+                if(pkg)
                     return pkg.getItem(srcId);
             }
             return null;
@@ -108,14 +108,15 @@ module fairygui {
             var str: string;
             var arr: string[];
 
-            this._resData = RES.getRes(this._resKey);
-            str = this._resData["sprites.bytes"];
+            this.decompressPackage(RES.getRes(this._resKey));
+
+            str = this.getDesc("sprites.bytes");
 
             arr = str.split(UIPackage.sep1);
             var cnt: number = arr.length;
-            for (var i: number = 1; i < cnt; i++) {
+            for(var i: number = 1;i < cnt;i++) {
                 str = arr[i];
-                if (!str)
+                if(!str)
                     continue;
 
                 var arr2: string[] = str.split(UIPackage.sep2);
@@ -123,14 +124,14 @@ module fairygui {
                 var sprite: AtlasSprite = new AtlasSprite();
                 var itemId: string = arr2[0];
                 var binIndex: number = parseInt(arr2[1]);
-                if (binIndex >= 0)
+                if(binIndex >= 0)
                     sprite.atlas = "atlas" + binIndex;
                 else {
                     var pos: number = itemId.indexOf("_");
-                    if (pos == -1)
+                    if(pos == -1)
                         sprite.atlas = "atlas_" + itemId;
                     else
-                        sprite.atlas = "atlas_" + itemId.substr(0, pos);
+                        sprite.atlas = "atlas_" + itemId.substr(0,pos);
                 }
 
                 sprite.rect.x = parseInt(arr2[2]);
@@ -141,7 +142,7 @@ module fairygui {
                 this._sprites[itemId] = sprite;
             }
 
-            str = this._resData["package.xml"];
+            str = this.getDesc("package.xml");
             var xml: any = egret.XML.parse(str);
 
             this._id = xml.attributes.id;
@@ -155,7 +156,7 @@ module fairygui {
             var cxml: any;
 
             var length1: number = resources.length;
-            for (var i1: number = 0; i1 < length1; i1++) {
+            for(var i1: number = 0;i1 < length1;i1++) {
                 cxml = resources[i1];
                 pi = new PackageItem();
                 pi.type = parsePackageItemType(cxml.name);
@@ -163,15 +164,15 @@ module fairygui {
                 pi.name = cxml.attributes.name;
                 pi.file = cxml.attributes.file;
                 str = cxml.attributes.size;
-                if (str) {
+                if(str) {
                     arr = str.split(UIPackage.sep0);
                     pi.width = parseInt(arr[0]);
                     pi.height = parseInt(arr[1]);
                 }
-                switch (pi.type) {
+                switch(pi.type) {
                     case PackageItemType.Image: {
                         str = cxml.attributes.scale;
-                        if (str == "9grid") {
+                        if(str == "9grid") {
                             pi.scale9Grid = new egret.Rectangle();
                             str = cxml.attributes.scale9grid;
                             if(str) {
@@ -182,7 +183,7 @@ module fairygui {
                                 pi.scale9Grid.height = parseInt(arr[3]);
                             }
                         }
-                        else if (str == "tile") {
+                        else if(str == "tile") {
                             pi.scaleByTile = true;
                         }
                         str = cxml.attributes.smoothing;
@@ -194,18 +195,43 @@ module fairygui {
                 pi.owner = this;
                 this._items.push(pi);
                 this._itemsById[pi.id] = pi;
-                if (pi.name != null)
+                if(pi.name != null)
                     this._itemsByName[pi.name] = pi;
             }
 
             cnt = this._items.length;
-            for (i = 0; i < cnt; i++) {
+            for(i = 0;i < cnt;i++) {
                 pi = this._items[i];
-                if (pi.type == PackageItemType.Font) {
+                if(pi.type == PackageItemType.Font) {
                     this.loadFont(pi);
                     UIPackage._bitmapFonts[pi.bitmapFont.id] = pi.bitmapFont;
                 }
             }
+        }
+
+        private decompressPackage(buf: ArrayBuffer): void {
+            this._resData = {};
+        
+            var inflater: Zlib.RawInflate = new Zlib.RawInflate(buf);
+            var data: Uint8Array = inflater.decompress();
+            var tmp: egret.ByteArray = new egret.ByteArray();
+            var source: string = tmp["decodeUTF8"](data); //ByteArray.decodeUTF8 is private @_@
+            var curr: number = 0;            
+            var fn: string;
+            var size: number;
+            while(true)
+            {
+                var pos:number = source.indexOf("|", curr);
+                if(pos == -1)
+                    break;
+                fn = source.substring(curr,pos);
+                curr = pos + 1;
+                pos = source.indexOf("|",curr);
+                size = parseInt(source.substring(curr,pos));
+                curr = pos + 1;
+                this._resData[fn] = source.substr(curr,size);
+                curr += size;
+            }            
         }
 
         public dispose(): void {
@@ -333,7 +359,7 @@ module fairygui {
                 case PackageItemType.Component:
                     if (!item.decoded) {
                         item.decoded = true;
-                        var str: string = this._resData[item.id + ".xml"];
+                        var str: string = this.getDesc(item.id + ".xml");
                         item.componentData = egret.XML.parse(str);
                     }
                     return item.componentData;
@@ -341,6 +367,10 @@ module fairygui {
                 default:
                     return RES.getRes(this._resKey + "@" + item.id);
             }
+        }
+        
+        private getDesc(fn:string):string {
+            return this._resData[fn];
         }
 
         private createSpriteTexture(sprite: AtlasSprite): egret.Texture {
@@ -366,7 +396,7 @@ module fairygui {
         }
 
         private loadMovieClip(item: PackageItem): void {
-            var xml:any = egret.XML.parse(this._resData[item.id + ".xml"]);
+            var xml: any = egret.XML.parse(this.getDesc(item.id + ".xml"));
             item.pivot = new egret.Point();
             var str: string = xml.attributes.pivot;
             if (str) {
@@ -409,7 +439,7 @@ module fairygui {
         private loadFont(item: PackageItem): void {
             var font: BitmapFont = new BitmapFont();
             font.id = "ui://" + this.id + item.id;
-            var str: string = this._resData[item.id + ".fnt"];
+            var str: string = this.getDesc(item.id + ".fnt");
 
             var lines: string[] = str.split(UIPackage.sep1);
             var lineCount: number = lines.length;

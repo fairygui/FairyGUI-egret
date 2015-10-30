@@ -1073,6 +1073,7 @@ declare module fairygui {
         ubbEnabled: boolean;
         autoSize: AutoSizeType;
         displayAsPassword: boolean;
+        textWidth: number;
         ensureSizeCorrect(): void;
         gearColor: GearColor;
         handleControllerChanged(c: Controller): void;
@@ -1605,6 +1606,7 @@ declare module fairygui {
         static getBitmapFontByURL(url: string): BitmapFont;
         private create(resKey);
         private loadPackage();
+        private decompressPackage(buf);
         dispose(): void;
         id: string;
         name: string;
@@ -1614,6 +1616,7 @@ declare module fairygui {
         getItem(itemId: string): PackageItem;
         getItemAssetByName(resName: string): any;
         getItemAsset(item: PackageItem): any;
+        private getDesc(fn);
         private createSpriteTexture(sprite);
         private createSubTexture(atlasTexture, uvRect);
         private loadMovieClip(item);

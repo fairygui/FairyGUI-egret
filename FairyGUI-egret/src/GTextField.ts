@@ -255,6 +255,11 @@ module fairygui {
                 this.render();
             }
         }
+        
+        public get textWidth(): number {
+            this.ensureSizeCorrect();
+            return Math.ceil(this._textWidth / GRoot.contentScaleFactor);
+        }
 
         public ensureSizeCorrect(): void {
             if (this._sizeDirty && this._requireRender)
