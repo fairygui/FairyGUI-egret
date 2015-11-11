@@ -149,12 +149,12 @@ class MainPanel {
             //取消对原目标的拖动，换成一个替代品
             evt.preventDefault();
 
-            DragManager.inst.startDrag(btn1,btn1.icon,btn1.icon);
+                fairygui.DragDropManager.inst.startDrag(btn1,btn1.icon,btn1.icon);
         },this);
 
         var btn2: fairygui.GButton = obj.getChild("n2").asButton;
         btn2.icon = null;
-        btn2.addEventListener(DropEvent.DROP,function(evt: DropEvent): void {
+        btn2.addEventListener(fairygui.DropEvent.DROP,function(evt: fairygui.DropEvent): void {
             btn2.icon = evt.source;
         },this);
     }

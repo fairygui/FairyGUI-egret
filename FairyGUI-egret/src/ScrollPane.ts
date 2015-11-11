@@ -856,27 +856,11 @@ module fairygui {
                 time = 0.001;
             var yVelocity: number = (this._maskContentHolder.y - this._y2) / time;
             var xVelocity: number = (this._maskContentHolder.x - this._x2) / time;
-
-            var minDuration: number = this._bouncebackEffect ? .3 : 0;
-            var maxDuration: number = 0.5;
-            var overShoot: number = this._bouncebackEffect ? 1 : 0;
-
+            var duration: number = 0.3;
             var xMin: number = -this._xOverlap;
             var yMin: number = -this._yOverlap;
             var xMax: number = 0;
             var yMax: number = 0;
-
-            var duration: number = 0;
-
-            if (this._hScroll)
-                duration = ThrowTween.calculateDuration(this._maskContentHolder.x, xMin, xMax, xVelocity, overShoot, duration);
-            if (this._vScroll)
-                duration = ThrowTween.calculateDuration(this._maskContentHolder.y, yMin, yMax, yVelocity, overShoot, duration);
-
-            if (duration > maxDuration)
-                duration = maxDuration;
-            else if (duration < minDuration)
-                duration = minDuration;
 
             this._throwTween.start.x = this._maskContentHolder.x;
             this._throwTween.start.y = this._maskContentHolder.y;
@@ -1005,7 +989,6 @@ module fairygui {
         public change1: egret.Point;
         public change2: egret.Point;
 
-        private static resistance: number = 300;
         private static checkpoint: number = 0.05;
 
         public constructor() {
@@ -1019,42 +1002,9 @@ module fairygui {
             obj.y = Math.floor(this.start.y + this.change1.y * this.value + this.change2.y * this.value * this.value);
         }
 
-        public static calculateDuration(targetValue: number, min: number, max: number, velocity: number,
-            overshootTolerance: number, duration: number): number {
-            var curDuration: number = (velocity * ThrowTween.resistance > 0) ? velocity / this.resistance : velocity / -ThrowTween.resistance;
-            var curClippedDuration: number = 0;
-            var clippedDuration: number = 9999999999;
-
-            var end: number = targetValue + ThrowTween.calculateChange(velocity, curDuration);
-            if (end > max) {
-                curClippedDuration = ThrowTween.calculateDuration2(targetValue, max, velocity);
-                if (curClippedDuration + overshootTolerance < clippedDuration)
-                    clippedDuration = curClippedDuration + overshootTolerance;
-            }
-            else if (end < min) {
-                curClippedDuration = ThrowTween.calculateDuration2(targetValue, min, velocity);
-                if (curClippedDuration + overshootTolerance < clippedDuration)
-                    clippedDuration = curClippedDuration + overshootTolerance;
-            }
-
-            if (curClippedDuration > duration)
-                duration = curClippedDuration;
-            if (curDuration > duration)
-                duration = curDuration;
-            if (duration > clippedDuration)
-                duration = clippedDuration;
-
-            return duration;
-        }
-
         public static calculateChange(velocity: number, duration: number): number {
             return (duration * ThrowTween.checkpoint * velocity) / ThrowTween.easeOutCubic(ThrowTween.checkpoint, 0, 1, 1);
         }
-
-        public static calculateDuration2(start: number, end: number, velocity: number): number {
-            return Math.abs((end - start) * ThrowTween.easeOutCubic(ThrowTween.checkpoint, 0, 1, 1) / velocity / this.checkpoint);
-        }
-
         public static easeOutCubic(t: number, b: number, c: number, d: number): number {
             return c * ((t = t / d - 1) * t * t + 1) + b;
         }

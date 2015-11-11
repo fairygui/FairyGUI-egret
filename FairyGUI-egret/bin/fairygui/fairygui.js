@@ -720,6 +720,23 @@ var fairygui;
 
 var fairygui;
 (function (fairygui) {
+    var DropEvent = (function (_super) {
+        __extends(DropEvent, _super);
+        function DropEvent(type, source) {
+            if (source === void 0) { source = null; }
+            _super.call(this, type, false);
+            this.source = source;
+        }
+        var d = __define,c=DropEvent;p=c.prototype;
+        DropEvent.DROP = "__drop";
+        return DropEvent;
+    })(egret.Event);
+    fairygui.DropEvent = DropEvent;
+    egret.registerClass(DropEvent,"fairygui.DropEvent");
+})(fairygui || (fairygui = {}));
+
+var fairygui;
+(function (fairygui) {
     var FocusChangeEvent = (function (_super) {
         __extends(FocusChangeEvent, _super);
         function FocusChangeEvent(type, oldObject, newObject) {
@@ -2334,7 +2351,7 @@ var fairygui;
             this._scaleY = 1;
             this._pivotOffsetX = 0;
             this._pivotOffsetY = 0;
-            this._alwaysOnTop = 0;
+            this._sortingOrder = 0;
             this._internalVisible = 1;
             this._focusable = false;
             this._rawWidth = 0;
@@ -2393,7 +2410,7 @@ var fairygui;
                     this.moveChildren(dx, dy);
                 if (this._gearXY.controller)
                     this._gearXY.updateState();
-                if (this._parent) {
+                if (this._parent && !(this._parent instanceof fairygui.GList)) {
                     this._parent.setBoundsChangedFlag();
                     this.dispatchEventWith(GObject.XY_CHANGED);
                 }
@@ -2685,18 +2702,18 @@ var fairygui;
                 return this._visible && this._internalVisible > 0 && (!this._group || this._group.finalVisible);
             }
         );
-        d(p, "alwaysOnTop"
+        d(p, "sortingOrder"
             ,function () {
-                return this._alwaysOnTop;
+                return this._sortingOrder;
             }
             ,function (value) {
                 if (value < 0)
                     value = 0;
-                if (this._alwaysOnTop != value) {
-                    var old = this._alwaysOnTop;
-                    this._alwaysOnTop = value;
+                if (this._sortingOrder != value) {
+                    var old = this._sortingOrder;
+                    this._sortingOrder = value;
                     if (this._parent != null)
-                        this._parent.notifyChildAOTChanged(this, old, this._alwaysOnTop);
+                        this._parent.childSortingOrderChanged(this, old, this._sortingOrder);
                 }
             }
         );
@@ -3203,7 +3220,7 @@ var fairygui;
         __extends(GComponent, _super);
         function GComponent() {
             _super.call(this);
-            this._AOTChildCount = 0;
+            this._sortingChildCount = 0;
             this._bounds = new egret.Rectangle();
             this._children = new Array();
             this._controllers = new Array();
@@ -3247,13 +3264,13 @@ var fairygui;
                     child.removeFromParent();
                     child.parent = this;
                     var cnt = this._children.length;
-                    if (child.alwaysOnTop != 0) {
-                        this._AOTChildCount++;
-                        index = this.getInsertPosForAOTChild(child);
+                    if (child.sortingOrder != 0) {
+                        this._sortingChildCount++;
+                        index = this.getInsertPosForSortingChild(child);
                     }
-                    else if (this._AOTChildCount > 0) {
-                        if (index > (cnt - this._AOTChildCount))
-                            index = cnt - this._AOTChildCount;
+                    else if (this._sortingChildCount > 0) {
+                        if (index > (cnt - this._sortingChildCount))
+                            index = cnt - this._sortingChildCount;
                     }
                     if (index == cnt)
                         this._children.push(child);
@@ -3268,14 +3285,14 @@ var fairygui;
                 throw "Invalid child index";
             }
         };
-        p.getInsertPosForAOTChild = function (target) {
+        p.getInsertPosForSortingChild = function (target) {
             var cnt = this._children.length;
             var i = 0;
             for (i = 0; i < cnt; i++) {
                 var child = this._children[i];
                 if (child == target)
                     continue;
-                if (target.alwaysOnTop < child.alwaysOnTop)
+                if (target.sortingOrder < child.sortingOrder)
                     break;
             }
             return i;
@@ -3293,8 +3310,8 @@ var fairygui;
             if (index >= 0 && index < this.numChildren) {
                 var child = this._children[index];
                 child.parent = null;
-                if (child.alwaysOnTop != 0)
-                    this._AOTChildCount--;
+                if (child.sortingOrder != 0)
+                    this._sortingChildCount--;
                 this._children.splice(index, 1);
                 if (child.inContainer)
                     this._container.removeChild(child.displayObject);
@@ -3365,12 +3382,12 @@ var fairygui;
             var oldIndex = this._children.indexOf(child);
             if (oldIndex == -1)
                 throw "Not a child of this container";
-            if (child.alwaysOnTop != 0)
+            if (child.sortingOrder != 0)
                 return;
             var cnt = this._children.length;
-            if (this._AOTChildCount > 0) {
-                if (index > (cnt - this._AOTChildCount - 1))
-                    index = cnt - this._AOTChildCount - 1;
+            if (this._sortingChildCount > 0) {
+                if (index > (cnt - this._sortingChildCount - 1))
+                    index = cnt - this._sortingChildCount - 1;
             }
             this._setChildIndex(child, oldIndex, index);
         };
@@ -3702,17 +3719,17 @@ var fairygui;
             resultPoint.y = yValue;
             return resultPoint;
         };
-        p.notifyChildAOTChanged = function (child, oldValue, newValue) {
+        p.childSortingOrderChanged = function (child, oldValue, newValue) {
             if (newValue === void 0) { newValue = 0; }
             if (newValue == 0) {
-                this._AOTChildCount--;
+                this._sortingChildCount--;
                 this.setChildIndex(child, this._children.length);
             }
             else {
                 if (oldValue == 0)
-                    this._AOTChildCount++;
+                    this._sortingChildCount++;
                 var oldIndex = this._children.indexOf(child);
-                var index = this.getInsertPosForAOTChild(child);
+                var index = this.getInsertPosForSortingChild(child);
                 if (oldIndex < index)
                     this._setChildIndex(child, oldIndex, index - 1);
                 else
@@ -6151,10 +6168,11 @@ var fairygui;
                     }
                     else
                         this._container.addChild(this._content);
-                    (this._content).interval = this._contentItem.interval;
-                    (this._content).frames = this._contentItem.frames;
                     this._contentSourceWidth = this._contentItem.width;
                     this._contentSourceHeight = this._contentItem.height;
+                    (this._content).interval = this._contentItem.interval;
+                    (this._content).frames = this._contentItem.frames;
+                    (this._content).boundsRect = new egret.Rectangle(0, 0, this._contentSourceWidth, this._contentSourceHeight);
                     this.updateLayout();
                 }
                 else
@@ -9885,22 +9903,11 @@ var fairygui;
                 time = 0.001;
             var yVelocity = (this._maskContentHolder.y - this._y2) / time;
             var xVelocity = (this._maskContentHolder.x - this._x2) / time;
-            var minDuration = this._bouncebackEffect ? .3 : 0;
-            var maxDuration = 0.5;
-            var overShoot = this._bouncebackEffect ? 1 : 0;
+            var duration = 0.3;
             var xMin = -this._xOverlap;
             var yMin = -this._yOverlap;
             var xMax = 0;
             var yMax = 0;
-            var duration = 0;
-            if (this._hScroll)
-                duration = ThrowTween.calculateDuration(this._maskContentHolder.x, xMin, xMax, xVelocity, overShoot, duration);
-            if (this._vScroll)
-                duration = ThrowTween.calculateDuration(this._maskContentHolder.y, yMin, yMax, yVelocity, overShoot, duration);
-            if (duration > maxDuration)
-                duration = maxDuration;
-            else if (duration < minDuration)
-                duration = minDuration;
             this._throwTween.start.x = this._maskContentHolder.x;
             this._throwTween.start.y = this._maskContentHolder.y;
             var change1 = this._throwTween.change1;
@@ -10014,39 +10021,12 @@ var fairygui;
             obj.x = Math.floor(this.start.x + this.change1.x * this.value + this.change2.x * this.value * this.value);
             obj.y = Math.floor(this.start.y + this.change1.y * this.value + this.change2.y * this.value * this.value);
         };
-        ThrowTween.calculateDuration = function (targetValue, min, max, velocity, overshootTolerance, duration) {
-            var curDuration = (velocity * ThrowTween.resistance > 0) ? velocity / this.resistance : velocity / -ThrowTween.resistance;
-            var curClippedDuration = 0;
-            var clippedDuration = 9999999999;
-            var end = targetValue + ThrowTween.calculateChange(velocity, curDuration);
-            if (end > max) {
-                curClippedDuration = ThrowTween.calculateDuration2(targetValue, max, velocity);
-                if (curClippedDuration + overshootTolerance < clippedDuration)
-                    clippedDuration = curClippedDuration + overshootTolerance;
-            }
-            else if (end < min) {
-                curClippedDuration = ThrowTween.calculateDuration2(targetValue, min, velocity);
-                if (curClippedDuration + overshootTolerance < clippedDuration)
-                    clippedDuration = curClippedDuration + overshootTolerance;
-            }
-            if (curClippedDuration > duration)
-                duration = curClippedDuration;
-            if (curDuration > duration)
-                duration = curDuration;
-            if (duration > clippedDuration)
-                duration = clippedDuration;
-            return duration;
-        };
         ThrowTween.calculateChange = function (velocity, duration) {
             return (duration * ThrowTween.checkpoint * velocity) / ThrowTween.easeOutCubic(ThrowTween.checkpoint, 0, 1, 1);
-        };
-        ThrowTween.calculateDuration2 = function (start, end, velocity) {
-            return Math.abs((end - start) * ThrowTween.easeOutCubic(ThrowTween.checkpoint, 0, 1, 1) / velocity / this.checkpoint);
         };
         ThrowTween.easeOutCubic = function (t, b, c, d) {
             return c * ((t = t / d - 1) * t * t + 1) + b;
         };
-        ThrowTween.resistance = 300;
         ThrowTween.checkpoint = 0.05;
         return ThrowTween;
     })();
@@ -11249,5 +11229,75 @@ var fairygui;
     })(fairygui.GComponent);
     fairygui.Window = Window;
     egret.registerClass(Window,"fairygui.Window");
+})(fairygui || (fairygui = {}));
+
+var fairygui;
+(function (fairygui) {
+    var DragDropManager = (function () {
+        function DragDropManager() {
+            this._agent = new fairygui.GLoader();
+            this._agent.draggable = true;
+            this._agent.touchable = false; //important
+            this._agent.setSize(100, 100);
+            this._agent.sortingOrder = 1000000;
+            this._agent.addEventListener(fairygui.DragEvent.DRAG_END, this.__dragEnd, this);
+        }
+        var d = __define,c=DragDropManager;p=c.prototype;
+        d(DragDropManager, "inst"
+            ,function () {
+                if (DragDropManager._inst == null)
+                    DragDropManager._inst = new DragDropManager();
+                return DragDropManager._inst;
+            }
+        );
+        d(p, "dragAgent"
+            ,function () {
+                return this._agent;
+            }
+        );
+        d(p, "dragging"
+            ,function () {
+                return this._agent.parent != null;
+            }
+        );
+        p.startDrag = function (source, icon, sourceData, touchPointID) {
+            if (touchPointID === void 0) { touchPointID = -1; }
+            if (this._agent.parent != null)
+                return;
+            this._sourceData = sourceData;
+            this._agent.url = icon;
+            fairygui.GRoot.inst.addChild(this._agent);
+            var pt = source.localToGlobal();
+            this._agent.setXY(pt.x, pt.y);
+            this._agent.startDrag(null, touchPointID);
+        };
+        p.cancel = function () {
+            if (this._agent.parent != null) {
+                this._agent.stopDrag();
+                fairygui.GRoot.inst.removeChild(this._agent);
+                this._sourceData = null;
+            }
+        };
+        p.__dragEnd = function (evt) {
+            if (this._agent.parent == null)
+                return;
+            fairygui.GRoot.inst.removeChild(this._agent);
+            var sourceData = this._sourceData;
+            this._sourceData = null;
+            var obj = fairygui.GRoot.inst.getObjectUnderPoint(evt.stageX, evt.stageY);
+            while (obj != null) {
+                if (obj.hasEventListener(fairygui.DropEvent.DROP)) {
+                    var dropEvt = new fairygui.DropEvent(fairygui.DropEvent.DROP, sourceData);
+                    obj.requestFocus();
+                    obj.dispatchEvent(dropEvt);
+                    return;
+                }
+                obj = obj.parent;
+            }
+        };
+        return DragDropManager;
+    })();
+    fairygui.DragDropManager = DragDropManager;
+    egret.registerClass(DragDropManager,"fairygui.DragDropManager");
 })(fairygui || (fairygui = {}));
 
