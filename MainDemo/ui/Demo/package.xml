@@ -217,6 +217,7 @@
     <folder id="mejr80" name="声音" folder=""/>
     <sound id="mejr81" name="click" folder="mejr80" file="mejr81.mp3" exported="true"/>
     <sound id="mejr82" name="tabswitch" folder="mejr80" file="mejr82.mp3" exported="true"/>
+    <component id="f6ue83" name="Button52" folder="" file="f6ue83.xml"/>
   </resources>
   <publish name="demo" singlePackage="true">
     <atlas name="Default" index="0"/>

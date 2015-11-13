@@ -68,9 +68,13 @@
     <component id="n32" name="n32" src="rpmb13" xy="41,724" grayed="true">
       <Button icon="ui://9leh0eyfrpmbu"/>
     </component>
-    <text id="n33" name="n33" xy="57,691" size="69,20" fontSize="16" text="变灰效果"/>
+    <text id="n33" name="n33" xy="46,678" size="533,26" fontSize="22" text="变灰效果(Egret暂不支持滤镜，所以请用下边的方式）"/>
     <component id="n34" name="n34" src="k8qi7f" xy="164,120">
       <Button title="简单按钮"/>
     </component>
+    <component id="n35" name="n35" src="f6ue83" xy="48,865" grayed="true">
+      <Button icon="ui://9leh0eyfrpmbu"/>
+    </component>
+    <text id="n36" name="n36" xy="50,813" size="509,26" fontSize="22" autoSize="height" text="可以自定义变灰的效果（使用一个grayed控制器）"/>
   </displayList>
 </component>
