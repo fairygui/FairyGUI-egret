@@ -49,7 +49,7 @@
     <component id="rpmb19" name="OnOffButton" folder="rpmby" file="rpmb19.xml"/>
     <component id="rpmb1a" name="RadioButton" folder="rpmby" file="rpmb1a.xml"/>
     <component id="rpmb1b" name="Demo_Button" folder="" file="rpmb1b.xml" exported="true"/>
-    <component id="rpmb1c" name="Demo" folder="" file="rpmb1c.xml" exported="true"/>
+    <component id="rpmb1c" name="Main" folder="" file="rpmb1c.xml" exported="true"/>
     <image id="sner1h" name="pic" folder="rpmb0" qualityOption="source" file="sner1h.png" size="179,386"/>
     <component id="sner1i" name="Demo_Image" folder="" file="sner1i.xml" exported="true"/>
     <component id="hixt1j" name="Button10" folder="rpmby" file="hixt1j.xml"/>
@@ -68,7 +68,6 @@
     <image id="wa8u2t" name="r3" folder="rpmb0" qualityOption="source" file="wa8u2t.png" size="90,90" exported="true"/>
     <image id="wa8u2u" name="r4" folder="rpmb0" qualityOption="source" file="wa8u2u.png" size="89,90" exported="true"/>
     <component id="wa8u2v" name="Demo_Controller" folder="" file="wa8u2v.xml" exported="true"/>
-    <swf id="wa8u2w" name="qtm01d" folder="rpmb0" file="wa8u2w.swf" size="176,176"/>
     <component id="wa8u2x" name="Demo_Relation" folder="" file="wa8u2x.xml" exported="true"/>
     <component id="es412y" name="Demo_Clip&amp;Scroll" folder="" file="es412y.xml" exported="true"/>
     <component id="es412z" name="组件1" folder="rpmby" file="es412z.xml"/>
@@ -112,7 +111,6 @@
     <component id="zd9g4e" name="Demo_Slider" folder="" file="zd9g4e.xml" exported="true"/>
     <component id="zd9g4f" name="Demo_ProgressBar" folder="" file="zd9g4f.xml" exported="true"/>
     <component id="zd9g4g" name="Demo_List" folder="" file="zd9g4g.xml" exported="true"/>
-    <component id="zd9g4h" name="Demo_Transition" folder="" file="zd9g4h.xml" exported="true"/>
     <component id="suiz4i" name="Slider_HZ" folder="rpmby" file="suiz4i.xml"/>
     <image id="suiz4j" name="p10.png" folder="rpmb0" file="suiz4j.png" size="112,23" qualityOption="source"/>
     <image id="suiz4k" name="p11.png" folder="rpmb0" qualityOption="source" file="suiz4k.png" size="62,3"/>
@@ -170,12 +168,7 @@
     <image id="kpev62" name="道具图标外框.png" folder="rpmb0" qualityOption="source" file="kpev62.png" size="100,100"/>
     <image id="kpev63" name="道具框点击.png" folder="rpmb0" file="kpev63.png" size="108,108" scale="9grid" scale9grid="17,16,74,73" qualityOption="source"/>
     <image id="kpev64" name="破冰诀书" folder="rpmb0" qualityOption="source" file="kpev64.png" size="90,90"/>
-    <component id="duef65" name="Demo_Transition1" folder="rpmby" file="duef65.xml"/>
-    <image id="duef66" name="15_icon_zhanbaoxx" folder="rpmb0" qualityOption="source" file="duef66.png" size="65,59"/>
-    <image id="duef67" name="15_icon_zhanbaoxx_2" folder="rpmb0" qualityOption="source" file="duef67.png" size="10,23"/>
-    <component id="duef68" name="Demo_Transition2" folder="rpmby" file="duef68.xml"/>
     <image id="duef69" name="打击坡墨底.png" folder="rpmb0" qualityOption="source" file="duef69.png" size="227,163"/>
-    <image id="duef6a" name="棒极了" folder="rpmb0" qualityOption="source" file="duef6a.png" size="242,123"/>
     <font id="duef6m" name="连击数字" folder="scfj23" file="duef6m.fnt" exported="true"/>
     <image id="duef6n" name="打击数字_0.png" folder="rpmb0" qualityOption="source" file="duef6n.png" size="50,50"/>
     <image id="duef6o" name="打击数字_1.png" folder="rpmb0" qualityOption="source" file="duef6o.png" size="50,50"/>
@@ -196,7 +189,7 @@
     <component id="l6f473" name="WindowA" folder="" file="l6f473.xml" exported="true"/>
     <component id="f2ax74" name="组件4" folder="rpmby" file="f2ax74.xml"/>
     <folder id="gx2b75" name="弹出菜单" folder=""/>
-    <component id="gx2b76" name="Demo_PopupMenu" folder="" file="gx2b76.xml" exported="true"/>
+    <component id="gx2b76" name="Demo_Popup" folder="" file="gx2b76.xml" exported="true"/>
     <component id="gx2b77" name="Demo_Window" folder="" file="gx2b77.xml" exported="true"/>
     <component id="gx2b78" name="Demo_Drag&amp;Drop" folder="" file="gx2b78.xml" exported="true"/>
     <component id="gx2b79" name="BagGridSub2" folder="rpmby" file="gx2b79.xml"/>
@@ -209,6 +202,21 @@
     <component id="t24n7f" name="Demo_Component" folder="" file="t24n7f.xml" exported="true"/>
     <component id="t24n7g" name="组件5" folder="rpmby" file="t24n7g.xml"/>
     <component id="qa477h" name="组件6" folder="rpmby" file="qa477h.xml"/>
+    <component id="rwlc7i" name="Demo_Grid" folder="" file="rwlc7i.xml" exported="true"/>
+    <image id="rwlc7j" name="grid_header.png" folder="rpmb0" file="rwlc7j.png" size="200,20" scale="9grid" scale9grid="50,5,100,10" qualityOption="source"/>
+    <component id="rwlc7k" name="GridItem" folder="rpmby" file="rwlc7k.xml"/>
+    <component id="rwlc7l" name="Component11" folder="rpmby" file="rwlc7l.xml"/>
+    <image id="rwlc7m" name="star" folder="rpmb0" qualityOption="source" file="rwlc7m.png" size="90,23" scale="tile"/>
+    <component id="rwlc7n" name="GridItem2" folder="rpmby" file="rwlc7n.xml"/>
+    <component id="rwlc7s" name="Button16" folder="" file="rwlc7s.xml"/>
+    <image id="rwlc7t" name="22" folder="rpmb0" qualityOption="source" file="rwlc7t.png" size="97,97"/>
+    <component id="rwlc7w" name="Demo_Depth" folder="" file="rwlc7w.xml" exported="true"/>
+    <component id="rwlc7x" name="Component13" folder="" file="rwlc7x.xml"/>
+    <component id="rwlc7y" name="Button1" folder="" file="rwlc7y.xml"/>
+    <component id="bh5j7z" name="Component12" folder="rpmby" file="bh5j7z.xml" exported="true"/>
+    <folder id="mejr80" name="声音" folder=""/>
+    <sound id="mejr81" name="click" folder="mejr80" file="mejr81.mp3" exported="true"/>
+    <sound id="mejr82" name="tabswitch" folder="mejr80" file="mejr82.mp3" exported="true"/>
   </resources>
   <publish name="demo" singlePackage="true">
     <atlas name="Default" index="0"/>

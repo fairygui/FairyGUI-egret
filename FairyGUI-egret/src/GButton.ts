@@ -13,7 +13,7 @@ module fairygui {
         private _icon: string;
         private _selectedIcon: string;
         private _sound: string;
-        private _soundVolumeScale: number = 1;
+        private _soundVolumeScale: number;
         private _pageOption: PageOption;
         private _buttonController: Controller;
         private _changeStateOnClick: boolean;
@@ -267,7 +267,9 @@ module fairygui {
             if (str)
                 this._mode = parseButtonMode(str);
                 
-            this._sound = xml.attributes.sound;
+            str= xml.attributes.sound;
+            if(str != null)
+                this._sound = str;
             str = xml.attributes.volume;
             if(str)
                 this._soundVolumeScale = parseInt(str) / 100;
@@ -364,12 +366,12 @@ module fairygui {
         }
 
         private __click(evt: egret.TouchEvent): void {
-            if (this._sound) {
+            if(this._sound) {
                 var pi: PackageItem = UIPackage.getItemByURL(this._sound);
                 if (pi) {
                     var sound: egret.Sound = <egret.Sound> pi.owner.getItemAsset(pi);
-                    if (sound)
-                        sound.play();
+                    if(sound)
+                        GRoot.inst.playOneShotSound(sound,this._soundVolumeScale);
                 }
             }
 

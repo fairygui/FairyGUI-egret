@@ -1,0 +1,25 @@
+{
+	"close":false,
+	"publishSetting":
+	{
+		"compile":false,
+		"password":"",
+		"projectPath":"D:/FairyGUI-egret-demo/TransitionDemo-egret/",
+		"runtime":"html5",
+		"version":"1"
+	},
+	"resourcePlugin":
+	{
+		"configs":[
+		{
+			"configPath":"resource/resource.json",
+			"relativePath":"resource/"
+		}],
+		"id":"org.egret-labs.resource",
+		"library":
+		{
+			"children":[]
+		}
+	},
+	"theme":"resource/theme.thm"
+}

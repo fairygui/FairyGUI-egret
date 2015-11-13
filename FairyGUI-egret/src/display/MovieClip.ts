@@ -43,6 +43,7 @@ module fairygui {
                 this._frameCount = this._frames.length;
             else
                 this._frameCount = 0;
+            this._currentFrame = -1;
             this.setPlaySettings();
         }
 
@@ -66,8 +67,7 @@ module fairygui {
             if (this._currentFrame != value) {
                 this._currentFrame = value;
                 this._playState.currentFrame = value;
-                if (!this.playing && this.frameCount != 0)
-                    this.setFrame(this._frames[this._currentFrame]);
+                this.setFrame(this._currentFrame < this.frameCount ? this._frames[this._currentFrame] : null);
             }
         }
 
@@ -96,18 +96,15 @@ module fairygui {
             this._endAt = endAt;
             if (this._endAt == -1)
                 this._endAt = this._end;
-            this.currentFrame = start;
             this._status = 0;
             this._callback = endCallback;
             this._callbackObj = callbackObj;
 
+            this.currentFrame = start;
             if (this.playing && this.frameCount != 0)
                 GTimers.inst.callBy24Fps(this.update, this);
-            else {
+            else
                 GTimers.inst.remove(this.update, this);
-                if (this._frameCount == 0)
-                    this.setFrame(null);
-            }
         }
 
         private update(): void {

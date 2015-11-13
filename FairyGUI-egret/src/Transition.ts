@@ -624,8 +624,8 @@ module fairygui {
                     var pi: PackageItem = UIPackage.getItemByURL(value.s);
                     if(pi) {
                         var sound: egret.Sound = <egret.Sound> pi.owner.getItemAsset(pi);
-                        if (sound)
-                            sound.play();
+                        if(sound)
+                            GRoot.inst.playOneShotSound(sound,value.f1);
                     }
                     break;
                 case TransitionActionType.Shake:

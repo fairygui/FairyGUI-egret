@@ -155,6 +155,13 @@ declare module fairygui {
     }
 }
 declare module fairygui {
+    class DropEvent extends egret.Event {
+        source: any;
+        static DROP: string;
+        constructor(type: string, source?: any);
+    }
+}
+declare module fairygui {
     class FocusChangeEvent extends egret.Event {
         static CHANGED: string;
         private _oldFocusedObject;
@@ -315,19 +322,6 @@ declare module fairygui {
     }
 }
 declare module fairygui {
-    class GearSize extends GearBase {
-        private _storage;
-        private _default;
-        private _tweenValue;
-        private _tweener;
-        constructor(owner: GObject);
-        protected init(): void;
-        protected addStatus(pageId: string, value: string): void;
-        apply(): void;
-        updateState(): void;
-    }
-}
-declare module fairygui {
     class GearXY extends GearBase {
         private _storage;
         private _default;
@@ -386,37 +380,54 @@ declare module fairygui {
     }
 }
 declare module fairygui {
-    class RelationItem {
-        private _owner;
-        private _target;
-        private _defs;
-        private _targetX;
-        private _targetY;
-        private _targetWidth;
-        private _targetHeight;
-        constructor(owner: GObject);
-        owner: GObject;
-        target: GObject;
-        add(relationType: number, usePercent: boolean): void;
-        remove(relationType?: number): void;
-        copyFrom(source: RelationItem): void;
-        dispose(): void;
-        isEmpty: boolean;
-        applyOnSelfResized(dWidth: number, dHeight: number): void;
-        private applyOnXYChanged(info, dx, dy);
-        private applyOnSizeChanged(info);
-        private addRefTarget(target);
-        private releaseRefTarget(target);
-        private __targetXYChanged(evt);
-        private __targetSizeChanged(evt);
-        private __targetSizeWillChange(evt);
-    }
-    class RelationDef {
-        affectBySelfSizeChanged: boolean;
-        percent: boolean;
-        type: number;
+    class PackageItem {
+        owner: UIPackage;
+        type: PackageItemType;
+        id: string;
+        name: string;
+        width: number;
+        height: number;
+        file: string;
+        decoded: boolean;
+        scale9Grid: egret.Rectangle;
+        scaleByTile: boolean;
+        smoothing: boolean;
+        texture: egret.Texture;
+        pivot: egret.Point;
+        interval: number;
+        repeatDelay: number;
+        swing: boolean;
+        frames: Array<Frame>;
+        componentData: any;
+        sound: egret.Sound;
+        bitmapFont: BitmapFont;
         constructor();
-        copyFrom(source: RelationDef): void;
+        load(): any;
+        toString(): string;
+    }
+}
+declare module fairygui {
+    class GearSize extends GearBase {
+        private _storage;
+        private _default;
+        private _tweenValue;
+        private _tweener;
+        constructor(owner: GObject);
+        protected init(): void;
+        protected addStatus(pageId: string, value: string): void;
+        apply(): void;
+        updateState(): void;
+    }
+}
+declare module fairygui {
+    class GObjectPool {
+        private _pool;
+        private _count;
+        constructor();
+        clear(): void;
+        count: number;
+        getObject(url: string): GObject;
+        returnObject(obj: GObject): void;
     }
 }
 declare module fairygui {
@@ -438,7 +449,7 @@ declare module fairygui {
         private _scaleY;
         private _pivotOffsetX;
         private _pivotOffsetY;
-        private _alwaysOnTop;
+        private _sortingOrder;
         private _internalVisible;
         private _focusable;
         private _tooltips;
@@ -500,7 +511,7 @@ declare module fairygui {
         visible: boolean;
         internalVisible: number;
         finalVisible: boolean;
-        alwaysOnTop: number;
+        sortingOrder: number;
         focusable: boolean;
         focused: boolean;
         requestFocus(): void;
@@ -575,37 +586,10 @@ declare module fairygui {
     }
 }
 declare module fairygui {
-    class PackageItem {
-        owner: UIPackage;
-        type: PackageItemType;
-        id: string;
-        name: string;
-        width: number;
-        height: number;
-        file: string;
-        decoded: boolean;
-        scale9Grid: egret.Rectangle;
-        scaleByTile: boolean;
-        smoothing: boolean;
-        texture: egret.Texture;
-        pivot: egret.Point;
-        interval: number;
-        repeatDelay: number;
-        swing: boolean;
-        frames: Array<Frame>;
-        componentData: any;
-        sound: egret.Sound;
-        bitmapFont: BitmapFont;
-        constructor();
-        load(): any;
-        toString(): string;
-    }
-}
-declare module fairygui {
     class GComponent extends GObject {
         private _boundsChanged;
         private _bounds;
-        private _AOTChildCount;
+        private _sortingChildCount;
         private _opaque;
         protected _margin: Margin;
         protected _trackBounds: boolean;
@@ -622,7 +606,7 @@ declare module fairygui {
         displayListContainer: egret.DisplayObjectContainer;
         addChild(child: GObject): GObject;
         addChildAt(child: GObject, index?: number): GObject;
-        private getInsertPosForAOTChild(target);
+        private getInsertPosForSortingChild(target);
         removeChild(child: GObject, dispose?: boolean): GObject;
         removeChildAt(index: number, dispose?: boolean): GObject;
         removeChildren(beginIndex?: number, endIndex?: number, dispose?: boolean): void;
@@ -662,7 +646,7 @@ declare module fairygui {
         viewWidth: number;
         viewHeight: number;
         findObjectNear(xValue: number, yValue: number, resultPoint?: egret.Point): egret.Point;
-        notifyChildAOTChanged(child: GObject, oldValue: number, newValue?: number): void;
+        childSortingOrderChanged(child: GObject, oldValue: number, newValue?: number): void;
         constructFromResource(pkgItem: PackageItem): void;
         protected constructFromXML(xml: any): void;
         private constructChild(xml);
@@ -914,17 +898,6 @@ declare module fairygui {
     }
 }
 declare module fairygui {
-    class GObjectPool {
-        private _pool;
-        private _count;
-        constructor();
-        clear(): void;
-        count: number;
-        getObject(url: string): GObject;
-        returnObject(obj: GObject): void;
-    }
-}
-declare module fairygui {
     class GLoader extends GObject implements IAnimationGear, IColorGear {
         private _gearAnimation;
         private _gearColor;
@@ -946,8 +919,6 @@ declare module fairygui {
         private _content;
         private _errorSign;
         private _updatingLayout;
-        private _loading;
-        private _externalLoader;
         private static _errorSignPool;
         constructor();
         protected createDisplayObject(): void;
@@ -965,10 +936,10 @@ declare module fairygui {
         protected loadContent(): void;
         protected loadFromPackage(itemURL: string): void;
         protected loadExternal(): void;
+        protected freeExternal(texture: egret.Texture): void;
         protected onExternalLoadSuccess(texture: egret.Texture): void;
         protected onExternalLoadFailed(): void;
-        private __externalLoadCompleted(evt);
-        private __externalLoadFailed(evt);
+        private __getResCompleted(res, key);
         private setErrorState();
         private clearErrorState();
         private updateLayout();
@@ -1347,6 +1318,40 @@ declare module fairygui {
     }
 }
 declare module fairygui {
+    class RelationItem {
+        private _owner;
+        private _target;
+        private _defs;
+        private _targetX;
+        private _targetY;
+        private _targetWidth;
+        private _targetHeight;
+        constructor(owner: GObject);
+        owner: GObject;
+        target: GObject;
+        add(relationType: number, usePercent: boolean): void;
+        remove(relationType?: number): void;
+        copyFrom(source: RelationItem): void;
+        dispose(): void;
+        isEmpty: boolean;
+        applyOnSelfResized(dWidth: number, dHeight: number): void;
+        private applyOnXYChanged(info, dx, dy);
+        private applyOnSizeChanged(info);
+        private addRefTarget(target);
+        private releaseRefTarget(target);
+        private __targetXYChanged(evt);
+        private __targetSizeChanged(evt);
+        private __targetSizeWillChange(evt);
+    }
+    class RelationDef {
+        affectBySelfSizeChanged: boolean;
+        percent: boolean;
+        type: number;
+        constructor();
+        copyFrom(source: RelationDef): void;
+    }
+}
+declare module fairygui {
     class Relations {
         private _owner;
         private _items;
@@ -1672,5 +1677,19 @@ declare module fairygui {
         private __onHidden(evt);
         private __mouseDown(evt);
         private __dragStart(evt);
+    }
+}
+declare module fairygui {
+    class DragDropManager {
+        private _agent;
+        private _sourceData;
+        private static _inst;
+        static inst: DragDropManager;
+        constructor();
+        dragAgent: fairygui.GObject;
+        dragging: Boolean;
+        startDrag(source: fairygui.GObject, icon: string, sourceData: any, touchPointID?: number): void;
+        cancel(): void;
+        private __dragEnd(evt);
     }
 }

@@ -17,6 +17,7 @@
 				"display/UISprite.ts",
 				"display/UITextField.ts",
 				"event/DragEvent.ts",
+				"event/DropEvent.ts",
 				"event/FocusChangeEvent.ts",
 				"event/ItemEvent.ts",
 				"event/StateChangeEvent.ts",
@@ -68,7 +69,8 @@
 				"utils/ToolSet.ts",
 				"UIObjectFactory.ts",
 				"UIPackage.ts",
-				"Window.ts"
+				"Window.ts",
+				"DragDropManager.ts"
 			],
 			"root": "src"
 		}

@@ -112,8 +112,7 @@ class Main extends egret.DisplayObjectContainer {
         fairygui.UIConfig.verticalScrollBar = fairygui.UIPackage.getItemURL("Demo", "ScrollBar_VT");
         fairygui.UIConfig.horizontalScrollBar = fairygui.UIPackage.getItemURL("Demo", "ScrollBar_HZ");
         fairygui.UIConfig.popupMenu = fairygui.UIPackage.getItemURL("Demo", "PopupMenu");
-        fairygui.UIConfig.defaultScrollBounceEffect = true;
-        fairygui.UIConfig.defaultScrollTouchEffect = true;
+        fairygui.UIConfig.buttonSound = fairygui.UIPackage.getItemURL("Demo","click");
         
         this.stage.addChild(fairygui.GRoot.inst.displayObject);
 

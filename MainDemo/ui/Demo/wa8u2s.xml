@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<component size="640,497">
+<component size="640,890">
   <displayList>
     <text id="n0" name="n0" xy="14,10" size="583,71" fontSize="16" leading="6" autoSize="none" text="装载器可以动态载入图片和动画，在编辑器里可以通过设置URL属性，在SDK里可以通过设置url属性的值。&#xA;常用于显示动态图标。"/>
     <loader id="n1" name="n1" xy="34,112" size="90,90" url="ui://9leh0eyfwa8u2t"/>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<projectDescription name="ModalWaitingDemo" type="Egret" id="b19fe008b645f25bd344b94ace41d609">
+  <packages>
+    <package id="16eoroa8" name="Demo"/>
+  </packages>
+  <textSetting font="Arial" size="12"/>
+  <scrollBars/>
+</projectDescription>

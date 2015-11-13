@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <component size="163,69" extention="Button">
   <controller name="button" pages="0,up,1,down,2,over,3,selectedOver" selected="0"/>
   <displayList>
@@ -12,7 +13,7 @@
     <loader id="n4" name="icon" xy="0,4" size="163,61" align="center" vAlign="middle">
       <relation target="" sidePair="width-width,height-height"/>
     </loader>
-    <text id="n3" name="title" xy="0,3" size="163,63" fontSize="22" color="#ffffff" align="center" vAlign="middle" autoSize="none" bold="true" strokeColor="#003c49" demoText="">
+    <text id="n3" name="title" xy="0,3" size="163,63" fontSize="22" color="#ffffff" align="center" vAlign="middle" autoSize="none" bold="true" strokeColor="#003c49" text="">
       <relation target="" sidePair="width-width,height-height"/>
     </text>
   </displayList>

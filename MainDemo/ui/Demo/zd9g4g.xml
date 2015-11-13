@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<component size="640,879">
+<component size="640,890">
   <displayList>
     <list id="n0" name="n0" xy="18,65" size="163,422" overflow="scroll" margin="0,0,0,0" clipSoftness="0,20" lineGap="6" defaultItem="ui://9leh0eyfkpev60">
       <item title="100" icon="ui://9leh0eyfkpev64"/>
@@ -9,7 +9,7 @@
       <item title="4" icon="ui://9leh0eyfkpev64"/>
       <item title="5" icon="ui://9leh0eyfkpev64"/>
     </list>
-    <text id="n1" name="n1" xy="7,7" size="583,25" fontSize="16" leading="6" autoSize="none" text="列表有四种布局"/>
+    <text id="n1" name="n1" xy="7,7" size="583,25" fontSize="16" leading="6" autoSize="none" text="列表有四种布局。支持选择效果的列表项目必须是单选按钮。"/>
     <text id="n2" name="n2" xy="45,42" size="53,16" fontSize="12" text="单列竖排"/>
     <list id="n4" name="n4" xy="19,527" size="571,126" layout="row" overflow="scroll" scroll="horizontal" margin="0,0,0,0" clipSoftness="0,20" lineGap="6" colGap="6" defaultItem="ui://9leh0eyfkpev60">
       <item title="100" icon="ui://9leh0eyfkpev64"/>

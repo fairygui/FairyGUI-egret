@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<projectDescription name="ExtensionDemo" type="Egret" id="9ea6df9201065ade3d5a29e75d917419">
+  <packages>
+    <package id="sn61v45b" name="Demo"/>
+  </packages>
+  <textSetting font="Arial" size="12"/>
+  <scrollBars/>
+</projectDescription>

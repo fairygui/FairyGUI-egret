@@ -10,8 +10,6 @@ var game_file_list = [
 	"libs/modules/res/res.js",
 	"libs/rawinflate/rawinflate.min.js",
 	"libs/fairygui/fairygui.js",
-	"bin-debug/DragManager.js",
-	"bin-debug/DropEvent.js",
 	"bin-debug/LoadingUI.js",
 	"bin-debug/Main.js",
 	"bin-debug/MainPanel.js",

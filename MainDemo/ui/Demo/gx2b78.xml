@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<component size="640,400">
+<component size="640,890">
   <displayList>
-    <component id="n0" name="n0" src="gx2b79" xy="61,49">
+    <component id="n0" name="a" src="gx2b79" xy="61,49">
       <Button title="A" icon="ui://9leh0eyfwa8u2t"/>
     </component>
-    <component id="n1" name="n1" src="gx2b79" xy="63,223">
+    <component id="n1" name="b" src="gx2b79" xy="63,223">
       <Button title="B" icon="ui://9leh0eyfwa8u2t"/>
     </component>
-    <component id="n2" name="n2" src="gx2b79" xy="442,221">
+    <component id="n2" name="c" src="gx2b79" xy="442,221">
       <Button title="C"/>
     </component>
-    <text id="n3" name="n3" xy="49,19" size="109,20" fontSize="16" text="A可以随意拖动"/>
-    <text id="n4" name="n4" xy="50,190" size="261,20" fontSize="16" text="拖动B到C的位置可以将B的图标赋予C"/>
+    <text id="n3" name="n3" xy="46,8" size="148,26" fontSize="22" text="A可以随意拖动"/>
+    <text id="n4" name="n4" xy="50,177" size="357,26" fontSize="22" text="拖动B到C的位置可以将B的图标赋予C"/>
+    <text id="n5" name="n5" xy="46,376" size="236,26" fontSize="22" text="D可以在一定范围内拖动"/>
+    <graph id="n6" name="bounds" xy="74,426" size="440,413" type="rect" lineSize="3" fillColor="#00ffffff"/>
+    <component id="n7" name="d" src="gx2b79" xy="248,577">
+      <Button title="D" icon="ui://9leh0eyfwa8u2t"/>
+    </component>
   </displayList>
 </component>

@@ -28,11 +28,10 @@ module fairygui {
                     return new GSwfObject();
 
                 case PackageItemType.Component:
-
                     {
-                        var cls: any = UIObjectFactory.packageItemExtensions[pi.owner.id + pi.id];
-                        if(cls)
-                            return new cls();
+                        var cls:any = UIObjectFactory.packageItemExtensions[pi.owner.id + pi.id];
+                        if(cls) 
+                            return new cls();                        
 
                         var xml: any = pi.owner.getItemAsset(pi);
                         var extention: string = xml.attributes.extention;

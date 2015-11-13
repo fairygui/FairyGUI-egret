@@ -20,7 +20,7 @@ module fairygui {
         private _scaleY: number = 1;
         private _pivotOffsetX: number = 0;
         private _pivotOffsetY: number = 0;
-        private _alwaysOnTop: number = 0;
+        private _sortingOrder: number = 0;
         private _internalVisible: number = 1;
         private _focusable: boolean = false;
         private _tooltips: string;
@@ -112,7 +112,7 @@ module fairygui {
                 if(this._gearXY.controller)
                     this._gearXY.updateState();
                     
-                if(this._parent) {
+                if(this._parent && !(this._parent instanceof GList)) {
                     this._parent.setBoundsChangedFlag();
                     this.dispatchEventWith(GObject.XY_CHANGED);
                 }
@@ -411,18 +411,18 @@ module fairygui {
             return this._visible && this._internalVisible>0 && (!this._group || this._group.finalVisible);
         }
 
-        public get alwaysOnTop(): number {
-            return this._alwaysOnTop;
+        public get sortingOrder(): number {
+            return this._sortingOrder;
         }
 
-        public set alwaysOnTop(value: number) {
+        public set sortingOrder(value: number) {
             if (value < 0)
                 value = 0;
-            if (this._alwaysOnTop != value) {
-                var old: number = this._alwaysOnTop;
-                this._alwaysOnTop = value;
+            if (this._sortingOrder != value) {
+                var old: number = this._sortingOrder;
+                this._sortingOrder = value;
                 if (this._parent != null)
-                    this._parent.notifyChildAOTChanged(this, old, this._alwaysOnTop);
+                    this._parent.childSortingOrderChanged(this, old, this._sortingOrder);
             }
         }
 

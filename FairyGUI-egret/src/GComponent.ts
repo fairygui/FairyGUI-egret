@@ -4,7 +4,7 @@ module fairygui {
     export class GComponent extends GObject {
         private _boundsChanged: boolean;
         private _bounds: egret.Rectangle;
-        private _AOTChildCount: number = 0;
+        private _sortingChildCount: number = 0;
         private _opaque: boolean;
 
         protected _margin: Margin;
@@ -69,13 +69,13 @@ module fairygui {
                     child.parent = this;
 
                     var cnt: number = this._children.length;
-                    if(child.alwaysOnTop != 0) {
-                        this._AOTChildCount++;
-                        index = this.getInsertPosForAOTChild(child);
+                    if(child.sortingOrder != 0) {
+                        this._sortingChildCount++;
+                        index = this.getInsertPosForSortingChild(child);
                     }
-                    else if(this._AOTChildCount > 0) {
-                        if(index > (cnt - this._AOTChildCount))
-                            index = cnt - this._AOTChildCount;
+                    else if(this._sortingChildCount > 0) {
+                        if(index > (cnt - this._sortingChildCount))
+                            index = cnt - this._sortingChildCount;
                     }
 
                     if(index == cnt)
@@ -94,7 +94,7 @@ module fairygui {
             }
         }
 
-        private getInsertPosForAOTChild(target: GObject): number {
+        private getInsertPosForSortingChild(target: GObject): number {
             var cnt: number = this._children.length;
             var i: number = 0;
             for(i = 0;i < cnt;i++) {
@@ -102,7 +102,7 @@ module fairygui {
                 if(child == target)
                     continue;
 
-                if(target.alwaysOnTop < child.alwaysOnTop)
+                if(target.sortingOrder < child.sortingOrder)
                     break;
             }
             return i;
@@ -121,8 +121,8 @@ module fairygui {
                 var child: GObject = this._children[index];
                 child.parent = null;
 
-                if(child.alwaysOnTop != 0)
-                    this._AOTChildCount--;
+                if(child.sortingOrder != 0)
+                    this._sortingChildCount--;
 
                 this._children.splice(index,1);
                 if(child.inContainer)
@@ -206,13 +206,13 @@ module fairygui {
             if(oldIndex == -1)
                 throw "Not a child of this container";
 
-            if(child.alwaysOnTop != 0) //no effect
+            if(child.sortingOrder != 0) //no effect
                 return;
 
             var cnt: number = this._children.length;
-            if(this._AOTChildCount > 0) {
-                if(index > (cnt - this._AOTChildCount - 1))
-                    index = cnt - this._AOTChildCount - 1;
+            if(this._sortingChildCount > 0) {
+                if(index > (cnt - this._sortingChildCount - 1))
+                    index = cnt - this._sortingChildCount - 1;
             }
 
             this._setChildIndex(child,oldIndex,index);
@@ -591,17 +591,17 @@ module fairygui {
             return resultPoint;
         }
 
-        public notifyChildAOTChanged(child: GObject, oldValue: number, newValue: number = 0): void {
+        public childSortingOrderChanged(child: GObject, oldValue: number, newValue: number = 0): void {
             if (newValue == 0) {
-                this._AOTChildCount--;
+                this._sortingChildCount--;
                 this.setChildIndex(child, this._children.length);
             }
             else {
                 if (oldValue == 0)
-                    this._AOTChildCount++;
+                    this._sortingChildCount++;
 
                 var oldIndex: number = this._children.indexOf(child);
-                var index: number = this.getInsertPosForAOTChild(child);
+                var index: number = this.getInsertPosForSortingChild(child);
                 if (oldIndex < index)
                     this._setChildIndex(child, oldIndex, index - 1);
                 else

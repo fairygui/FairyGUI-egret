@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<component size="640,870">
+<component size="640,890">
   <displayList>
     <text id="n0" name="n0" xy="15,6" size="591,30" fontSize="16" autoSize="none" text="改变组件的宽和高并不会直接拉伸组件内的内容"/>
     <component id="n12" name="n12" src="t24n7g" xy="17,91"/>

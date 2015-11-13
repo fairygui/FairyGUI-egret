@@ -6,7 +6,7 @@ module fairygui {
         }
 
         //Default font name
-        public static defaultFont: string = "";
+        public static defaultFont: string = "宋体";
 
         //Resource using in Window.ShowModalWait for locking the window.
         public static windowModalWaiting: string;

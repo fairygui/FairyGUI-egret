@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<component size="640,400">
+<component size="640,890">
   <displayList>
-    <component id="n0" name="n0" src="rpmbz" xy="62,58">
+    <component id="n0" name="n0" src="rpmbz" xy="62,58" size="130,40">
       <Button title="点我A"/>
     </component>
-    <component id="n1" name="n1" src="rpmbz" xy="197,58">
+    <component id="n1" name="n1" src="rpmbz" xy="239,58" size="130,40">
       <Button title="点我B"/>
     </component>
   </displayList>

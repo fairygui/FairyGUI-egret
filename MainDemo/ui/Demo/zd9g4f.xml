@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<component size="640,400">
+<component size="640,890">
   <displayList>
     <text id="n0" name="n0" xy="16,15" size="614,20" fontSize="16" autoSize="height" text="进度条(ProgressBar)是对组件的一种扩展，用于显示一个进度"/>
     <component id="n1" name="n1" src="t9fj50" xy="38,75">

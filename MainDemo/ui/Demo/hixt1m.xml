@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<component size="640,433">
+<component size="640,890">
   <displayList>
     <text id="n0" name="n0" xy="31,30" size="453,20" fontSize="16" text="可以使用简单的图形，但要注意，圆角和圆形仅部分平台支持。"/>
     <graph id="n1" name="n1" xy="31,73" size="100,100" type="rect"/>

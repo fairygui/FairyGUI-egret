@@ -9,12 +9,24 @@
 			"name": "demo@atlas0",
 			"type": "image",
 			"url": "assets/demo@atlas0.png"
+		},
+		{
+			"name": "demo@mejr81",
+			"type": "sound",
+			"soundType":"effect",
+			"url": "assets/demo@mejr81.mp3"
+		},
+		{
+			"name": "demo@mejr82",
+			"type": "sound",
+			"soundType":"effect",
+			"url": "assets/demo@mejr82.mp3"
 		}
 	],
 	"groups": [
 		{
 			"name": "preload",
-			"keys": "demo,demo@atlas0"
+			"keys": "demo,demo@atlas0,demo@mejr81,demo@mejr82"
 		}
 	]
 }

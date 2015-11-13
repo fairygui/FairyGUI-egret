@@ -11,7 +11,7 @@ module fairygui {
         private _tooltipWin: GObject;
         private _defaultTooltipWin: GObject;
         private _focusManagement: boolean;
-        private _volumeScale: number = 1;
+        private _volumeScale: number;
 
         private static _inst: GRoot;
 
@@ -35,6 +35,7 @@ module fairygui {
                 GRoot._inst = this;
 
             this.opaque = false;
+            this._volumeScale = 1;
             this._popupStack = new Array<GObject>();
             this._justClosedPopups = new Array<GObject>();
             this.displayObject.addEventListener(egret.Event.ADDED_TO_STAGE,this.__addedToStage,this);
@@ -333,7 +334,8 @@ module fairygui {
         
         public playOneShotSound(sound: egret.Sound,volumeScale: number = 1) {
             var vs: number = this._volumeScale * volumeScale;
-            sound.play(); //volume support?
+            var channel:egret.SoundChannel = sound.play(0,1);
+            channel.volume = vs;
         }
 
         private adjustModalLayer(): void {
@@ -450,7 +452,7 @@ module fairygui {
             
             this.setSize(Math.round(w / GRoot.contentScaleFactor), Math.round( h / GRoot.contentScaleFactor));
 
-            console.info("screen size=" + w + "x" + h + "/" + this.width + "x" + this.height);
+            //console.info("screen size=" + w + "x" + h + "/" + this.width + "x" + this.height);
         }
 
     }

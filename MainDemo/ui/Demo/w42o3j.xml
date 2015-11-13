@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<component size="640,313">
+<component size="640,890">
   <displayList>
     <text id="n1" name="n1" xy="9,10" size="614,20" fontSize="16" autoSize="height" text="标签(Label)是对组件的一种扩展，使其具有标题和图标属性"/>
     <component id="n3" name="frame" src="rt103l" xy="25,62" size="223,226">

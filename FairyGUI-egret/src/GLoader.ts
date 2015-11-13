@@ -1,10 +1,10 @@
 
 module fairygui {
 
-    export class GLoader extends GObject implements IAnimationGear, IColorGear {
+    export class GLoader extends GObject implements IAnimationGear,IColorGear {
         private _gearAnimation: GearAnimation;
         private _gearColor: GearColor;
-        
+
         private _url: string;
         private _align: AlignType;
         private _verticalAlign: VertAlignType;
@@ -26,9 +26,6 @@ module fairygui {
         private _errorSign: GObject;
 
         private _updatingLayout: boolean;
-
-        private _loading: number = 0;
-        private _externalLoader: egret.URLLoader;
 
         private static _errorSignPool: GObjectPool = new GObjectPool();
 
@@ -53,6 +50,9 @@ module fairygui {
         }
 
         public dispose(): void {
+            if(this._contentItem == null && (<egret.Bitmap>this._content).texture != null)
+                this.freeExternal(<egret.Texture>(<egret.Bitmap>this._content).texture);
+
             super.dispose();
         }
 
@@ -213,10 +213,11 @@ module fairygui {
                     }
                     else
                         this._container.addChild(this._content);
-                    (<MovieClip>(this._content)).interval = this._contentItem.interval;
-                    (<MovieClip>(this._content)).frames = this._contentItem.frames;
                     this._contentSourceWidth = this._contentItem.width;
                     this._contentSourceHeight = this._contentItem.height;
+                    (<MovieClip>(this._content)).interval = this._contentItem.interval;
+                    (<MovieClip>(this._content)).frames = this._contentItem.frames;
+                    (<MovieClip>(this._content)).boundsRect = new egret.Rectangle(0,0,this._contentSourceWidth,this._contentSourceHeight);
                     this.updateLayout();
                 }
                 else
@@ -227,18 +228,13 @@ module fairygui {
         }
 
         protected loadExternal(): void {
-            if(!this._externalLoader) {
-                this._externalLoader = new egret.URLLoader();
-                this._externalLoader.dataFormat = egret.URLLoaderDataFormat.TEXTURE;
-                this._externalLoader.addEventListener(egret.Event.COMPLETE,this.__externalLoadCompleted,this);
-                this._externalLoader.addEventListener(egret.IOErrorEvent.IO_ERROR,this.__externalLoadFailed,this);
-            }
-            this._externalLoader.load(new egret.URLRequest(this.url));
-            this._loading = 3;
+            RES.getResAsync(this._url,this.__getResCompleted,this);
         }
+        
+        protected freeExternal(texture: egret.Texture): void {
+        }        
 
         protected onExternalLoadSuccess(texture: egret.Texture): void {
-            this._loading = 0;
             if(!(this._content instanceof egret.Bitmap)) {
                 this._content = new egret.Bitmap();
                 this._container.addChild(this._content);
@@ -256,18 +252,12 @@ module fairygui {
         protected onExternalLoadFailed(): void {
             this.setErrorState();
         }
-
-        private __externalLoadCompleted(evt: egret.Event): void {
-            var cc: any = this._externalLoader.data;
-            if (cc instanceof egret.Texture) {
-                this.onExternalLoadSuccess(<egret.Texture>cc);
-            }
+        
+        private __getResCompleted(res:any, key:string): void {
+            if(res instanceof egret.Texture)
+                this.onExternalLoadSuccess(<egret.Texture>res);
             else
                 this.onExternalLoadFailed();
-        }
-
-        private __externalLoadFailed(evt: egret.Event): void {
-            this.onExternalLoadFailed();
         }
 
         private setErrorState(): void {
@@ -364,9 +354,11 @@ module fairygui {
 
             if (this._content != null && this._content.parent != null)
                 this._container.removeChild(this._content);
+                
+            if(this._contentItem == null && this._content != null)
+                this.freeExternal(<egret.Texture>(<egret.Bitmap>this._content).texture);
 
             this._contentItem = null;
-            this._loading = 0;
         }
         
         public get gearAnimation(): GearAnimation {

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<projectDescription name="JoystickDemo" type="Egret" id="0465c57b374f238ca7b8d7456e547b90">
+  <packages>
+    <package id="co8erd7u" name="Demo"/>
+  </packages>
+  <textSetting font="Arial" size="12"/>
+  <scrollBars/>
+</projectDescription>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="sn61v45b" jpegQuality="80" compressPNG="true">
+  <resources>
+    <component id="od1m0" name="Main" folder="" file="od1m0.xml" exported="true"/>
+    <image id="evgg1" name="1" folder="" file="evgg1.png" size="50,62" scale="9grid" scale9grid="10,15,28,32" qualityOption="source"/>
+    <image id="evgg2" name="3" folder="" file="evgg2.png" size="261,63" scale="9grid" scale9grid="110,16,33,32" qualityOption="source"/>
+    <image id="evgg3" name="4" folder="" qualityOption="source" file="evgg3.png" size="133,34"/>
+    <component id="evgg4" name="mailItem" folder="" file="evgg4.xml"/>
+    <image id="evgg5" name="2" folder="" file="evgg5.png" size="78,141" scale="9grid" scale9grid="25,26,26,90" qualityOption="source"/>
+    <image id="evgg6" name="0" folder="" file="evgg6.png" size="108,108" scale="9grid" scale9grid="17,16,74,73" qualityOption="source"/>
+    <image id="evgg7" name="7" folder="" qualityOption="source" file="evgg7.png" size="71,71"/>
+    <image id="evgg8" name="9" folder="" qualityOption="source" file="evgg8.png" size="55,59"/>
+    <image id="evgg9" name="6" folder="" qualityOption="source" file="evgg9.png" size="55,47"/>
+    <image id="evgga" name="8" folder="" qualityOption="source" file="evgga.png" size="143,120"/>
+  </resources>
+  <publish name="demo">
+    <atlas name="Default" index="0"/>
+  </publish>
+</packageDescription>

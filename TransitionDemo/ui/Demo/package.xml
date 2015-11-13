@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="c0hnre6o" jpegQuality="80" compressPNG="true">
+  <resources>
+    <component id="lvxr0" name="Main" folder="" file="lvxr0.xml" exported="true"/>
+    <folder id="lvxr1" name="images" folder=""/>
+    <image id="lvxr2" name="0" folder="lvxr1" qualityOption="source" file="lvxr2.png" size="1024,56"/>
+    <image id="lvxr3" name="0000_+" folder="lvxr1" qualityOption="source" file="lvxr3.png" size="28,36"/>
+    <image id="lvxr4" name="0000_9.png" folder="lvxr1" qualityOption="source" file="lvxr4.png" size="36,46"/>
+    <image id="lvxr5" name="0001_8.png" folder="lvxr1" qualityOption="source" file="lvxr5.png" size="36,46"/>
+    <image id="lvxr6" name="0001_9" folder="lvxr1" qualityOption="source" file="lvxr6.png" size="28,36"/>
+    <image id="lvxr7" name="0002_7.png" folder="lvxr1" qualityOption="source" file="lvxr7.png" size="36,46"/>
+    <image id="lvxr8" name="0002_8" folder="lvxr1" qualityOption="source" file="lvxr8.png" size="28,36"/>
+    <image id="lvxr9" name="0003_6.png" folder="lvxr1" qualityOption="source" file="lvxr9.png" size="36,46"/>
+    <image id="lvxra" name="0003_7" folder="lvxr1" qualityOption="source" file="lvxra.png" size="28,36"/>
+    <image id="lvxrb" name="0004_5.png" folder="lvxr1" qualityOption="source" file="lvxrb.png" size="36,46"/>
+    <image id="lvxrc" name="0004_6" folder="lvxr1" qualityOption="source" file="lvxrc.png" size="28,36"/>
+    <image id="lvxrd" name="0005_4.png" folder="lvxr1" qualityOption="source" file="lvxrd.png" size="36,46"/>
+    <image id="lvxre" name="0005_5" folder="lvxr1" qualityOption="source" file="lvxre.png" size="28,36"/>
+    <image id="lvxrf" name="0006_3.png" folder="lvxr1" qualityOption="source" file="lvxrf.png" size="36,46"/>
+    <image id="lvxrg" name="0006_4" folder="lvxr1" qualityOption="source" file="lvxrg.png" size="28,36"/>
+    <image id="lvxrh" name="0007_2.png" folder="lvxr1" qualityOption="source" file="lvxrh.png" size="36,46"/>
+    <image id="lvxri" name="0007_3" folder="lvxr1" qualityOption="source" file="lvxri.png" size="28,36"/>
+    <image id="lvxrj" name="0008_1.png" folder="lvxr1" qualityOption="source" file="lvxrj.png" size="36,46"/>
+    <image id="lvxrk" name="0008_2" folder="lvxr1" qualityOption="source" file="lvxrk.png" size="28,36"/>
+    <image id="lvxrl" name="0009_0-.png" folder="lvxr1" qualityOption="source" file="lvxrl.png" size="36,46"/>
+    <image id="lvxrm" name="0009_1" folder="lvxr1" qualityOption="source" file="lvxrm.png" size="28,36"/>
+    <image id="lvxrn" name="0010_0" folder="lvxr1" qualityOption="source" file="lvxrn.png" size="28,36"/>
+    <image id="lvxro" name="1" folder="lvxr1" qualityOption="source" file="lvxro.png" size="722,66"/>
+    <image id="lvxrp" name="2" folder="lvxr1" qualityOption="source" file="lvxrp.png" size="270,231"/>
+    <image id="lvxrq" name="3" folder="lvxr1" qualityOption="source" file="lvxrq.png" size="396,119"/>
+    <image id="lvxrr" name="4" folder="lvxr1" qualityOption="source" file="lvxrr.png" size="358,367"/>
+    <sound id="lvxrs" name="BUZZ4" folder="lvxr1" file="lvxrs.mp3"/>
+    <jta id="lvxrt" name="U1UIT17" folder="lvxr1" origin="242,83" file="lvxrt.jta" size="398,146"/>
+    <image id="lvxru" name="bangjile" folder="lvxr1" qualityOption="source" file="lvxru.png" size="242,123"/>
+    <image id="lvxrv" name="blood" folder="lvxr1" qualityOption="source" file="lvxrv.png" size="227,163"/>
+    <image id="lvxrw" name="power" folder="lvxr1" qualityOption="source" file="lvxrw.png" size="163,61"/>
+    <image id="lvxrx" name="red" folder="lvxr1" qualityOption="source" file="lvxrx.png" size="462,72"/>
+    <component id="lvxry" name="BOSS" folder="" file="lvxry.xml" exported="true"/>
+    <component id="lvxrz" name="BOSS_SKILL" folder="" file="lvxrz.xml" exported="true"/>
+    <component id="lvxr10" name="Button1" folder="" file="lvxr10.xml"/>
+    <component id="lvxr11" name="GoodHit" folder="" file="lvxr11.xml" exported="true"/>
+    <font id="lvxr12" name="number3" folder="" file="lvxr12.fnt" exported="true"/>
+    <image id="lvxr13" name="h0" folder="" qualityOption="source" file="lvxr13.png" size="50,50"/>
+    <image id="lvxr14" name="h1" folder="" qualityOption="source" file="lvxr14.png" size="50,50"/>
+    <image id="lvxr15" name="h2" folder="" qualityOption="source" file="lvxr15.png" size="50,50"/>
+    <image id="lvxr16" name="h3" folder="" qualityOption="source" file="lvxr16.png" size="50,50"/>
+    <image id="lvxr17" name="h4" folder="" qualityOption="source" file="lvxr17.png" size="50,50"/>
+    <image id="lvxr18" name="h5" folder="" qualityOption="source" file="lvxr18.png" size="50,50"/>
+    <image id="lvxr19" name="h6" folder="" qualityOption="source" file="lvxr19.png" size="50,50"/>
+    <image id="lvxr1a" name="h7" folder="" qualityOption="source" file="lvxr1a.png" size="50,50"/>
+    <image id="lvxr1b" name="h8" folder="" qualityOption="source" file="lvxr1b.png" size="50,50"/>
+    <image id="lvxr1c" name="h9" folder="" qualityOption="source" file="lvxr1c.png" size="50,50"/>
+    <component id="lvxr1d" name="PowerUp" folder="" file="lvxr1d.xml" exported="true"/>
+    <font id="lvxr1e" name="number1" folder="" file="lvxr1e.fnt" exported="true"/>
+    <font id="lvxr1f" name="number2" folder="" file="lvxr1f.fnt" exported="true"/>
+    <component id="lvxr1g" name="TRAP" folder="" file="lvxr1g.xml" exported="true"/>
+  </resources>
+  <publish name="demo">
+    <atlas name="Default" index="0"/>
+  </publish>
+</packageDescription>

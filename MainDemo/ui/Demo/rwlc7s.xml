@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="100,100" extention="Button">
+  <controller name="button" pages="0,up,1,down,2,over,3,selectedOver" selected="0"/>
+  <displayList>
+    <image id="n1" name="n1" src="rwlc7t" xy="1,1" pivot="49,49" aspect="true">
+      <gearLook controller="button" pages="0,1,2,3" values="-|1.00,180,0|-|1.00,180,0" default="1.00,0,0" tween="true" ease="Sine.Out"/>
+    </image>
+  </displayList>
+  <Button mode="Check" sound="ui://9leh0eyfmejr82"/>
+</component>
