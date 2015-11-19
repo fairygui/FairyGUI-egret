@@ -22,7 +22,7 @@ module fairygui {
         private _contentHeight: number = 0;
 
         private _container: UIContainer;
-        private _content: egret.DisplayObject;
+        private _content: egret.Bitmap | fairygui.MovieClip;
         private _errorSign: GObject;
 
         private _updatingLayout: boolean;
@@ -119,8 +119,8 @@ module fairygui {
         public set playing(value: boolean) {
             if (this._playing != value) {
                 this._playing = value;
-                if (this._content instanceof egret.MovieClip)
-                    (<MovieClip>(this._content)).playing = value;
+                if (this._content instanceof MovieClip)
+                    (<MovieClip>this._content).playing = value;
 
                 if (this._gearAnimation.controller != null)
                     this._gearAnimation.updateState();
@@ -134,8 +134,8 @@ module fairygui {
         public set frame(value: number) {
             if (this._frame != value) {
                 this._frame = value;
-                if (this._content instanceof egret.MovieClip)
-                    (<MovieClip>(this._content)).currentFrame = value;
+                if (this._content instanceof MovieClip)
+                    (<MovieClip>this._content).currentFrame = value;
 
                 if (this._gearAnimation.controller != null)
                     this._gearAnimation.updateState();
@@ -168,6 +168,10 @@ module fairygui {
             this._showErrorSign = value;
         }
 
+        public get content(): egret.Bitmap | fairygui.MovieClip {
+            return this._content;
+        }
+
         protected loadContent(): void {
             this.clearContent();
 
@@ -196,11 +200,11 @@ module fairygui {
                         }
                         else
                             this._container.addChild(this._content);
-                        (<egret.Bitmap>(this._content)).texture = this._contentItem.texture;
-                        (<egret.Bitmap>(this._content)).scale9Grid = this._contentItem.scale9Grid;
+                        (<egret.Bitmap>this._content).texture = this._contentItem.texture;
+                        (<egret.Bitmap>this._content).scale9Grid = this._contentItem.scale9Grid;
                         if(this._contentItem.scaleByTile)
-                            (<egret.Bitmap>(this._content)).fillMode = egret.BitmapFillMode.REPEAT;
-                        else(<egret.Bitmap>(this._content)).fillMode = egret.BitmapFillMode.SCALE;
+                            (<egret.Bitmap>this._content).fillMode = egret.BitmapFillMode.REPEAT;
+                        else(<egret.Bitmap>this._content).fillMode = egret.BitmapFillMode.SCALE;
                         this._contentSourceWidth = this._contentItem.width;
                         this._contentSourceHeight = this._contentItem.height;
                         this.updateLayout();
@@ -215,9 +219,9 @@ module fairygui {
                         this._container.addChild(this._content);
                     this._contentSourceWidth = this._contentItem.width;
                     this._contentSourceHeight = this._contentItem.height;
-                    (<MovieClip>(this._content)).interval = this._contentItem.interval;
-                    (<MovieClip>(this._content)).frames = this._contentItem.frames;
-                    (<MovieClip>(this._content)).boundsRect = new egret.Rectangle(0,0,this._contentSourceWidth,this._contentSourceHeight);
+                    (<MovieClip>this._content).interval = this._contentItem.interval;
+                    (<MovieClip>this._content).frames = this._contentItem.frames;
+                    (<MovieClip>this._content).boundsRect = new egret.Rectangle(0,0,this._contentSourceWidth,this._contentSourceHeight);
                     this.updateLayout();
                 }
                 else
@@ -241,9 +245,9 @@ module fairygui {
             }
             else
                 this._container.addChild(this._content);
-            (<egret.Bitmap>(this._content)).texture = texture;
-            (<egret.Bitmap>(this._content)).scale9Grid = null;
-            (<egret.Bitmap>(this._content)).fillMode = egret.BitmapFillMode.SCALE;
+            (<egret.Bitmap>this._content).texture = texture;
+            (<egret.Bitmap>this._content).scale9Grid = null;
+            (<egret.Bitmap>this._content).fillMode = egret.BitmapFillMode.SCALE;
             this._contentSourceWidth = texture.textureWidth;
             this._contentSourceHeight = texture.textureHeight;
             this.updateLayout();

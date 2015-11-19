@@ -178,11 +178,19 @@ module fairygui {
         }
 
         public getPageIdByName(aName: string): string {
-            return this._pageIds[this._pageNames.indexOf(aName)];
+            var i: number = this._pageNames.indexOf(aName);
+            if(i != -1)
+                return this._pageIds[i];
+            else
+                return null;
         }
 
         public getPageNameById(aId: string): string {
-            return this._pageNames[this._pageIds.indexOf(aId)];
+            var i: number = this._pageIds.indexOf(aId);
+            if(i != -1)
+                return this._pageNames[i];
+            else
+                return null;
         }
 
         public getPageId(index: number = 0): string {

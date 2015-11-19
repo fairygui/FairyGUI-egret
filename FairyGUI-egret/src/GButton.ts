@@ -27,6 +27,7 @@ module fairygui {
         public static DOWN: string = "down";
         public static OVER: string = "over";
         public static SELECTED_OVER: string = "selectedOver";
+        public static DISABLED: string = "disabled";
 
         public constructor() {
             super();
@@ -255,6 +256,13 @@ module fairygui {
 
             if (this._relatedController == c)
                 this.selected = this._pageOption.id == c.selectedPageId;
+        }
+        
+        protected handleGrayChanged(): void {
+            if(this._buttonController.getPageIdByName(GButton.DISABLED) != null)
+                this.setState(GButton.DISABLED);
+            else
+                super.handleGrayChanged();
         }
 
         protected constructFromXML(xml: any): void {

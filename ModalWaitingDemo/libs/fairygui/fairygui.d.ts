@@ -676,6 +676,7 @@ declare module fairygui {
         static DOWN: string;
         static OVER: string;
         static SELECTED_OVER: string;
+        static DISABLED: string;
         constructor();
         icon: string;
         selectedIcon: string;
@@ -697,6 +698,7 @@ declare module fairygui {
         fireClick(downEffect?: boolean): void;
         protected setState(val: string): void;
         handleControllerChanged(c: Controller): void;
+        protected handleGrayChanged(): void;
         protected constructFromXML(xml: any): void;
         setup_afterAdd(xml: any): void;
         private __rollover(evt);
@@ -933,6 +935,7 @@ declare module fairygui {
         color: number;
         private applyColor();
         showErrorSign: boolean;
+        content: egret.Bitmap | fairygui.MovieClip;
         protected loadContent(): void;
         protected loadFromPackage(itemURL: string): void;
         protected loadExternal(): void;
