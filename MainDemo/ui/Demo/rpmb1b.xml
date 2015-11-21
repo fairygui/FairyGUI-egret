@@ -30,10 +30,8 @@
       <Button icon="ui://9leh0eyfrpmbu"/>
     </component>
     <component id="n15" name="n15" src="rpmb15" xy="41,109"/>
-    <component id="n16" name="n16" src="rpmb19" xy="259,597">
-      <Button title="On" selectedTitle="Off"/>
-    </component>
-    <component id="n17" name="n17" src="rpmb17" xy="413,586">
+    <component id="n16" name="n16" src="tqrn84" xy="230,586"/>
+    <component id="n17" name="n17" src="rpmb17" xy="462,585">
       <Button title="淡入淡出"/>
     </component>
     <component id="n18" name="n18" src="rpmb1a" xy="43,392" size="86,19">

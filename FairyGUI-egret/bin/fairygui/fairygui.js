@@ -164,10 +164,18 @@ var fairygui;
             return this._pageIds.indexOf(aId);
         };
         p.getPageIdByName = function (aName) {
-            return this._pageIds[this._pageNames.indexOf(aName)];
+            var i = this._pageNames.indexOf(aName);
+            if (i != -1)
+                return this._pageIds[i];
+            else
+                return null;
         };
         p.getPageNameById = function (aId) {
-            return this._pageNames[this._pageIds.indexOf(aId)];
+            var i = this._pageIds.indexOf(aId);
+            if (i != -1)
+                return this._pageNames[i];
+            else
+                return null;
         };
         p.getPageId = function (index) {
             if (index === void 0) { index = 0; }
@@ -4018,7 +4026,7 @@ var fairygui;
                         this.setState(this._over ? GButton.SELECTED_OVER : GButton.DOWN);
                     else
                         this.setState(this._over ? GButton.OVER : GButton.UP);
-                    if (this._selectedTitle)
+                    if (this._selectedTitle && this._titleObject)
                         this._titleObject.text = this._selected ? this._selectedTitle : this._title;
                     if (this._selectedIcon) {
                         var str = this._selected ? this._selectedIcon : this._icon;
@@ -4106,6 +4114,12 @@ var fairygui;
             _super.prototype.handleControllerChanged.call(this, c);
             if (this._relatedController == c)
                 this.selected = this._pageOption.id == c.selectedPageId;
+        };
+        p.handleGrayChanged = function () {
+            if (this._buttonController.getPageIdByName(GButton.DISABLED) != null)
+                this.setState(GButton.DISABLED);
+            else
+                _super.prototype.handleGrayChanged.call(this);
         };
         p.constructFromXML = function (xml) {
             _super.prototype.constructFromXML.call(this, xml);
@@ -4221,6 +4235,7 @@ var fairygui;
         GButton.DOWN = "down";
         GButton.OVER = "over";
         GButton.SELECTED_OVER = "selectedOver";
+        GButton.DISABLED = "disabled";
         return GButton;
     })(fairygui.GComponent);
     fairygui.GButton = GButton;
@@ -6080,8 +6095,8 @@ var fairygui;
             ,function (value) {
                 if (this._playing != value) {
                     this._playing = value;
-                    if (this._content instanceof egret.MovieClip)
-                        (this._content).playing = value;
+                    if (this._content instanceof fairygui.MovieClip)
+                        this._content.playing = value;
                     if (this._gearAnimation.controller != null)
                         this._gearAnimation.updateState();
                 }
@@ -6094,8 +6109,8 @@ var fairygui;
             ,function (value) {
                 if (this._frame != value) {
                     this._frame = value;
-                    if (this._content instanceof egret.MovieClip)
-                        (this._content).currentFrame = value;
+                    if (this._content instanceof fairygui.MovieClip)
+                        this._content.currentFrame = value;
                     if (this._gearAnimation.controller != null)
                         this._gearAnimation.updateState();
                 }
@@ -6125,6 +6140,11 @@ var fairygui;
                 this._showErrorSign = value;
             }
         );
+        d(p, "content"
+            ,function () {
+                return this._content;
+            }
+        );
         p.loadContent = function () {
             this.clearContent();
             if (!this._url)
@@ -6149,12 +6169,12 @@ var fairygui;
                         }
                         else
                             this._container.addChild(this._content);
-                        (this._content).texture = this._contentItem.texture;
-                        (this._content).scale9Grid = this._contentItem.scale9Grid;
+                        this._content.texture = this._contentItem.texture;
+                        this._content.scale9Grid = this._contentItem.scale9Grid;
                         if (this._contentItem.scaleByTile)
-                            (this._content).fillMode = egret.BitmapFillMode.REPEAT;
+                            this._content.fillMode = egret.BitmapFillMode.REPEAT;
                         else
-                            (this._content).fillMode = egret.BitmapFillMode.SCALE;
+                            this._content.fillMode = egret.BitmapFillMode.SCALE;
                         this._contentSourceWidth = this._contentItem.width;
                         this._contentSourceHeight = this._contentItem.height;
                         this.updateLayout();
@@ -6169,9 +6189,9 @@ var fairygui;
                         this._container.addChild(this._content);
                     this._contentSourceWidth = this._contentItem.width;
                     this._contentSourceHeight = this._contentItem.height;
-                    (this._content).interval = this._contentItem.interval;
-                    (this._content).frames = this._contentItem.frames;
-                    (this._content).boundsRect = new egret.Rectangle(0, 0, this._contentSourceWidth, this._contentSourceHeight);
+                    this._content.interval = this._contentItem.interval;
+                    this._content.frames = this._contentItem.frames;
+                    this._content.boundsRect = new egret.Rectangle(0, 0, this._contentSourceWidth, this._contentSourceHeight);
                     this.updateLayout();
                 }
                 else
@@ -6192,9 +6212,9 @@ var fairygui;
             }
             else
                 this._container.addChild(this._content);
-            (this._content).texture = texture;
-            (this._content).scale9Grid = null;
-            (this._content).fillMode = egret.BitmapFillMode.SCALE;
+            this._content.texture = texture;
+            this._content.scale9Grid = null;
+            this._content.fillMode = egret.BitmapFillMode.SCALE;
             this._contentSourceWidth = texture.textureWidth;
             this._contentSourceHeight = texture.textureHeight;
             this.updateLayout();

@@ -159,7 +159,7 @@ module fairygui {
                     this.setState(this._over ? GButton.SELECTED_OVER : GButton.DOWN);
                 else
                     this.setState(this._over ? GButton.OVER : GButton.UP);
-                if (this._selectedTitle)
+                if(this._selectedTitle && this._titleObject)
                     this._titleObject.text = this._selected ? this._selectedTitle : this._title;
                 if(this._selectedIcon) {
                     var str: string = this._selected ? this._selectedIcon : this._icon;

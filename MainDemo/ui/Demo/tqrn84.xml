@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="210,64" extention="Button">
+  <controller name="button" pages="0,up,1,down,2,over,3,selectedOver" selected="0"/>
+  <displayList>
+    <image id="n2" name="n2" src="tqrn85" xy="0,0" grayed="true">
+      <gearDisplay controller="button" pages="0,2"/>
+    </image>
+    <image id="n1" name="n1" src="tqrn86" xy="0,0" alpha="0">
+      <gearDisplay controller="button" pages="1,3"/>
+      <gearLook controller="button" pages="0,1,2,3" values="-|1.00,0,0|-|1.00,0,0" default="0.00,0,0" tween="true" ease="Linear" duration="0.6"/>
+    </image>
+    <image id="n0" name="n0" src="tqrn87" xy="3,3">
+      <gearXY controller="button" pages="0,1,2,3" values="-|105,3|-|105,3" default="3,3" tween="true" duration="0.2"/>
+    </image>
+  </displayList>
+  <Button mode="Check"/>
+</component>

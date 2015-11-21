@@ -9,8 +9,6 @@
     <image id="rpmb5" name="a4.png" folder="rpmb0" file="rpmb5.png" size="13,13" qualityOption="source"/>
     <image id="rpmb6" name="angry_smile.png" folder="rpmb0" qualityOption="source" file="rpmb6.png" size="32,32"/>
     <image id="rpmb7" name="b1.png" folder="rpmb0" qualityOption="source" file="rpmb7.jpg" size="13,13"/>
-    <image id="rpmb8" name="b12.png" folder="rpmb0" qualityOption="source" file="rpmb8.png" size="100,40"/>
-    <image id="rpmb9" name="b13.png" folder="rpmb0" qualityOption="source" file="rpmb9.png" size="100,40"/>
     <image id="rpmba" name="b2.png" folder="rpmb0" qualityOption="source" file="rpmba.jpg" size="13,13"/>
     <image id="rpmbb" name="b3.png" folder="rpmb0" qualityOption="source" file="rpmbb.jpg" size="13,13"/>
     <image id="rpmbc" name="b4.png" folder="rpmb0" qualityOption="source" file="rpmbc.jpg" size="13,13"/>
@@ -46,7 +44,6 @@
     <component id="rpmb16" name="Button8" folder="rpmby" file="rpmb16.xml"/>
     <component id="rpmb17" name="Button9" folder="rpmby" file="rpmb17.xml"/>
     <component id="rpmb18" name="Checkbox" folder="rpmby" file="rpmb18.xml"/>
-    <component id="rpmb19" name="OnOffButton" folder="rpmby" file="rpmb19.xml"/>
     <component id="rpmb1a" name="RadioButton" folder="rpmby" file="rpmb1a.xml"/>
     <component id="rpmb1b" name="Demo_Button" folder="" file="rpmb1b.xml" exported="true"/>
     <component id="rpmb1c" name="Main" folder="" file="rpmb1c.xml" exported="true"/>
@@ -208,16 +205,20 @@
     <component id="rwlc7l" name="Component11" folder="rpmby" file="rwlc7l.xml"/>
     <image id="rwlc7m" name="star" folder="rpmb0" qualityOption="source" file="rwlc7m.png" size="90,23" scale="tile"/>
     <component id="rwlc7n" name="GridItem2" folder="rpmby" file="rwlc7n.xml"/>
-    <component id="rwlc7s" name="Button16" folder="" file="rwlc7s.xml"/>
+    <component id="rwlc7s" name="Button16" folder="rpmby" file="rwlc7s.xml"/>
     <image id="rwlc7t" name="22" folder="rpmb0" qualityOption="source" file="rwlc7t.png" size="97,97"/>
     <component id="rwlc7w" name="Demo_Depth" folder="" file="rwlc7w.xml" exported="true"/>
-    <component id="rwlc7x" name="Component13" folder="" file="rwlc7x.xml"/>
-    <component id="rwlc7y" name="Button1" folder="" file="rwlc7y.xml"/>
+    <component id="rwlc7x" name="Component13" folder="rpmby" file="rwlc7x.xml"/>
+    <component id="rwlc7y" name="Button1" folder="rpmby" file="rwlc7y.xml"/>
     <component id="bh5j7z" name="Component12" folder="rpmby" file="bh5j7z.xml" exported="true"/>
     <folder id="mejr80" name="声音" folder=""/>
     <sound id="mejr81" name="click" folder="mejr80" file="mejr81.mp3" exported="true"/>
     <sound id="mejr82" name="tabswitch" folder="mejr80" file="mejr82.mp3" exported="true"/>
-    <component id="f6ue83" name="Button52" folder="" file="f6ue83.xml"/>
+    <component id="f6ue83" name="Button52" folder="rpmby" file="f6ue83.xml"/>
+    <component id="tqrn84" name="OnOffButton" folder="rpmby" file="tqrn84.xml"/>
+    <image id="tqrn85" name="graybg" folder="rpmby" qualityOption="source" file="tqrn85.png" size="210,64"/>
+    <image id="tqrn86" name="greenbg" folder="rpmby" qualityOption="source" file="tqrn86.png" size="210,64"/>
+    <image id="tqrn87" name="whitebox" folder="rpmby" qualityOption="source" file="tqrn87.png" size="102,58"/>
   </resources>
   <publish name="demo" singlePackage="true">
     <atlas name="Default" index="0"/>
