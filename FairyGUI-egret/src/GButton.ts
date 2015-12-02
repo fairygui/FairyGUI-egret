@@ -141,7 +141,7 @@ module fairygui {
 
             if (this._selected != val) {
                 this._selected = val;
-                if(this.grayed && this._buttonController.hasPage(GButton.DISABLED)) {
+                if(this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED)) {
                     if(this._selected)
                         this.setState(GButton.SELECTED_DISABLED);
                     else
@@ -253,7 +253,7 @@ module fairygui {
         }
         
         protected handleGrayChanged(): void {
-            if(this._buttonController.hasPage(GButton.DISABLED)) {
+            if(this._buttonController && this._buttonController.hasPage(GButton.DISABLED)) {
                 if(this.grayed) {
                     if(this._selected && this._buttonController.hasPage(GButton.SELECTED_DISABLED))
                         this.setState(GButton.SELECTED_DISABLED);
@@ -326,7 +326,7 @@ module fairygui {
         }
 
         private __rollover(evt: egret.TouchEvent): void {
-            if (!this._buttonController.hasPage(GButton.OVER))
+            if(!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
                 return;
 
             this._over = true;
@@ -337,7 +337,7 @@ module fairygui {
         }
 
         private __rollout(evt: egret.TouchEvent): void {
-            if(!this._buttonController.hasPage(GButton.OVER))
+            if(!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
                 return;
 
             this._over = false;
@@ -352,7 +352,7 @@ module fairygui {
             GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
 
             if(this._mode == ButtonMode.Common) {
-                if(this.grayed && this._buttonController.hasPage(GButton.DISABLED))
+                if(this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED))
                     this.setState(GButton.SELECTED_DISABLED);
                 else
                     this.setState(GButton.DOWN);
@@ -375,7 +375,7 @@ module fairygui {
                 this._down = false;
 
                 if(this._mode == ButtonMode.Common) {
-                    if(this.grayed && this._buttonController.hasPage(GButton.DISABLED))
+                    if(this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED))
                         this.setState(GButton.DISABLED);
                     else if(this._over)
                         this.setState(GButton.OVER);

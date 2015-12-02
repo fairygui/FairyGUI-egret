@@ -4011,7 +4011,7 @@ var fairygui;
                     return;
                 if (this._selected != val) {
                     this._selected = val;
-                    if (this.grayed && this._buttonController.hasPage(GButton.DISABLED)) {
+                    if (this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED)) {
                         if (this._selected)
                             this.setState(GButton.SELECTED_DISABLED);
                         else
@@ -4113,7 +4113,7 @@ var fairygui;
                 this.selected = this._pageOption.id == c.selectedPageId;
         };
         p.handleGrayChanged = function () {
-            if (this._buttonController.hasPage(GButton.DISABLED)) {
+            if (this._buttonController && this._buttonController.hasPage(GButton.DISABLED)) {
                 if (this.grayed) {
                     if (this._selected && this._buttonController.hasPage(GButton.SELECTED_DISABLED))
                         this.setState(GButton.SELECTED_DISABLED);
@@ -4176,7 +4176,7 @@ var fairygui;
             }
         };
         p.__rollover = function (evt) {
-            if (!this._buttonController.hasPage(GButton.OVER))
+            if (!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
                 return;
             this._over = true;
             if (this._down)
@@ -4184,7 +4184,7 @@ var fairygui;
             this.setState(this._selected ? GButton.SELECTED_OVER : GButton.OVER);
         };
         p.__rollout = function (evt) {
-            if (!this._buttonController.hasPage(GButton.OVER))
+            if (!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
                 return;
             this._over = false;
             if (this._down)
@@ -4195,7 +4195,7 @@ var fairygui;
             this._down = true;
             fairygui.GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
             if (this._mode == 0 /* Common */) {
-                if (this.grayed && this._buttonController.hasPage(GButton.DISABLED))
+                if (this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED))
                     this.setState(GButton.SELECTED_DISABLED);
                 else
                     this.setState(GButton.DOWN);
@@ -4215,7 +4215,7 @@ var fairygui;
                 fairygui.GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
                 this._down = false;
                 if (this._mode == 0 /* Common */) {
-                    if (this.grayed && this._buttonController.hasPage(GButton.DISABLED))
+                    if (this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED))
                         this.setState(GButton.DISABLED);
                     else if (this._over)
                         this.setState(GButton.OVER);
