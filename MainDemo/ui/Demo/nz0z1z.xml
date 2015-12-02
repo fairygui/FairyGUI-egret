@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <component size="640,890">
   <displayList>
+    <graph id="n20" name="n20" xy="125,625" size="348,35" type="rect"/>
     <graph id="n16" name="n16" xy="30,452" size="424,119" type="rect" fillColor="#ff000000"/>
     <graph id="n15" name="n15" xy="32,84" size="337,50" type="rect"/>
     <text id="n2" name="n2" xy="32,84" size="337,50" fontSize="16" color="#cc3300" align="center" vAlign="middle" autoSize="none" text="使用对齐"/>
@@ -15,5 +16,11 @@
     <text id="n11" name="n11" xy="258,379" size="225,36" font="ui://9leh0eyfwa8u2r" fontSize="16" color="#993300" text="如何使用UI编辑器"/>
     <richtext id="n12" name="n12" xy="30,452" size="424,119" fontSize="16" color="#ccff00" ubb="true" autoSize="none" text="多媒体文本支持点击/触摸事件，可以直接使用html标签（仅支持部分），可以带链接和图片，但显示的内容在编辑器里可能不能正确预览&#xA;&lt;img src='ui://9leh0eyfrpmb6'/>这是一个图片&#xA;&lt;a href='event:xx'>这是一个链接，点我试试&lt;/a>"/>
     <text id="n17" name="n17" xy="39,12" size="293,20" fontSize="16" color="#ccff00" text="普通文本是不支持任何点击和触摸事件的"/>
+    <text id="n18" name="n18" xy="129,627" size="341,29" input="true" fontSize="22" vAlign="middle" autoSize="none" singleLine="true" text=""/>
+    <text id="n19" name="n19" xy="14,630" size="115,26" fontSize="22" text="输入文本："/>
+    <text id="n21" name="n21" xy="127,680" size="352,26" fontSize="22" color="#ff3300" autoSize="height" text=""/>
+    <component id="n22" name="n22" src="k8qi7f" xy="490,674">
+      <Button title="获取输入"/>
+    </component>
   </displayList>
 </component>

@@ -3,58 +3,58 @@
   <controller name="单选组" pages="0,,1,,2," selected="0"/>
   <controller name="tab" pages="0,,1,,2," selected="0"/>
   <displayList>
-    <graph id="n26" name="n26" xy="340,388" size="246,116" type="rect" fillColor="#ff333333"/>
+    <graph id="n26" name="n26" xy="358,296" size="246,116" type="rect" fillColor="#ff333333"/>
     <component id="n3" name="n3" src="rpmbz" xy="32,46">
       <Button title="普通按钮"/>
     </component>
-    <component id="n4" name="n4" src="rpmb18" xy="48,288" size="88,19">
+    <component id="n4" name="n4" src="rpmb18" xy="46,247" size="88,19">
       <Button title="常规多选"/>
     </component>
-    <component id="n5" name="n5" src="rpmb1a" xy="167,288" size="86,19">
+    <component id="n5" name="n5" src="rpmb1a" xy="165,247" size="86,19">
       <Button title="常规单选"/>
     </component>
     <component id="n6" name="n6" src="rpmb10" xy="151,41" size="85,40">
       <Button title="点我" icon="ui://9leh0eyfrpmb6"/>
     </component>
-    <component id="n7" name="n7" src="rpmb12" xy="64,595"/>
-    <text id="n8" name="n8" xy="52,560" size="229,20" fontSize="16" text="更复杂的设计，例如过渡效果："/>
+    <component id="n7" name="n7" src="rpmb12" xy="53,476"/>
+    <text id="n8" name="n8" xy="41,441" size="229,20" fontSize="16" text="更复杂的设计，例如过渡效果："/>
     <text id="n9" name="n9" xy="28,11" size="459,19" fontSize="15" text="按钮(Button)可以随意安排文字、图标，其位置和形态完全由你设计"/>
-    <text id="n10" name="n10" xy="40,232" size="149,20" fontSize="16" text="按钮支持多选和单选"/>
+    <text id="n10" name="n10" xy="38,191" size="149,20" fontSize="16" text="按钮支持多选和单选"/>
     <component id="n11" name="n11" src="rpmb11" xy="253,42" size="88,40">
       <Button title="点我" icon="ui://9leh0eyfrpmb6"/>
     </component>
-    <component id="n12" name="n12" src="rpmb16" xy="287,272">
+    <component id="n12" name="n12" src="rpmb16" xy="285,231">
       <Button checked="true"/>
     </component>
     <component id="n13" name="n13" src="rpmb13" xy="376,45">
       <Button icon="ui://9leh0eyfrpmbu"/>
     </component>
     <component id="n15" name="n15" src="rpmb15" xy="41,109"/>
-    <component id="n16" name="n16" src="tqrn84" xy="230,586"/>
-    <component id="n17" name="n17" src="rpmb17" xy="462,585">
+    <component id="n16" name="n16" src="tqrn84" xy="219,467"/>
+    <component id="n17" name="n17" src="rpmb17" xy="451,466">
       <Button title="淡入淡出"/>
     </component>
-    <component id="n18" name="n18" src="rpmb1a" xy="43,392" size="86,19">
+    <component id="n18" name="n18" src="rpmb1a" xy="40,323" size="86,19">
       <Button checked="true" title="选项1" controller="单选组" page="0"/>
     </component>
-    <component id="n19" name="n19" src="rpmb1a" xy="43,424" size="86,19">
+    <component id="n19" name="n19" src="rpmb1a" xy="40,355" size="86,19">
       <Button title="选项2" controller="单选组" page="1"/>
     </component>
-    <component id="n20" name="n20" src="rpmb1a" xy="43,454" size="86,19">
+    <component id="n20" name="n20" src="rpmb1a" xy="40,385" size="86,19">
       <Button title="选项3" controller="单选组" page="2"/>
     </component>
-    <text id="n21" name="n21" xy="45,359" size="165,20" fontSize="16" text="结合控制器实现单选组"/>
-    <text id="n22" name="n22" xy="363,357" size="141,20" fontSize="16" text="结合控制器实现Tab"/>
-    <component id="n23" name="n23" src="rpmb14" xy="360,395">
+    <text id="n21" name="n21" xy="42,290" size="165,20" fontSize="16" text="结合控制器实现单选组"/>
+    <text id="n22" name="n22" xy="381,265" size="141,20" fontSize="16" text="结合控制器实现Tab"/>
+    <component id="n23" name="n23" src="rpmb14" xy="378,303">
       <Button checked="true" title="Tab1" controller="tab" page="0"/>
     </component>
-    <component id="n24" name="n24" src="rpmb14" xy="429,395">
+    <component id="n24" name="n24" src="rpmb14" xy="447,303">
       <Button title="Tab2" controller="tab" page="1"/>
     </component>
-    <component id="n25" name="n25" src="rpmb14" xy="498,395">
+    <component id="n25" name="n25" src="rpmb14" xy="516,303">
       <Button title="Tab3" controller="tab" page="2"/>
     </component>
-    <image id="n29" name="n29" src="rpmb6" xy="450,455">
+    <image id="n29" name="n29" src="rpmb6" xy="468,363">
       <gearDisplay controller="tab" pages="0"/>
     </image>
     <image id="n30" name="n30" src="rpmbg" xy="450,455">
@@ -63,16 +63,20 @@
     <image id="n31" name="n31" src="rpmbh" xy="450,455">
       <gearDisplay controller="tab" pages="2"/>
     </image>
-    <component id="n32" name="n32" src="rpmb13" xy="41,724" grayed="true">
+    <component id="n32" name="n32" src="rpmb13" xy="30,605">
       <Button icon="ui://9leh0eyfrpmbu"/>
     </component>
-    <text id="n33" name="n33" xy="46,678" size="533,26" fontSize="22" text="变灰效果(Egret暂不支持滤镜，所以请用下边的方式）"/>
+    <text id="n33" name="n33" xy="35,559" size="533,26" fontSize="22" text="变灰效果(Egret暂不支持滤镜，所以请用下边的方式）"/>
     <component id="n34" name="n34" src="k8qi7f" xy="164,120">
       <Button title="简单按钮"/>
     </component>
-    <component id="n35" name="n35" src="f6ue83" xy="48,865" grayed="true">
+    <component id="n35" name="n35" src="f6ue83" xy="36,719" grayed="true">
       <Button icon="ui://9leh0eyfrpmbu"/>
     </component>
-    <text id="n36" name="n36" xy="50,813" size="509,26" fontSize="22" autoSize="height" text="可以自定义变灰的效果（使用一个grayed控制器）"/>
+    <text id="n36" name="n36" xy="39,683" size="509,26" fontSize="22" autoSize="height" text="可以自定义变灰的效果（使用一个grayed控制器）"/>
+    <text id="n37" name="n37" xy="47,793" size="509,26" fontSize="22" autoSize="height" text="可以自定义变灰的效果（使用额外的控制器页面）"/>
+    <component id="n40" name="n40" src="g51h89" xy="57,830" grayed="true">
+      <Button checked="true"/>
+    </component>
   </displayList>
 </component>

@@ -27,7 +27,7 @@ module fairygui {
 			var item:GButton = this._list.addItemFromPool().asButton;
 			item.title = caption;
 			item.data = callback;
-			item.menuItemGrayed = false;
+			item.grayed = false;
 			var c:Controller = item.getController("checked");
 			if(c != null)
 				c.selectedIndex = 0;
@@ -40,7 +40,7 @@ module fairygui {
 			this._list.addChildAt(item,index);
 			item.title = caption;
 			item.data = callback;
-			item.menuItemGrayed = false;
+            item.grayed = false;
 			var c:Controller = item.getController("checked");
 			if(c != null)
 				c.selectedIndex = 0;
@@ -79,7 +79,7 @@ module fairygui {
 		public setItemGrayed(name:string,grayed:boolean)
 		{
 			var item:GButton = this._list.getChild(name).asButton;
-			item.menuItemGrayed = grayed;
+            item.grayed = grayed;
 		}
 
 		public setItemCheckable(name:string,checkable:boolean)
@@ -167,8 +167,10 @@ module fairygui {
             var item: GButton = evt.itemObject.asButton;
             if(item == null)
                 return;
-            if(item.menuItemGrayed)
+            if(item.grayed) {
+                this._list.selectedIndex = -1;
                 return;
+            }
             var c: Controller = item.getController("checked");
             if(c != null && c.selectedIndex != 0) {
                 if(c.selectedIndex == 1)

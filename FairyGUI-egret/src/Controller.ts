@@ -172,6 +172,10 @@ module fairygui {
             else
                 this._parent.applyController(this);
         }
+        
+        public hasPage(aName:string):boolean {
+            return this._pageNames.indexOf(aName) != -1;
+        }
 
         public getPageIndexById(aId: string): number {
             return this._pageIds.indexOf(aId);

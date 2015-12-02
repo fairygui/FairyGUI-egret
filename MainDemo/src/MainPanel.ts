@@ -82,13 +82,17 @@ class MainPanel {
         var obj: fairygui.GComponent = this._demoObjects["Button"];
         obj.getChild("n34").addClickListener(function(): void { console.log("click button"); },this);
     }
-        
+
     //------------------------------
     private playText(): void {
         var obj: fairygui.GComponent = this._demoObjects["Text"];
         obj.getChild("n12").asRichTextField.addEventListener(egret.TextEvent.LINK,function(evt: egret.TextEvent): void {
             var obj: fairygui.GRichTextField = <fairygui.GRichTextField><any>evt.currentTarget;
             obj.text = "[img]ui://9leh0eyft9fj5f[/img][color=#FF0000]你点击了链接[/color]：" + evt.text;
+        },this);
+        
+        obj.getChild("n22").addClickListener(function(): void {
+            obj.getChild("n21").text = obj.getChild("n18").text;
         },this);
     }
             

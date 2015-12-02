@@ -18,7 +18,6 @@ module fairygui {
         private _buttonController: Controller;
         private _changeStateOnClick: boolean;
         private _linkedPopup: GObject;
-        private _menuItemGrayed: boolean;
 
         private _down: boolean;
         private _over: boolean;
@@ -28,7 +27,8 @@ module fairygui {
         public static OVER: string = "over";
         public static SELECTED_OVER: string = "selectedOver";
         public static DISABLED: string = "disabled";
-
+        public static SELECTED_DISABLED: string = "selectedDisabled";
+        
         public constructor() {
             super();
 
@@ -135,30 +135,24 @@ module fairygui {
             this._soundVolumeScale = value;
         }
         
-        public get menuItemGrayed(): boolean {
-            return this._menuItemGrayed;
-        }
-
-        public set menuItemGrayed(val: boolean) {
-            if (this._menuItemGrayed != val) {
-                this._menuItemGrayed = val;
-                if (this._titleObject)
-                    this._titleObject.grayed = this._menuItemGrayed;
-                if (this._iconObject)
-                    this._iconObject.grayed = this._menuItemGrayed;
-            }
-        }
-
         public set selected(val: boolean) {
             if (this._mode == ButtonMode.Common)
                 return;
 
             if (this._selected != val) {
                 this._selected = val;
-                if (this._selected)
-                    this.setState(this._over ? GButton.SELECTED_OVER : GButton.DOWN);
-                else
-                    this.setState(this._over ? GButton.OVER : GButton.UP);
+                if(this.grayed && this._buttonController.hasPage(GButton.DISABLED)) {
+                    if(this._selected)
+                        this.setState(GButton.SELECTED_DISABLED);
+                    else
+                        this.setState(GButton.DISABLED);
+                }
+                else {
+                    if(this._selected)
+                        this.setState(this._over ? GButton.SELECTED_OVER : GButton.DOWN);
+                    else
+                        this.setState(this._over ? GButton.OVER : GButton.UP);
+                }
                 if(this._selectedTitle && this._titleObject)
                     this._titleObject.text = this._selected ? this._selectedTitle : this._title;
                 if(this._selectedIcon) {
@@ -259,8 +253,18 @@ module fairygui {
         }
         
         protected handleGrayChanged(): void {
-            if(this._buttonController.getPageIdByName(GButton.DISABLED) != null)
-                this.setState(GButton.DISABLED);
+            if(this._buttonController.hasPage(GButton.DISABLED)) {
+                if(this.grayed) {
+                    if(this._selected && this._buttonController.hasPage(GButton.SELECTED_DISABLED))
+                        this.setState(GButton.SELECTED_DISABLED);
+                    else
+                        this.setState(GButton.DISABLED);
+                }
+                else if(this._selected)
+                    this.setState(GButton.DOWN);
+                else
+                    this.setState(GButton.UP);
+            }
             else
                 super.handleGrayChanged();
         }
@@ -322,7 +326,7 @@ module fairygui {
         }
 
         private __rollover(evt: egret.TouchEvent): void {
-            if (this._menuItemGrayed)
+            if (!this._buttonController.hasPage(GButton.OVER))
                 return;
 
             this._over = true;
@@ -333,7 +337,7 @@ module fairygui {
         }
 
         private __rollout(evt: egret.TouchEvent): void {
-            if (this._menuItemGrayed)
+            if(!this._buttonController.hasPage(GButton.OVER))
                 return;
 
             this._over = false;
@@ -347,8 +351,12 @@ module fairygui {
             this._down = true;
             GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
 
-            if (this._mode == ButtonMode.Common)
-                this.setState(GButton.DOWN);
+            if(this._mode == ButtonMode.Common) {
+                if(this.grayed && this._buttonController.hasPage(GButton.DISABLED))
+                    this.setState(GButton.SELECTED_DISABLED);
+                else
+                    this.setState(GButton.DOWN);
+            }
 
             if (this._linkedPopup != null) {
                 if (this._linkedPopup instanceof Window)
@@ -366,10 +374,14 @@ module fairygui {
                 GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
                 this._down = false;
 
-                if (this._over)
-                    this.setState(this._selected ? GButton.SELECTED_OVER : GButton.OVER);
-                else
-                    this.setState(this._selected ? GButton.DOWN : GButton.UP);
+                if(this._mode == ButtonMode.Common) {
+                    if(this.grayed && this._buttonController.hasPage(GButton.DISABLED))
+                        this.setState(GButton.DISABLED);
+                    else if(this._over)
+                        this.setState(GButton.OVER);
+                    else
+                        this.setState(GButton.UP);
+                }
             }
         }
 
@@ -383,7 +395,7 @@ module fairygui {
                 }
             }
 
-            if (!this._changeStateOnClick || this._menuItemGrayed)
+            if (!this._changeStateOnClick)
                 return;
 
             if (this._mode == ButtonMode.Check) {

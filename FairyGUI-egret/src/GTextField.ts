@@ -2,7 +2,6 @@
 module fairygui {
 
     export class GTextField extends GObject implements IColorGear {
-        //below are all protected
         protected _textField: egret.TextField;
         protected _font: string;
         protected _fontSize: number = 0;
@@ -14,25 +13,25 @@ module fairygui {
         protected _text: string;
         protected _ubbEnabled: boolean;
         
-        private _autoSize: AutoSizeType;
-        private _widthAutoSize: boolean;
-        private _heightAutoSize: boolean;
+        protected _autoSize: AutoSizeType;
+        protected _widthAutoSize: boolean;
+        protected _heightAutoSize: boolean;
         
-        private _gearColor: GearColor;
+        protected _gearColor: GearColor;
 
-        private _updatingSize: boolean;
-        private _sizeDirty: boolean;
-        private _yOffset: number = 0;
-        private _textWidth: number = 0;
-        private _textHeight: number = 0;
-        private _requireRender: boolean;
+        protected _updatingSize: boolean;
+        protected _sizeDirty: boolean;
+        protected _yOffset: number = 0;
+        protected _textWidth: number = 0;
+        protected _textHeight: number = 0;
+        protected _requireRender: boolean;
 
-        private _bitmapFont: BitmapFont;
-        private _lines: Array<LineInfo>;
-        private _bitmapPool: Array<egret.Bitmap>;
+        protected _bitmapFont: BitmapFont;
+        protected _lines: Array<LineInfo>;
+        protected _bitmapPool: Array<egret.Bitmap>;
 
-        private static GUTTER_X: number = 2;
-        private static GUTTER_Y: number = 2;
+        protected static GUTTER_X: number = 2;
+        protected static GUTTER_Y: number = 2;
 
         public constructor() {
             super();
@@ -619,12 +618,11 @@ module fairygui {
             this.displayObject.x = this.x * GRoot.contentScaleFactor;
             this.displayObject.y = this.y * GRoot.contentScaleFactor + this._yOffset;
         }
-
+        
         protected handleSizeChanged(): void {
             if(!this._updatingSize) {
-                if(!this._widthAutoSize) {
-                    this._textField.width = Math.ceil(this.width * GRoot.contentScaleFactor);
-                }
+                if(!this._widthAutoSize)
+                    this.render();
                 else
                     this.doAlign();
             }
@@ -635,7 +633,7 @@ module fairygui {
             this.updateTextFormat();
         }
 
-        private doAlign(): void {
+        protected doAlign(): void {
             if(this._verticalAlign == VertAlignType.Top || this._textHeight == 0)
                 this._yOffset = GTextField.GUTTER_Y;
             else {

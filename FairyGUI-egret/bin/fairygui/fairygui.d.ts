@@ -25,6 +25,7 @@ declare module fairygui {
         removePage(name: string): void;
         removePageAt(index?: number): void;
         clearPages(): void;
+        hasPage(aName: string): boolean;
         getPageIndexById(aId: string): number;
         getPageIdByName(aName: string): string;
         getPageNameById(aId: string): string;
@@ -669,13 +670,14 @@ declare module fairygui {
         private _buttonController;
         private _changeStateOnClick;
         private _linkedPopup;
-        private _menuItemGrayed;
         private _down;
         private _over;
         static UP: string;
         static DOWN: string;
         static OVER: string;
         static SELECTED_OVER: string;
+        static DISABLED: string;
+        static SELECTED_DISABLED: string;
         constructor();
         icon: string;
         selectedIcon: string;
@@ -685,7 +687,6 @@ declare module fairygui {
         titleColor: number;
         sound: string;
         soundVolumeScale: number;
-        menuItemGrayed: boolean;
         selected: boolean;
         mode: ButtonMode;
         relatedController: Controller;
@@ -697,6 +698,7 @@ declare module fairygui {
         fireClick(downEffect?: boolean): void;
         protected setState(val: string): void;
         handleControllerChanged(c: Controller): void;
+        protected handleGrayChanged(): void;
         protected constructFromXML(xml: any): void;
         setup_afterAdd(xml: any): void;
         private __rollover(evt);
@@ -933,6 +935,7 @@ declare module fairygui {
         color: number;
         private applyColor();
         showErrorSign: boolean;
+        content: egret.Bitmap | fairygui.MovieClip;
         protected loadContent(): void;
         protected loadFromPackage(itemURL: string): void;
         protected loadExternal(): void;
@@ -1009,21 +1012,21 @@ declare module fairygui {
         protected _letterSpacing: number;
         protected _text: string;
         protected _ubbEnabled: boolean;
-        private _autoSize;
-        private _widthAutoSize;
-        private _heightAutoSize;
-        private _gearColor;
-        private _updatingSize;
-        private _sizeDirty;
-        private _yOffset;
-        private _textWidth;
-        private _textHeight;
-        private _requireRender;
-        private _bitmapFont;
-        private _lines;
-        private _bitmapPool;
-        private static GUTTER_X;
-        private static GUTTER_Y;
+        protected _autoSize: AutoSizeType;
+        protected _widthAutoSize: boolean;
+        protected _heightAutoSize: boolean;
+        protected _gearColor: GearColor;
+        protected _updatingSize: boolean;
+        protected _sizeDirty: boolean;
+        protected _yOffset: number;
+        protected _textWidth: number;
+        protected _textHeight: number;
+        protected _requireRender: boolean;
+        protected _bitmapFont: BitmapFont;
+        protected _lines: Array<LineInfo>;
+        protected _bitmapPool: Array<egret.Bitmap>;
+        protected static GUTTER_X: number;
+        protected static GUTTER_Y: number;
         constructor();
         protected createDisplayObject(): void;
         dispose(): void;
@@ -1056,7 +1059,7 @@ declare module fairygui {
         protected handleXYChanged(): void;
         protected handleSizeChanged(): void;
         protected handleGrayChanged(): void;
-        private doAlign();
+        protected doAlign(): void;
         setup_beforeAdd(xml: any): void;
         setup_afterAdd(xml: any): void;
     }
@@ -1239,10 +1242,18 @@ declare module fairygui {
 }
 declare module fairygui {
     class GTextInput extends GTextField {
+        private _changed;
         constructor();
         dispose(): void;
         editable: boolean;
         maxLength: number;
+        verticalAlign: VertAlignType;
+        private updateVertAlign();
+        protected handleSizeChanged(): void;
+        protected doAlign(): void;
+        setup_beforeAdd(xml: any): void;
+        private __textChanged(evt);
+        private __focusOut(evt);
     }
 }
 declare module fairygui {

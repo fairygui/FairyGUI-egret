@@ -219,6 +219,9 @@
     <image id="tqrn85" name="graybg" folder="rpmby" qualityOption="source" file="tqrn85.png" size="210,64"/>
     <image id="tqrn86" name="greenbg" folder="rpmby" qualityOption="source" file="tqrn86.png" size="210,64"/>
     <image id="tqrn87" name="whitebox" folder="rpmby" qualityOption="source" file="tqrn87.png" size="102,58"/>
+    <component id="g51h89" name="Button82" folder="rpmby" file="g51h89.xml"/>
+    <image id="g51h8a" name="勾选gray" folder="rpmb0" qualityOption="source" file="g51h8a.png" size="55,46"/>
+    <image id="g51h8b" name="勾选框gray" folder="rpmb0" qualityOption="source" file="g51h8b.png" size="49,49"/>
   </resources>
   <publish name="demo" singlePackage="true">
     <atlas name="Default" index="0"/>

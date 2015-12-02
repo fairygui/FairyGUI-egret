@@ -160,6 +160,9 @@ var fairygui;
             else
                 this._parent.applyController(this);
         };
+        p.hasPage = function (aName) {
+            return this._pageNames.indexOf(aName) != -1;
+        };
         p.getPageIndexById = function (aId) {
             return this._pageIds.indexOf(aId);
         };
@@ -3999,20 +4002,6 @@ var fairygui;
                 this._soundVolumeScale = value;
             }
         );
-        d(p, "menuItemGrayed"
-            ,function () {
-                return this._menuItemGrayed;
-            }
-            ,function (val) {
-                if (this._menuItemGrayed != val) {
-                    this._menuItemGrayed = val;
-                    if (this._titleObject)
-                        this._titleObject.grayed = this._menuItemGrayed;
-                    if (this._iconObject)
-                        this._iconObject.grayed = this._menuItemGrayed;
-                }
-            }
-        );
         d(p, "selected"
             ,function () {
                 return this._selected;
@@ -4022,10 +4011,18 @@ var fairygui;
                     return;
                 if (this._selected != val) {
                     this._selected = val;
-                    if (this._selected)
-                        this.setState(this._over ? GButton.SELECTED_OVER : GButton.DOWN);
-                    else
-                        this.setState(this._over ? GButton.OVER : GButton.UP);
+                    if (this.grayed && this._buttonController.hasPage(GButton.DISABLED)) {
+                        if (this._selected)
+                            this.setState(GButton.SELECTED_DISABLED);
+                        else
+                            this.setState(GButton.DISABLED);
+                    }
+                    else {
+                        if (this._selected)
+                            this.setState(this._over ? GButton.SELECTED_OVER : GButton.DOWN);
+                        else
+                            this.setState(this._over ? GButton.OVER : GButton.UP);
+                    }
                     if (this._selectedTitle && this._titleObject)
                         this._titleObject.text = this._selected ? this._selectedTitle : this._title;
                     if (this._selectedIcon) {
@@ -4116,8 +4113,18 @@ var fairygui;
                 this.selected = this._pageOption.id == c.selectedPageId;
         };
         p.handleGrayChanged = function () {
-            if (this._buttonController.getPageIdByName(GButton.DISABLED) != null)
-                this.setState(GButton.DISABLED);
+            if (this._buttonController.hasPage(GButton.DISABLED)) {
+                if (this.grayed) {
+                    if (this._selected && this._buttonController.hasPage(GButton.SELECTED_DISABLED))
+                        this.setState(GButton.SELECTED_DISABLED);
+                    else
+                        this.setState(GButton.DISABLED);
+                }
+                else if (this._selected)
+                    this.setState(GButton.DOWN);
+                else
+                    this.setState(GButton.UP);
+            }
             else
                 _super.prototype.handleGrayChanged.call(this);
         };
@@ -4169,7 +4176,7 @@ var fairygui;
             }
         };
         p.__rollover = function (evt) {
-            if (this._menuItemGrayed)
+            if (!this._buttonController.hasPage(GButton.OVER))
                 return;
             this._over = true;
             if (this._down)
@@ -4177,7 +4184,7 @@ var fairygui;
             this.setState(this._selected ? GButton.SELECTED_OVER : GButton.OVER);
         };
         p.__rollout = function (evt) {
-            if (this._menuItemGrayed)
+            if (!this._buttonController.hasPage(GButton.OVER))
                 return;
             this._over = false;
             if (this._down)
@@ -4187,8 +4194,12 @@ var fairygui;
         p.__mousedown = function (evt) {
             this._down = true;
             fairygui.GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
-            if (this._mode == 0 /* Common */)
-                this.setState(GButton.DOWN);
+            if (this._mode == 0 /* Common */) {
+                if (this.grayed && this._buttonController.hasPage(GButton.DISABLED))
+                    this.setState(GButton.SELECTED_DISABLED);
+                else
+                    this.setState(GButton.DOWN);
+            }
             if (this._linkedPopup != null) {
                 if (this._linkedPopup instanceof fairygui.Window)
                     (this._linkedPopup).toggleStatus();
@@ -4203,10 +4214,14 @@ var fairygui;
             if (this._down) {
                 fairygui.GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
                 this._down = false;
-                if (this._over)
-                    this.setState(this._selected ? GButton.SELECTED_OVER : GButton.OVER);
-                else
-                    this.setState(this._selected ? GButton.DOWN : GButton.UP);
+                if (this._mode == 0 /* Common */) {
+                    if (this.grayed && this._buttonController.hasPage(GButton.DISABLED))
+                        this.setState(GButton.DISABLED);
+                    else if (this._over)
+                        this.setState(GButton.OVER);
+                    else
+                        this.setState(GButton.UP);
+                }
             }
         };
         p.__click = function (evt) {
@@ -4218,7 +4233,7 @@ var fairygui;
                         fairygui.GRoot.inst.playOneShotSound(sound, this._soundVolumeScale);
                 }
             }
-            if (!this._changeStateOnClick || this._menuItemGrayed)
+            if (!this._changeStateOnClick)
                 return;
             if (this._mode == 1 /* Check */) {
                 this.selected = !this._selected;
@@ -4236,6 +4251,7 @@ var fairygui;
         GButton.OVER = "over";
         GButton.SELECTED_OVER = "selectedOver";
         GButton.DISABLED = "disabled";
+        GButton.SELECTED_DISABLED = "selectedDisabled";
         return GButton;
     })(fairygui.GComponent);
     fairygui.GButton = GButton;
@@ -7186,9 +7202,8 @@ var fairygui;
         };
         p.handleSizeChanged = function () {
             if (!this._updatingSize) {
-                if (!this._widthAutoSize) {
-                    this._textField.width = Math.ceil(this.width * fairygui.GRoot.contentScaleFactor);
-                }
+                if (!this._widthAutoSize)
+                    this.render();
                 else
                     this.doAlign();
             }
@@ -8255,8 +8270,12 @@ var fairygui;
         __extends(GTextInput, _super);
         function GTextInput() {
             _super.call(this);
+            this._widthAutoSize = false;
+            this._heightAutoSize = false;
             this.displayObject.touchChildren = true;
             this._textField.type = egret.TextFieldType.INPUT;
+            this._textField.addEventListener(egret.Event.CHANGE, this.__textChanged, this);
+            this._textField.addEventListener(egret.FocusEvent.FOCUS_OUT, this.__focusOut, this);
         }
         var d = __define,c=GTextInput;p=c.prototype;
         p.dispose = function () {
@@ -8281,6 +8300,46 @@ var fairygui;
                 this._textField.maxChars = val;
             }
         );
+        d(p, "verticalAlign",undefined
+            ,function (value) {
+                if (this._verticalAlign != value) {
+                    this._verticalAlign = value;
+                    this.updateVertAlign();
+                }
+            }
+        );
+        p.updateVertAlign = function () {
+            switch (this._verticalAlign) {
+                case 0 /* Top */:
+                    this._textField.verticalAlign = egret.VerticalAlign.TOP;
+                    break;
+                case 1 /* Middle */:
+                    this._textField.verticalAlign = egret.VerticalAlign.MIDDLE;
+                    break;
+                case 2 /* Bottom */:
+                    this._textField.verticalAlign = egret.VerticalAlign.BOTTOM;
+                    break;
+            }
+        };
+        p.handleSizeChanged = function () {
+            if (!this._updatingSize) {
+                this._textField.width = Math.ceil(this.width * fairygui.GRoot.contentScaleFactor);
+                this._textField.height = Math.ceil(this.height * fairygui.GRoot.contentScaleFactor);
+            }
+        };
+        p.doAlign = function () {
+            //nothing here
+        };
+        p.setup_beforeAdd = function (xml) {
+            _super.prototype.setup_beforeAdd.call(this, xml);
+            this.updateVertAlign();
+        };
+        p.__textChanged = function (evt) {
+            this._text = this._textField.text;
+        };
+        p.__focusOut = function (evt) {
+            this._text = this._textField.text;
+        };
         return GTextInput;
     })(fairygui.GTextField);
     fairygui.GTextInput = GTextInput;
@@ -8423,7 +8482,7 @@ var fairygui;
             var item = this._list.addItemFromPool().asButton;
             item.title = caption;
             item.data = callback;
-            item.menuItemGrayed = false;
+            item.grayed = false;
             var c = item.getController("checked");
             if (c != null)
                 c.selectedIndex = 0;
@@ -8435,7 +8494,7 @@ var fairygui;
             this._list.addChildAt(item, index);
             item.title = caption;
             item.data = callback;
-            item.menuItemGrayed = false;
+            item.grayed = false;
             var c = item.getController("checked");
             if (c != null)
                 c.selectedIndex = 0;
@@ -8463,7 +8522,7 @@ var fairygui;
         };
         p.setItemGrayed = function (name, grayed) {
             var item = this._list.getChild(name).asButton;
-            item.menuItemGrayed = grayed;
+            item.grayed = grayed;
         };
         p.setItemCheckable = function (name, checkable) {
             var item = this._list.getChild(name).asButton;
@@ -8536,8 +8595,10 @@ var fairygui;
             var item = evt.itemObject.asButton;
             if (item == null)
                 return;
-            if (item.menuItemGrayed)
+            if (item.grayed) {
+                this._list.selectedIndex = -1;
                 return;
+            }
             var c = item.getController("checked");
             if (c != null && c.selectedIndex != 0) {
                 if (c.selectedIndex == 1)
