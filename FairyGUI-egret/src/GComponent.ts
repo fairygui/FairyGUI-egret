@@ -386,13 +386,13 @@ module fairygui {
         }
 
         public set opaque(value: boolean) {
-            if(this._opaque!=value) {
+            if(this._opaque != value) {
                 this._opaque = value;
                 if(this._opaque)
-                    this.updateOpaque();                
+                    this.updateOpaque();
+                else
+                    this._rootContainer.hitArea = null;
             }
-            else
-                this._rootContainer.hitArea = null;
         }
         
         protected updateOpaque() {

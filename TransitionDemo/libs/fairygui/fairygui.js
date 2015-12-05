@@ -3551,9 +3551,9 @@ var fairygui;
                     this._opaque = value;
                     if (this._opaque)
                         this.updateOpaque();
+                    else
+                        this._rootContainer.hitArea = null;
                 }
-                else
-                    this._rootContainer.hitArea = null;
             }
         );
         p.updateOpaque = function () {
