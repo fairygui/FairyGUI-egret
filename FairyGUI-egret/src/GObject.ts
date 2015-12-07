@@ -542,7 +542,7 @@ module fairygui {
             }
             return null;
         }
-
+        
         public get asCom(): GComponent {
             return <GComponent><any> this;
         }
@@ -593,6 +593,10 @@ module fairygui {
 
         public get asComboBox(): GComboBox {
             return <GComboBox><any> this;
+        }
+        
+        public get asImage(): GImage {
+            return <GImage><any> this;
         }
 
         public get asMovieClip(): GMovieClip {
