@@ -50,8 +50,11 @@ module fairygui {
         }
 
         public dispose(): void {
-            if(this._contentItem == null && (<egret.Bitmap>this._content).texture != null)
-                this.freeExternal(<egret.Texture>(<egret.Bitmap>this._content).texture);
+            if(this._contentItem == null && (this._content instanceof egret.Bitmap)) {
+                var texture: egret.Texture = <egret.Texture>(<egret.Bitmap>this._content).texture;
+                if(texture != null)
+                    this.freeExternal(texture);
+            }
 
             super.dispose();
         }
@@ -359,8 +362,11 @@ module fairygui {
             if (this._content != null && this._content.parent != null)
                 this._container.removeChild(this._content);
                 
-            if(this._contentItem == null && this._content != null)
-                this.freeExternal(<egret.Texture>(<egret.Bitmap>this._content).texture);
+            if(this._contentItem == null && (this._content instanceof egret.Bitmap)) {
+                var texture: egret.Texture = <egret.Texture>(<egret.Bitmap>this._content).texture;
+                if(texture != null)
+                    this.freeExternal(texture);
+            }
 
             this._contentItem = null;
         }
