@@ -53,6 +53,7 @@ module fairygui {
             delete UIPackage._packageInstById[pkg.id];
             if(pkg._customId != null)
                 delete UIPackage._packageInstById[pkg._customId];
+            delete UIPackage._packageInstByName[pkg.name];
         }
 
         public static createObject(pkgName: string,resName: string,userClass: any = null): GObject {
