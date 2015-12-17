@@ -615,8 +615,8 @@ module fairygui {
         }
 
         protected handleXYChanged(): void {
-            this.displayObject.x = this.x * GRoot.contentScaleFactor;
-            this.displayObject.y = this.y * GRoot.contentScaleFactor + this._yOffset;
+            this.displayObject.x = Math.floor(this.x * GRoot.contentScaleFactor);
+            this.displayObject.y = Math.floor(this.y * GRoot.contentScaleFactor + this._yOffset);
         }
         
         protected handleSizeChanged(): void {
