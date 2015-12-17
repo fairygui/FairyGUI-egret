@@ -107,7 +107,7 @@ module fairygui {
 
                 this.handleXYChanged();
                 if(this instanceof GGroup)
-                    (<GGroup>this).moveChildren(dx,dy);
+                    (<GGroup><any>this).moveChildren(dx,dy);
 
                 if(this._gearXY.controller)
                     this._gearXY.updateState();
