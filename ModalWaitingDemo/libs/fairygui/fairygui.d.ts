@@ -316,8 +316,22 @@ declare module fairygui {
         tweenTime: number;
         easeType: Function;
         setup(xml: any): void;
+        protected connected: boolean;
         protected addStatus(pageId: string, value: string): void;
         protected init(): void;
+        apply(): void;
+        updateState(): void;
+    }
+}
+declare module fairygui {
+    class GearSize extends GearBase {
+        private _storage;
+        private _default;
+        private _tweenValue;
+        private _tweener;
+        constructor(owner: GObject);
+        protected init(): void;
+        protected addStatus(pageId: string, value: string): void;
         apply(): void;
         updateState(): void;
     }
@@ -378,57 +392,6 @@ declare module fairygui {
         private __shakeItem(item);
         setup(xml: any): void;
         private decodeValue(type, str, value);
-    }
-}
-declare module fairygui {
-    class PackageItem {
-        owner: UIPackage;
-        type: PackageItemType;
-        id: string;
-        name: string;
-        width: number;
-        height: number;
-        file: string;
-        decoded: boolean;
-        scale9Grid: egret.Rectangle;
-        scaleByTile: boolean;
-        smoothing: boolean;
-        texture: egret.Texture;
-        pivot: egret.Point;
-        interval: number;
-        repeatDelay: number;
-        swing: boolean;
-        frames: Array<Frame>;
-        componentData: any;
-        sound: egret.Sound;
-        bitmapFont: BitmapFont;
-        constructor();
-        load(): any;
-        toString(): string;
-    }
-}
-declare module fairygui {
-    class GearSize extends GearBase {
-        private _storage;
-        private _default;
-        private _tweenValue;
-        private _tweener;
-        constructor(owner: GObject);
-        protected init(): void;
-        protected addStatus(pageId: string, value: string): void;
-        apply(): void;
-        updateState(): void;
-    }
-}
-declare module fairygui {
-    class GObjectPool {
-        private _pool;
-        private _count;
-        constructor();
-        clear(): void;
-        count: number;
-        getObject(url: string): GObject;
-        returnObject(obj: GObject): void;
     }
 }
 declare module fairygui {
@@ -546,6 +509,7 @@ declare module fairygui {
         asGroup: GGroup;
         asSlider: GSlider;
         asComboBox: GComboBox;
+        asImage: GImage;
         asMovieClip: GMovieClip;
         text: string;
         dispose(): void;
@@ -584,6 +548,33 @@ declare module fairygui {
         private __moving(evt);
         private __moving2(evt);
         private __end2(evt);
+    }
+}
+declare module fairygui {
+    class PackageItem {
+        owner: UIPackage;
+        type: PackageItemType;
+        id: string;
+        name: string;
+        width: number;
+        height: number;
+        file: string;
+        decoded: boolean;
+        scale9Grid: egret.Rectangle;
+        scaleByTile: boolean;
+        smoothing: boolean;
+        texture: egret.Texture;
+        pivot: egret.Point;
+        interval: number;
+        repeatDelay: number;
+        swing: boolean;
+        frames: Array<Frame>;
+        componentData: any;
+        sound: egret.Sound;
+        bitmapFont: BitmapFont;
+        constructor();
+        load(): any;
+        toString(): string;
     }
 }
 declare module fairygui {
@@ -767,6 +758,7 @@ declare module fairygui {
 declare module fairygui {
     class GearDisplay extends GearBase {
         constructor(owner: GObject);
+        protected connected: boolean;
         apply(): void;
     }
 }
@@ -897,6 +889,17 @@ declare module fairygui {
         findObjectNear(xValue: number, yValue: number, resultPoint?: egret.Point): egret.Point;
         protected updateBounds(): void;
         setup_beforeAdd(xml: any): void;
+    }
+}
+declare module fairygui {
+    class GObjectPool {
+        private _pool;
+        private _count;
+        constructor();
+        clear(): void;
+        count: number;
+        getObject(url: string): GObject;
+        returnObject(obj: GObject): void;
     }
 }
 declare module fairygui {

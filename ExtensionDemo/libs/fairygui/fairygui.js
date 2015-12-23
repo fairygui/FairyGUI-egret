@@ -51,9 +51,7 @@ var fairygui;
                             }
                         }
                         if (this._playingTransition)
-                            this._playingTransition.play(function () {
-                                this._playingTransition = null;
-                            }, this);
+                            this._playingTransition.play(function () { this._playingTransition = null; }, this);
                     }
                 }
             }
@@ -935,180 +933,181 @@ var fairygui;
     function parseButtonMode(value) {
         switch (value) {
             case "Common":
-                return 0 /* Common */;
+                return ButtonMode.Common;
             case "Check":
-                return 1 /* Check */;
+                return ButtonMode.Check;
             case "Radio":
-                return 2 /* Radio */;
+                return ButtonMode.Radio;
             default:
-                return 0 /* Common */;
+                return ButtonMode.Common;
         }
     }
     fairygui.parseButtonMode = parseButtonMode;
     function parseAutoSizeType(value) {
         switch (value) {
             case "none":
-                return 0 /* None */;
+                return AutoSizeType.None;
             case "both":
-                return 1 /* Both */;
+                return AutoSizeType.Both;
             case "height":
-                return 2 /* Height */;
+                return AutoSizeType.Height;
             default:
-                return 0 /* None */;
+                return AutoSizeType.None;
         }
     }
     fairygui.parseAutoSizeType = parseAutoSizeType;
     function parseAlignType(value) {
         switch (value) {
             case "left":
-                return 0 /* Left */;
+                return AlignType.Left;
             case "center":
-                return 1 /* Center */;
+                return AlignType.Center;
             case "right":
-                return 2 /* Right */;
+                return AlignType.Right;
             default:
-                return 0 /* Left */;
+                return AlignType.Left;
         }
     }
     fairygui.parseAlignType = parseAlignType;
     function getAlignTypeString(type) {
-        return type == 0 /* Left */ ? egret.HorizontalAlign.LEFT : (type == 1 /* Center */ ? egret.HorizontalAlign.CENTER : egret.HorizontalAlign.RIGHT);
+        return type == AlignType.Left ? egret.HorizontalAlign.LEFT :
+            (type == AlignType.Center ? egret.HorizontalAlign.CENTER : egret.HorizontalAlign.RIGHT);
     }
     fairygui.getAlignTypeString = getAlignTypeString;
     function parseVertAlignType(value) {
         switch (value) {
             case "top":
-                return 0 /* Top */;
+                return VertAlignType.Top;
             case "middle":
-                return 1 /* Middle */;
+                return VertAlignType.Middle;
             case "bottom":
-                return 2 /* Bottom */;
+                return VertAlignType.Bottom;
             default:
-                return 0 /* Top */;
+                return VertAlignType.Top;
         }
     }
     fairygui.parseVertAlignType = parseVertAlignType;
     function parseFillType(value) {
         switch (value) {
             case "none":
-                return 0 /* None */;
+                return FillType.None;
             case "scale":
-                return 1 /* Scale */;
+                return FillType.Scale;
             case "scaleFree":
-                return 2 /* ScaleFree */;
+                return FillType.ScaleFree;
             default:
-                return 0 /* None */;
+                return FillType.None;
         }
     }
     fairygui.parseFillType = parseFillType;
     function parseListLayoutType(value) {
         switch (value) {
             case "column":
-                return 0 /* SingleColumn */;
+                return ListLayoutType.SingleColumn;
             case "row":
-                return 1 /* SingleRow */;
+                return ListLayoutType.SingleRow;
             case "flow_hz":
-                return 2 /* FlowHorizontal */;
+                return ListLayoutType.FlowHorizontal;
             case "flow_vt":
-                return 3 /* FlowVertical */;
+                return ListLayoutType.FlowVertical;
             default:
-                return 0 /* SingleColumn */;
+                return ListLayoutType.SingleColumn;
         }
     }
     fairygui.parseListLayoutType = parseListLayoutType;
     function parseListSelectionMode(value) {
         switch (value) {
             case "single":
-                return 0 /* Single */;
+                return ListSelectionMode.Single;
             case "multiple":
-                return 1 /* Multiple */;
+                return ListSelectionMode.Multiple;
             case "multipleSingleClick":
-                return 2 /* Multiple_SingleClick */;
+                return ListSelectionMode.Multiple_SingleClick;
             case "none":
-                return 3 /* None */;
+                return ListSelectionMode.None;
             default:
-                return 0 /* Single */;
+                return ListSelectionMode.Single;
         }
     }
     fairygui.parseListSelectionMode = parseListSelectionMode;
     function parseOverflowType(value) {
         switch (value) {
             case "visible":
-                return 0 /* Visible */;
+                return OverflowType.Visible;
             case "hidden":
-                return 1 /* Hidden */;
+                return OverflowType.Hidden;
             case "scroll":
-                return 2 /* Scroll */;
+                return OverflowType.Scroll;
             case "scale":
-                return 3 /* Scale */;
+                return OverflowType.Scale;
             case "scaleFree":
-                return 4 /* ScaleFree */;
+                return OverflowType.ScaleFree;
             default:
-                return 0 /* Visible */;
+                return OverflowType.Visible;
         }
     }
     fairygui.parseOverflowType = parseOverflowType;
     function parsePackageItemType(value) {
         switch (value) {
             case "image":
-                return 0 /* Image */;
+                return PackageItemType.Image;
             case "movieclip":
-                return 2 /* MovieClip */;
+                return PackageItemType.MovieClip;
             case "sound":
-                return 3 /* Sound */;
+                return PackageItemType.Sound;
             case "component":
-                return 4 /* Component */;
+                return PackageItemType.Component;
             case "swf":
-                return 1 /* Swf */;
+                return PackageItemType.Swf;
             case "font":
-                return 6 /* Font */;
+                return PackageItemType.Font;
             case "atlas":
-                return 7 /* Atlas */;
+                return PackageItemType.Atlas;
             default:
-                return 5 /* Misc */;
+                return PackageItemType.Misc;
         }
     }
     fairygui.parsePackageItemType = parsePackageItemType;
     function parseProgressTitleType(value) {
         switch (value) {
             case "percent":
-                return 0 /* Percent */;
+                return ProgressTitleType.Percent;
             case "valueAndmax":
-                return 1 /* ValueAndMax */;
+                return ProgressTitleType.ValueAndMax;
             case "value":
-                return 2 /* Value */;
+                return ProgressTitleType.Value;
             case "max":
-                return 3 /* Max */;
+                return ProgressTitleType.Max;
             default:
-                return 0 /* Percent */;
+                return ProgressTitleType.Percent;
         }
     }
     fairygui.parseProgressTitleType = parseProgressTitleType;
     function parseScrollBarDisplayType(value) {
         switch (value) {
             case "default":
-                return 0 /* Default */;
+                return ScrollBarDisplayType.Default;
             case "visible":
-                return 1 /* Visible */;
+                return ScrollBarDisplayType.Visible;
             case "auto":
-                return 2 /* Auto */;
+                return ScrollBarDisplayType.Auto;
             case "hidden":
-                return 3 /* Hidden */;
+                return ScrollBarDisplayType.Hidden;
             default:
-                return 0 /* Default */;
+                return ScrollBarDisplayType.Default;
         }
     }
     fairygui.parseScrollBarDisplayType = parseScrollBarDisplayType;
     function parseScrollType(value) {
         switch (value) {
             case "horizontal":
-                return 0 /* Horizontal */;
+                return ScrollType.Horizontal;
             case "vertical":
-                return 1 /* Vertical */;
+                return ScrollType.Vertical;
             case "both":
-                return 2 /* Both */;
+                return ScrollType.Both;
             default:
-                return 1 /* Vertical */;
+                return ScrollType.Vertical;
         }
     }
     fairygui.parseScrollType = parseScrollType;
@@ -1308,7 +1307,8 @@ var fairygui;
                 gv = this._default;
             if (this._tweener)
                 this._tweener.tick(100000000);
-            if (this._tween && !fairygui.UIPackage._constructing && ct && this._pageSet.containsId(this._controller.previousPageId)) {
+            if (this._tween && !fairygui.UIPackage._constructing
+                && ct && this._pageSet.containsId(this._controller.previousPageId)) {
                 var a = gv.width != this._owner.width || gv.height != this._owner.height;
                 var b = gv.scaleX != this._owner.scaleX || gv.scaleY != this._owner.scaleY;
                 if (a || b) {
@@ -1330,7 +1330,9 @@ var fairygui;
                     this._tweenValue.height = this._owner.height;
                     this._tweenValue.scaleX = this._owner.scaleX;
                     this._tweenValue.scaleY = this._owner.scaleY;
-                    this._tweener = egret.Tween.get(this._tweenValue, vars).to({ width: gv.width, height: gv.height, scaleX: gv.scaleX, scaleY: gv.scaleY }, this._tweenTime * 1000, this._easeType).call(function () {
+                    this._tweener = egret.Tween.get(this._tweenValue, vars)
+                        .to({ width: gv.width, height: gv.height, scaleX: gv.scaleX, scaleY: gv.scaleY }, this._tweenTime * 1000, this._easeType)
+                        .call(function () {
                         this._owner.internalVisible--;
                         this._tweener = null;
                     }, this);
@@ -1419,7 +1421,8 @@ var fairygui;
                 pt = this._default;
             if (this._tweener)
                 this._tweener.tick(100000000);
-            if (this._tween && !fairygui.UIPackage._constructing && ct && this._pageSet.containsId(this._controller.previousPageId)) {
+            if (this._tween && !fairygui.UIPackage._constructing
+                && ct && this._pageSet.containsId(this._controller.previousPageId)) {
                 if (this._owner.x != pt.x || this._owner.y != pt.y) {
                     this._owner.internalVisible++;
                     var vars = {
@@ -1434,7 +1437,9 @@ var fairygui;
                         this._tweenValue = new egret.Point();
                     this._tweenValue.x = this._owner.x;
                     this._tweenValue.y = this._owner.y;
-                    this._tweener = egret.Tween.get(this._tweenValue, vars).to({ x: pt.x, y: pt.y }, this._tweenTime * 1000, this._easeType).call(function () {
+                    this._tweener = egret.Tween.get(this._tweenValue, vars)
+                        .to({ x: pt.x, y: pt.y }, this._tweenTime * 1000, this._easeType)
+                        .call(function () {
                         this._owner.internalVisible--;
                         this._tweener = null;
                     }, this);
@@ -1771,7 +1776,8 @@ var fairygui;
                                 item.tweener.wait(startTime);
                             else
                                 this.applyValue(item, item.value);
-                            item.tweener.call(this.__tweenStart, this, [item]).to(toProps, item.duration * 1000, item.easeType);
+                            item.tweener.call(this.__tweenStart, this, [item])
+                                .to(toProps, item.duration * 1000, item.easeType);
                             if (item.repeat > 0) {
                                 //egret.Tween不支持yoyo，这里自行实现
                                 item.tweenTimes = 0;
@@ -1926,7 +1932,8 @@ var fairygui;
                 initProps.onChangeObj = [this, item];
                 this.prepareValue(item, toProps, item.yoyo && item.tweenTimes % 2 == 1);
                 item.tweener = egret.Tween.get(item.value, initProps);
-                item.tweener.to(toProps, item.duration * 1000, item.easeType).call(this.__tweenRepeatComplete, this, [item]);
+                item.tweener.to(toProps, item.duration * 1000, item.easeType)
+                    .call(this.__tweenRepeatComplete, this, [item]);
             }
             else
                 this.__tweenComplete(item);
@@ -2436,8 +2443,8 @@ var fairygui;
             }
             this.setXY((r.width - this.width) / 2, (r.height - this.height) / 2);
             if (restraint) {
-                this.addRelation(r, 3 /* Center_Center */);
-                this.addRelation(r, 10 /* Middle_Middle */);
+                this.addRelation(r, fairygui.RelationType.Center_Center);
+                this.addRelation(r, fairygui.RelationType.Middle_Middle);
             }
         };
         d(p, "width"
@@ -2610,7 +2617,8 @@ var fairygui;
             }
             ,function (value) {
                 this._touchable = value;
-                if ((this instanceof fairygui.GImage) || (this instanceof fairygui.GMovieClip) || (this instanceof fairygui.GTextField) && !(this instanceof fairygui.GTextInput) && !(this instanceof fairygui.GRichTextField))
+                if ((this instanceof fairygui.GImage) || (this instanceof fairygui.GMovieClip)
+                    || (this instanceof fairygui.GTextField) && !(this instanceof fairygui.GTextInput) && !(this instanceof fairygui.GRichTextField))
                     //Touch is not supported by GImage/GMovieClip/GTextField
                     return;
                 if (this._displayObject != null) {
@@ -2911,6 +2919,11 @@ var fairygui;
             }
         );
         d(p, "asComboBox"
+            ,function () {
+                return this;
+            }
+        );
+        d(p, "asImage"
             ,function () {
                 return this;
             }
@@ -3529,7 +3542,8 @@ var fairygui;
         };
         p.isChildInView = function (child) {
             if (this._rootContainer.mask != null) {
-                return child.x + child.width >= 0 && child.x <= this.width && child.y + child.height >= 0 && child.y <= this.height;
+                return child.x + child.width >= 0 && child.x <= this.width
+                    && child.y + child.height >= 0 && child.y <= this.height;
             }
             else if (this._scrollPane != null) {
                 return this._scrollPane.isChildInView(child);
@@ -3576,14 +3590,14 @@ var fairygui;
         };
         p.setupOverflowAndScroll = function (overflow, scrollBarMargin, scroll, scrollBarDisplay, flags) {
             if (flags === void 0) { flags = 0; }
-            if (overflow == 1 /* Hidden */) {
+            if (overflow == fairygui.OverflowType.Hidden) {
                 this._container = new egret.DisplayObjectContainer();
                 this._rootContainer.addChild(this._container);
                 this.updateMask();
                 this._container.x = this._margin.left * fairygui.GRoot.contentScaleFactor;
                 this._container.y = this._margin.top * fairygui.GRoot.contentScaleFactor;
             }
-            else if (overflow == 2 /* Scroll */) {
+            else if (overflow == fairygui.OverflowType.Scroll) {
                 this._container = new egret.DisplayObjectContainer();
                 this._rootContainer.addChild(this._container);
                 this._scrollPane = new fairygui.ScrollPane(this, scroll, this._margin, scrollBarMargin, scrollBarDisplay, flags);
@@ -3763,19 +3777,19 @@ var fairygui;
             if (str)
                 overflow = fairygui.parseOverflowType(str);
             else
-                overflow = 0 /* Visible */;
+                overflow = fairygui.OverflowType.Visible;
             var scroll;
             str = xml.attributes.scroll;
             if (str)
                 scroll = fairygui.parseScrollType(str);
             else
-                scroll = 1 /* Vertical */;
+                scroll = fairygui.ScrollType.Vertical;
             var scrollBarDisplay;
             str = xml.attributes.scrollBar;
             if (str)
                 scrollBarDisplay = fairygui.parseScrollBarDisplayType(str);
             else
-                scrollBarDisplay = 0 /* Default */;
+                scrollBarDisplay = fairygui.ScrollBarDisplayType.Default;
             var scrollBarFlags;
             str = xml.attributes.scrollBarFlags;
             if (str)
@@ -3783,7 +3797,7 @@ var fairygui;
             else
                 scrollBarFlags = 0;
             var scrollBarMargin;
-            if (overflow == 2 /* Scroll */) {
+            if (overflow == fairygui.OverflowType.Scroll) {
                 scrollBarMargin = new fairygui.Margin();
                 str = xml.attributes.scrollBarMargin;
                 if (str)
@@ -3899,7 +3913,7 @@ var fairygui;
         __extends(GButton, _super);
         function GButton() {
             _super.call(this);
-            this._mode = 0 /* Common */;
+            this._mode = fairygui.ButtonMode.Common;
             this._title = "";
             this._icon = "";
             this._sound = fairygui.UIConfig.buttonSound;
@@ -4007,7 +4021,7 @@ var fairygui;
                 return this._selected;
             }
             ,function (val) {
-                if (this._mode == 0 /* Common */)
+                if (this._mode == fairygui.ButtonMode.Common)
                     return;
                 if (this._selected != val) {
                     this._selected = val;
@@ -4034,10 +4048,12 @@ var fairygui;
                         else if (this._iconObject instanceof GButton)
                             this._iconObject.icon = str;
                     }
-                    if (this._relatedController && this._parent && !this._parent._buildingDisplayList) {
+                    if (this._relatedController
+                        && this._parent
+                        && !this._parent._buildingDisplayList) {
                         if (this._selected)
                             this._relatedController.selectedPageId = this._pageOption.id;
-                        else if (this._mode == 1 /* Check */ && this._relatedController.selectedPageId == this._pageOption.id)
+                        else if (this._mode == fairygui.ButtonMode.Check && this._relatedController.selectedPageId == this._pageOption.id)
                             this._relatedController.oppositePageId = this._pageOption.id;
                     }
                 }
@@ -4049,7 +4065,7 @@ var fairygui;
             }
             ,function (value) {
                 if (this._mode != value) {
-                    if (value == 0 /* Common */)
+                    if (value == fairygui.ButtonMode.Common)
                         this.selected = false;
                     this._mode = value;
                 }
@@ -4096,7 +4112,7 @@ var fairygui;
         };
         p.fireClick = function (downEffect) {
             if (downEffect === void 0) { downEffect = true; }
-            if (downEffect && this._mode == 0 /* Common */) {
+            if (downEffect && this._mode == fairygui.ButtonMode.Common) {
                 this.setState(GButton.OVER);
                 fairygui.GTimers.inst.add(100, 1, this.setState, this, GButton.DOWN);
                 fairygui.GTimers.inst.add(200, 1, this.setState, this, GButton.UP);
@@ -4144,7 +4160,7 @@ var fairygui;
             this._buttonController = this.getController("button");
             this._titleObject = this.getChild("title");
             this._iconObject = this.getChild("icon");
-            if (this._mode == 0 /* Common */)
+            if (this._mode == fairygui.ButtonMode.Common)
                 this.setState(GButton.UP);
             this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__mousedown, this);
             this.addEventListener(egret.TouchEvent.TOUCH_TAP, this.__click, this);
@@ -4194,7 +4210,7 @@ var fairygui;
         p.__mousedown = function (evt) {
             this._down = true;
             fairygui.GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
-            if (this._mode == 0 /* Common */) {
+            if (this._mode == fairygui.ButtonMode.Common) {
                 if (this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED))
                     this.setState(GButton.SELECTED_DISABLED);
                 else
@@ -4214,7 +4230,7 @@ var fairygui;
             if (this._down) {
                 fairygui.GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
                 this._down = false;
-                if (this._mode == 0 /* Common */) {
+                if (this._mode == fairygui.ButtonMode.Common) {
                     if (this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED))
                         this.setState(GButton.DISABLED);
                     else if (this._over)
@@ -4235,11 +4251,11 @@ var fairygui;
             }
             if (!this._changeStateOnClick)
                 return;
-            if (this._mode == 1 /* Check */) {
+            if (this._mode == fairygui.ButtonMode.Check) {
                 this.selected = !this._selected;
                 this.dispatchEvent(new fairygui.StateChangeEvent(fairygui.StateChangeEvent.CHANGED));
             }
-            else if (this._mode == 2 /* Radio */) {
+            else if (this._mode == fairygui.ButtonMode.Radio) {
                 if (!this._selected) {
                     this.selected = true;
                     this.dispatchEvent(new fairygui.StateChangeEvent(fairygui.StateChangeEvent.CHANGED));
@@ -4383,10 +4399,10 @@ var fairygui;
                     return;
                 }
                 this._list.addEventListener(fairygui.ItemEvent.CLICK, this.__clickItem, this);
-                this._list.addRelation(this._dropdownObject, 14 /* Width */);
-                this._list.removeRelation(this._dropdownObject, 15 /* Height */);
-                this._dropdownObject.addRelation(this._list, 15 /* Height */);
-                this._dropdownObject.removeRelation(this._list, 14 /* Width */);
+                this._list.addRelation(this._dropdownObject, fairygui.RelationType.Width);
+                this._list.removeRelation(this._dropdownObject, fairygui.RelationType.Height);
+                this._dropdownObject.addRelation(this._list, fairygui.RelationType.Height);
+                this._dropdownObject.removeRelation(this._list, fairygui.RelationType.Width);
                 this._dropdownObject.displayObject.addEventListener(egret.Event.REMOVED_FROM_STAGE, this.__popupWinClosed, this);
             }
             /*not support
@@ -4688,7 +4704,8 @@ var fairygui;
                 gv = this._default;
             if (this._tweener)
                 this._tweener.tick(100000000);
-            if (this._tween && !fairygui.UIPackage._constructing && ct && this._pageSet.containsId(this._controller.previousPageId)) {
+            if (this._tween && !fairygui.UIPackage._constructing
+                && ct && this._pageSet.containsId(this._controller.previousPageId)) {
                 this._owner._gearLocked = true;
                 this._owner.grayed = gv.grayed;
                 this._owner._gearLocked = false;
@@ -4711,7 +4728,9 @@ var fairygui;
                         this._tweenValue = new egret.Point();
                     this._tweenValue.x = this._owner.alpha;
                     this._tweenValue.y = this._owner.rotation;
-                    this._tweener = egret.Tween.get(this._tweenValue, vars).to({ x: gv.alpha, y: gv.rotation }, this._tweenTime * 1000, this._easeType).call(function () {
+                    this._tweener = egret.Tween.get(this._tweenValue, vars)
+                        .to({ x: gv.alpha, y: gv.rotation }, this._tweenTime * 1000, this._easeType)
+                        .call(function () {
                         this._owner.internalVisible--;
                         this._tweener = null;
                     }, this);
@@ -5227,10 +5246,10 @@ var fairygui;
             this._lastSelectedIndex = 0;
             this._trackBounds = true;
             this._pool = new fairygui.GObjectPool();
-            this._layout = 0 /* SingleColumn */;
+            this._layout = fairygui.ListLayoutType.SingleColumn;
             this._autoResizeItem = true;
             this._lastSelectedIndex = -1;
-            this._selectionMode = 0 /* Single */;
+            this._selectionMode = fairygui.ListSelectionMode.Single;
         }
         var d = __define,c=GList;p=c.prototype;
         p.dispose = function () {
@@ -5306,9 +5325,9 @@ var fairygui;
         p.addChildAt = function (child, index) {
             if (index === void 0) { index = 0; }
             if (this._autoResizeItem) {
-                if (this._layout == 0 /* SingleColumn */)
+                if (this._layout == fairygui.ListLayoutType.SingleColumn)
                     child.width = this.viewWidth;
-                else if (this._layout == 1 /* SingleRow */)
+                else if (this._layout == fairygui.ListLayoutType.SingleRow)
                     child.height = this.viewHeight;
             }
             _super.prototype.addChildAt.call(this, child, index);
@@ -5383,9 +5402,9 @@ var fairygui;
         };
         p.addSelection = function (index, scrollItToView) {
             if (scrollItToView === void 0) { scrollItToView = false; }
-            if (this._selectionMode == 3 /* None */)
+            if (this._selectionMode == fairygui.ListSelectionMode.None)
                 return;
-            if (this._selectionMode == 0 /* Single */)
+            if (this._selectionMode == fairygui.ListSelectionMode.Single)
                 this.clearSelection();
             var obj = this.getChildAt(index).asButton;
             if (obj != null) {
@@ -5397,7 +5416,7 @@ var fairygui;
         };
         p.removeSelection = function (index) {
             if (index === void 0) { index = 0; }
-            if (this._selectionMode == 3 /* None */)
+            if (this._selectionMode == fairygui.ListSelectionMode.None)
                 return;
             var obj = this.getChildAt(index).asButton;
             if (obj != null && obj.selected)
@@ -5442,14 +5461,14 @@ var fairygui;
                 return;
             switch (dir) {
                 case 1:
-                    if (this._layout == 0 /* SingleColumn */ || this._layout == 3 /* FlowVertical */) {
+                    if (this._layout == fairygui.ListLayoutType.SingleColumn || this._layout == fairygui.ListLayoutType.FlowVertical) {
                         index--;
                         if (index >= 0) {
                             this.clearSelection();
                             this.addSelection(index, true);
                         }
                     }
-                    else if (this._layout == 2 /* FlowHorizontal */) {
+                    else if (this._layout == fairygui.ListLayoutType.FlowHorizontal) {
                         var current = this._children[index];
                         var k = 0;
                         for (var i = index - 1; i >= 0; i--) {
@@ -5471,14 +5490,14 @@ var fairygui;
                     }
                     break;
                 case 3:
-                    if (this._layout == 1 /* SingleRow */ || this._layout == 2 /* FlowHorizontal */) {
+                    if (this._layout == fairygui.ListLayoutType.SingleRow || this._layout == fairygui.ListLayoutType.FlowHorizontal) {
                         index++;
                         if (index < this._children.length) {
                             this.clearSelection();
                             this.addSelection(index, true);
                         }
                     }
-                    else if (this._layout == 3 /* FlowVertical */) {
+                    else if (this._layout == fairygui.ListLayoutType.FlowVertical) {
                         current = this._children[index];
                         k = 0;
                         var cnt = this._children.length;
@@ -5501,14 +5520,14 @@ var fairygui;
                     }
                     break;
                 case 5:
-                    if (this._layout == 0 /* SingleColumn */ || this._layout == 3 /* FlowVertical */) {
+                    if (this._layout == fairygui.ListLayoutType.SingleColumn || this._layout == fairygui.ListLayoutType.FlowVertical) {
                         index++;
                         if (index < this._children.length) {
                             this.clearSelection();
                             this.addSelection(index, true);
                         }
                     }
-                    else if (this._layout == 2 /* FlowHorizontal */) {
+                    else if (this._layout == fairygui.ListLayoutType.FlowHorizontal) {
                         current = this._children[index];
                         k = 0;
                         cnt = this._children.length;
@@ -5531,14 +5550,14 @@ var fairygui;
                     }
                     break;
                 case 7:
-                    if (this._layout == 1 /* SingleRow */ || this._layout == 2 /* FlowHorizontal */) {
+                    if (this._layout == fairygui.ListLayoutType.SingleRow || this._layout == fairygui.ListLayoutType.FlowHorizontal) {
                         index--;
                         if (index >= 0) {
                             this.clearSelection();
                             this.addSelection(index, true);
                         }
                     }
-                    else if (this._layout == 3 /* FlowVertical */) {
+                    else if (this._layout == fairygui.ListLayoutType.FlowVertical) {
                         current = this._children[index];
                         k = 0;
                         for (i = index - 1; i >= 0; i--) {
@@ -5563,12 +5582,12 @@ var fairygui;
         };
         p.__mouseDownItem = function (evt) {
             var item = (evt.currentTarget);
-            if (item == null || this._selectionMode == 3 /* None */)
+            if (item == null || this._selectionMode == fairygui.ListSelectionMode.None)
                 return;
             this._selectionHandled = false;
             if (fairygui.UIConfig.defaultScrollTouchEffect && this.scrollPane != null)
                 return;
-            if (this._selectionMode == 0 /* Single */) {
+            if (this._selectionMode == fairygui.ListSelectionMode.Single) {
                 this.setSelectionOnEvent(item);
             }
             else {
@@ -5591,13 +5610,13 @@ var fairygui;
             this.dispatchEvent(ie);
         };
         p.setSelectionOnEvent = function (item) {
-            if (!(item instanceof fairygui.GButton) || this._selectionMode == 3 /* None */)
+            if (!(item instanceof fairygui.GButton) || this._selectionMode == fairygui.ListSelectionMode.None)
                 return;
             this._selectionHandled = true;
             var dontChangeLastIndex = false;
             var button = item;
             var index = this.getChildIndex(item);
-            if (this._selectionMode == 0 /* Single */) {
+            if (this._selectionMode == fairygui.ListSelectionMode.Single) {
                 if (!button.selected) {
                     this.clearSelectionExcept(button);
                     button.selected = true;
@@ -5622,7 +5641,7 @@ var fairygui;
                         }
                     }
                 }
-                else if (fairygui.GRoot.ctrlKeyDown || this._selectionMode == 2 /* Multiple_SingleClick */) {
+                else if (fairygui.GRoot.ctrlKeyDown || this._selectionMode == fairygui.ListSelectionMode.Multiple_SingleClick) {
                     button.selected = !button.selected;
                 }
                 else {
@@ -5654,7 +5673,7 @@ var fairygui;
             if (itemCount > curCount)
                 itemCount = curCount;
             if (itemCount == 0) {
-                if (this._layout == 0 /* SingleColumn */ || this._layout == 2 /* FlowHorizontal */)
+                if (this._layout == fairygui.ListLayoutType.SingleColumn || this._layout == fairygui.ListLayoutType.FlowHorizontal)
                     this.viewHeight = minSize;
                 else
                     this.viewWidth = minSize;
@@ -5669,14 +5688,14 @@ var fairygui;
                     i--;
                 }
                 if (i < 0) {
-                    if (this._layout == 0 /* SingleColumn */ || this._layout == 2 /* FlowHorizontal */)
+                    if (this._layout == fairygui.ListLayoutType.SingleColumn || this._layout == fairygui.ListLayoutType.FlowHorizontal)
                         this.viewHeight = minSize;
                     else
                         this.viewWidth = minSize;
                 }
                 else {
                     var size = 0;
-                    if (this._layout == 0 /* SingleColumn */ || this._layout == 2 /* FlowHorizontal */) {
+                    if (this._layout == fairygui.ListLayoutType.SingleColumn || this._layout == fairygui.ListLayoutType.FlowHorizontal) {
                         size = obj.y + obj.height;
                         if (size < minSize)
                             size = minSize;
@@ -5705,11 +5724,11 @@ var fairygui;
             _super.prototype.handleSizeChanged.call(this);
             if (this._autoResizeItem)
                 this.adjustItemsSize();
-            if (this._layout == 2 /* FlowHorizontal */ || this._layout == 3 /* FlowVertical */)
+            if (this._layout == fairygui.ListLayoutType.FlowHorizontal || this._layout == fairygui.ListLayoutType.FlowVertical)
                 this.setBoundsChangedFlag();
         };
         p.adjustItemsSize = function () {
-            if (this._layout == 0 /* SingleColumn */) {
+            if (this._layout == fairygui.ListLayoutType.SingleColumn) {
                 var cnt = this.numChildren;
                 var cw = this.viewWidth;
                 for (var i = 0; i < cnt; i++) {
@@ -5717,7 +5736,7 @@ var fairygui;
                     child.width = cw;
                 }
             }
-            else if (this._layout == 1 /* SingleRow */) {
+            else if (this._layout == fairygui.ListLayoutType.SingleRow) {
                 cnt = this.numChildren;
                 var ch = this.viewHeight;
                 for (i = 0; i < cnt; i++) {
@@ -5804,7 +5823,7 @@ var fairygui;
                 child = this.getChildAt(i);
                 child.ensureSizeCorrect();
             }
-            if (this._layout == 0 /* SingleColumn */) {
+            if (this._layout == fairygui.ListLayoutType.SingleColumn) {
                 for (i = 0; i < cnt; i++) {
                     child = this.getChildAt(i);
                     if (!child.visible)
@@ -5819,7 +5838,7 @@ var fairygui;
                 cw = curX + maxWidth;
                 ch = curY;
             }
-            else if (this._layout == 1 /* SingleRow */) {
+            else if (this._layout == fairygui.ListLayoutType.SingleRow) {
                 for (i = 0; i < cnt; i++) {
                     child = this.getChildAt(i);
                     if (!child.visible)
@@ -5834,7 +5853,7 @@ var fairygui;
                 cw = curX;
                 ch = curY + maxHeight;
             }
-            else if (this._layout == 2 /* FlowHorizontal */) {
+            else if (this._layout == fairygui.ListLayoutType.FlowHorizontal) {
                 cw = this.viewWidth;
                 for (i = 0; i < cnt; i++) {
                     child = this.getChildAt(i);
@@ -5888,19 +5907,19 @@ var fairygui;
             if (str)
                 overflow = fairygui.parseOverflowType(str);
             else
-                overflow = 0 /* Visible */;
+                overflow = fairygui.OverflowType.Visible;
             var scroll;
             str = xml.attributes.scroll;
             if (str)
                 scroll = fairygui.parseScrollType(str);
             else
-                scroll = 1 /* Vertical */;
+                scroll = fairygui.ScrollType.Vertical;
             var scrollBarDisplay;
             str = xml.attributes.scrollBar;
             if (str)
                 scrollBarDisplay = fairygui.parseScrollBarDisplayType(str);
             else
-                scrollBarDisplay = 0 /* Default */;
+                scrollBarDisplay = fairygui.ScrollBarDisplayType.Default;
             var scrollBarFlags;
             str = xml.attributes.scrollBarFlags;
             if (str)
@@ -5908,7 +5927,7 @@ var fairygui;
             else
                 scrollBarFlags = 0;
             var scrollBarMargin;
-            if (overflow == 2 /* Scroll */) {
+            if (overflow == fairygui.OverflowType.Scroll) {
                 scrollBarMargin = new fairygui.Margin();
                 str = xml.attributes.scrollBarMargin;
                 if (str)
@@ -6030,8 +6049,8 @@ var fairygui;
             this._contentHeight = 0;
             this._playing = true;
             this._url = "";
-            this._align = 0 /* Left */;
-            this._verticalAlign = 0 /* Top */;
+            this._align = fairygui.AlignType.Left;
+            this._verticalAlign = fairygui.VertAlignType.Top;
             this._showErrorSign = true;
             this._color = 0xFFFFFF;
             this._gearAnimation = new fairygui.GearAnimation(this);
@@ -6045,8 +6064,11 @@ var fairygui;
             this.setDisplayObject(this._container);
         };
         p.dispose = function () {
-            if (this._contentItem == null && this._content.texture != null)
-                this.freeExternal(this._content.texture);
+            if (this._contentItem == null && (this._content instanceof egret.Bitmap)) {
+                var texture = this._content.texture;
+                if (texture != null)
+                    this.freeExternal(texture);
+            }
             _super.prototype.dispose.call(this);
         };
         d(p, "url"
@@ -6174,7 +6196,7 @@ var fairygui;
             this._contentItem = fairygui.UIPackage.getItemByURL(itemURL);
             if (this._contentItem != null) {
                 this._contentItem.load();
-                if (this._contentItem.type == 0 /* Image */) {
+                if (this._contentItem.type == fairygui.PackageItemType.Image) {
                     if (this._contentItem.texture == null) {
                         this.setErrorState();
                     }
@@ -6196,7 +6218,7 @@ var fairygui;
                         this.updateLayout();
                     }
                 }
-                else if (this._contentItem.type == 2 /* MovieClip */) {
+                else if (this._contentItem.type == fairygui.PackageItemType.MovieClip) {
                     if (!(this._content instanceof fairygui.MovieClip)) {
                         this._content = new fairygui.MovieClip();
                         this._container.addChild(this._content);
@@ -6291,11 +6313,11 @@ var fairygui;
             }
             else {
                 var sx = 1, sy = 1;
-                if (this._fill == 1 /* Scale */ || this._fill == 2 /* ScaleFree */) {
+                if (this._fill == fairygui.FillType.Scale || this._fill == fairygui.FillType.ScaleFree) {
                     sx = this.width / this._contentSourceWidth;
                     sy = this.height / this._contentSourceHeight;
                     if (sx != 1 || sy != 1) {
-                        if (this._fill == 1 /* Scale */) {
+                        if (this._fill == fairygui.FillType.Scale) {
                             if (sx > sy)
                                 sx = sy;
                             else
@@ -6313,13 +6335,13 @@ var fairygui;
                     this._content.scaleX = sx;
                     this._content.scaleY = sy;
                 }
-                if (this._align == 1 /* Center */)
+                if (this._align == fairygui.AlignType.Center)
                     this._content.x = Math.floor((this.width - this._contentWidth) / 2);
-                else if (this._align == 2 /* Right */)
+                else if (this._align == fairygui.AlignType.Right)
                     this._content.x = this.width - this._contentWidth;
-                if (this._verticalAlign == 1 /* Middle */)
+                if (this._verticalAlign == fairygui.VertAlignType.Middle)
                     this._content.y = Math.floor((this.height - this._contentHeight) / 2);
-                else if (this._verticalAlign == 2 /* Bottom */)
+                else if (this._verticalAlign == fairygui.VertAlignType.Bottom)
                     this._content.y = this.height - this._contentHeight;
             }
         };
@@ -6327,8 +6349,11 @@ var fairygui;
             this.clearErrorState();
             if (this._content != null && this._content.parent != null)
                 this._container.removeChild(this._content);
-            if (this._contentItem == null && this._content != null)
-                this.freeExternal(this._content.texture);
+            if (this._contentItem == null && (this._content instanceof egret.Bitmap)) {
+                var texture = this._content.texture;
+                if (texture != null)
+                    this.freeExternal(texture);
+            }
             this._contentItem = null;
         };
         d(p, "gearAnimation"
@@ -6533,7 +6558,7 @@ var fairygui;
             this._barMaxHeightDelta = 0;
             this._barStartX = 0;
             this._barStartY = 0;
-            this._titleType = 0 /* Percent */;
+            this._titleType = fairygui.ProgressTitleType.Percent;
             this._value = 50;
             this._max = 100;
         }
@@ -6572,16 +6597,16 @@ var fairygui;
             var percent = Math.min(this._value / this._max, 1);
             if (this._titleObject) {
                 switch (this._titleType) {
-                    case 0 /* Percent */:
+                    case fairygui.ProgressTitleType.Percent:
                         this._titleObject.text = Math.round(percent * 100) + "%";
                         break;
-                    case 1 /* ValueAndMax */:
+                    case fairygui.ProgressTitleType.ValueAndMax:
                         this._titleObject.text = this._value + "/" + this._max;
                         break;
-                    case 2 /* Value */:
+                    case fairygui.ProgressTitleType.Value:
                         this._titleObject.text = "" + this._value;
                         break;
-                    case 3 /* Max */:
+                    case fairygui.ProgressTitleType.Max:
                         this._titleObject.text = "" + this._max;
                         break;
                 }
@@ -6669,12 +6694,12 @@ var fairygui;
             this._textWidth = 0;
             this._textHeight = 0;
             this._fontSize = 12;
-            this._align = 0 /* Left */;
-            this._verticalAlign = 0 /* Top */;
+            this._align = fairygui.AlignType.Left;
+            this._verticalAlign = fairygui.VertAlignType.Top;
             this._text = "";
             this._leading = 3;
             this._color = 0;
-            this._autoSize = 1 /* Both */;
+            this._autoSize = fairygui.AutoSizeType.Both;
             this._widthAutoSize = true;
             this._heightAutoSize = true;
             this._gearColor = new fairygui.GearColor(this);
@@ -6862,8 +6887,8 @@ var fairygui;
             ,function (value) {
                 if (this._autoSize != value) {
                     this._autoSize = value;
-                    this._widthAutoSize = value == 1 /* Both */;
-                    this._heightAutoSize = value == 1 /* Both */ || value == 2 /* Height */;
+                    this._widthAutoSize = value == fairygui.AutoSizeType.Both;
+                    this._heightAutoSize = value == fairygui.AutoSizeType.Both || value == fairygui.AutoSizeType.Height;
                     this.render();
                 }
             }
@@ -7108,7 +7133,8 @@ var fairygui;
                     this._lines.push(line);
                 }
             }
-            if (lineBuffer.length > 0 || this._lines.length > 0 && fairygui.ToolSet.endsWith(this._lines[this._lines.length - 1].text, "\n")) {
+            if (lineBuffer.length > 0
+                || this._lines.length > 0 && fairygui.ToolSet.endsWith(this._lines[this._lines.length - 1].text, "\n")) {
                 line = LineInfo.borrow();
                 line.width = lineWidth;
                 if (lineHeight == 0)
@@ -7166,9 +7192,9 @@ var fairygui;
             for (var i = 0; i < lineCount; i++) {
                 line = this._lines[i];
                 charX = GTextField.GUTTER_X;
-                if (this._align == 1 /* Center */)
+                if (this._align == fairygui.AlignType.Center)
                     lineIndent = (rectWidth - line.width) / 2;
-                else if (this._align == 2 /* Right */)
+                else if (this._align == fairygui.AlignType.Right)
                     lineIndent = rectWidth - line.width;
                 else
                     lineIndent = 0;
@@ -7193,12 +7219,12 @@ var fairygui;
                     else {
                         charX += letterSpacing;
                     }
-                }
-            }
+                } //text loop
+            } //line loop
         };
         p.handleXYChanged = function () {
-            this.displayObject.x = this.x * fairygui.GRoot.contentScaleFactor;
-            this.displayObject.y = this.y * fairygui.GRoot.contentScaleFactor + this._yOffset;
+            this.displayObject.x = Math.floor(this.x * fairygui.GRoot.contentScaleFactor);
+            this.displayObject.y = Math.floor(this.y * fairygui.GRoot.contentScaleFactor + this._yOffset);
         };
         p.handleSizeChanged = function () {
             if (!this._updatingSize) {
@@ -7213,13 +7239,13 @@ var fairygui;
             this.updateTextFormat();
         };
         p.doAlign = function () {
-            if (this._verticalAlign == 0 /* Top */ || this._textHeight == 0)
+            if (this._verticalAlign == fairygui.VertAlignType.Top || this._textHeight == 0)
                 this._yOffset = GTextField.GUTTER_Y;
             else {
                 var dh = this.height * fairygui.GRoot.contentScaleFactor - this._textHeight;
                 if (dh < 0)
                     dh = 0;
-                if (this._verticalAlign == 1 /* Middle */)
+                if (this._verticalAlign == fairygui.VertAlignType.Middle)
                     this._yOffset = Math.floor(dh / 2);
                 else
                     this._yOffset = Math.floor(dh);
@@ -7257,8 +7283,8 @@ var fairygui;
             str = xml.attributes.autoSize;
             if (str) {
                 this._autoSize = fairygui.parseAutoSizeType(str);
-                this._widthAutoSize = this._autoSize == 1 /* Both */;
-                this._heightAutoSize = this._autoSize == 1 /* Both */ || this._autoSize == 2 /* Height */;
+                this._widthAutoSize = this._autoSize == fairygui.AutoSizeType.Both;
+                this._heightAutoSize = this._autoSize == fairygui.AutoSizeType.Both || this._autoSize == fairygui.AutoSizeType.Height;
             }
             //this._textField.underline = xml.attributes.underline == "true";
             this._textField.italic = xml.attributes.italic == "true";
@@ -7440,7 +7466,7 @@ var fairygui;
                 if (this._modalWaitPane == null)
                     this._modalWaitPane = fairygui.UIPackage.createObjectFromURL(fairygui.UIConfig.globalModalWaiting);
                 this._modalWaitPane.setSize(this.width, this.height);
-                this._modalWaitPane.addRelation(this, 24 /* Size */);
+                this._modalWaitPane.addRelation(this, fairygui.RelationType.Size);
                 this.addChild(this._modalWaitPane);
                 this._modalWaitPane.text = msg;
             }
@@ -7515,7 +7541,8 @@ var fairygui;
             if (xx + popup.width > this.width)
                 xx = xx + sizeW - popup.width;
             yy = pos.y + sizeH;
-            if ((downward == null && yy + popup.height > this.height) || downward == false) {
+            if ((downward == null && yy + popup.height > this.height)
+                || downward == false) {
                 yy = pos.y - popup.height - 1;
                 if (yy < 0) {
                     yy = 0;
@@ -7653,15 +7680,22 @@ var fairygui;
         };
         p.adjustModalLayer = function () {
             var cnt = this.numChildren;
+            var modalLayerIsTop = false;
             if (this._modalWaitPane != null && this._modalWaitPane.parent != null)
                 this.setChildIndex(this._modalWaitPane, cnt - 1);
             for (var i = cnt - 1; i >= 0; i--) {
                 var g = this.getChildAt(i);
-                if (g != this._modalLayer && (g instanceof fairygui.Window) && g.modal) {
+                if (g == this._modalLayer)
+                    modalLayerIsTop = true;
+                else if ((g instanceof fairygui.Window) && g.modal) {
                     if (this._modalLayer.parent == null)
                         this.addChildAt(this._modalLayer, i);
-                    else if (i > 0)
-                        this.setChildIndex(this._modalLayer, i - 1);
+                    else if (i > 0) {
+                        if (modalLayerIsTop)
+                            this.setChildIndex(this._modalLayer, i);
+                        else
+                            this.setChildIndex(this._modalLayer, i - 1);
+                    }
                     else
                         this.addChildAt(this._modalLayer, 0);
                     return;
@@ -7680,7 +7714,7 @@ var fairygui;
             this._modalLayer = new fairygui.GGraph();
             this._modalLayer.setSize(this.width, this.height);
             this._modalLayer.drawRect(0, 0, 0, fairygui.UIConfig.modalLayerColor, fairygui.UIConfig.modalLayerAlpha);
-            this._modalLayer.addRelation(this, 24 /* Size */);
+            this._modalLayer.addRelation(this, fairygui.RelationType.Size);
             this.displayObject.stage.addEventListener(egret.Event.RESIZE, this.__winResize, this);
             this.__winResize(null);
         };
@@ -8055,7 +8089,7 @@ var fairygui;
             this._barMaxHeight = 0;
             this._barMaxWidthDelta = 0;
             this._barMaxHeightDelta = 0;
-            this._titleType = 0 /* Percent */;
+            this._titleType = fairygui.ProgressTitleType.Percent;
             this._value = 50;
             this._max = 100;
             this._clickPos = new egret.Point();
@@ -8098,16 +8132,16 @@ var fairygui;
         p.updateWidthPercent = function (percent) {
             if (this._titleObject) {
                 switch (this._titleType) {
-                    case 0 /* Percent */:
+                    case fairygui.ProgressTitleType.Percent:
                         this._titleObject.text = Math.round(percent * 100) + "%";
                         break;
-                    case 1 /* ValueAndMax */:
+                    case fairygui.ProgressTitleType.ValueAndMax:
                         this._titleObject.text = this._value + "/" + this._max;
                         break;
-                    case 2 /* Value */:
+                    case fairygui.ProgressTitleType.Value:
                         this._titleObject.text = "" + this._value;
                         break;
-                    case 3 /* Max */:
+                    case fairygui.ProgressTitleType.Max:
                         this._titleObject.text = "" + this._max;
                         break;
                 }
@@ -8310,13 +8344,13 @@ var fairygui;
         );
         p.updateVertAlign = function () {
             switch (this._verticalAlign) {
-                case 0 /* Top */:
+                case fairygui.VertAlignType.Top:
                     this._textField.verticalAlign = egret.VerticalAlign.TOP;
                     break;
-                case 1 /* Middle */:
+                case fairygui.VertAlignType.Middle:
                     this._textField.verticalAlign = egret.VerticalAlign.MIDDLE;
                     break;
-                case 2 /* Bottom */:
+                case fairygui.VertAlignType.Bottom:
                     this._textField.verticalAlign = egret.VerticalAlign.BOTTOM;
                     break;
             }
@@ -8471,9 +8505,9 @@ var fairygui;
             this._contentPane.addEventListener(egret.Event.ADDED_TO_STAGE, this.__addedToStage, this);
             this._list = (this._contentPane.getChild("list"));
             this._list.removeChildrenToPool();
-            this._list.addRelation(this._contentPane, 14 /* Width */);
-            this._list.removeRelation(this._contentPane, 15 /* Height */);
-            this._contentPane.addRelation(this._list, 15 /* Height */);
+            this._list.addRelation(this._contentPane, fairygui.RelationType.Width);
+            this._list.removeRelation(this._contentPane, fairygui.RelationType.Height);
+            this._contentPane.addRelation(this._list, fairygui.RelationType.Height);
             this._list.addEventListener(fairygui.ItemEvent.CLICK, this.__clickItem, this);
         }
         var d = __define,c=PopupMenu;p=c.prototype;
@@ -8653,9 +8687,9 @@ var fairygui;
             }
         );
         p.add = function (relationType, usePercent) {
-            if (relationType == 24 /* Size */) {
-                this.add(14 /* Width */, usePercent);
-                this.add(15 /* Height */, usePercent);
+            if (relationType == fairygui.RelationType.Size) {
+                this.add(fairygui.RelationType.Width, usePercent);
+                this.add(fairygui.RelationType.Height, usePercent);
                 return;
             }
             var length = this._defs.length;
@@ -8665,16 +8699,17 @@ var fairygui;
                     return;
             }
             var info = new RelationDef();
-            info.affectBySelfSizeChanged = relationType >= 3 /* Center_Center */ && relationType <= 6 /* Right_Right */ || relationType >= 10 /* Middle_Middle */ && relationType <= 13 /* Bottom_Bottom */;
+            info.affectBySelfSizeChanged = relationType >= fairygui.RelationType.Center_Center && relationType <= fairygui.RelationType.Right_Right
+                || relationType >= fairygui.RelationType.Middle_Middle && relationType <= fairygui.RelationType.Bottom_Bottom;
             info.percent = usePercent;
             info.type = relationType;
             this._defs.push(info);
         };
         p.remove = function (relationType) {
             if (relationType === void 0) { relationType = 0; }
-            if (relationType == 24 /* Size */) {
-                this.remove(14 /* Width */);
-                this.remove(15 /* Height */);
+            if (relationType == fairygui.RelationType.Size) {
+                this.remove(fairygui.RelationType.Width);
+                this.remove(fairygui.RelationType.Height);
                 return;
             }
             var dc = this._defs.length;
@@ -8715,20 +8750,20 @@ var fairygui;
                 var info = this._defs[i];
                 if (info.affectBySelfSizeChanged) {
                     switch (info.type) {
-                        case 3 /* Center_Center */:
-                        case 5 /* Right_Center */:
+                        case fairygui.RelationType.Center_Center:
+                        case fairygui.RelationType.Right_Center:
                             this._owner.x -= dWidth / 2;
                             break;
-                        case 4 /* Right_Left */:
-                        case 6 /* Right_Right */:
+                        case fairygui.RelationType.Right_Left:
+                        case fairygui.RelationType.Right_Right:
                             this._owner.x -= dWidth;
                             break;
-                        case 10 /* Middle_Middle */:
-                        case 12 /* Bottom_Middle */:
+                        case fairygui.RelationType.Middle_Middle:
+                        case fairygui.RelationType.Bottom_Middle:
                             this._owner.y -= dHeight / 2;
                             break;
-                        case 11 /* Bottom_Top */:
-                        case 13 /* Bottom_Bottom */:
+                        case fairygui.RelationType.Bottom_Top:
+                        case fairygui.RelationType.Bottom_Bottom:
                             this._owner.y -= dHeight;
                             break;
                     }
@@ -8752,45 +8787,45 @@ var fairygui;
         p.applyOnXYChanged = function (info, dx, dy) {
             var tmp;
             switch (info.type) {
-                case 0 /* Left_Left */:
-                case 1 /* Left_Center */:
-                case 2 /* Left_Right */:
-                case 3 /* Center_Center */:
-                case 4 /* Right_Left */:
-                case 5 /* Right_Center */:
-                case 6 /* Right_Right */:
+                case fairygui.RelationType.Left_Left:
+                case fairygui.RelationType.Left_Center:
+                case fairygui.RelationType.Left_Right:
+                case fairygui.RelationType.Center_Center:
+                case fairygui.RelationType.Right_Left:
+                case fairygui.RelationType.Right_Center:
+                case fairygui.RelationType.Right_Right:
                     this._owner.x += dx;
                     break;
-                case 7 /* Top_Top */:
-                case 8 /* Top_Middle */:
-                case 9 /* Top_Bottom */:
-                case 10 /* Middle_Middle */:
-                case 11 /* Bottom_Top */:
-                case 12 /* Bottom_Middle */:
-                case 13 /* Bottom_Bottom */:
+                case fairygui.RelationType.Top_Top:
+                case fairygui.RelationType.Top_Middle:
+                case fairygui.RelationType.Top_Bottom:
+                case fairygui.RelationType.Middle_Middle:
+                case fairygui.RelationType.Bottom_Top:
+                case fairygui.RelationType.Bottom_Middle:
+                case fairygui.RelationType.Bottom_Bottom:
                     this._owner.y += dy;
                     break;
-                case 14 /* Width */:
-                case 15 /* Height */:
+                case fairygui.RelationType.Width:
+                case fairygui.RelationType.Height:
                     break;
-                case 16 /* LeftExt_Left */:
-                case 17 /* LeftExt_Right */:
+                case fairygui.RelationType.LeftExt_Left:
+                case fairygui.RelationType.LeftExt_Right:
                     tmp = this._owner.x;
                     this._owner.x += dx;
                     this._owner.width = this._owner._rawWidth - (this._owner.x - tmp);
                     break;
-                case 18 /* RightExt_Left */:
-                case 19 /* RightExt_Right */:
+                case fairygui.RelationType.RightExt_Left:
+                case fairygui.RelationType.RightExt_Right:
                     this._owner.width = this._owner._rawWidth + dx;
                     break;
-                case 20 /* TopExt_Top */:
-                case 21 /* TopExt_Bottom */:
+                case fairygui.RelationType.TopExt_Top:
+                case fairygui.RelationType.TopExt_Bottom:
                     tmp = this._owner.y;
                     this._owner.y += dy;
                     this._owner.height = this._owner._rawHeight - (this._owner.y - tmp);
                     break;
-                case 22 /* BottomExt_Top */:
-                case 23 /* BottomExt_Bottom */:
+                case fairygui.RelationType.BottomExt_Top:
+                case fairygui.RelationType.BottomExt_Bottom:
                     this._owner.height = this._owner._rawHeight + dy;
                     break;
             }
@@ -8807,83 +8842,83 @@ var fairygui;
             }
             var v, tmp;
             switch (info.type) {
-                case 0 /* Left_Left */:
+                case fairygui.RelationType.Left_Left:
                     break;
-                case 1 /* Left_Center */:
+                case fairygui.RelationType.Left_Center:
                     v = this._owner.x - (targetX + this._targetWidth / 2);
                     if (info.percent)
                         v = v / this._targetWidth * this._target._rawWidth;
                     this._owner.x = targetX + this._target._rawWidth / 2 + v;
                     break;
-                case 2 /* Left_Right */:
+                case fairygui.RelationType.Left_Right:
                     v = this._owner.x - (targetX + this._targetWidth);
                     if (info.percent)
                         v = v / this._targetWidth * this._target._rawWidth;
                     this._owner.x = targetX + this._target._rawWidth + v;
                     break;
-                case 3 /* Center_Center */:
+                case fairygui.RelationType.Center_Center:
                     v = this._owner.x + this._owner._rawWidth / 2 - (targetX + this._targetWidth / 2);
                     if (info.percent)
                         v = v / this._targetWidth * this._target._rawWidth;
                     this._owner.x = targetX + this._target._rawWidth / 2 + v - this._owner._rawWidth / 2;
                     break;
-                case 4 /* Right_Left */:
+                case fairygui.RelationType.Right_Left:
                     v = this._owner.x + this._owner._rawWidth - targetX;
                     if (info.percent)
                         v = v / this._targetWidth * this._target._rawWidth;
                     this._owner.x = targetX + v - this._owner._rawWidth;
                     break;
-                case 5 /* Right_Center */:
+                case fairygui.RelationType.Right_Center:
                     v = this._owner.x + this._owner._rawWidth - (targetX + this._targetWidth / 2);
                     if (info.percent)
                         v = v / this._targetWidth * this._target._rawWidth;
                     this._owner.x = targetX + this._target._rawWidth / 2 + v - this._owner._rawWidth;
                     break;
-                case 6 /* Right_Right */:
+                case fairygui.RelationType.Right_Right:
                     v = this._owner.x + this._owner._rawWidth - (targetX + this._targetWidth);
                     if (info.percent)
                         v = v / this._targetWidth * this._target._rawWidth;
                     this._owner.x = targetX + this._target._rawWidth + v - this._owner._rawWidth;
                     break;
-                case 7 /* Top_Top */:
+                case fairygui.RelationType.Top_Top:
                     break;
-                case 8 /* Top_Middle */:
+                case fairygui.RelationType.Top_Middle:
                     v = this._owner.y - (targetY + this._targetHeight / 2);
                     if (info.percent)
                         v = v / this._targetHeight * this._target._rawHeight;
                     this._owner.y = targetY + this._target._rawHeight / 2 + v;
                     break;
-                case 9 /* Top_Bottom */:
+                case fairygui.RelationType.Top_Bottom:
                     v = this._owner.y - (targetY + this._targetHeight);
                     if (info.percent)
                         v = v / this._targetHeight * this._target._rawHeight;
                     this._owner.y = targetY + this._target._rawHeight + v;
                     break;
-                case 10 /* Middle_Middle */:
+                case fairygui.RelationType.Middle_Middle:
                     v = this._owner.y + this._owner._rawHeight / 2 - (targetY + this._targetHeight / 2);
                     if (info.percent)
                         v = v / this._targetHeight * this._target._rawHeight;
                     this._owner.y = targetY + this._target._rawHeight / 2 + v - this._owner._rawHeight / 2;
                     break;
-                case 11 /* Bottom_Top */:
+                case fairygui.RelationType.Bottom_Top:
                     v = this._owner.y + this._owner._rawHeight - targetY;
                     if (info.percent)
                         v = v / this._targetHeight * this._target._rawHeight;
                     this._owner.y = targetY + v - this._owner._rawHeight;
                     break;
-                case 12 /* Bottom_Middle */:
+                case fairygui.RelationType.Bottom_Middle:
                     v = this._owner.y + this._owner._rawHeight - (targetY + this._targetHeight / 2);
                     if (info.percent)
                         v = v / this._targetHeight * this._target._rawHeight;
                     this._owner.y = targetY + this._target._rawHeight / 2 + v - this._owner._rawHeight;
                     break;
-                case 13 /* Bottom_Bottom */:
+                case fairygui.RelationType.Bottom_Bottom:
                     v = this._owner.y + this._owner._rawHeight - (targetY + this._targetHeight);
                     if (info.percent)
                         v = v / this._targetHeight * this._target._rawHeight;
                     this._owner.y = targetY + this._target._rawHeight + v - this._owner._rawHeight;
                     break;
-                case 14 /* Width */:
+                case fairygui.RelationType.Width:
                     if (this._owner._underConstruct && this._owner == this._target.parent)
                         v = this._owner.sourceWidth - this._target._initWidth;
                     else
@@ -8892,7 +8927,7 @@ var fairygui;
                         v = v / this._targetWidth * this._target._rawWidth;
                     this._owner.width = this._target._rawWidth + v;
                     break;
-                case 15 /* Height */:
+                case fairygui.RelationType.Height:
                     if (this._owner._underConstruct && this._owner == this._target.parent)
                         v = this._owner.sourceHeight - this._target._initHeight;
                     else
@@ -8901,9 +8936,9 @@ var fairygui;
                         v = v / this._targetHeight * this._target._rawHeight;
                     this._owner.height = this._target._rawHeight + v;
                     break;
-                case 16 /* LeftExt_Left */:
+                case fairygui.RelationType.LeftExt_Left:
                     break;
-                case 17 /* LeftExt_Right */:
+                case fairygui.RelationType.LeftExt_Right:
                     v = this._owner.x - (targetX + this._targetWidth);
                     if (info.percent)
                         v = v / this._targetWidth * this._target._rawWidth;
@@ -8911,9 +8946,9 @@ var fairygui;
                     this._owner.x = targetX + this._target._rawWidth + v;
                     this._owner.width = this._owner._rawWidth - (this._owner.x - tmp);
                     break;
-                case 18 /* RightExt_Left */:
+                case fairygui.RelationType.RightExt_Left:
                     break;
-                case 19 /* RightExt_Right */:
+                case fairygui.RelationType.RightExt_Right:
                     if (this._owner._underConstruct && this._owner == this._target.parent)
                         v = this._owner.sourceWidth - (targetX + this._target._initWidth);
                     else
@@ -8927,9 +8962,9 @@ var fairygui;
                     else
                         this._owner.width = targetX + this._target._rawWidth + v;
                     break;
-                case 20 /* TopExt_Top */:
+                case fairygui.RelationType.TopExt_Top:
                     break;
-                case 21 /* TopExt_Bottom */:
+                case fairygui.RelationType.TopExt_Bottom:
                     v = this._owner.y - (targetY + this._targetHeight);
                     if (info.percent)
                         v = v / this._targetHeight * this._target._rawHeight;
@@ -8937,9 +8972,9 @@ var fairygui;
                     this._owner.y = targetY + this._target._rawHeight + v;
                     this._owner.height = this._owner._rawHeight - (this._owner.y - tmp);
                     break;
-                case 22 /* BottomExt_Top */:
+                case fairygui.RelationType.BottomExt_Top:
                     break;
-                case 23 /* BottomExt_Bottom */:
+                case fairygui.RelationType.BottomExt_Bottom:
                     if (this._owner._underConstruct && this._owner == this._target.parent)
                         v = this._owner.sourceHeight - (targetY + this._target._initHeight);
                     else
@@ -9240,7 +9275,7 @@ var fairygui;
             "topext-top",
             "topext-bottom",
             "bottomext-top",
-            "bottomext-bottom"
+            "bottomext-bottom" //23
         ];
         return Relations;
     })();
@@ -9291,10 +9326,10 @@ var fairygui;
             this._displayInDemand = (flags & 4) != 0;
             this._scrollType = scrollType;
             this._mouseWheelEnabled = false;
-            if (scrollBarDisplay == 0 /* Default */)
+            if (scrollBarDisplay == fairygui.ScrollBarDisplayType.Default)
                 scrollBarDisplay = fairygui.UIConfig.defaultScrollBarDisplay;
-            if (scrollBarDisplay != 3 /* Hidden */) {
-                if (this._scrollType == 2 /* Both */ || this._scrollType == 1 /* Vertical */) {
+            if (scrollBarDisplay != fairygui.ScrollBarDisplayType.Hidden) {
+                if (this._scrollType == fairygui.ScrollType.Both || this._scrollType == fairygui.ScrollType.Vertical) {
                     if (fairygui.UIConfig.verticalScrollBar) {
                         this._vtScrollBar = (fairygui.UIPackage.createObjectFromURL(fairygui.UIConfig.verticalScrollBar));
                         if (!this._vtScrollBar)
@@ -9303,7 +9338,7 @@ var fairygui;
                         this._container.addChild(this._vtScrollBar.displayObject);
                     }
                 }
-                if (this._scrollType == 2 /* Both */ || this._scrollType == 0 /* Horizontal */) {
+                if (this._scrollType == fairygui.ScrollType.Both || this._scrollType == fairygui.ScrollType.Horizontal) {
                     if (fairygui.UIConfig.horizontalScrollBar) {
                         this._hzScrollBar = (fairygui.UIPackage.createObjectFromURL(fairygui.UIConfig.horizontalScrollBar));
                         if (!this._hzScrollBar)
@@ -9312,7 +9347,7 @@ var fairygui;
                         this._container.addChild(this._hzScrollBar.displayObject);
                     }
                 }
-                this._scrollBarDisplayAuto = scrollBarDisplay == 2 /* Auto */;
+                this._scrollBarDisplayAuto = scrollBarDisplay == fairygui.ScrollBarDisplayType.Auto;
                 if (this._scrollBarDisplayAuto) {
                     this._scrollBarVisible = false;
                     if (this._vtScrollBar)
@@ -9674,7 +9709,7 @@ var fairygui;
             this._xOverlap = Math.ceil(Math.max(0, this._contentWidth - this._maskWidth) * fairygui.GRoot.contentScaleFactor);
             this._yOverlap = Math.ceil(Math.max(0, this._contentHeight - this._maskHeight) * fairygui.GRoot.contentScaleFactor);
             switch (this._scrollType) {
-                case 2 /* Both */:
+                case fairygui.ScrollType.Both:
                     if (this._contentWidth > this._maskWidth && this._contentHeight <= this._maskHeight) {
                         this._hScroll = true;
                         this._vScroll = false;
@@ -9692,7 +9727,7 @@ var fairygui;
                         this._vScroll = false;
                     }
                     break;
-                case 1 /* Vertical */:
+                case fairygui.ScrollType.Vertical:
                     if (this._contentHeight > this._maskHeight) {
                         this._hScroll = false;
                         this._vScroll = true;
@@ -9702,7 +9737,7 @@ var fairygui;
                         this._vScroll = false;
                     }
                     break;
-                case 0 /* Horizontal */:
+                case fairygui.ScrollType.Horizontal:
                     if (this._contentWidth > this._maskWidth) {
                         this._hScroll = true;
                         this._vScroll = false;
@@ -9769,7 +9804,9 @@ var fairygui;
                     this.killTweens();
                     this._maskHolder.touchEnabled = false;
                     this._tweening = 1;
-                    egret.Tween.get(this._maskContentHolder, { onChange: this.__tweenUpdate, onChangeObj: this }).to({ x: toX, y: toY, }, 500, ScrollPane._easeTypeFunc).call(this.__tweenComplete, this);
+                    egret.Tween.get(this._maskContentHolder, { onChange: this.__tweenUpdate, onChangeObj: this })
+                        .to({ x: toX, y: toY, }, 500, ScrollPane._easeTypeFunc)
+                        .call(this.__tweenComplete, this);
                 }
             }
             else {
@@ -9874,7 +9911,7 @@ var fairygui;
             var diff;
             var sv, sh, st;
             this._container.globalToLocal(evt.stageX, evt.stageY, ScrollPane.sHelperPoint);
-            if (this._scrollType == 1 /* Vertical */) {
+            if (this._scrollType == fairygui.ScrollType.Vertical) {
                 if (!this._isHoldAreaDone) {
                     diff = Math.abs(this._holdAreaPoint.y - ScrollPane.sHelperPoint.y);
                     if (diff < this._holdArea)
@@ -9882,7 +9919,7 @@ var fairygui;
                 }
                 sv = true;
             }
-            else if (this._scrollType == 0 /* Horizontal */) {
+            else if (this._scrollType == fairygui.ScrollType.Horizontal) {
                 if (!this._isHoldAreaDone) {
                     diff = Math.abs(this._holdAreaPoint.x - ScrollPane.sHelperPoint.x);
                     if (diff < this._holdArea)
@@ -9985,14 +10022,14 @@ var fairygui;
             var change2 = this._throwTween.change2;
             var endX = 0;
             var endY = 0;
-            if (this._scrollType == 2 /* Both */ || this._scrollType == 0 /* Horizontal */) {
+            if (this._scrollType == fairygui.ScrollType.Both || this._scrollType == fairygui.ScrollType.Horizontal) {
                 change1.x = ThrowTween.calculateChange(xVelocity, duration);
                 change2.x = 0;
                 endX = this._maskContentHolder.x + change1.x;
             }
             else
                 change1.x = change2.x = 0;
-            if (this._scrollType == 2 /* Both */ || this._scrollType == 1 /* Vertical */) {
+            if (this._scrollType == fairygui.ScrollType.Both || this._scrollType == fairygui.ScrollType.Vertical) {
                 change1.y = ThrowTween.calculateChange(yVelocity, duration);
                 change2.y = 0;
                 endY = this._maskContentHolder.y + change1.y;
@@ -10021,7 +10058,9 @@ var fairygui;
             this._throwTween.change2 = change2;
             this.killTweens();
             this._tweening = 2;
-            egret.Tween.get(this._throwTween, { onChange: this.__tweenUpdate2, onChangeObj: this }).to({ value: 1 }, duration * 1000, ScrollPane._easeTypeFunc).call(this.__tweenComplete2, this);
+            egret.Tween.get(this._throwTween, { onChange: this.__tweenUpdate2, onChangeObj: this })
+                .to({ value: 1 }, duration * 1000, ScrollPane._easeTypeFunc)
+                .call(this.__tweenComplete2, this);
         };
         p.__rollOver = function (evt) {
             this.showScrollBar(true);
@@ -10053,9 +10092,9 @@ var fairygui;
         };
         p.__tweenUpdate2 = function () {
             this._throwTween.update(this._maskContentHolder);
-            if (this._scrollType == 1 /* Vertical */)
+            if (this._scrollType == fairygui.ScrollType.Vertical)
                 this._yPerc = this.calcYPerc();
-            else if (this._scrollType == 0 /* Horizontal */)
+            else if (this._scrollType == fairygui.ScrollType.Horizontal)
                 this._xPerc = this.calcXPerc();
             else {
                 this._yPerc = this.calcYPerc();
@@ -10064,9 +10103,9 @@ var fairygui;
             this.onScrolling();
         };
         p.__tweenComplete2 = function () {
-            if (this._scrollType == 1 /* Vertical */)
+            if (this._scrollType == fairygui.ScrollType.Vertical)
                 this._yPerc = this.calcYPerc();
-            else if (this._scrollType == 0 /* Horizontal */)
+            else if (this._scrollType == fairygui.ScrollType.Horizontal)
                 this._xPerc = this.calcXPerc();
             else {
                 this._yPerc = this.calcYPerc();
@@ -10154,7 +10193,7 @@ var fairygui;
         //Scrolling step in pixels
         UIConfig.defaultScrollSpeed = 25;
         //Default scrollbar display mode. Recommened visible for Desktop and Auto for mobile.
-        UIConfig.defaultScrollBarDisplay = 1 /* Visible */;
+        UIConfig.defaultScrollBarDisplay = fairygui.ScrollBarDisplayType.Visible;
         //Allow dragging the content to scroll. Recommeded true for mobile.
         UIConfig.defaultScrollTouchEffect = true;
         //The "rebound" effect in the scolling container. Recommeded true for mobile.
@@ -10419,7 +10458,11 @@ var fairygui;
                 return parseInt(str, 16);
         };
         ToolSet.isUIObject = function (obj) {
-            return (obj instanceof fairygui.UIImage) || (obj instanceof fairygui.UIMovieClip) || (obj instanceof fairygui.UISprite) || (obj instanceof fairygui.UIContainer) || (obj instanceof fairygui.UITextField);
+            return (obj instanceof fairygui.UIImage)
+                || (obj instanceof fairygui.UIMovieClip)
+                || (obj instanceof fairygui.UISprite)
+                || (obj instanceof fairygui.UIContainer)
+                || (obj instanceof fairygui.UITextField);
         };
         ToolSet.displayObjectToGObject = function (obj) {
             while (obj != null && !(obj instanceof egret.Stage)) {
@@ -10472,13 +10515,13 @@ var fairygui;
         };
         UIObjectFactory.newObject = function (pi) {
             switch (pi.type) {
-                case 0 /* Image */:
+                case fairygui.PackageItemType.Image:
                     return new fairygui.GImage();
-                case 2 /* MovieClip */:
+                case fairygui.PackageItemType.MovieClip:
                     return new fairygui.GMovieClip();
-                case 1 /* Swf */:
+                case fairygui.PackageItemType.Swf:
                     return new fairygui.GSwfObject();
-                case 4 /* Component */:
+                case fairygui.PackageItemType.Component:
                     {
                         var cls = UIObjectFactory.packageItemExtensions[pi.owner.id + pi.id];
                         if (cls)
@@ -10572,6 +10615,7 @@ var fairygui;
             delete UIPackage._packageInstById[pkg.id];
             if (pkg._customId != null)
                 delete UIPackage._packageInstById[pkg._customId];
+            delete UIPackage._packageInstByName[pkg.name];
         };
         UIPackage.createObject = function (pkgName, resName, userClass) {
             if (userClass === void 0) { userClass = null; }
@@ -10670,7 +10714,7 @@ var fairygui;
                     pi.height = parseInt(arr[1]);
                 }
                 switch (pi.type) {
-                    case 0 /* Image */: {
+                    case fairygui.PackageItemType.Image: {
                         str = cxml.attributes.scale;
                         if (str == "9grid") {
                             pi.scale9Grid = new egret.Rectangle();
@@ -10700,7 +10744,7 @@ var fairygui;
             cnt = this._items.length;
             for (i = 0; i < cnt; i++) {
                 pi = this._items[i];
-                if (pi.type == 6 /* Font */) {
+                if (pi.type == fairygui.PackageItemType.Font) {
                     this.loadFont(pi);
                     UIPackage._bitmapFonts[pi.bitmapFont.id] = pi.bitmapFont;
                 }
@@ -10781,7 +10825,7 @@ var fairygui;
         p.createObject2 = function (pi, userClass) {
             if (userClass === void 0) { userClass = null; }
             var g;
-            if (pi.type == 4 /* Component */) {
+            if (pi.type == fairygui.PackageItemType.Component) {
                 if (userClass != null)
                     g = new userClass();
                 else
@@ -10808,7 +10852,7 @@ var fairygui;
         };
         p.getItemAsset = function (item) {
             switch (item.type) {
-                case 0 /* Image */:
+                case fairygui.PackageItemType.Image:
                     if (!item.decoded) {
                         item.decoded = true;
                         var sprite = this._sprites[item.id];
@@ -10816,32 +10860,32 @@ var fairygui;
                             item.texture = this.createSpriteTexture(sprite);
                     }
                     return item.texture;
-                case 7 /* Atlas */:
+                case fairygui.PackageItemType.Atlas:
                     if (!item.decoded) {
                         item.decoded = true;
                         var fileName = (item.file != null && item.file.length > 0) ? item.file : (item.id + ".png");
                         item.texture = RES.getRes(this._resKey + "@" + fairygui.ToolSet.getFileName(fileName));
                     }
                     return item.texture;
-                case 3 /* Sound */:
+                case fairygui.PackageItemType.Sound:
                     if (!item.decoded) {
                         item.decoded = true;
                         item.sound = RES.getRes(this._resKey + "@" + item.id);
                     }
                     return item.sound;
-                case 6 /* Font */:
+                case fairygui.PackageItemType.Font:
                     if (!item.decoded) {
                         item.decoded = true;
                         this.loadFont(item);
                     }
                     return item.bitmapFont;
-                case 2 /* MovieClip */:
+                case fairygui.PackageItemType.MovieClip:
                     if (!item.decoded) {
                         item.decoded = true;
                         this.loadMovieClip(item);
                     }
                     return item.frames;
-                case 4 /* Component */:
+                case fairygui.PackageItemType.Component:
                     if (!item.decoded) {
                         item.decoded = true;
                         var str = this.getDesc(item.id + ".xml");
@@ -11064,7 +11108,7 @@ var fairygui;
                     if (this._contentPane != null) {
                         this.addChild(this._contentPane);
                         this.setSize(this._contentPane.width, this._contentPane.height);
-                        this._contentPane.addRelation(this, 24 /* Size */);
+                        this._contentPane.addRelation(this, fairygui.RelationType.Size);
                         this._frame = (this._contentPane.getChild("frame"));
                         if (this._frame != null) {
                             this.closeButton = this._frame.getChild("closeButton");
@@ -11147,8 +11191,8 @@ var fairygui;
             if (restraint === void 0) { restraint = false; }
             this.setXY(Math.round((r.width - this.width) / 2), Math.round((r.height - this.height) / 2));
             if (restraint) {
-                this.addRelation(r, 3 /* Center_Center */);
-                this.addRelation(r, 10 /* Middle_Middle */);
+                this.addRelation(r, fairygui.RelationType.Center_Center);
+                this.addRelation(r, fairygui.RelationType.Middle_Middle);
             }
         };
         p.toggleStatus = function () {
