@@ -78,7 +78,6 @@ module fairygui {
         protected handleSizeChanged(): void {
             this._content.width = this.width * this.scaleX;
             this._content.height = this.height * this.scaleY;
-            this._content.scaleX = this._content.scaleY = GRoot.contentScaleFactor;
         }
         
         public setup_beforeAdd(xml: any): void {

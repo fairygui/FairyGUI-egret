@@ -51,8 +51,8 @@ module fairygui {
 
         protected handleSizeChanged(): void {
             if (this._content) {
-                this._container.scaleX = this.width / this._sourceWidth * this.scaleX * GRoot.contentScaleFactor;
-                this._container.scaleY = this.height / this._sourceHeight * this.scaleY * GRoot.contentScaleFactor;
+                this._container.scaleX = this.width / this._sourceWidth * this.scaleX;
+                this._container.scaleY = this.height / this._sourceHeight * this.scaleY;
             }
         }
 

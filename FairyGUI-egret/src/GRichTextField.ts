@@ -14,7 +14,7 @@ module fairygui {
             this._text = value;
             if(this._text == null)
                 this._text = "";
-            this._textField.width = this.width * GRoot.contentScaleFactor;
+            this._textField.width = this.width;
             if(this._ubbEnabled)
                 this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(this._text));
             else

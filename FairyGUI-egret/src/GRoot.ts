@@ -64,6 +64,8 @@ module fairygui {
                 GRoot.contentScaleFactor = 1;
 
             this.setSize(Math.round(w / GRoot.contentScaleFactor),Math.round(h / GRoot.contentScaleFactor));
+            this.scaleX = GRoot.contentScaleFactor;
+            this.scaleY = GRoot.contentScaleFactor;
         }
 
         public enableFocusManagement(): void {
@@ -171,13 +173,12 @@ module fairygui {
             var pos: egret.Point;
             var sizeW: number,sizeH: number = 0;
             if(target) {
-                pos = target.localToGlobal();
+                pos = target.localToRoot();
                 sizeW = target.width;
                 sizeH = target.height;
             }
             else {
-                pos = new egret.Point(GRoot.mouseX / GRoot.contentScaleFactor,
-                    GRoot.mouseY / GRoot.contentScaleFactor);
+                pos = this.globalToLocal(GRoot.mouseX, GRoot.mouseY);
             }
             var xx: number,yy: number;
             xx = pos.x;
@@ -256,14 +257,17 @@ module fairygui {
             var xx: number = 0;
             var yy: number = 0;
             if (position == null) {
-                xx = (GRoot.mouseX + 10) / GRoot.contentScaleFactor;
-                yy = (GRoot.mouseY + 20) / GRoot.contentScaleFactor;
+                xx = GRoot.mouseX + 10;
+                yy = GRoot.mouseY + 20;
             }
             else {
                 xx = position.x;
                 yy = position.y;
             }
-
+            var pt: egret.Point = this.globalToLocal(xx,yy);
+            xx = pt.x;
+            yy = pt.y;
+            
             if (xx + this._tooltipWin.width > this.width) {
                 xx = xx - this._tooltipWin.width - 1;
                 if (xx < 0)

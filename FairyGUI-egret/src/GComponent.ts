@@ -398,8 +398,7 @@ module fairygui {
         protected updateOpaque() {
             if(!this._rootContainer.hitArea)
                 this._rootContainer.hitArea = new egret.Rectangle();
-            this._rootContainer.hitArea.setTo(0, 0,
-                this.width * GRoot.contentScaleFactor, this.height * GRoot.contentScaleFactor);
+            this._rootContainer.hitArea.setTo(0, 0, this.width, this.height);
         }
         
         protected updateMask() {
@@ -409,10 +408,10 @@ module fairygui {
             else
                 mask = new egret.Rectangle();
 
-            var left: number = this._margin.left * GRoot.contentScaleFactor;
-            var top: number = this._margin.top * GRoot.contentScaleFactor;
-            var w: number = (this.width - (this._margin.left + this._margin.right)) * GRoot.contentScaleFactor;
-            var h: number = (this.height - (this._margin.top + this._margin.bottom)) * GRoot.contentScaleFactor;
+            var left: number = this._margin.left;
+            var top: number = this._margin.top;
+            var w: number = this.width - (this._margin.left + this._margin.right);
+            var h: number = this.height - (this._margin.top + this._margin.bottom);
             mask.setTo(left,top,w,h);
             this._rootContainer.mask = mask;
         }
@@ -426,8 +425,8 @@ module fairygui {
                 this._container = new egret.DisplayObjectContainer();
                 this._rootContainer.addChild(this._container);
                 this.updateMask();
-                this._container.x = this._margin.left * GRoot.contentScaleFactor;
-                this._container.y = this._margin.top * GRoot.contentScaleFactor;
+                this._container.x = this._margin.left;
+                this._container.y = this._margin.top;
             }
             else if(overflow == OverflowType.Scroll) {
                 this._container = new egret.DisplayObjectContainer();
@@ -437,8 +436,8 @@ module fairygui {
             else if(this._margin.left != 0 || this._margin.top != 0) {
                 this._container = new egret.DisplayObjectContainer();
                 this._rootContainer.addChild(this._container);
-                this._container.x = this._margin.left * GRoot.contentScaleFactor;
-                this._container.y = this._margin.top * GRoot.contentScaleFactor;
+                this._container.x = this._margin.left;
+                this._container.y = this._margin.top;
             }
 
             this.setBoundsChangedFlag();

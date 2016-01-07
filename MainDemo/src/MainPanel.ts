@@ -80,38 +80,49 @@ class MainPanel {
     //------------------------------
     private playButton(): void {
         var obj: fairygui.GComponent = this._demoObjects["Button"];
-        obj.getChild("n34").addClickListener(function(): void { console.log("click button"); },this);
+        obj.getChild("n34").addClickListener(this.__clickButton,this);
+    }
+    
+    private __clickButton(evt: egret.Event): void {
+        console.log("click button"); 
     }
 
     //------------------------------
     private playText(): void {
         var obj: fairygui.GComponent = this._demoObjects["Text"];
-        obj.getChild("n12").asRichTextField.addEventListener(egret.TextEvent.LINK,function(evt: egret.TextEvent): void {
-            var obj: fairygui.GRichTextField = <fairygui.GRichTextField><any>evt.currentTarget;
-            obj.text = "[img]ui://9leh0eyft9fj5f[/img][color=#FF0000]你点击了链接[/color]：" + evt.text;
-        },this);
-        
-        obj.getChild("n22").addClickListener(function(): void {
-            obj.getChild("n21").text = obj.getChild("n18").text;
-        },this);
+        obj.getChild("n12").asRichTextField.addEventListener(egret.TextEvent.LINK,this.__clickLink,this);
+        obj.getChild("n22").addClickListener(this.__clickGetInput,this);
+    }
+    
+    private __clickLink(evt: egret.TextEvent): void {
+        var obj: fairygui.GRichTextField = <fairygui.GRichTextField><any>evt.currentTarget;
+        obj.text = "[img]ui://9leh0eyft9fj5f[/img][color=#FF0000]你点击了链接[/color]：" + evt.text;
+    }
+    
+    private __clickGetInput(evt:egret.Event):void {
+        var obj: fairygui.GComponent = this._demoObjects["Text"];
+        obj.getChild("n21").text = obj.getChild("n18").text;
     }
             
     //------------------------------
-    private _winA: Window;
-    private _winB: Window;
+    private _winA: fairygui.Window;
+    private _winB: fairygui.Window;
     private playWindow(): void {
         var obj: fairygui.GComponent = this._demoObjects["Window"];
-        obj.getChild("n0").addClickListener(function(): void {
-            if(this._winA == null)
-                this._winA = new WindowA();
-            this._winA.show();
-        },this);
-
-        obj.getChild("n1").addClickListener(function(): void {
-            if(this._winB == null)
-                this._winB = new WindowB();
-            this._winB.show();
-        },this);
+        obj.getChild("n0").addClickListener(this.__clickWindowA,this);
+        obj.getChild("n1").addClickListener(this.__clickWindowB,this);
+    }
+    
+    private __clickWindowA(evt: egret.Event): void {
+        if(this._winA == null)
+            this._winA = new WindowA();
+        this._winA.show();
+    }
+    
+    private __clickWindowB(evt: egret.Event): void {
+        if(this._winB == null)
+            this._winB = new WindowB();
+        this._winB.show();
     }
                     
     //------------------------------
@@ -133,14 +144,19 @@ class MainPanel {
 
         var obj: fairygui.GComponent = this._demoObjects["Popup"];
         var btn: fairygui.GObject = obj.getChild("n0");
-        btn.addClickListener(function(): void {
-            this._pm.show(btn,true);
-        },this);
+        btn.addClickListener(this.__clickPopup1,this);
 
         var btn2: fairygui.GObject = obj.getChild("n2");
-        btn2.addClickListener(function(): void {
-            fairygui.GRoot.inst.showPopup(this._popupCom);
-        },this);
+        btn2.addClickListener(this.__clickPopup2,this);
+    }
+    
+    private __clickPopup1(evt:egret.Event):void {
+        var btn: fairygui.GObject = <fairygui.GObject><any>evt.currentTarget;
+        this._pm.show(btn,true);
+    }
+    
+    private __clickPopup2(evt: egret.Event): void {
+        fairygui.GRoot.inst.showPopup(this._popupCom);
     }
                     
     //------------------------------
@@ -151,26 +167,36 @@ class MainPanel {
 
         var btnB: fairygui.GButton = obj.getChild("b").asButton;
         btnB.draggable = true;
-        btnB.addEventListener(fairygui.DragEvent.DRAG_START,function(evt: fairygui.DragEvent): void {
-            //取消对原目标的拖动，换成一个替代品
-            evt.preventDefault();
-
-            fairygui.DragDropManager.inst.startDrag(btnB,btnB.icon,btnB.icon);
-        },this);
+        btnB.addEventListener(fairygui.DragEvent.DRAG_START,this.__onDragStart,this);
 
         var btnC: fairygui.GButton = obj.getChild("c").asButton;
         btnC.icon = null;
-        btnC.addEventListener(fairygui.DropEvent.DROP,function(evt: fairygui.DropEvent): void {
-            btnC.icon = evt.source;
-        },this);
+        btnC.addEventListener(fairygui.DropEvent.DROP,this.__onDrop,this);
 
         var btnD: fairygui.GObject = obj.getChild("d");
         btnD.draggable = true;
         var bounds: fairygui.GObject = obj.getChild("bounds");
-        var pt: egret.Point = bounds.localToGlobal();
-        var pt2: egret.Point = obj.localToGlobal();
-        pt.x -= pt2.x;
-        btnD.dragBounds = new egret.Rectangle(pt.x,pt.y,bounds.width,bounds.height);
+        var rect: egret.Rectangle = new egret.Rectangle();
+        bounds.localToGlobalRect(0,0,bounds.width,bounds.height,rect);
+        fairygui.GRoot.inst.globalToLocalRect(rect.x,rect.y,rect.width,rect.height,rect);
+        
+        //因为这时候面板还在从右往左动，所以rect不准确，需要用相对位置算出最终停下来的范围
+        rect.x -= obj.parent.x;
+
+        btnD.dragBounds = rect;
+    }
+    
+    private __onDragStart(evt:fairygui.DragEvent):void {
+        //取消对原目标的拖动，换成一个替代品
+        evt.preventDefault();
+
+        var btn: fairygui.GButton = <fairygui.GButton><any>evt.currentTarget;
+        fairygui.DragDropManager.inst.startDrag(btn,btn.icon,btn.icon);
+    }
+    
+    private __onDrop(evt:fairygui.DropEvent):void {
+        var btn: fairygui.GButton = <fairygui.GButton><any>evt.currentTarget;
+        btn.icon = evt.source;
     }
     
     //------------------------------

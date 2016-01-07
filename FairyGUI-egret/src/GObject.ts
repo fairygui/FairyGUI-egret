@@ -684,31 +684,50 @@ module fairygui {
             return GObject.sDragging == this;
         }
 
-        public localToGlobal(x:number=0, y:number=0, resultPoint?:egret.Point): egret.Point {
-            var ret: egret.Point = this._displayObject.localToGlobal(x*GRoot.contentScaleFactor, y*GRoot.contentScaleFactor, resultPoint);
-            ret.x /= GRoot.contentScaleFactor;
-            ret.y /= GRoot.contentScaleFactor;
-            return ret;
+        public localToGlobal(ax:number=0, ay:number=0, resultPoint?:egret.Point): egret.Point {
+            return this._displayObject.localToGlobal(ax, ay, resultPoint);
         }
 
-        public globalToLocal(x:number=0, y:number=0, resultPoint?:egret.Point): egret.Point {
-            var ret: egret.Point = this._displayObject.globalToLocal(x*GRoot.contentScaleFactor, y*GRoot.contentScaleFactor, resultPoint);
-            ret.x /= GRoot.contentScaleFactor;
-            ret.y /= GRoot.contentScaleFactor;
-            return ret;
+        public globalToLocal(ax:number=0, ay:number=0, resultPoint?:egret.Point): egret.Point {
+            return this._displayObject.globalToLocal(ax, ay, resultPoint);
+        }
+        
+        public localToRoot(ax: number = 0,ay: number = 0,resultPoint?: egret.Point): egret.Point {
+
+            var pt: egret.Point = this._displayObject.localToGlobal(ax,ay,resultPoint);
+            pt.x /= GRoot.contentScaleFactor;
+            pt.y /= GRoot.contentScaleFactor;
+            return pt;
         }
 
-        public getGlobalRect(rect?: egret.Rectangle): egret.Rectangle {
-            if(!rect)
-                rect = new egret.Rectangle();
+        public rootToLocal(ax: number = 0,ay: number = 0,resultPoint?: egret.Point): egret.Point {
+            ax *= GRoot.contentScaleFactor;
+            ay *= GRoot.contentScaleFactor;
+            return this._displayObject.globalToLocal(ax,ay,resultPoint);
+        }
 
-            var pt: egret.Point = this.localToGlobal(0, 0, GObject.sHelperPoint);
-            rect.x = pt.x;
-            rect.y = pt.y;
-            pt = this.localToGlobal(this.width,this.height, GObject.sHelperPoint);
-            rect.right = pt.x;
-            rect.bottom = pt.y;
-            return rect;
+        public localToGlobalRect(ax: number = 0,ay: number = 0,aWidth: number = 0,aHeight: number = 0,resultRect?: egret.Rectangle): egret.Rectangle {
+            if(resultRect == null)
+                resultRect = new egret.Rectangle();
+            var pt: egret.Point = this.localToGlobal(ax,ay);
+            resultRect.x = pt.x;
+            resultRect.y = pt.y;
+            pt = this.localToGlobal(ax + aWidth,ay + aHeight);
+            resultRect.right = pt.x;
+            resultRect.bottom = pt.y;
+            return resultRect;
+        }
+
+        public globalToLocalRect(ax: number = 0,ay: number = 0,aWidth: number = 0,aHeight: number = 0,resultRect?: egret.Rectangle): egret.Rectangle {
+            if(resultRect == null)
+                resultRect = new egret.Rectangle();
+            var pt: egret.Point = this.globalToLocal(ax,ay);
+            resultRect.x = pt.x;
+            resultRect.y = pt.y;
+            pt = this.globalToLocal(ax + aWidth,ay + aHeight);
+            resultRect.right = pt.x;
+            resultRect.bottom = pt.y;
+            return resultRect;
         }
         
         public handleControllerChanged(c: Controller): void {
@@ -727,8 +746,8 @@ module fairygui {
 
         protected handleXYChanged(): void {
             if(this._displayObject) {
-                this._displayObject.x = (this._x + this._pivotOffsetX) * GRoot.contentScaleFactor;
-                this._displayObject.y = (this._y + this._pivotOffsetY) * GRoot.contentScaleFactor;
+                this._displayObject.x = this._x + this._pivotOffsetX;
+                this._displayObject.y = this._y + this._pivotOffsetY;
             }
         }
 
@@ -827,6 +846,7 @@ module fairygui {
         private static sGlobalDragStart: egret.Point = new egret.Point();
         private static sGlobalRect: egret.Rectangle = new egret.Rectangle();
         private static sHelperPoint: egret.Point = new egret.Point();
+        private static sDragHelperRect: egret.Rectangle = new egret.Rectangle();
 
         private initDrag(): void {
             if (this._draggable)
@@ -840,14 +860,14 @@ module fairygui {
                 GObject.sDragging.stopDrag();
 
             if (evt != null) {
-                GObject.sGlobalDragStart.x = evt.stageX / GRoot.contentScaleFactor;
-                GObject.sGlobalDragStart.y = evt.stageY / GRoot.contentScaleFactor;
+                GObject.sGlobalDragStart.x = evt.stageX;
+                GObject.sGlobalDragStart.y = evt.stageY;
             }
             else {
-                GObject.sGlobalDragStart.x = GRoot.mouseX / GRoot.contentScaleFactor;
-                GObject.sGlobalDragStart.y = GRoot.mouseY / GRoot.contentScaleFactor;
+                GObject.sGlobalDragStart.x = GRoot.mouseX;
+                GObject.sGlobalDragStart.y = GRoot.mouseY;
             }
-            this.getGlobalRect(GObject.sGlobalRect);
+            this.localToGlobalRect(0,0,this.width,this.height,GObject.sGlobalRect);
             GObject.sDragging = this;
 
             GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__moving2, this);
@@ -890,29 +910,31 @@ module fairygui {
         }
 
         private __moving2(evt: egret.TouchEvent): void {
-            var xx: number = evt.stageX / GRoot.contentScaleFactor - GObject.sGlobalDragStart.x + GObject.sGlobalRect.x;
-            var yy: number = evt.stageY / GRoot.contentScaleFactor - GObject.sGlobalDragStart.y 　+ GObject.sGlobalRect.y;
+            var xx: number = evt.stageX - GObject.sGlobalDragStart.x + GObject.sGlobalRect.x;
+            var yy: number = evt.stageY - GObject.sGlobalDragStart.y + GObject.sGlobalRect.y;
 
             if(this._dragBounds != null) {
-                if(xx < this._dragBounds.x)
-                    xx = this._dragBounds.x;
-                else if(xx + GObject.sGlobalRect.width > this._dragBounds.right) {
-                    xx = this._dragBounds.right - GObject.sGlobalRect.width;
-                    if(xx < this._dragBounds.x)
-                        xx = this._dragBounds.x;
+                var rect: egret.Rectangle = GRoot.inst.localToGlobalRect(this._dragBounds.x,this._dragBounds.y,
+                    this._dragBounds.width,this._dragBounds.height,GObject.sDragHelperRect);
+                if(xx < rect.x)
+                    xx = rect.x;
+                else if(xx + GObject.sGlobalRect.width > rect.right) {
+                    xx = rect.right - GObject.sGlobalRect.width;
+                    if(xx < rect.x)
+                        xx = rect.x;
                 }
 
-                if(yy < this._dragBounds.y)
-                    yy = this._dragBounds.y;
-                else if(yy + GObject.sGlobalRect.height > this._dragBounds.bottom) {
-                    yy = this._dragBounds.bottom - GObject.sGlobalRect.height;
-                    if(yy < this._dragBounds.y)
-                        yy = this._dragBounds.y;
+                if(yy < rect.y)
+                    yy = rect.y;
+                else if(yy + GObject.sGlobalRect.height > rect.bottom) {
+                    yy = rect.bottom - GObject.sGlobalRect.height;
+                    if(yy < rect.y)
+                        yy = rect.y;
                 }
             }
 
-            this.parent.globalToLocal(xx,yy,GObject.sHelperPoint);
-            this.setXY(Math.round(GObject.sHelperPoint.x),Math.round(GObject.sHelperPoint.y));
+            var pt: egret.Point = this.parent.globalToLocal(xx,yy,GObject.sHelperPoint);
+            this.setXY(Math.round(pt.x),Math.round(pt.y));
         }
 
         private __end2(evt: egret.TouchEvent): void {

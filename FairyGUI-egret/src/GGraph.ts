@@ -66,12 +66,11 @@ module fairygui {
 
             this._graphics.clear();
 
-            var w: number = this.width * this.scaleX * GRoot.contentScaleFactor;
-            var h: number = this.height * this.scaleY * GRoot.contentScaleFactor;
+            var w: number = this.width * this.scaleX;
+            var h: number = this.height * this.scaleY;
             if(w == 0 || h == 0)
                 return;
-                
-            var lineSize: number = Math.ceil(Math.min(this._lineSize * GRoot.contentScaleFactor,this._lineSize * GRoot.contentScaleFactor));
+
             if (this._lineSize == 0)
                 this._graphics.lineStyle(0, 0, 0);
             else

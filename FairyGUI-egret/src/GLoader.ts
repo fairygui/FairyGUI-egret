@@ -44,8 +44,6 @@ module fairygui {
 
         protected createDisplayObject(): void {
             this._container = new UIContainer(this);
-            this._container.scaleX = GRoot.contentScaleFactor;
-            this._container.scaleY = GRoot.contentScaleFactor;
             this.setDisplayObject(this._container);
         }
 
@@ -391,8 +389,8 @@ module fairygui {
             if(!this._updatingLayout)
                 this.updateLayout();
 
-            this._container.scaleX = this.scaleX * GRoot.contentScaleFactor;
-            this._container.scaleY = this.scaleY * GRoot.contentScaleFactor;
+            this._container.scaleX = this.scaleX;
+            this._container.scaleY = this.scaleY;
         }
 
         public setup_beforeAdd(xml: any): void {

@@ -316,8 +316,22 @@ declare module fairygui {
         tweenTime: number;
         easeType: Function;
         setup(xml: any): void;
+        protected connected: boolean;
         protected addStatus(pageId: string, value: string): void;
         protected init(): void;
+        apply(): void;
+        updateState(): void;
+    }
+}
+declare module fairygui {
+    class GearSize extends GearBase {
+        private _storage;
+        private _default;
+        private _tweenValue;
+        private _tweener;
+        constructor(owner: GObject);
+        protected init(): void;
+        protected addStatus(pageId: string, value: string): void;
         apply(): void;
         updateState(): void;
     }
@@ -378,57 +392,6 @@ declare module fairygui {
         private __shakeItem(item);
         setup(xml: any): void;
         private decodeValue(type, str, value);
-    }
-}
-declare module fairygui {
-    class PackageItem {
-        owner: UIPackage;
-        type: PackageItemType;
-        id: string;
-        name: string;
-        width: number;
-        height: number;
-        file: string;
-        decoded: boolean;
-        scale9Grid: egret.Rectangle;
-        scaleByTile: boolean;
-        smoothing: boolean;
-        texture: egret.Texture;
-        pivot: egret.Point;
-        interval: number;
-        repeatDelay: number;
-        swing: boolean;
-        frames: Array<Frame>;
-        componentData: any;
-        sound: egret.Sound;
-        bitmapFont: BitmapFont;
-        constructor();
-        load(): any;
-        toString(): string;
-    }
-}
-declare module fairygui {
-    class GearSize extends GearBase {
-        private _storage;
-        private _default;
-        private _tweenValue;
-        private _tweener;
-        constructor(owner: GObject);
-        protected init(): void;
-        protected addStatus(pageId: string, value: string): void;
-        apply(): void;
-        updateState(): void;
-    }
-}
-declare module fairygui {
-    class GObjectPool {
-        private _pool;
-        private _count;
-        constructor();
-        clear(): void;
-        count: number;
-        getObject(url: string): GObject;
-        returnObject(obj: GObject): void;
     }
 }
 declare module fairygui {
@@ -546,6 +509,7 @@ declare module fairygui {
         asGroup: GGroup;
         asSlider: GSlider;
         asComboBox: GComboBox;
+        asImage: GImage;
         asMovieClip: GMovieClip;
         text: string;
         dispose(): void;
@@ -560,9 +524,12 @@ declare module fairygui {
         startDrag(bounds?: egret.Rectangle, touchPointID?: number): void;
         stopDrag(): void;
         dragging: boolean;
-        localToGlobal(x?: number, y?: number, resultPoint?: egret.Point): egret.Point;
-        globalToLocal(x?: number, y?: number, resultPoint?: egret.Point): egret.Point;
-        getGlobalRect(rect?: egret.Rectangle): egret.Rectangle;
+        localToGlobal(ax?: number, ay?: number, resultPoint?: egret.Point): egret.Point;
+        globalToLocal(ax?: number, ay?: number, resultPoint?: egret.Point): egret.Point;
+        localToRoot(ax?: number, ay?: number, resultPoint?: egret.Point): egret.Point;
+        rootToLocal(ax?: number, ay?: number, resultPoint?: egret.Point): egret.Point;
+        localToGlobalRect(ax?: number, ay?: number, aWidth?: number, aHeight?: number, resultRect?: egret.Rectangle): egret.Rectangle;
+        globalToLocalRect(ax?: number, ay?: number, aWidth?: number, aHeight?: number, resultRect?: egret.Rectangle): egret.Rectangle;
         handleControllerChanged(c: Controller): void;
         protected createDisplayObject(): void;
         protected handleXYChanged(): void;
@@ -575,6 +542,7 @@ declare module fairygui {
         private static sGlobalDragStart;
         private static sGlobalRect;
         private static sHelperPoint;
+        private static sDragHelperRect;
         private initDrag();
         private dragBegin(evt);
         private dragEnd();
@@ -584,6 +552,33 @@ declare module fairygui {
         private __moving(evt);
         private __moving2(evt);
         private __end2(evt);
+    }
+}
+declare module fairygui {
+    class PackageItem {
+        owner: UIPackage;
+        type: PackageItemType;
+        id: string;
+        name: string;
+        width: number;
+        height: number;
+        file: string;
+        decoded: boolean;
+        scale9Grid: egret.Rectangle;
+        scaleByTile: boolean;
+        smoothing: boolean;
+        texture: egret.Texture;
+        pivot: egret.Point;
+        interval: number;
+        repeatDelay: number;
+        swing: boolean;
+        frames: Array<Frame>;
+        componentData: any;
+        sound: egret.Sound;
+        bitmapFont: BitmapFont;
+        constructor();
+        load(): any;
+        toString(): string;
     }
 }
 declare module fairygui {
@@ -767,6 +762,7 @@ declare module fairygui {
 declare module fairygui {
     class GearDisplay extends GearBase {
         constructor(owner: GObject);
+        protected connected: boolean;
         apply(): void;
     }
 }
@@ -897,6 +893,17 @@ declare module fairygui {
         findObjectNear(xValue: number, yValue: number, resultPoint?: egret.Point): egret.Point;
         protected updateBounds(): void;
         setup_beforeAdd(xml: any): void;
+    }
+}
+declare module fairygui {
+    class GObjectPool {
+        private _pool;
+        private _count;
+        constructor();
+        clear(): void;
+        count: number;
+        getObject(url: string): GObject;
+        returnObject(obj: GObject): void;
     }
 }
 declare module fairygui {
@@ -1186,10 +1193,10 @@ declare module fairygui {
         minSize: number;
         protected constructFromXML(xml: any): void;
         private __gripMouseDown(evt);
+        private static sScrollbarHelperPoint;
         private __gripDragging(evt);
         private __arrowButton1Click(evt);
         private __arrowButton2Click(evt);
-        private sHelperPoint;
         private __barMouseDown(evt);
     }
 }
@@ -1219,6 +1226,7 @@ declare module fairygui {
         protected handleSizeChanged(): void;
         setup_afterAdd(xml: any): void;
         private __gripMouseDown(evt);
+        private static sSilderHelperPoint;
         private __gripMouseMove(evt);
         private __gripMouseUp(evt);
     }

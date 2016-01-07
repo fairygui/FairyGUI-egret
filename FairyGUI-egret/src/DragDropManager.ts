@@ -35,7 +35,7 @@ module fairygui {
             this._sourceData = sourceData;
             this._agent.url = icon;
             fairygui.GRoot.inst.addChild(this._agent);
-            var pt: egret.Point = source.localToGlobal();
+            var pt: egret.Point = source.localToRoot();
             this._agent.setXY(pt.x,pt.y);
             this._agent.startDrag(null,touchPointID);
         }

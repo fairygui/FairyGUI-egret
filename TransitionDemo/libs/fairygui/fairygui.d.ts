@@ -524,9 +524,12 @@ declare module fairygui {
         startDrag(bounds?: egret.Rectangle, touchPointID?: number): void;
         stopDrag(): void;
         dragging: boolean;
-        localToGlobal(x?: number, y?: number, resultPoint?: egret.Point): egret.Point;
-        globalToLocal(x?: number, y?: number, resultPoint?: egret.Point): egret.Point;
-        getGlobalRect(rect?: egret.Rectangle): egret.Rectangle;
+        localToGlobal(ax?: number, ay?: number, resultPoint?: egret.Point): egret.Point;
+        globalToLocal(ax?: number, ay?: number, resultPoint?: egret.Point): egret.Point;
+        localToRoot(ax?: number, ay?: number, resultPoint?: egret.Point): egret.Point;
+        rootToLocal(ax?: number, ay?: number, resultPoint?: egret.Point): egret.Point;
+        localToGlobalRect(ax?: number, ay?: number, aWidth?: number, aHeight?: number, resultRect?: egret.Rectangle): egret.Rectangle;
+        globalToLocalRect(ax?: number, ay?: number, aWidth?: number, aHeight?: number, resultRect?: egret.Rectangle): egret.Rectangle;
         handleControllerChanged(c: Controller): void;
         protected createDisplayObject(): void;
         protected handleXYChanged(): void;
@@ -539,6 +542,7 @@ declare module fairygui {
         private static sGlobalDragStart;
         private static sGlobalRect;
         private static sHelperPoint;
+        private static sDragHelperRect;
         private initDrag();
         private dragBegin(evt);
         private dragEnd();
@@ -1189,10 +1193,10 @@ declare module fairygui {
         minSize: number;
         protected constructFromXML(xml: any): void;
         private __gripMouseDown(evt);
+        private static sScrollbarHelperPoint;
         private __gripDragging(evt);
         private __arrowButton1Click(evt);
         private __arrowButton2Click(evt);
-        private sHelperPoint;
         private __barMouseDown(evt);
     }
 }
@@ -1222,6 +1226,7 @@ declare module fairygui {
         protected handleSizeChanged(): void;
         setup_afterAdd(xml: any): void;
         private __gripMouseDown(evt);
+        private static sSilderHelperPoint;
         private __gripMouseMove(evt);
         private __gripMouseUp(evt);
     }

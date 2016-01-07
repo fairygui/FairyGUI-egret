@@ -66,8 +66,8 @@ module fairygui {
         }
 
         protected handleSizeChanged(): void {
-            this.displayObject.scaleX = this.width / this._sourceWidth * this.scaleX * GRoot.contentScaleFactor;
-            this.displayObject.scaleY = this.height / this._sourceHeight * this.scaleY * GRoot.contentScaleFactor;
+            this.displayObject.scaleX = this.width / this._sourceWidth * this.scaleX;
+            this.displayObject.scaleY = this.height / this._sourceHeight * this.scaleY;
         }
 
         public constructFromResource(pkgItem: PackageItem): void {

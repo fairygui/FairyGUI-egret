@@ -85,17 +85,20 @@ module fairygui {
 
             evt.stopPropagation();
 
-            this._dragOffset.x = evt.stageX / GRoot.contentScaleFactor - this._grip.x;
-            this._dragOffset.y = evt.stageY / GRoot.contentScaleFactor - this._grip.y;
+            this.globalToLocal(evt.stageX,evt.stageY,this._dragOffset);
+            this._dragOffset.x -= this._grip.x;
+            this._dragOffset.y -= this._grip.y;
         }
 
+        private static sScrollbarHelperPoint: egret.Point = new egret.Point();
         private __gripDragging(evt: egret.TouchEvent): void {
+            var pt: egret.Point = this.globalToLocal(evt.stageX,evt.stageY,GScrollBar.sScrollbarHelperPoint);
             if (this._vertical) {
-                var curY: number = evt.stageY / GRoot.contentScaleFactor - this._dragOffset.y;
+                var curY: number = pt.y- this._dragOffset.y;
                 this._target.setPercY((curY - this._bar.y) / (this._bar.height - this._grip.height), false);
             }
             else {
-                var curX: number = evt.stageX / GRoot.contentScaleFactor - this._dragOffset.x;
+                var curX: number = pt.x - this._dragOffset.x;
                 this._target.setPercX((curX - this._bar.x) / (this._bar.width - this._grip.width), false);
             }
         }
@@ -118,17 +121,16 @@ module fairygui {
                 this._target.scrollRight();
         }
 
-        private sHelperPoint: egret.Point = new egret.Point();
         private __barMouseDown(evt: egret.TouchEvent): void {
-            this._grip.displayObject.globalToLocal(evt.stageX, evt.stageY, this.sHelperPoint);
+            var pt: egret.Point = this._grip.globalToLocal(evt.stageX,evt.stageY,GScrollBar.sScrollbarHelperPoint);
             if (this._vertical) {
-                if (this.sHelperPoint.y < 0)
+                if (pt.y < 0)
                     this._target.scrollUp(4);
                 else
                     this._target.scrollDown(4);
             }
             else {
-                if (this.sHelperPoint.x < 0)
+                if (pt.x < 0)
                     this._target.scrollLeft(4);
                 else
                     this._target.scrollRight(4);

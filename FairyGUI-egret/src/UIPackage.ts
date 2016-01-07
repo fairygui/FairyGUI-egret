@@ -516,13 +516,6 @@ module fairygui {
                         if (bg.lineHeight < lineHeight)
                             bg.lineHeight = lineHeight;
                     }
-
-                    bg.offsetX *= GRoot.contentScaleFactor;
-                    bg.offsetY *= GRoot.contentScaleFactor;
-                    bg.width *= GRoot.contentScaleFactor;
-                    bg.height *= GRoot.contentScaleFactor;
-                    bg.advance *= GRoot.contentScaleFactor;
-                    bg.lineHeight *= GRoot.contentScaleFactor;
                     font.glyphs[String.fromCharCode(kv.id)] = bg;
                 }
                 else if (str == "info") {
@@ -546,7 +539,7 @@ module fairygui {
             }
 
             font.ttf = ttf;
-            font.lineHeight = lineHeight * GRoot.contentScaleFactor;
+            font.lineHeight = lineHeight;
             item.bitmapFont = font;
         }
     }

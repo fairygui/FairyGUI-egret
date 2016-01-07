@@ -141,10 +141,10 @@ module fairygui {
             this._margin.bottom = margin.bottom;
 
             if(this._displayOnLeft && this._vtScrollBar)
-                this._maskHolder.x = Math.round((this._margin.left + this._vtScrollBar.width) * GRoot.contentScaleFactor);
+                this._maskHolder.x = Math.round(this._margin.left + this._vtScrollBar.width);
             else
-                this._maskHolder.x = Math.round(this._margin.left * GRoot.contentScaleFactor);
-            this._maskHolder.y = Math.round(this._margin.top * GRoot.contentScaleFactor);
+                this._maskHolder.x = this._margin.left;
+            this._maskHolder.y = this._margin.top;
 
             this._contentWidth = 0;
             this._contentHeight = 0;
@@ -274,12 +274,12 @@ module fairygui {
 
         public get contentWidth(): number {
             this._owner.ensureBoundsCorrect();
-            return this._contentWidth / GRoot.contentScaleFactor;
+            return this._contentWidth;
         }
 
         public get contentHeight(): number {
             this._owner.ensureBoundsCorrect();
-            return this._contentHeight / GRoot.contentScaleFactor;
+            return this._contentHeight;
         }
 
         public get viewWidth(): number {
@@ -425,8 +425,6 @@ module fairygui {
         }
 
         public setContentSize(aWidth: number, aHeight: number): void {
-            aWidth *= GRoot.contentScaleFactor;
-            aHeight *= GRoot.contentScaleFactor;
             if (this._contentWidth == aWidth && this._contentHeight == aHeight)
                 return;
 
@@ -492,11 +490,10 @@ module fairygui {
                 }
             }
 
-            this._maskHolder.mask = new egret.Rectangle(0,0,
-                this._maskWidth * GRoot.contentScaleFactor,this._maskHeight * GRoot.contentScaleFactor);
+            this._maskHolder.mask = new egret.Rectangle(0,0,this._maskWidth,this._maskHeight);
                 
-            this._xOverlap = Math.ceil(Math.max(0, this._contentWidth - this._maskWidth)*GRoot.contentScaleFactor);
-            this._yOverlap = Math.ceil(Math.max(0, this._contentHeight - this._maskHeight)*GRoot.contentScaleFactor);
+            this._xOverlap = Math.max(0, this._contentWidth - this._maskWidth);
+            this._yOverlap = Math.max(0, this._contentHeight - this._maskHeight);
                     
             switch(this._scrollType) {
                 case ScrollType.Both:
@@ -581,8 +578,8 @@ module fairygui {
                     contentYLoc = this._yPerc * (this._contentHeight - this._maskHeight);
                 }
             }
-            contentXLoc = Math.floor(contentXLoc * GRoot.contentScaleFactor);
-            contentYLoc = Math.floor(contentYLoc * GRoot.contentScaleFactor);
+            contentXLoc = Math.floor(contentXLoc);
+            contentYLoc = Math.floor(contentYLoc);
 
             if (this._aniFlag) {
                 var toX: number = this._maskContentHolder.x;
@@ -651,7 +648,7 @@ module fairygui {
                 return 0;
 
             var diff: number = this._contentHeight - this._maskHeight;
-            var my: number = this._maskContentHolder.y / GRoot.contentScaleFactor;
+            var my: number = this._maskContentHolder.y;
 
             var currY: number;
             if(my > 0)
@@ -671,7 +668,7 @@ module fairygui {
             var diff: number = this._contentWidth - this._maskWidth;
 
             var currX: number;
-            var mx: number = this._maskContentHolder.x / GRoot.contentScaleFactor;
+            var mx: number = this._maskContentHolder.x;
             if (mx > 0)
                 currX = 0;
             else if (-mx > diff)
@@ -890,8 +887,8 @@ module fairygui {
                 endX = -endX;
                 endY = -endY;
                 var pt: egret.Point = this._owner.findObjectNear(endX, endY);
-                endX = -pt.x * GRoot.contentScaleFactor;
-                endY = -pt.y * GRoot.contentScaleFactor;
+                endX = -pt.x;
+                endY = -pt.y;
                 change1.x = endX - this._maskContentHolder.x;
                 change1.y = endY - this._maskContentHolder.y;
             }

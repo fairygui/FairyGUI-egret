@@ -3005,32 +3005,60 @@ var fairygui;
                 return GObject.sDragging == this;
             }
         );
-        p.localToGlobal = function (x, y, resultPoint) {
-            if (x === void 0) { x = 0; }
-            if (y === void 0) { y = 0; }
-            var ret = this._displayObject.localToGlobal(x * fairygui.GRoot.contentScaleFactor, y * fairygui.GRoot.contentScaleFactor, resultPoint);
-            ret.x /= fairygui.GRoot.contentScaleFactor;
-            ret.y /= fairygui.GRoot.contentScaleFactor;
-            return ret;
+        p.localToGlobal = function (ax, ay, resultPoint) {
+            if (ax === void 0) { ax = 0; }
+            if (ay === void 0) { ay = 0; }
+            return this._displayObject.localToGlobal(ax, ay, resultPoint);
         };
-        p.globalToLocal = function (x, y, resultPoint) {
-            if (x === void 0) { x = 0; }
-            if (y === void 0) { y = 0; }
-            var ret = this._displayObject.globalToLocal(x * fairygui.GRoot.contentScaleFactor, y * fairygui.GRoot.contentScaleFactor, resultPoint);
-            ret.x /= fairygui.GRoot.contentScaleFactor;
-            ret.y /= fairygui.GRoot.contentScaleFactor;
-            return ret;
+        p.globalToLocal = function (ax, ay, resultPoint) {
+            if (ax === void 0) { ax = 0; }
+            if (ay === void 0) { ay = 0; }
+            return this._displayObject.globalToLocal(ax, ay, resultPoint);
         };
-        p.getGlobalRect = function (rect) {
-            if (!rect)
-                rect = new egret.Rectangle();
-            var pt = this.localToGlobal(0, 0, GObject.sHelperPoint);
-            rect.x = pt.x;
-            rect.y = pt.y;
-            pt = this.localToGlobal(this.width, this.height, GObject.sHelperPoint);
-            rect.right = pt.x;
-            rect.bottom = pt.y;
-            return rect;
+        p.localToRoot = function (ax, ay, resultPoint) {
+            if (ax === void 0) { ax = 0; }
+            if (ay === void 0) { ay = 0; }
+            var pt = this._displayObject.localToGlobal(ax, ay, resultPoint);
+            pt.x /= fairygui.GRoot.contentScaleFactor;
+            pt.y /= fairygui.GRoot.contentScaleFactor;
+            return pt;
+        };
+        p.rootToLocal = function (ax, ay, resultPoint) {
+            if (ax === void 0) { ax = 0; }
+            if (ay === void 0) { ay = 0; }
+            ax *= fairygui.GRoot.contentScaleFactor;
+            ay *= fairygui.GRoot.contentScaleFactor;
+            return this._displayObject.globalToLocal(ax, ay, resultPoint);
+        };
+        p.localToGlobalRect = function (ax, ay, aWidth, aHeight, resultRect) {
+            if (ax === void 0) { ax = 0; }
+            if (ay === void 0) { ay = 0; }
+            if (aWidth === void 0) { aWidth = 0; }
+            if (aHeight === void 0) { aHeight = 0; }
+            if (resultRect == null)
+                resultRect = new egret.Rectangle();
+            var pt = this.localToGlobal(ax, ay);
+            resultRect.x = pt.x;
+            resultRect.y = pt.y;
+            pt = this.localToGlobal(ax + aWidth, ay + aHeight);
+            resultRect.right = pt.x;
+            resultRect.bottom = pt.y;
+            return resultRect;
+        };
+        p.globalToLocalRect = function (ax, ay, aWidth, aHeight, resultRect) {
+            if (ax === void 0) { ax = 0; }
+            if (ay === void 0) { ay = 0; }
+            if (aWidth === void 0) { aWidth = 0; }
+            if (aHeight === void 0) { aHeight = 0; }
+            if (resultRect == null)
+                resultRect = new egret.Rectangle();
+            var pt = this.globalToLocal(ax, ay);
+            resultRect.x = pt.x;
+            resultRect.y = pt.y;
+            pt = this.globalToLocal(ax + aWidth, ay + aHeight);
+            resultRect.right = pt.x;
+            resultRect.bottom = pt.y;
+            return resultRect;
         };
         p.handleControllerChanged = function (c) {
             if (this._gearDisplay.controller == c)
@@ -3046,8 +3074,8 @@ var fairygui;
         };
         p.handleXYChanged = function () {
             if (this._displayObject) {
-                this._displayObject.x = (this._x + this._pivotOffsetX) * fairygui.GRoot.contentScaleFactor;
-                this._displayObject.y = (this._y + this._pivotOffsetY) * fairygui.GRoot.contentScaleFactor;
+                this._displayObject.x = this._x + this._pivotOffsetX;
+                this._displayObject.y = this._y + this._pivotOffsetY;
             }
         };
         p.handleSizeChanged = function () {
@@ -3130,14 +3158,14 @@ var fairygui;
             if (GObject.sDragging != null)
                 GObject.sDragging.stopDrag();
             if (evt != null) {
-                GObject.sGlobalDragStart.x = evt.stageX / fairygui.GRoot.contentScaleFactor;
-                GObject.sGlobalDragStart.y = evt.stageY / fairygui.GRoot.contentScaleFactor;
+                GObject.sGlobalDragStart.x = evt.stageX;
+                GObject.sGlobalDragStart.y = evt.stageY;
             }
             else {
-                GObject.sGlobalDragStart.x = fairygui.GRoot.mouseX / fairygui.GRoot.contentScaleFactor;
-                GObject.sGlobalDragStart.y = fairygui.GRoot.mouseY / fairygui.GRoot.contentScaleFactor;
+                GObject.sGlobalDragStart.x = fairygui.GRoot.mouseX;
+                GObject.sGlobalDragStart.y = fairygui.GRoot.mouseY;
             }
-            this.getGlobalRect(GObject.sGlobalRect);
+            this.localToGlobalRect(0, 0, this.width, this.height, GObject.sGlobalRect);
             GObject.sDragging = this;
             fairygui.GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__moving2, this);
             fairygui.GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__end2, this);
@@ -3171,26 +3199,27 @@ var fairygui;
                 this.dragBegin(evt);
         };
         p.__moving2 = function (evt) {
-            var xx = evt.stageX / fairygui.GRoot.contentScaleFactor - GObject.sGlobalDragStart.x + GObject.sGlobalRect.x;
-            var yy = evt.stageY / fairygui.GRoot.contentScaleFactor - GObject.sGlobalDragStart.y + GObject.sGlobalRect.y;
+            var xx = evt.stageX - GObject.sGlobalDragStart.x + GObject.sGlobalRect.x;
+            var yy = evt.stageY - GObject.sGlobalDragStart.y + GObject.sGlobalRect.y;
             if (this._dragBounds != null) {
-                if (xx < this._dragBounds.x)
-                    xx = this._dragBounds.x;
-                else if (xx + GObject.sGlobalRect.width > this._dragBounds.right) {
-                    xx = this._dragBounds.right - GObject.sGlobalRect.width;
-                    if (xx < this._dragBounds.x)
-                        xx = this._dragBounds.x;
+                var rect = fairygui.GRoot.inst.localToGlobalRect(this._dragBounds.x, this._dragBounds.y, this._dragBounds.width, this._dragBounds.height, GObject.sDragHelperRect);
+                if (xx < rect.x)
+                    xx = rect.x;
+                else if (xx + GObject.sGlobalRect.width > rect.right) {
+                    xx = rect.right - GObject.sGlobalRect.width;
+                    if (xx < rect.x)
+                        xx = rect.x;
                 }
-                if (yy < this._dragBounds.y)
-                    yy = this._dragBounds.y;
-                else if (yy + GObject.sGlobalRect.height > this._dragBounds.bottom) {
-                    yy = this._dragBounds.bottom - GObject.sGlobalRect.height;
-                    if (yy < this._dragBounds.y)
-                        yy = this._dragBounds.y;
+                if (yy < rect.y)
+                    yy = rect.y;
+                else if (yy + GObject.sGlobalRect.height > rect.bottom) {
+                    yy = rect.bottom - GObject.sGlobalRect.height;
+                    if (yy < rect.y)
+                        yy = rect.y;
                 }
             }
-            this.parent.globalToLocal(xx, yy, GObject.sHelperPoint);
-            this.setXY(Math.round(GObject.sHelperPoint.x), Math.round(GObject.sHelperPoint.y));
+            var pt = this.parent.globalToLocal(xx, yy, GObject.sHelperPoint);
+            this.setXY(Math.round(pt.x), Math.round(pt.y));
         };
         p.__end2 = function (evt) {
             if (GObject.sDragging == this) {
@@ -3209,6 +3238,7 @@ var fairygui;
         GObject.sGlobalDragStart = new egret.Point();
         GObject.sGlobalRect = new egret.Rectangle();
         GObject.sHelperPoint = new egret.Point();
+        GObject.sDragHelperRect = new egret.Rectangle();
         return GObject;
     })(egret.EventDispatcher);
     fairygui.GObject = GObject;
@@ -3573,7 +3603,7 @@ var fairygui;
         p.updateOpaque = function () {
             if (!this._rootContainer.hitArea)
                 this._rootContainer.hitArea = new egret.Rectangle();
-            this._rootContainer.hitArea.setTo(0, 0, this.width * fairygui.GRoot.contentScaleFactor, this.height * fairygui.GRoot.contentScaleFactor);
+            this._rootContainer.hitArea.setTo(0, 0, this.width, this.height);
         };
         p.updateMask = function () {
             var mask;
@@ -3581,10 +3611,10 @@ var fairygui;
                 mask = this._rootContainer.mask;
             else
                 mask = new egret.Rectangle();
-            var left = this._margin.left * fairygui.GRoot.contentScaleFactor;
-            var top = this._margin.top * fairygui.GRoot.contentScaleFactor;
-            var w = (this.width - (this._margin.left + this._margin.right)) * fairygui.GRoot.contentScaleFactor;
-            var h = (this.height - (this._margin.top + this._margin.bottom)) * fairygui.GRoot.contentScaleFactor;
+            var left = this._margin.left;
+            var top = this._margin.top;
+            var w = this.width - (this._margin.left + this._margin.right);
+            var h = this.height - (this._margin.top + this._margin.bottom);
             mask.setTo(left, top, w, h);
             this._rootContainer.mask = mask;
         };
@@ -3594,8 +3624,8 @@ var fairygui;
                 this._container = new egret.DisplayObjectContainer();
                 this._rootContainer.addChild(this._container);
                 this.updateMask();
-                this._container.x = this._margin.left * fairygui.GRoot.contentScaleFactor;
-                this._container.y = this._margin.top * fairygui.GRoot.contentScaleFactor;
+                this._container.x = this._margin.left;
+                this._container.y = this._margin.top;
             }
             else if (overflow == fairygui.OverflowType.Scroll) {
                 this._container = new egret.DisplayObjectContainer();
@@ -3605,8 +3635,8 @@ var fairygui;
             else if (this._margin.left != 0 || this._margin.top != 0) {
                 this._container = new egret.DisplayObjectContainer();
                 this._rootContainer.addChild(this._container);
-                this._container.x = this._margin.left * fairygui.GRoot.contentScaleFactor;
-                this._container.y = this._margin.top * fairygui.GRoot.contentScaleFactor;
+                this._container.x = this._margin.left;
+                this._container.y = this._margin.top;
             }
             this.setBoundsChangedFlag();
         };
@@ -4836,11 +4866,10 @@ var fairygui;
         p.drawCommon = function () {
             this.graphics;
             this._graphics.clear();
-            var w = this.width * this.scaleX * fairygui.GRoot.contentScaleFactor;
-            var h = this.height * this.scaleY * fairygui.GRoot.contentScaleFactor;
+            var w = this.width * this.scaleX;
+            var h = this.height * this.scaleY;
             if (w == 0 || h == 0)
                 return;
-            var lineSize = Math.ceil(Math.min(this._lineSize * fairygui.GRoot.contentScaleFactor, this._lineSize * fairygui.GRoot.contentScaleFactor));
             if (this._lineSize == 0)
                 this._graphics.lineStyle(0, 0, 0);
             else
@@ -5105,7 +5134,6 @@ var fairygui;
         p.handleSizeChanged = function () {
             this._content.width = this.width * this.scaleX;
             this._content.height = this.height * this.scaleY;
-            this._content.scaleX = this._content.scaleY = fairygui.GRoot.contentScaleFactor;
         };
         p.setup_beforeAdd = function (xml) {
             _super.prototype.setup_beforeAdd.call(this, xml);
@@ -6059,8 +6087,6 @@ var fairygui;
         var d = __define,c=GLoader;p=c.prototype;
         p.createDisplayObject = function () {
             this._container = new fairygui.UIContainer(this);
-            this._container.scaleX = fairygui.GRoot.contentScaleFactor;
-            this._container.scaleY = fairygui.GRoot.contentScaleFactor;
             this.setDisplayObject(this._container);
         };
         p.dispose = function () {
@@ -6376,8 +6402,8 @@ var fairygui;
         p.handleSizeChanged = function () {
             if (!this._updatingLayout)
                 this.updateLayout();
-            this._container.scaleX = this.scaleX * fairygui.GRoot.contentScaleFactor;
-            this._container.scaleY = this.scaleY * fairygui.GRoot.contentScaleFactor;
+            this._container.scaleX = this.scaleX;
+            this._container.scaleY = this.scaleY;
         };
         p.setup_beforeAdd = function (xml) {
             _super.prototype.setup_beforeAdd.call(this, xml);
@@ -6493,8 +6519,8 @@ var fairygui;
                 this._gearColor.apply();
         };
         p.handleSizeChanged = function () {
-            this.displayObject.scaleX = this.width / this._sourceWidth * this.scaleX * fairygui.GRoot.contentScaleFactor;
-            this.displayObject.scaleY = this.height / this._sourceHeight * this.scaleY * fairygui.GRoot.contentScaleFactor;
+            this.displayObject.scaleX = this.width / this._sourceWidth * this.scaleX;
+            this.displayObject.scaleY = this.height / this._sourceHeight * this.scaleY;
         };
         p.constructFromResource = function (pkgItem) {
             this._packageItem = pkgItem;
@@ -6723,7 +6749,7 @@ var fairygui;
                 this._text = value;
                 if (this._text == null)
                     this._text = "";
-                this._textField.width = Math.ceil(this.width * fairygui.GRoot.contentScaleFactor);
+                this._textField.width = Math.ceil(this.width);
                 if (this._ubbEnabled)
                     this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(fairygui.ToolSet.encodeHTML(this._text)));
                 else
@@ -6907,7 +6933,7 @@ var fairygui;
         d(p, "textWidth"
             ,function () {
                 this.ensureSizeCorrect();
-                return Math.ceil(this._textWidth / fairygui.GRoot.contentScaleFactor);
+                return this._textWidth;
             }
         );
         p.ensureSizeCorrect = function () {
@@ -6925,10 +6951,7 @@ var fairygui;
                 this._gearColor.apply();
         };
         p.updateTextFormat = function () {
-            if (fairygui.GRoot.contentScaleFactor == 1)
-                this._textField.size = this._fontSize;
-            else
-                this._textField.size = Math.floor(this._fontSize * fairygui.GRoot.contentScaleFactor) - 1;
+            this._textField.size = this._fontSize;
             if (fairygui.ToolSet.startsWith(this._font, "ui://"))
                 this._bitmapFont = fairygui.UIPackage.getBitmapFontByURL(this._font);
             else {
@@ -6943,8 +6966,8 @@ var fairygui;
             else
                 this._textField.textColor = this._color;
             this._textField.textAlign = fairygui.getAlignTypeString(this._align);
-            this._textField.lineSpacing = Math.floor(this._leading * fairygui.GRoot.contentScaleFactor);
-            //this._textField.letterSpacing = Math.floor(this._letterSpacing*GRoot.contentScaleFactor);
+            this._textField.lineSpacing = this._leading;
+            //this._textField.letterSpacing = this._letterSpacing;
             if (!this._underConstruct)
                 this.render();
         };
@@ -6972,7 +6995,7 @@ var fairygui;
                 this.displayObject.removeChildren();
                 this.displayObject.addChild(this._textField);
             }
-            this._textField.width; //不加这句动态add的文本对不齐，未知原因
+            this._textField.width = Math.ceil(this.width);
             this._textWidth = Math.ceil(this._textField.textWidth);
             if (this._textWidth > 0)
                 this._textWidth += 4;
@@ -6981,18 +7004,18 @@ var fairygui;
                 this._textHeight += 4;
             var w, h = 0;
             if (this._widthAutoSize)
-                w = Math.ceil(this._textWidth / fairygui.GRoot.contentScaleFactor);
+                w = this._textWidth;
             else
                 w = this.width;
             if (this._heightAutoSize) {
-                h = Math.ceil(this._textHeight / fairygui.GRoot.contentScaleFactor);
+                h = this._textHeight;
                 if (!this._widthAutoSize)
                     this._textField.height = this._textHeight;
             }
             else {
                 h = this.height;
-                if (this._textHeight > h * fairygui.GRoot.contentScaleFactor)
-                    this._textHeight = Math.ceil(h * fairygui.GRoot.contentScaleFactor);
+                if (this._textHeight > h)
+                    this._textHeight = h;
                 this._textField.height = this._textHeight;
             }
             if (updateBounds) {
@@ -7015,10 +7038,10 @@ var fairygui;
                 this._lines = new Array();
             else
                 LineInfo.returnList(this._lines);
-            var letterSpacing = this._letterSpacing * fairygui.GRoot.contentScaleFactor;
-            var lineSpacing = this._leading * fairygui.GRoot.contentScaleFactor - 1;
+            var letterSpacing = this._letterSpacing;
+            var lineSpacing = this._leading - 1;
             var fontSize = this._textField.size;
-            var rectWidth = (this.width - GTextField.GUTTER_X * 2) * fairygui.GRoot.contentScaleFactor;
+            var rectWidth = this.width - GTextField.GUTTER_X * 2;
             var lineWidth = 0, lineHeight = 0, lineTextHeight = 0;
             var glyphWidth = 0, glyphHeight = 0;
             var wordChars = 0, wordStart = 0, wordEnd = 0;
@@ -7078,12 +7101,12 @@ var fairygui;
                 else {
                     var glyph = this._bitmapFont.glyphs[ch];
                     if (glyph) {
-                        glyphWidth = Math.ceil(glyph.advance * fairygui.GRoot.contentScaleFactor);
-                        glyphHeight = Math.ceil(glyph.lineHeight * fairygui.GRoot.contentScaleFactor);
+                        glyphWidth = glyph.advance;
+                        glyphHeight = glyph.lineHeight;
                     }
                     else if (ch == " ") {
-                        glyphWidth = Math.ceil(this._bitmapFont.lineHeight * fairygui.GRoot.contentScaleFactor / 2);
-                        glyphHeight = Math.ceil(this._bitmapFont.lineHeight * fairygui.GRoot.contentScaleFactor);
+                        glyphWidth = Math.ceil(this._bitmapFont.lineHeight / 2);
+                        glyphHeight = this._bitmapFont.lineHeight;
                     }
                     else {
                         glyphWidth = 0;
@@ -7167,7 +7190,7 @@ var fairygui;
                     w = textWidth;
             }
             else
-                w = this.width * fairygui.GRoot.contentScaleFactor;
+                w = this.width;
             if (this._heightAutoSize) {
                 if (textHeight == 0)
                     h = 0;
@@ -7175,11 +7198,10 @@ var fairygui;
                     h = textHeight;
             }
             else
-                h = this.height * fairygui.GRoot.contentScaleFactor;
-            ;
+                h = this.height;
             if (updateBounds) {
                 this._updatingSize = true;
-                this.setSize(w / fairygui.GRoot.contentScaleFactor, h / fairygui.GRoot.contentScaleFactor);
+                this.setSize(w, h);
                 this._updatingSize = false;
                 this.doAlign();
             }
@@ -7208,13 +7230,11 @@ var fairygui;
                         bm.x = charX + lineIndent + glyph.offsetX;
                         bm.y = line.y + charIndent + glyph.offsetY;
                         bm.texture = glyph.texture;
-                        bm.scaleX = fairygui.GRoot.contentScaleFactor;
-                        bm.scaleY = fairygui.GRoot.contentScaleFactor;
                         container.addChild(bm);
-                        charX += letterSpacing + Math.ceil(glyph.advance * fairygui.GRoot.contentScaleFactor);
+                        charX += letterSpacing + glyph.advance;
                     }
                     else if (ch == " ") {
-                        charX += letterSpacing + Math.ceil(this._bitmapFont.lineHeight * fairygui.GRoot.contentScaleFactor / 2);
+                        charX += letterSpacing + Math.ceil(this._bitmapFont.lineHeight / 2);
                     }
                     else {
                         charX += letterSpacing;
@@ -7223,8 +7243,8 @@ var fairygui;
             } //line loop
         };
         p.handleXYChanged = function () {
-            this.displayObject.x = Math.floor(this.x * fairygui.GRoot.contentScaleFactor);
-            this.displayObject.y = Math.floor(this.y * fairygui.GRoot.contentScaleFactor + this._yOffset);
+            this.displayObject.x = Math.floor(this.x);
+            this.displayObject.y = Math.floor(this.y + this._yOffset);
         };
         p.handleSizeChanged = function () {
             if (!this._updatingSize) {
@@ -7242,7 +7262,7 @@ var fairygui;
             if (this._verticalAlign == fairygui.VertAlignType.Top || this._textHeight == 0)
                 this._yOffset = GTextField.GUTTER_Y;
             else {
-                var dh = this.height * fairygui.GRoot.contentScaleFactor - this._textHeight;
+                var dh = this.height - this._textHeight;
                 if (dh < 0)
                     dh = 0;
                 if (this._verticalAlign == fairygui.VertAlignType.Middle)
@@ -7250,7 +7270,7 @@ var fairygui;
                 else
                     this._yOffset = Math.floor(dh);
             }
-            this.displayObject.y = this.y * fairygui.GRoot.contentScaleFactor + this._yOffset;
+            this.displayObject.y = this.y + this._yOffset;
         };
         p.setup_beforeAdd = function (xml) {
             _super.prototype.setup_beforeAdd.call(this, xml);
@@ -7375,7 +7395,7 @@ var fairygui;
                 this._text = value;
                 if (this._text == null)
                     this._text = "";
-                this._textField.width = this.width * fairygui.GRoot.contentScaleFactor;
+                this._textField.width = this.width;
                 if (this._ubbEnabled)
                     this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(this._text));
                 else
@@ -7435,6 +7455,8 @@ var fairygui;
             else
                 GRoot.contentScaleFactor = 1;
             this.setSize(Math.round(w / GRoot.contentScaleFactor), Math.round(h / GRoot.contentScaleFactor));
+            this.scaleX = GRoot.contentScaleFactor;
+            this.scaleY = GRoot.contentScaleFactor;
         };
         p.enableFocusManagement = function () {
             this._focusManagement = true;
@@ -7529,12 +7551,12 @@ var fairygui;
             var pos;
             var sizeW, sizeH = 0;
             if (target) {
-                pos = target.localToGlobal();
+                pos = target.localToRoot();
                 sizeW = target.width;
                 sizeH = target.height;
             }
             else {
-                pos = new egret.Point(GRoot.mouseX / GRoot.contentScaleFactor, GRoot.mouseY / GRoot.contentScaleFactor);
+                pos = this.globalToLocal(GRoot.mouseX, GRoot.mouseY);
             }
             var xx, yy;
             xx = pos.x;
@@ -7607,13 +7629,16 @@ var fairygui;
             var xx = 0;
             var yy = 0;
             if (position == null) {
-                xx = (GRoot.mouseX + 10) / GRoot.contentScaleFactor;
-                yy = (GRoot.mouseY + 20) / GRoot.contentScaleFactor;
+                xx = GRoot.mouseX + 10;
+                yy = GRoot.mouseY + 20;
             }
             else {
                 xx = position.x;
                 yy = position.y;
             }
+            var pt = this.globalToLocal(xx, yy);
+            xx = pt.x;
+            yy = pt.y;
             if (xx + this._tooltipWin.width > this.width) {
                 xx = xx - this._tooltipWin.width - 1;
                 if (xx < 0)
@@ -7965,7 +7990,6 @@ var fairygui;
         __extends(GScrollBar, _super);
         function GScrollBar() {
             _super.call(this);
-            this.sHelperPoint = new egret.Point();
             this._dragOffset = new egret.Point();
             this._scrollPerc = 0;
         }
@@ -8029,16 +8053,18 @@ var fairygui;
             if (!this._bar)
                 return;
             evt.stopPropagation();
-            this._dragOffset.x = evt.stageX / fairygui.GRoot.contentScaleFactor - this._grip.x;
-            this._dragOffset.y = evt.stageY / fairygui.GRoot.contentScaleFactor - this._grip.y;
+            this.globalToLocal(evt.stageX, evt.stageY, this._dragOffset);
+            this._dragOffset.x -= this._grip.x;
+            this._dragOffset.y -= this._grip.y;
         };
         p.__gripDragging = function (evt) {
+            var pt = this.globalToLocal(evt.stageX, evt.stageY, GScrollBar.sScrollbarHelperPoint);
             if (this._vertical) {
-                var curY = evt.stageY / fairygui.GRoot.contentScaleFactor - this._dragOffset.y;
+                var curY = pt.y - this._dragOffset.y;
                 this._target.setPercY((curY - this._bar.y) / (this._bar.height - this._grip.height), false);
             }
             else {
-                var curX = evt.stageX / fairygui.GRoot.contentScaleFactor - this._dragOffset.x;
+                var curX = pt.x - this._dragOffset.x;
                 this._target.setPercX((curX - this._bar.x) / (this._bar.width - this._grip.width), false);
             }
         };
@@ -8057,20 +8083,21 @@ var fairygui;
                 this._target.scrollRight();
         };
         p.__barMouseDown = function (evt) {
-            this._grip.displayObject.globalToLocal(evt.stageX, evt.stageY, this.sHelperPoint);
+            var pt = this._grip.globalToLocal(evt.stageX, evt.stageY, GScrollBar.sScrollbarHelperPoint);
             if (this._vertical) {
-                if (this.sHelperPoint.y < 0)
+                if (pt.y < 0)
                     this._target.scrollUp(4);
                 else
                     this._target.scrollDown(4);
             }
             else {
-                if (this.sHelperPoint.x < 0)
+                if (pt.x < 0)
                     this._target.scrollLeft(4);
                 else
                     this._target.scrollRight(4);
             }
         };
+        GScrollBar.sScrollbarHelperPoint = new egret.Point();
         return GScrollBar;
     })(fairygui.GComponent);
     fairygui.GScrollBar = GScrollBar;
@@ -8198,15 +8225,15 @@ var fairygui;
             this.update();
         };
         p.__gripMouseDown = function (evt) {
-            this._clickPos.x = evt.stageX / fairygui.GRoot.contentScaleFactor;
-            this._clickPos.y = evt.stageY / fairygui.GRoot.contentScaleFactor;
+            this._clickPos = this.globalToLocal(evt.stageX, evt.stageY);
             this._clickPercent = this._value / this._max;
             this._gripObject.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__gripMouseMove, this);
             this._gripObject.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_END, this.__gripMouseUp, this);
         };
         p.__gripMouseMove = function (evt) {
-            var deltaX = evt.stageX / fairygui.GRoot.contentScaleFactor - this._clickPos.x;
-            var deltaY = evt.stageY / fairygui.GRoot.contentScaleFactor - this._clickPos.y;
+            var pt = this.globalToLocal(evt.stageX, evt.stageY, GSlider.sSilderHelperPoint);
+            var deltaX = pt.x - this._clickPos.x;
+            var deltaY = pt.y - this._clickPos.y;
             var percent;
             if (this._barObjectH)
                 percent = this._clickPercent + deltaX / this._barMaxWidth;
@@ -8229,6 +8256,7 @@ var fairygui;
             this._gripObject.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.__gripMouseMove, this);
             this._gripObject.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__gripMouseUp, this);
         };
+        GSlider.sSilderHelperPoint = new egret.Point();
         return GSlider;
     })(fairygui.GComponent);
     fairygui.GSlider = GSlider;
@@ -8281,8 +8309,8 @@ var fairygui;
         );
         p.handleSizeChanged = function () {
             if (this._content) {
-                this._container.scaleX = this.width / this._sourceWidth * this.scaleX * fairygui.GRoot.contentScaleFactor;
-                this._container.scaleY = this.height / this._sourceHeight * this.scaleY * fairygui.GRoot.contentScaleFactor;
+                this._container.scaleX = this.width / this._sourceWidth * this.scaleX;
+                this._container.scaleY = this.height / this._sourceHeight * this.scaleY;
             }
         };
         p.handleControllerChanged = function (c) {
@@ -8357,8 +8385,8 @@ var fairygui;
         };
         p.handleSizeChanged = function () {
             if (!this._updatingSize) {
-                this._textField.width = Math.ceil(this.width * fairygui.GRoot.contentScaleFactor);
-                this._textField.height = Math.ceil(this.height * fairygui.GRoot.contentScaleFactor);
+                this._textField.width = Math.ceil(this.width);
+                this._textField.height = Math.ceil(this.height);
             }
         };
         p.doAlign = function () {
@@ -9361,10 +9389,10 @@ var fairygui;
             this._margin.right = margin.right;
             this._margin.bottom = margin.bottom;
             if (this._displayOnLeft && this._vtScrollBar)
-                this._maskHolder.x = Math.round((this._margin.left + this._vtScrollBar.width) * fairygui.GRoot.contentScaleFactor);
+                this._maskHolder.x = Math.round(this._margin.left + this._vtScrollBar.width);
             else
-                this._maskHolder.x = Math.round(this._margin.left * fairygui.GRoot.contentScaleFactor);
-            this._maskHolder.y = Math.round(this._margin.top * fairygui.GRoot.contentScaleFactor);
+                this._maskHolder.x = this._margin.left;
+            this._maskHolder.y = this._margin.top;
             this._contentWidth = 0;
             this._contentHeight = 0;
             this.setSize(owner.width, owner.height);
@@ -9494,13 +9522,13 @@ var fairygui;
         d(p, "contentWidth"
             ,function () {
                 this._owner.ensureBoundsCorrect();
-                return this._contentWidth / fairygui.GRoot.contentScaleFactor;
+                return this._contentWidth;
             }
         );
         d(p, "contentHeight"
             ,function () {
                 this._owner.ensureBoundsCorrect();
-                return this._contentHeight / fairygui.GRoot.contentScaleFactor;
+                return this._contentHeight;
             }
         );
         d(p, "viewWidth"
@@ -9642,8 +9670,6 @@ var fairygui;
             this.posChanged(false);
         };
         p.setContentSize = function (aWidth, aHeight) {
-            aWidth *= fairygui.GRoot.contentScaleFactor;
-            aHeight *= fairygui.GRoot.contentScaleFactor;
             if (this._contentWidth == aWidth && this._contentHeight == aHeight)
                 return;
             this._contentWidth = aWidth;
@@ -9705,9 +9731,9 @@ var fairygui;
                         this._hzScrollBar.displayPerc = Math.min(1, this._maskWidth / this._contentWidth);
                 }
             }
-            this._maskHolder.mask = new egret.Rectangle(0, 0, this._maskWidth * fairygui.GRoot.contentScaleFactor, this._maskHeight * fairygui.GRoot.contentScaleFactor);
-            this._xOverlap = Math.ceil(Math.max(0, this._contentWidth - this._maskWidth) * fairygui.GRoot.contentScaleFactor);
-            this._yOverlap = Math.ceil(Math.max(0, this._contentHeight - this._maskHeight) * fairygui.GRoot.contentScaleFactor);
+            this._maskHolder.mask = new egret.Rectangle(0, 0, this._maskWidth, this._maskHeight);
+            this._xOverlap = Math.max(0, this._contentWidth - this._maskWidth);
+            this._yOverlap = Math.max(0, this._contentHeight - this._maskHeight);
             switch (this._scrollType) {
                 case fairygui.ScrollType.Both:
                     if (this._contentWidth > this._maskWidth && this._contentHeight <= this._maskHeight) {
@@ -9781,8 +9807,8 @@ var fairygui;
                     contentYLoc = this._yPerc * (this._contentHeight - this._maskHeight);
                 }
             }
-            contentXLoc = Math.floor(contentXLoc * fairygui.GRoot.contentScaleFactor);
-            contentYLoc = Math.floor(contentYLoc * fairygui.GRoot.contentScaleFactor);
+            contentXLoc = Math.floor(contentXLoc);
+            contentYLoc = Math.floor(contentYLoc);
             if (this._aniFlag) {
                 var toX = this._maskContentHolder.x;
                 var toY = this._maskContentHolder.y;
@@ -9842,7 +9868,7 @@ var fairygui;
             if (!this._vScroll)
                 return 0;
             var diff = this._contentHeight - this._maskHeight;
-            var my = this._maskContentHolder.y / fairygui.GRoot.contentScaleFactor;
+            var my = this._maskContentHolder.y;
             var currY;
             if (my > 0)
                 currY = 0;
@@ -9857,7 +9883,7 @@ var fairygui;
                 return 0;
             var diff = this._contentWidth - this._maskWidth;
             var currX;
-            var mx = this._maskContentHolder.x / fairygui.GRoot.contentScaleFactor;
+            var mx = this._maskContentHolder.x;
             if (mx > 0)
                 currX = 0;
             else if (-mx > diff)
@@ -10040,8 +10066,8 @@ var fairygui;
                 endX = -endX;
                 endY = -endY;
                 var pt = this._owner.findObjectNear(endX, endY);
-                endX = -pt.x * fairygui.GRoot.contentScaleFactor;
-                endY = -pt.y * fairygui.GRoot.contentScaleFactor;
+                endX = -pt.x;
+                endY = -pt.y;
                 change1.x = endX - this._maskContentHolder.x;
                 change1.y = endY - this._maskContentHolder.y;
             }
@@ -11026,12 +11052,6 @@ var fairygui;
                         if (bg.lineHeight < lineHeight)
                             bg.lineHeight = lineHeight;
                     }
-                    bg.offsetX *= fairygui.GRoot.contentScaleFactor;
-                    bg.offsetY *= fairygui.GRoot.contentScaleFactor;
-                    bg.width *= fairygui.GRoot.contentScaleFactor;
-                    bg.height *= fairygui.GRoot.contentScaleFactor;
-                    bg.advance *= fairygui.GRoot.contentScaleFactor;
-                    bg.lineHeight *= fairygui.GRoot.contentScaleFactor;
                     font.glyphs[String.fromCharCode(kv.id)] = bg;
                 }
                 else if (str == "info") {
@@ -11053,7 +11073,7 @@ var fairygui;
                 }
             }
             font.ttf = ttf;
-            font.lineHeight = lineHeight * fairygui.GRoot.contentScaleFactor;
+            font.lineHeight = lineHeight;
             item.bitmapFont = font;
         };
         //internal
@@ -11382,7 +11402,7 @@ var fairygui;
             this._sourceData = sourceData;
             this._agent.url = icon;
             fairygui.GRoot.inst.addChild(this._agent);
-            var pt = source.localToGlobal();
+            var pt = source.localToRoot();
             this._agent.setXY(pt.x, pt.y);
             this._agent.startDrag(null, touchPointID);
         };

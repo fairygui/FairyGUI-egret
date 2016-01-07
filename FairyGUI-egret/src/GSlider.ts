@@ -147,17 +147,18 @@ module fairygui {
         }
 
         private __gripMouseDown(evt: egret.TouchEvent): void {
-            this._clickPos.x = evt.stageX / GRoot.contentScaleFactor;
-            this._clickPos.y = evt.stageY / GRoot.contentScaleFactor;
+            this._clickPos = this.globalToLocal(evt.stageX,evt.stageY);
             this._clickPercent = this._value / this._max;
 
-            this._gripObject.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__gripMouseMove, this);
-            this._gripObject.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_END, this.__gripMouseUp, this);
+            this._gripObject.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_MOVE,this.__gripMouseMove,this);
+            this._gripObject.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_END,this.__gripMouseUp,this);
         }
 
+        private static sSilderHelperPoint: egret.Point = new egret.Point();
         private __gripMouseMove(evt: egret.TouchEvent): void {
-            var deltaX: number = evt.stageX / GRoot.contentScaleFactor - this._clickPos.x;
-            var deltaY: number = evt.stageY / GRoot.contentScaleFactor - this._clickPos.y;
+            var pt: egret.Point = this.globalToLocal(evt.stageX,evt.stageY,GSlider.sSilderHelperPoint);
+            var deltaX: number = pt.x - this._clickPos.x;
+            var deltaY: number = pt.y - this._clickPos.y;
 
             var percent: number;
             if (this._barObjectH)

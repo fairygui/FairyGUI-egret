@@ -68,7 +68,7 @@ module fairygui {
             this._text = value;
             if (this._text == null)
                 this._text = "";
-            this._textField.width = Math.ceil(this.width * GRoot.contentScaleFactor);
+            this._textField.width = Math.ceil(this.width);
             if (this._ubbEnabled)
                 this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(ToolSet.encodeHTML(this._text)));
             else
@@ -257,7 +257,7 @@ module fairygui {
         
         public get textWidth(): number {
             this.ensureSizeCorrect();
-            return Math.ceil(this._textWidth / GRoot.contentScaleFactor);
+            return this._textWidth;
         }
 
         public ensureSizeCorrect(): void {
@@ -277,11 +277,7 @@ module fairygui {
         }
 
         protected updateTextFormat(): void {
-            if(GRoot.contentScaleFactor == 1)
-                this._textField.size = this._fontSize;
-            else
-                this._textField.size = Math.floor(this._fontSize * GRoot.contentScaleFactor) - 1;
-
+            this._textField.size = this._fontSize;
             if(ToolSet.startsWith(this._font,"ui://"))
                 this._bitmapFont = UIPackage.getBitmapFontByURL(this._font);
             else {
@@ -297,8 +293,8 @@ module fairygui {
             else
                 this._textField.textColor = this._color;
             this._textField.textAlign = getAlignTypeString(this._align);
-            this._textField.lineSpacing = Math.floor(this._leading * GRoot.contentScaleFactor);
-            //this._textField.letterSpacing = Math.floor(this._letterSpacing*GRoot.contentScaleFactor);
+            this._textField.lineSpacing = this._leading;
+            //this._textField.letterSpacing = this._letterSpacing;
 
             if(!this._underConstruct)
                 this.render();
@@ -334,7 +330,7 @@ module fairygui {
                 (<egret.DisplayObjectContainer>this.displayObject).addChild(this._textField);
             }
 
-            this._textField.width; //不加这句动态add的文本对不齐，未知原因
+            this._textField.width = Math.ceil(this.width);
             this._textWidth = Math.ceil(this._textField.textWidth);
             if(this._textWidth > 0)
                 this._textWidth += 4;
@@ -344,19 +340,19 @@ module fairygui {
 
             var w: number,h: number = 0;
             if(this._widthAutoSize)
-                w = Math.ceil(this._textWidth / GRoot.contentScaleFactor);
+                w = this._textWidth;
             else
                 w = this.width;
 
             if(this._heightAutoSize) {
-                h = Math.ceil(this._textHeight / GRoot.contentScaleFactor);
+                h = this._textHeight;
                 if(!this._widthAutoSize)
                     this._textField.height = this._textHeight;
             }
             else {
                 h = this.height;
-                if(this._textHeight > h * GRoot.contentScaleFactor)
-                    this._textHeight = Math.ceil(h * GRoot.contentScaleFactor);
+                if(this._textHeight > h)
+                    this._textHeight = h;
                 this._textField.height = this._textHeight;
             }
 
@@ -384,10 +380,10 @@ module fairygui {
             else
                 LineInfo.returnList(this._lines);
 
-            var letterSpacing: number = this._letterSpacing * GRoot.contentScaleFactor;
-            var lineSpacing: number = this._leading * GRoot.contentScaleFactor - 1;
+            var letterSpacing: number = this._letterSpacing;
+            var lineSpacing: number = this._leading - 1;
             var fontSize: number = this._textField.size;
-            var rectWidth: number = (this.width - GTextField.GUTTER_X * 2) * GRoot.contentScaleFactor;
+            var rectWidth: number = this.width - GTextField.GUTTER_X * 2;
             var lineWidth: number = 0, lineHeight: number = 0, lineTextHeight: number = 0;
             var glyphWidth: number = 0, glyphHeight: number = 0;
             var wordChars: number = 0, wordStart: number = 0, wordEnd: number = 0;
@@ -452,12 +448,12 @@ module fairygui {
                 else {
                     var glyph: BMGlyph = this._bitmapFont.glyphs[ch];
                     if (glyph) {
-                        glyphWidth = Math.ceil(glyph.advance*GRoot.contentScaleFactor); 
-                        glyphHeight = Math.ceil(glyph.lineHeight*GRoot.contentScaleFactor);
+                        glyphWidth = glyph.advance; 
+                        glyphHeight = glyph.lineHeight;
                     }
                     else if (ch == " ") {
-                        glyphWidth = Math.ceil(this._bitmapFont.lineHeight*GRoot.contentScaleFactor/2);
-                        glyphHeight = Math.ceil(this._bitmapFont.lineHeight*GRoot.contentScaleFactor);
+                        glyphWidth = Math.ceil(this._bitmapFont.lineHeight/2);
+                        glyphHeight = this._bitmapFont.lineHeight;
                     }
                     else {
                         glyphWidth = 0;
@@ -550,7 +546,7 @@ module fairygui {
                     w = textWidth;
             }
             else
-                w = this.width * GRoot.contentScaleFactor;
+                w = this.width;
 
             if (this._heightAutoSize) {
                 if (textHeight == 0)
@@ -559,11 +555,11 @@ module fairygui {
                     h = textHeight;
             }
             else
-                h = this.height * GRoot.contentScaleFactor;;
+                h = this.height;
 
             if (updateBounds) {
                 this._updatingSize = true;
-                this.setSize(w / GRoot.contentScaleFactor, h / GRoot.contentScaleFactor);
+                this.setSize(w, h);
                 this._updatingSize = false;
 
                 this.doAlign();
@@ -598,14 +594,12 @@ module fairygui {
                         bm.x = charX + lineIndent + glyph.offsetX;
                         bm.y = line.y + charIndent + glyph.offsetY;
                         bm.texture = glyph.texture;
-                        bm.scaleX = GRoot.contentScaleFactor;
-                        bm.scaleY = GRoot.contentScaleFactor;
                         container.addChild(bm);
 
-                        charX += letterSpacing + Math.ceil(glyph.advance*GRoot.contentScaleFactor);
+                        charX += letterSpacing + glyph.advance;
                     }
                     else if (ch == " ") {
-                        charX += letterSpacing + Math.ceil(this._bitmapFont.lineHeight*GRoot.contentScaleFactor/2);
+                        charX += letterSpacing + Math.ceil(this._bitmapFont.lineHeight/2);
                     }
                     else {
                         charX += letterSpacing;
@@ -615,8 +609,8 @@ module fairygui {
         }
 
         protected handleXYChanged(): void {
-            this.displayObject.x = Math.floor(this.x * GRoot.contentScaleFactor);
-            this.displayObject.y = Math.floor(this.y * GRoot.contentScaleFactor + this._yOffset);
+            this.displayObject.x = Math.floor(this.x);
+            this.displayObject.y = Math.floor(this.y + this._yOffset);
         }
         
         protected handleSizeChanged(): void {
@@ -637,7 +631,7 @@ module fairygui {
             if(this._verticalAlign == VertAlignType.Top || this._textHeight == 0)
                 this._yOffset = GTextField.GUTTER_Y;
             else {
-                var dh: number = this.height * GRoot.contentScaleFactor - this._textHeight;
+                var dh: number = this.height - this._textHeight;
                 if(dh < 0)
                     dh = 0;
                 if(this._verticalAlign == VertAlignType.Middle)
@@ -645,7 +639,7 @@ module fairygui {
                 else
                     this._yOffset = Math.floor(dh);
             }
-            this.displayObject.y = this.y * GRoot.contentScaleFactor + this._yOffset;
+            this.displayObject.y = this.y + this._yOffset;
         }
 
         public setup_beforeAdd(xml: any): void {

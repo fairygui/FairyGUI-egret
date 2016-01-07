@@ -12,7 +12,8 @@ class JoystickModule extends egret.EventDispatcher {
     private _center: fairygui.GObject;
     private touchId: number;
     private _tweener: egret.Tween;
-
+    private _curPos: egret.Point;
+    
     public static JoystickMoving: string = "JoystickMoving";
     public static JoystickUp: string = "JoystickUp";
 
@@ -31,6 +32,8 @@ class JoystickModule extends egret.EventDispatcher {
         this._InitY = this._center.y + this._center.height / 2;
         this.touchId = -1;
         this.radius = 150;
+        
+        this._curPos = new egret.Point();
 
         this._touchArea.addEventListener(egret.TouchEvent.TOUCH_BEGIN,this.onTouchDown,this);
     }
@@ -49,8 +52,9 @@ class JoystickModule extends egret.EventDispatcher {
                 this._tweener = null;
             }
 
-            var bx: number = evt.stageX / fairygui.GRoot.contentScaleFactor;
-            var by: number = evt.stageY / fairygui.GRoot.contentScaleFactor;
+            fairygui.GRoot.inst.globalToLocal(evt.stageX,evt.stageY,this._curPos);
+            var bx: number = this._curPos.x;
+            var by: number = this._curPos.y;
             this._button.selected = true;
 
             if(bx < 0)

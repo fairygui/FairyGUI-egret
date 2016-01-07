@@ -63,8 +63,8 @@ module fairygui {
 		
         protected handleSizeChanged(): void {
             if(!this._updatingSize) {
-                this._textField.width = Math.ceil(this.width * GRoot.contentScaleFactor);
-                this._textField.height = Math.ceil(this.height * GRoot.contentScaleFactor);
+                this._textField.width = Math.ceil(this.width);
+                this._textField.height = Math.ceil(this.height);
             }
         }
         
