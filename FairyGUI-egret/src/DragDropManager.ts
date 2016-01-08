@@ -37,7 +37,7 @@ module fairygui {
             fairygui.GRoot.inst.addChild(this._agent);
             var pt: egret.Point = source.localToRoot();
             this._agent.setXY(pt.x,pt.y);
-            this._agent.startDrag(null,touchPointID);
+            this._agent.startDrag(touchPointID);
         }
 
         public cancel(): void {

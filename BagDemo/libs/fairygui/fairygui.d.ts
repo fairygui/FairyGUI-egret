@@ -521,7 +521,7 @@ declare module fairygui {
         private _reDispatch(evt);
         draggable: boolean;
         dragBounds: egret.Rectangle;
-        startDrag(bounds?: egret.Rectangle, touchPointID?: number): void;
+        startDrag(touchPointID?: number): void;
         stopDrag(): void;
         dragging: boolean;
         localToGlobal(ax?: number, ay?: number, resultPoint?: egret.Point): egret.Point;

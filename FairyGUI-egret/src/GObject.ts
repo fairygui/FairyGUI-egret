@@ -669,7 +669,7 @@ module fairygui {
             this._dragBounds = value;
         }
 
-        public startDrag(bounds: egret.Rectangle= null, touchPointID: number= -1): void {
+        public startDrag(touchPointID: number= -1): void {
             if (this._displayObject.stage == null)
                 return;
 

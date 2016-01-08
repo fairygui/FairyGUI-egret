@@ -301,7 +301,7 @@ module fairygui {
         private __dragStart(evt: DragEvent): void {
             evt.preventDefault();
 
-            this.startDrag();
+            this.startDrag(evt.touchPointID);
         }
     }
 }

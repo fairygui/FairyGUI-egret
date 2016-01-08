@@ -2990,8 +2990,7 @@ var fairygui;
                 this._dragBounds = value;
             }
         );
-        p.startDrag = function (bounds, touchPointID) {
-            if (bounds === void 0) { bounds = null; }
+        p.startDrag = function (touchPointID) {
             if (touchPointID === void 0) { touchPointID = -1; }
             if (this._displayObject.stage == null)
                 return;
@@ -11358,7 +11357,7 @@ var fairygui;
         };
         p.__dragStart = function (evt) {
             evt.preventDefault();
-            this.startDrag();
+            this.startDrag(evt.touchPointID);
         };
         return Window;
     })(fairygui.GComponent);
@@ -11404,7 +11403,7 @@ var fairygui;
             fairygui.GRoot.inst.addChild(this._agent);
             var pt = source.localToRoot();
             this._agent.setXY(pt.x, pt.y);
-            this._agent.startDrag(null, touchPointID);
+            this._agent.startDrag(touchPointID);
         };
         p.cancel = function () {
             if (this._agent.parent != null) {
