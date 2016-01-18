@@ -799,6 +799,9 @@ module fairygui {
                 var length: number = col.length;
                 for (var i: number = 0; i < length; i++) {
                     var cxml: any = col[i];
+                    if(cxml.name != "item")
+                        continue;
+                    
                     var url: string = cxml.attributes.url;
                     if (!url)
                         url = this._defaultItem;

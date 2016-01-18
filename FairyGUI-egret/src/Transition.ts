@@ -680,81 +680,82 @@ module fairygui {
             var length1: number = col.length;
             for(var i1: number = 0;i1 < length1;i1++) {
                 var cxml: any = col[i1];
-                if(cxml.name == "item") {
-                    var item: TransitionItem = new TransitionItem();
-                    this._items.push(item);
-                    item.time = parseInt(cxml.attributes.time) / this.FRAME_RATE;
-                    item.targetId = cxml.attributes.target;
-                    str = cxml.attributes.type;
-                    switch(str) {
-                        case "XY":
-                            item.type = TransitionActionType.XY;
-                            break;
-                        case "Size":
-                            item.type = TransitionActionType.Size;
-                            break;
-                        case "Scale":
-                            item.type = TransitionActionType.Scale;
-                            break;
-                        case "Pivot":
-                            item.type = TransitionActionType.Pivot;
-                            break;
-                        case "Alpha":
-                            item.type = TransitionActionType.Alpha;
-                            break;
-                        case "Rotation":
-                            item.type = TransitionActionType.Rotation;
-                            break;
-                        case "Color":
-                            item.type = TransitionActionType.Color;
-                            break;
-                        case "Animation":
-                            item.type = TransitionActionType.Animation;
-                            break;
-                        case "Visible":
-                            item.type = TransitionActionType.Visible;
-                            break;
-                        case "Controller":
-                            item.type = TransitionActionType.Controller;
-                            break;
-                        case "Sound":
-                            item.type = TransitionActionType.Sound;
-                            break;
-                        case "Transition":
-                            item.type = TransitionActionType.Transition;
-                            break;
-                        case "Shake":
-                            item.type = TransitionActionType.Shake;
-                            break;
-                        default:
-                            item.type = TransitionActionType.Unknown;
-                            break;
-                    }
-                    item.tween = cxml.attributes.tween == "true";
-                    item.label = cxml.attributes.label;
-                    if(item.tween) {
-                        item.duration = parseInt(cxml.attributes.duration) / this.FRAME_RATE;
-                        str = cxml.attributes.ease;
-                        if(str)
-                            item.easeType = ParseEaseType(str);
-                        str = cxml.attributes.repeat;
-                        if(str)
-                            item.repeat = parseInt(str);
-                        item.yoyo = cxml.attributes.yoyo == "true";
-                        item.label2 = cxml.attributes.label2;
-                        var v: string = cxml.attributes.endValue;
-                        if(v) {
-                            this.decodeValue(item.type,cxml.attributes.startValue,item.startValue);
-                            this.decodeValue(item.type,v,item.endValue);
-                        }
-                        else {
-                            item.tween = false;
-                            this.decodeValue(item.type,cxml.attributes.startValue,item.value);
-                        }
+                if(cxml.name != "item")
+                    continue;
+                    
+                var item: TransitionItem = new TransitionItem();
+                this._items.push(item);
+                item.time = parseInt(cxml.attributes.time) / this.FRAME_RATE;
+                item.targetId = cxml.attributes.target;
+                str = cxml.attributes.type;
+                switch(str) {
+                    case "XY":
+                        item.type = TransitionActionType.XY;
+                        break;
+                    case "Size":
+                        item.type = TransitionActionType.Size;
+                        break;
+                    case "Scale":
+                        item.type = TransitionActionType.Scale;
+                        break;
+                    case "Pivot":
+                        item.type = TransitionActionType.Pivot;
+                        break;
+                    case "Alpha":
+                        item.type = TransitionActionType.Alpha;
+                        break;
+                    case "Rotation":
+                        item.type = TransitionActionType.Rotation;
+                        break;
+                    case "Color":
+                        item.type = TransitionActionType.Color;
+                        break;
+                    case "Animation":
+                        item.type = TransitionActionType.Animation;
+                        break;
+                    case "Visible":
+                        item.type = TransitionActionType.Visible;
+                        break;
+                    case "Controller":
+                        item.type = TransitionActionType.Controller;
+                        break;
+                    case "Sound":
+                        item.type = TransitionActionType.Sound;
+                        break;
+                    case "Transition":
+                        item.type = TransitionActionType.Transition;
+                        break;
+                    case "Shake":
+                        item.type = TransitionActionType.Shake;
+                        break;
+                    default:
+                        item.type = TransitionActionType.Unknown;
+                        break;
+                }
+                item.tween = cxml.attributes.tween == "true";
+                item.label = cxml.attributes.label;
+                if(item.tween) {
+                    item.duration = parseInt(cxml.attributes.duration) / this.FRAME_RATE;
+                    str = cxml.attributes.ease;
+                    if(str)
+                        item.easeType = ParseEaseType(str);
+                    str = cxml.attributes.repeat;
+                    if(str)
+                        item.repeat = parseInt(str);
+                    item.yoyo = cxml.attributes.yoyo == "true";
+                    item.label2 = cxml.attributes.label2;
+                    var v: string = cxml.attributes.endValue;
+                    if(v) {
+                        this.decodeValue(item.type,cxml.attributes.startValue,item.startValue);
+                        this.decodeValue(item.type,v,item.endValue);
                     }
                     else {
-                        this.decodeValue(item.type,cxml.attributes.value,item.value);
+                        item.tween = false;
+                        this.decodeValue(item.type,cxml.attributes.startValue,item.value);
                     }
+                }
+                else {
+                    this.decodeValue(item.type,cxml.attributes.value,item.value);
                 }
             }
         }

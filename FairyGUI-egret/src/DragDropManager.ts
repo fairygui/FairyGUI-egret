@@ -24,7 +24,7 @@ module fairygui {
             return this._agent;
         }
 
-        public get dragging(): Boolean {
+        public get dragging(): boolean {
             return this._agent.parent != null;
         }
 

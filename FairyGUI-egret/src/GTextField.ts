@@ -12,6 +12,7 @@ module fairygui {
         protected _letterSpacing: number = 0;                
         protected _text: string;
         protected _ubbEnabled: boolean;
+        protected _displayAsPassword: boolean;
         
         protected _autoSize: AutoSizeType;
         protected _widthAutoSize: boolean;
@@ -66,18 +67,22 @@ module fairygui {
 
         public set text(value: string) {
             this._text = value;
-            if (this._text == null)
+            if(this._text == null)
                 this._text = "";
             this._textField.width = Math.ceil(this.width);
-            if (this._ubbEnabled)
-                this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(ToolSet.encodeHTML(this._text)));
-            else
-                this._textField.text = this._text;
+            this.updateTextFieldText();
             
             if(this.parent && this.parent._underConstruct)
                 this.renderNow();
             else
                 this.render();
+        }
+        
+        protected updateTextFieldText():void {
+            if(this._ubbEnabled)
+                this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(ToolSet.encodeHTML(this._text)));
+            else
+                this._textField.text = this._text;
         }
 
         public get text(): string {
@@ -245,12 +250,13 @@ module fairygui {
         }
 
         public get displayAsPassword(): boolean {
-            return this._textField.displayAsPassword;
+            return this._displayAsPassword;
         }
 
         public set displayAsPassword(val: boolean) {
-            if (this._textField.displayAsPassword != val) {
-                this._textField.displayAsPassword = val;
+            if(this._displayAsPassword != val) {
+                this._displayAsPassword = val;
+                this._textField.displayAsPassword = this._displayAsPassword;
                 this.render();
             }
         }
@@ -646,7 +652,10 @@ module fairygui {
             super.setup_beforeAdd(xml);
 
             var str: string;
-            this._textField.displayAsPassword = xml.attributes.password == "true";
+            
+            this._displayAsPassword = xml.attributes.password == "true";
+            this._textField.displayAsPassword = this._displayAsPassword;
+            
             str = xml.attributes.font;
             if (str)
                 this._font = str;
@@ -704,7 +713,7 @@ module fairygui {
             
             var str:string = xml.attributes.text;
             if(str != null && str.length > 0)
-                this.text = str;            
+                this.text = str;
             this._sizeDirty = false;
             
             var col: any = xml.children;

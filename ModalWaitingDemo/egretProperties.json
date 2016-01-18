@@ -1,25 +1,25 @@
 {
-  "native": {
-    "path_ignore": []
-  },
-  "publish": {
-    "web": 0,
-    "native": 1,
-    "path": "bin-release"
-  },
-  "egret_version": "2.5.0",
-  "modules": [
-    {
-      "name": "egret"
-    },
-    {
-      "name": "game"
-    },
-    {
-      "name": "tween"
-    },
-    {
-      "name": "res"
-    }
-  ]
+	"native": {
+		"path_ignore": []
+	},
+	"publish": {
+		"web": 0,
+		"native": 1,
+		"path": "bin-release"
+	},
+	"egret_version": "2.5.6",
+	"modules": [
+		{
+			"name": "egret"
+		},
+		{
+			"name": "game"
+		},
+		{
+			"name": "tween"
+		},
+		{
+			"name": "res"
+		}
+	]
 }

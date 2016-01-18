@@ -178,8 +178,10 @@ module fairygui {
                     var length: number = col.length;
                     for (var i: number = 0; i < length; i++) {
                         var cxml: any = col[i];
-                        this._items.push(<string><any> (cxml.attributes.title));
-                        this._values.push(<string><any> (cxml.attributes.value));
+                        if(cxml.name == "item") {
+                            this._items.push(<string><any> (cxml.attributes.title));
+                            this._values.push(<string><any> (cxml.attributes.value));
+                        }
                     }
                 }
 

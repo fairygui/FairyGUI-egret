@@ -18,18 +18,16 @@ module fairygui {
 
         public constructor() {
             this._handlers = {};
-            this._handlers["URL"] = this.onTag_URL;
-            this._handlers["IMG"] = this.onTag_IMG;
-            this._handlers["B"] = this.onTag_Simple;
-            this._handlers["I"] = this.onTag_Simple;
-            this._handlers["U"] = this.onTag_Simple;
-            this._handlers["SUP"] = this.onTag_Simple;
-            this._handlers["SUB"] = this.onTag_Simple;
-            this._handlers["COLOR"] = this.onTag_COLOR;
-            this._handlers["FONT"] = this.onTag_FONT;
-            this._handlers["SIZE"] = this.onTag_SIZE;
-            this._handlers["MOVE"] = this.onTag_MOVE;
-            this._handlers["FLY"] = this.onTag_FLY;
+            this._handlers["url"] = this.onTag_URL;
+            this._handlers["img"] = this.onTag_IMG;
+            this._handlers["b"] = this.onTag_Simple;
+            this._handlers["i"] = this.onTag_Simple;
+            this._handlers["u"] = this.onTag_Simple;
+            this._handlers["sup"] = this.onTag_Simple;
+            this._handlers["sub"] = this.onTag_Simple;
+            this._handlers["color"] = this.onTag_COLOR;
+            this._handlers["font"] = this.onTag_FONT;
+            this._handlers["size"] = this.onTag_SIZE;
         }
 
         protected onTag_URL(tagName: string, end: boolean, attr: string): string {
@@ -96,20 +94,6 @@ module fairygui {
                 return "</font>";
         }
 
-        protected onTag_MOVE(tagName: string, end: boolean, attr: string): string {
-            if (!end)
-				return "<marquee scrollamount=\"3\">"
-			else
-                return "</marquee>";
-        }
-
-        protected onTag_FLY(tagName: string, end: boolean, attr: string): string {
-            if (!end)
-                return "<marquee behavior=\"alternate\" scrollamount=\"3\">";
-            else
-                return "</marquee>";
-        }
-
         protected getTagText(remove: boolean= false): string {
             var pos: number = this._text.indexOf("[", this._readPos);
             if (pos == -1)
@@ -145,7 +129,7 @@ module fairygui {
                     attr = tag.substring(pos3 + 1);
                     tag = tag.substring(0, pos3);
                 }
-                tag = tag.toUpperCase();
+                tag = tag.toLowerCase();
                 func = this._handlers[tag];
                 if (func != null) {
                     repl = func.call(this, tag, end, attr);

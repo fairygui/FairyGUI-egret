@@ -353,6 +353,26 @@ module fairygui {
                 this.applyController(this._controllers[i]);
             }
         }
+        
+        public adjustRadioGroupDepth(obj: GObject,c: Controller): void {
+            var cnt: number = this._children.length;
+            var i: number;
+            var child: GObject;
+            var myIndex: number = -1,maxIndex: number = -1;
+            for(i = 0;i < cnt;i++) {
+                child = this._children[i];
+                if(child == obj) {
+                    myIndex = i;
+                }
+                else if((child instanceof GButton)
+                    && (<GButton><any>child).relatedController == c) {
+                    if(i > maxIndex)
+                        maxIndex = i;
+                }
+            }
+            if(myIndex < maxIndex)
+                this.swapChildrenAt(myIndex,maxIndex);
+        }
 
         public getTransition(transName: string): Transition {
             var cnt: number = this._transitions.length;

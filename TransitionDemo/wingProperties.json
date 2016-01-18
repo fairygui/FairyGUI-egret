@@ -4,9 +4,9 @@
 	{
 		"compile":false,
 		"password":"",
-		"projectPath":"D:/FairyGUI-egret-demo/TransitionDemo-egret/",
+		"projectPath":"D:/FairyGUI-egret-demo/TransitionDemo/",
 		"runtime":"html5",
-		"version":"1"
+		"version":""
 	},
 	"resourcePlugin":
 	{

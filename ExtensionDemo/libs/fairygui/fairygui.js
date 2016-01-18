@@ -213,6 +213,7 @@ var fairygui;
         );
         p.setup = function (xml) {
             this._name = xml.attributes.name;
+            this._autoRadioGroupDepth = xml.attributes.autoRadioGroupDepth == "true";
             var i = 0;
             var k = 0;
             var str = xml.attributes.pages;
@@ -2124,81 +2125,81 @@ var fairygui;
             var length1 = col.length;
             for (var i1 = 0; i1 < length1; i1++) {
                 var cxml = col[i1];
-                if (cxml.name == "item") {
-                    var item = new TransitionItem();
-                    this._items.push(item);
-                    item.time = parseInt(cxml.attributes.time) / this.FRAME_RATE;
-                    item.targetId = cxml.attributes.target;
-                    str = cxml.attributes.type;
-                    switch (str) {
-                        case "XY":
-                            item.type = TransitionActionType.XY;
-                            break;
-                        case "Size":
-                            item.type = TransitionActionType.Size;
-                            break;
-                        case "Scale":
-                            item.type = TransitionActionType.Scale;
-                            break;
-                        case "Pivot":
-                            item.type = TransitionActionType.Pivot;
-                            break;
-                        case "Alpha":
-                            item.type = TransitionActionType.Alpha;
-                            break;
-                        case "Rotation":
-                            item.type = TransitionActionType.Rotation;
-                            break;
-                        case "Color":
-                            item.type = TransitionActionType.Color;
-                            break;
-                        case "Animation":
-                            item.type = TransitionActionType.Animation;
-                            break;
-                        case "Visible":
-                            item.type = TransitionActionType.Visible;
-                            break;
-                        case "Controller":
-                            item.type = TransitionActionType.Controller;
-                            break;
-                        case "Sound":
-                            item.type = TransitionActionType.Sound;
-                            break;
-                        case "Transition":
-                            item.type = TransitionActionType.Transition;
-                            break;
-                        case "Shake":
-                            item.type = TransitionActionType.Shake;
-                            break;
-                        default:
-                            item.type = TransitionActionType.Unknown;
-                            break;
-                    }
-                    item.tween = cxml.attributes.tween == "true";
-                    item.label = cxml.attributes.label;
-                    if (item.tween) {
-                        item.duration = parseInt(cxml.attributes.duration) / this.FRAME_RATE;
-                        str = cxml.attributes.ease;
-                        if (str)
-                            item.easeType = fairygui.ParseEaseType(str);
-                        str = cxml.attributes.repeat;
-                        if (str)
-                            item.repeat = parseInt(str);
-                        item.yoyo = cxml.attributes.yoyo == "true";
-                        item.label2 = cxml.attributes.label2;
-                        var v = cxml.attributes.endValue;
-                        if (v) {
-                            this.decodeValue(item.type, cxml.attributes.startValue, item.startValue);
-                            this.decodeValue(item.type, v, item.endValue);
-                        }
-                        else {
-                            item.tween = false;
-                            this.decodeValue(item.type, cxml.attributes.startValue, item.value);
-                        }
+                if (cxml.name != "item")
+                    continue;
+                var item = new TransitionItem();
+                this._items.push(item);
+                item.time = parseInt(cxml.attributes.time) / this.FRAME_RATE;
+                item.targetId = cxml.attributes.target;
+                str = cxml.attributes.type;
+                switch (str) {
+                    case "XY":
+                        item.type = TransitionActionType.XY;
+                        break;
+                    case "Size":
+                        item.type = TransitionActionType.Size;
+                        break;
+                    case "Scale":
+                        item.type = TransitionActionType.Scale;
+                        break;
+                    case "Pivot":
+                        item.type = TransitionActionType.Pivot;
+                        break;
+                    case "Alpha":
+                        item.type = TransitionActionType.Alpha;
+                        break;
+                    case "Rotation":
+                        item.type = TransitionActionType.Rotation;
+                        break;
+                    case "Color":
+                        item.type = TransitionActionType.Color;
+                        break;
+                    case "Animation":
+                        item.type = TransitionActionType.Animation;
+                        break;
+                    case "Visible":
+                        item.type = TransitionActionType.Visible;
+                        break;
+                    case "Controller":
+                        item.type = TransitionActionType.Controller;
+                        break;
+                    case "Sound":
+                        item.type = TransitionActionType.Sound;
+                        break;
+                    case "Transition":
+                        item.type = TransitionActionType.Transition;
+                        break;
+                    case "Shake":
+                        item.type = TransitionActionType.Shake;
+                        break;
+                    default:
+                        item.type = TransitionActionType.Unknown;
+                        break;
+                }
+                item.tween = cxml.attributes.tween == "true";
+                item.label = cxml.attributes.label;
+                if (item.tween) {
+                    item.duration = parseInt(cxml.attributes.duration) / this.FRAME_RATE;
+                    str = cxml.attributes.ease;
+                    if (str)
+                        item.easeType = fairygui.ParseEaseType(str);
+                    str = cxml.attributes.repeat;
+                    if (str)
+                        item.repeat = parseInt(str);
+                    item.yoyo = cxml.attributes.yoyo == "true";
+                    item.label2 = cxml.attributes.label2;
+                    var v = cxml.attributes.endValue;
+                    if (v) {
+                        this.decodeValue(item.type, cxml.attributes.startValue, item.startValue);
+                        this.decodeValue(item.type, v, item.endValue);
                     }
                     else {
-                        this.decodeValue(item.type, cxml.attributes.value, item.value);
+                        item.tween = false;
+                        this.decodeValue(item.type, cxml.attributes.startValue, item.value);
                     }
+                }
+                else {
+                    this.decodeValue(item.type, cxml.attributes.value, item.value);
                 }
             }
         };
@@ -3560,6 +3561,25 @@ var fairygui;
                 this.applyController(this._controllers[i]);
             }
         };
+        p.adjustRadioGroupDepth = function (obj, c) {
+            var cnt = this._children.length;
+            var i;
+            var child;
+            var myIndex = -1, maxIndex = -1;
+            for (i = 0; i < cnt; i++) {
+                child = this._children[i];
+                if (child == obj) {
+                    myIndex = i;
+                }
+                else if ((child instanceof fairygui.GButton)
+                    && child.relatedController == c) {
+                    if (i > maxIndex)
+                        maxIndex = i;
+                }
+            }
+            if (myIndex < maxIndex)
+                this.swapChildrenAt(myIndex, maxIndex);
+        };
         p.getTransition = function (transName) {
             var cnt = this._transitions.length;
             for (var i = 0; i < cnt; ++i) {
@@ -4080,8 +4100,11 @@ var fairygui;
                     if (this._relatedController
                         && this._parent
                         && !this._parent._buildingDisplayList) {
-                        if (this._selected)
+                        if (this._selected) {
                             this._relatedController.selectedPageId = this._pageOption.id;
+                            if (this._relatedController._autoRadioGroupDepth)
+                                this._parent.adjustRadioGroupDepth(this, this._relatedController);
+                        }
                         else if (this._mode == fairygui.ButtonMode.Check && this._relatedController.selectedPageId == this._pageOption.id)
                             this._relatedController.oppositePageId = this._pageOption.id;
                     }
@@ -4457,8 +4480,10 @@ var fairygui;
                     var length = col.length;
                     for (var i = 0; i < length; i++) {
                         var cxml = col[i];
-                        this._items.push((cxml.attributes.title));
-                        this._values.push((cxml.attributes.value));
+                        if (cxml.name == "item") {
+                            this._items.push((cxml.attributes.title));
+                            this._values.push((cxml.attributes.value));
+                        }
                     }
                 }
                 str = xml.attributes.title;
@@ -5984,6 +6009,8 @@ var fairygui;
                 var length = col.length;
                 for (var i = 0; i < length; i++) {
                     var cxml = col[i];
+                    if (cxml.name != "item")
+                        continue;
                     var url = cxml.attributes.url;
                     if (!url)
                         url = this._defaultItem;
@@ -6749,16 +6776,19 @@ var fairygui;
                 if (this._text == null)
                     this._text = "";
                 this._textField.width = Math.ceil(this.width);
-                if (this._ubbEnabled)
-                    this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(fairygui.ToolSet.encodeHTML(this._text)));
-                else
-                    this._textField.text = this._text;
+                this.updateTextFieldText();
                 if (this.parent && this.parent._underConstruct)
                     this.renderNow();
                 else
                     this.render();
             }
         );
+        p.updateTextFieldText = function () {
+            if (this._ubbEnabled)
+                this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(fairygui.ToolSet.encodeHTML(this._text)));
+            else
+                this._textField.text = this._text;
+        };
         d(p, "font"
             ,function () {
                 return this._font;
@@ -6920,11 +6950,12 @@ var fairygui;
         );
         d(p, "displayAsPassword"
             ,function () {
-                return this._textField.displayAsPassword;
+                return this._displayAsPassword;
             }
             ,function (val) {
-                if (this._textField.displayAsPassword != val) {
-                    this._textField.displayAsPassword = val;
+                if (this._displayAsPassword != val) {
+                    this._displayAsPassword = val;
+                    this._textField.displayAsPassword = this._displayAsPassword;
                     this.render();
                 }
             }
@@ -7274,7 +7305,8 @@ var fairygui;
         p.setup_beforeAdd = function (xml) {
             _super.prototype.setup_beforeAdd.call(this, xml);
             var str;
-            this._textField.displayAsPassword = xml.attributes.password == "true";
+            this._displayAsPassword = xml.attributes.password == "true";
+            this._textField.displayAsPassword = this._displayAsPassword;
             str = xml.attributes.font;
             if (str)
                 this._font = str;
@@ -8336,6 +8368,7 @@ var fairygui;
             this.displayObject.touchChildren = true;
             this._textField.type = egret.TextFieldType.INPUT;
             this._textField.addEventListener(egret.Event.CHANGE, this.__textChanged, this);
+            this._textField.addEventListener(egret.FocusEvent.FOCUS_IN, this.__focusIn, this);
             this._textField.addEventListener(egret.FocusEvent.FOCUS_OUT, this.__focusOut, this);
         }
         var d = __define,c=GTextInput;p=c.prototype;
@@ -8361,6 +8394,15 @@ var fairygui;
                 this._textField.maxChars = val;
             }
         );
+        d(p, "promptText"
+            ,function () {
+                return this._promptText;
+            }
+            ,function (val) {
+                this._promptText = val;
+                this.updateTextFieldText();
+            }
+        );
         d(p, "verticalAlign",undefined
             ,function (value) {
                 if (this._verticalAlign != value) {
@@ -8382,6 +8424,19 @@ var fairygui;
                     break;
             }
         };
+        p.updateTextFieldText = function () {
+            if (!this._text && this._promptText) {
+                this._textField.displayAsPassword = false;
+                this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(this._promptText));
+            }
+            else {
+                this._textField.displayAsPassword = this._displayAsPassword;
+                if (this._ubbEnabled)
+                    this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(fairygui.ToolSet.encodeHTML(this._text)));
+                else
+                    this._textField.text = this._text;
+            }
+        };
         p.handleSizeChanged = function () {
             if (!this._updatingSize) {
                 this._textField.width = Math.ceil(this.width);
@@ -8393,13 +8448,31 @@ var fairygui;
         };
         p.setup_beforeAdd = function (xml) {
             _super.prototype.setup_beforeAdd.call(this, xml);
+            this._promptText = xml.attributes.prompt;
             this.updateVertAlign();
+        };
+        p.setup_afterAdd = function (xml) {
+            _super.prototype.setup_afterAdd.call(this, xml);
+            if (!this._text && this._promptText) {
+                this._textField.displayAsPassword = false;
+                this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(fairygui.ToolSet.encodeHTML(this._promptText)));
+            }
         };
         p.__textChanged = function (evt) {
             this._text = this._textField.text;
         };
+        p.__focusIn = function (evt) {
+            if (!this._text && this._promptText) {
+                this._textField.displayAsPassword = this._displayAsPassword;
+                this._textField.text = "";
+            }
+        };
         p.__focusOut = function (evt) {
             this._text = this._textField.text;
+            if (!this._text && this._promptText) {
+                this._textField.displayAsPassword = false;
+                this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(fairygui.ToolSet.encodeHTML(this._promptText)));
+            }
         };
         return GTextInput;
     })(fairygui.GTextField);
@@ -10241,18 +10314,16 @@ var fairygui;
             this.defaultImgWidth = 0;
             this.defaultImgHeight = 0;
             this._handlers = {};
-            this._handlers["URL"] = this.onTag_URL;
-            this._handlers["IMG"] = this.onTag_IMG;
-            this._handlers["B"] = this.onTag_Simple;
-            this._handlers["I"] = this.onTag_Simple;
-            this._handlers["U"] = this.onTag_Simple;
-            this._handlers["SUP"] = this.onTag_Simple;
-            this._handlers["SUB"] = this.onTag_Simple;
-            this._handlers["COLOR"] = this.onTag_COLOR;
-            this._handlers["FONT"] = this.onTag_FONT;
-            this._handlers["SIZE"] = this.onTag_SIZE;
-            this._handlers["MOVE"] = this.onTag_MOVE;
-            this._handlers["FLY"] = this.onTag_FLY;
+            this._handlers["url"] = this.onTag_URL;
+            this._handlers["img"] = this.onTag_IMG;
+            this._handlers["b"] = this.onTag_Simple;
+            this._handlers["i"] = this.onTag_Simple;
+            this._handlers["u"] = this.onTag_Simple;
+            this._handlers["sup"] = this.onTag_Simple;
+            this._handlers["sub"] = this.onTag_Simple;
+            this._handlers["color"] = this.onTag_COLOR;
+            this._handlers["font"] = this.onTag_FONT;
+            this._handlers["size"] = this.onTag_SIZE;
         }
         var d = __define,c=UBBParser;p=c.prototype;
         p.onTag_URL = function (tagName, end, attr) {
@@ -10312,18 +10383,6 @@ var fairygui;
             else
                 return "</font>";
         };
-        p.onTag_MOVE = function (tagName, end, attr) {
-            if (!end)
-                return "<marquee scrollamount=\"3\">";
-            else
-                return "</marquee>";
-        };
-        p.onTag_FLY = function (tagName, end, attr) {
-            if (!end)
-                return "<marquee behavior=\"alternate\" scrollamount=\"3\">";
-            else
-                return "</marquee>";
-        };
         p.getTagText = function (remove) {
             if (remove === void 0) { remove = false; }
             var pos = this._text.indexOf("[", this._readPos);
@@ -10357,7 +10416,7 @@ var fairygui;
                     attr = tag.substring(pos3 + 1);
                     tag = tag.substring(0, pos3);
                 }
-                tag = tag.toUpperCase();
+                tag = tag.toLowerCase();
                 func = this._handlers[tag];
                 if (func != null) {
                     repl = func.call(this, tag, end, attr);

@@ -168,7 +168,11 @@ module fairygui {
                     && this._parent
                     && !this._parent._buildingDisplayList) {
                     if(this._selected)
+                    {
                         this._relatedController.selectedPageId = this._pageOption.id;
+                        if(this._relatedController._autoRadioGroupDepth)
+                            this._parent.adjustRadioGroupDepth(this,this._relatedController);
+                    }
                     else if(this._mode == ButtonMode.Check && this._relatedController.selectedPageId == this._pageOption.id)
                         this._relatedController.oppositePageId = this._pageOption.id;
                 }

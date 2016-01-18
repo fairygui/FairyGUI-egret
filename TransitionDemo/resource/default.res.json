@@ -20,7 +20,7 @@
 	"groups": [
 		{
 			"name": "preload",
-			"keys": "demo,demo@atlas0,demo@lvxrs"
+			"keys": "demo,demo@atlas0"
 		}
 	]
 }

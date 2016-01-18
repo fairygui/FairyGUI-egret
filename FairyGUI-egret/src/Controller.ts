@@ -9,8 +9,9 @@ module fairygui {
         private _pageNames: Array<string>;
         private _pageTransitions: Array<PageTransition>;
         private _playingTransition: Transition;
-
+        
         public _parent: GComponent;
+        public _autoRadioGroupDepth: boolean;
         
         private static _nextPageId:number = 0;
 
@@ -230,6 +231,8 @@ module fairygui {
 
         public setup(xml: any): void {
             this._name = xml.attributes.name;
+            this._autoRadioGroupDepth = xml.attributes.autoRadioGroupDepth == "true";
+            
             var i: number = 0;
             var k: number = 0;
             var str: string = xml.attributes.pages;

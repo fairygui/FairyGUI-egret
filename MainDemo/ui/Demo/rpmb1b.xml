@@ -57,10 +57,10 @@
     <image id="n29" name="n29" src="rpmb6" xy="468,363">
       <gearDisplay controller="tab" pages="0"/>
     </image>
-    <image id="n30" name="n30" src="rpmbg" xy="450,455">
+    <image id="n30" name="n30" src="rpmbg" xy="469,364">
       <gearDisplay controller="tab" pages="1"/>
     </image>
-    <image id="n31" name="n31" src="rpmbh" xy="450,455">
+    <image id="n31" name="n31" src="rpmbh" xy="469,363">
       <gearDisplay controller="tab" pages="2"/>
     </image>
     <component id="n32" name="n32" src="rpmb13" xy="30,605">

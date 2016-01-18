@@ -8,6 +8,7 @@ declare module fairygui {
         private _pageTransitions;
         private _playingTransition;
         _parent: GComponent;
+        _autoRadioGroupDepth: boolean;
         private static _nextPageId;
         constructor();
         name: string;
@@ -624,6 +625,7 @@ declare module fairygui {
         childStateChanged(child: GObject): void;
         applyController(c: Controller): void;
         applyAllControllers(): void;
+        adjustRadioGroupDepth(obj: GObject, c: Controller): void;
         getTransition(transName: string): Transition;
         isChildInView(child: GObject): boolean;
         scrollPane: ScrollPane;
@@ -1019,6 +1021,7 @@ declare module fairygui {
         protected _letterSpacing: number;
         protected _text: string;
         protected _ubbEnabled: boolean;
+        protected _displayAsPassword: boolean;
         protected _autoSize: AutoSizeType;
         protected _widthAutoSize: boolean;
         protected _heightAutoSize: boolean;
@@ -1038,6 +1041,7 @@ declare module fairygui {
         protected createDisplayObject(): void;
         dispose(): void;
         text: string;
+        protected updateTextFieldText(): void;
         font: string;
         fontSize: number;
         color: number;
@@ -1251,16 +1255,21 @@ declare module fairygui {
 declare module fairygui {
     class GTextInput extends GTextField {
         private _changed;
+        private _promptText;
         constructor();
         dispose(): void;
         editable: boolean;
         maxLength: number;
+        promptText: string;
         verticalAlign: VertAlignType;
         private updateVertAlign();
+        protected updateTextFieldText(): void;
         protected handleSizeChanged(): void;
         protected doAlign(): void;
         setup_beforeAdd(xml: any): void;
+        setup_afterAdd(xml: any): void;
         private __textChanged(evt);
+        private __focusIn(evt);
         private __focusOut(evt);
     }
 }
@@ -1562,8 +1571,6 @@ declare module fairygui {
         protected onTag_COLOR(tagName: string, end: boolean, attr: string): string;
         protected onTag_FONT(tagName: string, end: boolean, attr: string): string;
         protected onTag_SIZE(tagName: string, end: boolean, attr: string): string;
-        protected onTag_MOVE(tagName: string, end: boolean, attr: string): string;
-        protected onTag_FLY(tagName: string, end: boolean, attr: string): string;
         protected getTagText(remove?: boolean): string;
         parse(text: string): string;
     }
@@ -1706,7 +1713,7 @@ declare module fairygui {
         static inst: DragDropManager;
         constructor();
         dragAgent: fairygui.GObject;
-        dragging: Boolean;
+        dragging: boolean;
         startDrag(source: fairygui.GObject, icon: string, sourceData: any, touchPointID?: number): void;
         cancel(): void;
         private __dragEnd(evt);
