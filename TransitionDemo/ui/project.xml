@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<projectDescription name="TransitionDemo" type="Egret" id="6b10debc020eacdc47a3a6a38cffd3a7">
-  <packages>
-    <package id="c0hnre6o" name="Demo"/>
-  </packages>
-  <textSetting font="Arial" size="12"/>
-  <scrollBars/>
-</projectDescription>

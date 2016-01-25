@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<projectDescription name="BagDemo" type="Egret" id="a379957f0304d10b8053ce7f694bc83d">
-  <packages>
-    <package id="r5x6wd5v" name="Demo"/>
-  </packages>
-  <textSetting font="宋体" size="12" color="#000000"/>
-  <scrollBars vertical="" horizontal="" defaultDisplay="visible"/>
-</projectDescription>
