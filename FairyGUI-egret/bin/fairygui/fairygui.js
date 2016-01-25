@@ -3488,6 +3488,9 @@ var fairygui;
             controller._parent = this;
             this.applyController(controller);
         };
+        p.getControllerAt = function (index) {
+            return this._controllers[index];
+        };
         p.getController = function (name) {
             var cnt = this._controllers.length;
             for (var i = 0; i < cnt; ++i) {
@@ -3579,6 +3582,9 @@ var fairygui;
             }
             if (myIndex < maxIndex)
                 this.swapChildrenAt(myIndex, maxIndex);
+        };
+        p.getTransitionAt = function (index) {
+            return this._transitions[index];
         };
         p.getTransition = function (transName) {
             var cnt = this._transitions.length;

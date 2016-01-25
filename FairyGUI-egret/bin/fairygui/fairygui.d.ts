@@ -619,6 +619,7 @@ declare module fairygui {
         swapChildrenAt(index1: number, index2?: number): void;
         numChildren: number;
         addController(controller: Controller): void;
+        getControllerAt(index: number): Controller;
         getController(name: string): Controller;
         removeController(c: Controller): void;
         controllers: Array<Controller>;
@@ -626,6 +627,7 @@ declare module fairygui {
         applyController(c: Controller): void;
         applyAllControllers(): void;
         adjustRadioGroupDepth(obj: GObject, c: Controller): void;
+        getTransitionAt(index: number): Transition;
         getTransition(transName: string): Transition;
         isChildInView(child: GObject): boolean;
         scrollPane: ScrollPane;

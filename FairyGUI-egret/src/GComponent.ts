@@ -269,6 +269,10 @@ module fairygui {
             controller._parent = this;
             this.applyController(controller);
         }
+        
+        public getControllerAt(index:number):Controller {
+            return this._controllers[index];
+        }
 
         public getController(name: string): Controller {
             var cnt: number = this._controllers.length;
@@ -372,6 +376,10 @@ module fairygui {
             }
             if(myIndex < maxIndex)
                 this.swapChildrenAt(myIndex,maxIndex);
+        }
+        
+        public getTransitionAt(index: number): Transition {
+            return this._transitions[index];
         }
 
         public getTransition(transName: string): Transition {
