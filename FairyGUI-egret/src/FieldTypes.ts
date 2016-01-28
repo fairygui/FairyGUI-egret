@@ -1,4 +1,4 @@
-﻿module fairygui {
+module fairygui {
     export enum ButtonMode { Common, Check, Radio };
     export enum AutoSizeType { None, Both, Height };
     export enum AlignType { Left, Center, Right };
@@ -11,6 +11,7 @@
     export enum ProgressTitleType { Percent, ValueAndMax, Value, Max };
     export enum ScrollBarDisplayType { Default, Visible, Auto, Hidden };
     export enum ScrollType { Horizontal, Vertical, Both };
+    export enum FlipType { None,  Horizontal, Vertical, Both };
 
     export enum RelationType {
         Left_Left = 0,
@@ -222,6 +223,20 @@
                 return ScrollType.Both;
             default:
                 return ScrollType.Vertical;
+        }
+    }
+    
+
+    export function parseFlipType(value: string): FlipType {
+        switch(value) {
+            case "hz":
+                return FlipType.Horizontal;
+            case "vt":
+                return FlipType.Vertical;
+            case "both":
+                return FlipType.Both;
+            default:
+                return FlipType.None;
         }
     }
 

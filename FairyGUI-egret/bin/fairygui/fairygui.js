@@ -11,7 +11,7 @@ var fairygui;
             this._selectedIndex = -1;
             this._previousIndex = -1;
         }
-        var d = __define,c=Controller;p=c.prototype;
+        var d = __define,c=Controller,p=c.prototype;
         d(p, "name"
             ,function () {
                 return this._name;
@@ -257,16 +257,16 @@ var fairygui;
         return Controller;
     })(egret.EventDispatcher);
     fairygui.Controller = Controller;
-    egret.registerClass(Controller,"fairygui.Controller");
+    egret.registerClass(Controller,'fairygui.Controller');
     var PageTransition = (function () {
         function PageTransition() {
             this.fromIndex = 0;
             this.toIndex = 0;
         }
-        var d = __define,c=PageTransition;p=c.prototype;
+        var d = __define,c=PageTransition,p=c.prototype;
         return PageTransition;
     })();
-    egret.registerClass(PageTransition,"PageTransition");
+    egret.registerClass(PageTransition,'PageTransition');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -276,11 +276,11 @@ var fairygui;
             this.addDelay = 0;
             this.rect = new egret.Rectangle();
         }
-        var d = __define,c=Frame;p=c.prototype;
+        var d = __define,c=Frame,p=c.prototype;
         return Frame;
     })();
     fairygui.Frame = Frame;
-    egret.registerClass(Frame,"fairygui.Frame");
+    egret.registerClass(Frame,'fairygui.Frame');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -303,7 +303,7 @@ var fairygui;
             this._playing = true;
             this.touchEnabled = false;
         }
-        var d = __define,c=MovieClip;p=c.prototype;
+        var d = __define,c=MovieClip,p=c.prototype;
         d(p, "frames"
             ,function () {
                 return this._frames;
@@ -462,7 +462,7 @@ var fairygui;
         return MovieClip;
     })(egret.DisplayObject);
     fairygui.MovieClip = MovieClip;
-    egret.registerClass(MovieClip,"fairygui.MovieClip");
+    egret.registerClass(MovieClip,'fairygui.MovieClip');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -473,7 +473,7 @@ var fairygui;
             this._curFrame = 0;
             this._curFrameDelay = 0;
         }
-        var d = __define,c=PlayState;p=c.prototype;
+        var d = __define,c=PlayState,p=c.prototype;
         p.update = function (mc) {
             var t = egret.getTimer();
             var elapsed = t - this._lastTime;
@@ -530,7 +530,7 @@ var fairygui;
         return PlayState;
     })();
     fairygui.PlayState = PlayState;
-    egret.registerClass(PlayState,"fairygui.PlayState");
+    egret.registerClass(PlayState,'fairygui.PlayState');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -543,7 +543,7 @@ var fairygui;
             this.touchEnabled = true;
             this.touchChildren = true;
         }
-        var d = __define,c=UIContainer;p=c.prototype;
+        var d = __define,c=UIContainer,p=c.prototype;
         d(p, "owner"
             ,function () {
                 return this._owner;
@@ -578,7 +578,7 @@ var fairygui;
         return UIContainer;
     })(egret.DisplayObjectContainer);
     fairygui.UIContainer = UIContainer;
-    egret.registerClass(UIContainer,"fairygui.UIContainer",["fairygui.UIDisplayObject"]);
+    egret.registerClass(UIContainer,'fairygui.UIContainer',["fairygui.UIDisplayObject"]);
 })(fairygui || (fairygui = {}));
 
 
@@ -591,7 +591,7 @@ var fairygui;
             this._owner = owner;
             this.touchEnabled = false;
         }
-        var d = __define,c=UIImage;p=c.prototype;
+        var d = __define,c=UIImage,p=c.prototype;
         d(p, "owner"
             ,function () {
                 return this._owner;
@@ -600,7 +600,7 @@ var fairygui;
         return UIImage;
     })(egret.Bitmap);
     fairygui.UIImage = UIImage;
-    egret.registerClass(UIImage,"fairygui.UIImage",["fairygui.UIDisplayObject"]);
+    egret.registerClass(UIImage,'fairygui.UIImage',["fairygui.UIDisplayObject"]);
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -612,7 +612,7 @@ var fairygui;
             this._owner = owner;
             this.touchEnabled = false;
         }
-        var d = __define,c=UIMovieClip;p=c.prototype;
+        var d = __define,c=UIMovieClip,p=c.prototype;
         d(p, "owner"
             ,function () {
                 return this._owner;
@@ -621,7 +621,7 @@ var fairygui;
         return UIMovieClip;
     })(fairygui.MovieClip);
     fairygui.UIMovieClip = UIMovieClip;
-    egret.registerClass(UIMovieClip,"fairygui.UIMovieClip",["fairygui.UIDisplayObject"]);
+    egret.registerClass(UIMovieClip,'fairygui.UIMovieClip',["fairygui.UIDisplayObject"]);
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -634,7 +634,7 @@ var fairygui;
             this.touchEnabled = true;
             this.touchChildren = true;
         }
-        var d = __define,c=UISprite;p=c.prototype;
+        var d = __define,c=UISprite,p=c.prototype;
         d(p, "owner"
             ,function () {
                 return this._owner;
@@ -669,7 +669,7 @@ var fairygui;
         return UISprite;
     })(egret.Sprite);
     fairygui.UISprite = UISprite;
-    egret.registerClass(UISprite,"fairygui.UISprite",["fairygui.UIDisplayObject"]);
+    egret.registerClass(UISprite,'fairygui.UISprite',["fairygui.UIDisplayObject"]);
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -684,7 +684,7 @@ var fairygui;
             this.nativeTextField = new egret.TextField();
             this.addChild(this.nativeTextField);
         }
-        var d = __define,c=UITextField;p=c.prototype;
+        var d = __define,c=UITextField,p=c.prototype;
         d(p, "owner"
             ,function () {
                 return this._owner;
@@ -693,7 +693,7 @@ var fairygui;
         return UITextField;
     })(egret.DisplayObjectContainer);
     fairygui.UITextField = UITextField;
-    egret.registerClass(UITextField,"fairygui.UITextField",["fairygui.UIDisplayObject"]);
+    egret.registerClass(UITextField,'fairygui.UITextField',["fairygui.UIDisplayObject"]);
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -710,7 +710,7 @@ var fairygui;
             this.stageY = stageY;
             this.touchPointID = touchPointID;
         }
-        var d = __define,c=DragEvent;p=c.prototype;
+        var d = __define,c=DragEvent,p=c.prototype;
         p.preventDefault = function () {
             this._prevented = true;
         };
@@ -722,7 +722,7 @@ var fairygui;
         return DragEvent;
     })(egret.Event);
     fairygui.DragEvent = DragEvent;
-    egret.registerClass(DragEvent,"fairygui.DragEvent");
+    egret.registerClass(DragEvent,'fairygui.DragEvent');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -734,12 +734,12 @@ var fairygui;
             _super.call(this, type, false);
             this.source = source;
         }
-        var d = __define,c=DropEvent;p=c.prototype;
+        var d = __define,c=DropEvent,p=c.prototype;
         DropEvent.DROP = "__drop";
         return DropEvent;
     })(egret.Event);
     fairygui.DropEvent = DropEvent;
-    egret.registerClass(DropEvent,"fairygui.DropEvent");
+    egret.registerClass(DropEvent,'fairygui.DropEvent');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -751,7 +751,7 @@ var fairygui;
             this._oldFocusedObject = oldObject;
             this._newFocusedObject = newObject;
         }
-        var d = __define,c=FocusChangeEvent;p=c.prototype;
+        var d = __define,c=FocusChangeEvent,p=c.prototype;
         d(p, "oldFocusedObject"
             ,function () {
                 return this._oldFocusedObject;
@@ -766,7 +766,7 @@ var fairygui;
         return FocusChangeEvent;
     })(egret.Event);
     fairygui.FocusChangeEvent = FocusChangeEvent;
-    egret.registerClass(FocusChangeEvent,"fairygui.FocusChangeEvent");
+    egret.registerClass(FocusChangeEvent,'fairygui.FocusChangeEvent');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -782,12 +782,12 @@ var fairygui;
             this.stageX = stageX;
             this.stageY = stageY;
         }
-        var d = __define,c=ItemEvent;p=c.prototype;
+        var d = __define,c=ItemEvent,p=c.prototype;
         ItemEvent.CLICK = "___itemClick";
         return ItemEvent;
     })(egret.Event);
     fairygui.ItemEvent = ItemEvent;
-    egret.registerClass(ItemEvent,"fairygui.ItemEvent");
+    egret.registerClass(ItemEvent,'fairygui.ItemEvent');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -797,12 +797,12 @@ var fairygui;
         function StateChangeEvent(type) {
             _super.call(this, type, false);
         }
-        var d = __define,c=StateChangeEvent;p=c.prototype;
+        var d = __define,c=StateChangeEvent,p=c.prototype;
         StateChangeEvent.CHANGED = "___stateChanged";
         return StateChangeEvent;
     })(egret.Event);
     fairygui.StateChangeEvent = StateChangeEvent;
-    egret.registerClass(StateChangeEvent,"fairygui.StateChangeEvent");
+    egret.registerClass(StateChangeEvent,'fairygui.StateChangeEvent');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -901,6 +901,14 @@ var fairygui;
         ScrollType[ScrollType["Both"] = 2] = "Both";
     })(fairygui.ScrollType || (fairygui.ScrollType = {}));
     var ScrollType = fairygui.ScrollType;
+    ;
+    (function (FlipType) {
+        FlipType[FlipType["None"] = 0] = "None";
+        FlipType[FlipType["Horizontal"] = 1] = "Horizontal";
+        FlipType[FlipType["Vertical"] = 2] = "Vertical";
+        FlipType[FlipType["Both"] = 3] = "Both";
+    })(fairygui.FlipType || (fairygui.FlipType = {}));
+    var FlipType = fairygui.FlipType;
     ;
     (function (RelationType) {
         RelationType[RelationType["Left_Left"] = 0] = "Left_Left";
@@ -1112,6 +1120,19 @@ var fairygui;
         }
     }
     fairygui.parseScrollType = parseScrollType;
+    function parseFlipType(value) {
+        switch (value) {
+            case "hz":
+                return FlipType.Horizontal;
+            case "vt":
+                return FlipType.Vertical;
+            case "both":
+                return FlipType.Both;
+            default:
+                return FlipType.None;
+        }
+    }
+    fairygui.parseFlipType = parseFlipType;
     var EaseMap = {
         "Linear": egret.Ease.sineIn,
         "Elastic.In": egret.Ease.elasticIn,
@@ -1163,7 +1184,7 @@ var fairygui;
             this._easeType = egret.Ease.quadOut;
             this._tweenTime = 0.3;
         }
-        var d = __define,c=GearBase;p=c.prototype;
+        var d = __define,c=GearBase,p=c.prototype;
         d(p, "controller"
             ,function () {
                 return this._controller;
@@ -1265,7 +1286,7 @@ var fairygui;
         return GearBase;
     })();
     fairygui.GearBase = GearBase;
-    egret.registerClass(GearBase,"fairygui.GearBase");
+    egret.registerClass(GearBase,'fairygui.GearBase');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -1275,7 +1296,7 @@ var fairygui;
         function GearSize(owner) {
             _super.call(this, owner);
         }
-        var d = __define,c=GearSize;p=c.prototype;
+        var d = __define,c=GearSize,p=c.prototype;
         p.init = function () {
             this._default = new GearSizeValue(this._owner.width, this._owner.height, this._owner.scaleX, this._owner.scaleY);
             this._storage = {};
@@ -1368,7 +1389,7 @@ var fairygui;
         return GearSize;
     })(fairygui.GearBase);
     fairygui.GearSize = GearSize;
-    egret.registerClass(GearSize,"fairygui.GearSize");
+    egret.registerClass(GearSize,'fairygui.GearSize');
     var GearSizeValue = (function () {
         function GearSizeValue(width, height, scaleX, scaleY) {
             if (width === void 0) { width = 0; }
@@ -1380,10 +1401,10 @@ var fairygui;
             this.scaleX = scaleX;
             this.scaleY = scaleY;
         }
-        var d = __define,c=GearSizeValue;p=c.prototype;
+        var d = __define,c=GearSizeValue,p=c.prototype;
         return GearSizeValue;
     })();
-    egret.registerClass(GearSizeValue,"GearSizeValue");
+    egret.registerClass(GearSizeValue,'GearSizeValue');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -1393,7 +1414,7 @@ var fairygui;
         function GearXY(owner) {
             _super.call(this, owner);
         }
-        var d = __define,c=GearXY;p=c.prototype;
+        var d = __define,c=GearXY,p=c.prototype;
         p.init = function () {
             this._default = new egret.Point(this._owner.x, this._owner.y);
             this._storage = {};
@@ -1481,7 +1502,7 @@ var fairygui;
         return GearXY;
     })(fairygui.GearBase);
     fairygui.GearXY = GearXY;
-    egret.registerClass(GearXY,"fairygui.GearXY");
+    egret.registerClass(GearXY,'fairygui.GearXY');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -1499,7 +1520,7 @@ var fairygui;
             this._owner = owner;
             this._items = new Array();
         }
-        var d = __define,c=Transition;p=c.prototype;
+        var d = __define,c=Transition,p=c.prototype;
         d(p, "name"
             ,function () {
                 return this._name;
@@ -2287,11 +2308,11 @@ var fairygui;
         return Transition;
     })();
     fairygui.Transition = Transition;
-    egret.registerClass(Transition,"fairygui.Transition");
+    egret.registerClass(Transition,'fairygui.Transition');
     var TransitionActionType = (function () {
         function TransitionActionType() {
         }
-        var d = __define,c=TransitionActionType;p=c.prototype;
+        var d = __define,c=TransitionActionType,p=c.prototype;
         TransitionActionType.XY = 0;
         TransitionActionType.Size = 1;
         TransitionActionType.Scale = 2;
@@ -2308,7 +2329,7 @@ var fairygui;
         TransitionActionType.Unknown = 13;
         return TransitionActionType;
     })();
-    egret.registerClass(TransitionActionType,"TransitionActionType");
+    egret.registerClass(TransitionActionType,'TransitionActionType');
     var TransitionItem = (function () {
         function TransitionItem() {
             this.time = 0;
@@ -2324,10 +2345,10 @@ var fairygui;
             this.startValue = new TransitionValue();
             this.endValue = new TransitionValue();
         }
-        var d = __define,c=TransitionItem;p=c.prototype;
+        var d = __define,c=TransitionItem,p=c.prototype;
         return TransitionItem;
     })();
-    egret.registerClass(TransitionItem,"TransitionItem");
+    egret.registerClass(TransitionItem,'TransitionItem');
     var TransitionValue = (function () {
         function TransitionValue() {
             this.f1 = 0;
@@ -2339,10 +2360,10 @@ var fairygui;
             this.b1 = true;
             this.b2 = true;
         }
-        var d = __define,c=TransitionValue;p=c.prototype;
+        var d = __define,c=TransitionValue,p=c.prototype;
         return TransitionValue;
     })();
-    egret.registerClass(TransitionValue,"TransitionValue");
+    egret.registerClass(TransitionValue,'TransitionValue');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -2385,7 +2406,7 @@ var fairygui;
             this._gearSize = new fairygui.GearSize(this);
             this._gearLook = new fairygui.GearLook(this);
         }
-        var d = __define,c=GObject;p=c.prototype;
+        var d = __define,c=GObject,p=c.prototype;
         d(p, "id"
             ,function () {
                 return this._id;
@@ -3242,7 +3263,7 @@ var fairygui;
         return GObject;
     })(egret.EventDispatcher);
     fairygui.GObject = GObject;
-    egret.registerClass(GObject,"fairygui.GObject");
+    egret.registerClass(GObject,'fairygui.GObject');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -3252,7 +3273,7 @@ var fairygui;
             this.width = 0;
             this.height = 0;
         }
-        var d = __define,c=PackageItem;p=c.prototype;
+        var d = __define,c=PackageItem,p=c.prototype;
         p.load = function () {
             return this.owner.getItemAsset(this);
         };
@@ -3262,7 +3283,7 @@ var fairygui;
         return PackageItem;
     })();
     fairygui.PackageItem = PackageItem;
-    egret.registerClass(PackageItem,"fairygui.PackageItem");
+    egret.registerClass(PackageItem,'fairygui.PackageItem');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -3279,7 +3300,7 @@ var fairygui;
             this._margin = new fairygui.Margin();
             this.opaque = true;
         }
-        var d = __define,c=GComponent;p=c.prototype;
+        var d = __define,c=GComponent,p=c.prototype;
         p.createDisplayObject = function () {
             this._rootContainer = new fairygui.UIContainer(this);
             this.setDisplayObject(this._rootContainer);
@@ -3959,7 +3980,7 @@ var fairygui;
         return GComponent;
     })(fairygui.GObject);
     fairygui.GComponent = GComponent;
-    egret.registerClass(GComponent,"fairygui.GComponent");
+    egret.registerClass(GComponent,'fairygui.GComponent');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -3976,7 +3997,7 @@ var fairygui;
             this._pageOption = new fairygui.PageOption();
             this._changeStateOnClick = true;
         }
-        var d = __define,c=GButton;p=c.prototype;
+        var d = __define,c=GButton,p=c.prototype;
         d(p, "icon"
             ,function () {
                 return this._icon;
@@ -4329,7 +4350,7 @@ var fairygui;
         return GButton;
     })(fairygui.GComponent);
     fairygui.GButton = GButton;
-    egret.registerClass(GButton,"fairygui.GButton");
+    egret.registerClass(GButton,'fairygui.GButton');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -4346,7 +4367,7 @@ var fairygui;
             this._items = [];
             this._values = [];
         }
-        var d = __define,c=GComboBox;p=c.prototype;
+        var d = __define,c=GComboBox,p=c.prototype;
         d(p, "text"
             ,function () {
                 if (this._titleObject)
@@ -4577,7 +4598,7 @@ var fairygui;
         return GComboBox;
     })(fairygui.GComponent);
     fairygui.GComboBox = GComboBox;
-    egret.registerClass(GComboBox,"fairygui.GComboBox");
+    egret.registerClass(GComboBox,'fairygui.GComboBox');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -4587,7 +4608,7 @@ var fairygui;
         function GearAnimation(owner) {
             _super.call(this, owner);
         }
-        var d = __define,c=GearAnimation;p=c.prototype;
+        var d = __define,c=GearAnimation,p=c.prototype;
         p.init = function () {
             this._default = new GearAnimationValue(this._owner.playing, this._owner.frame);
             this._storage = {};
@@ -4638,7 +4659,7 @@ var fairygui;
         return GearAnimation;
     })(fairygui.GearBase);
     fairygui.GearAnimation = GearAnimation;
-    egret.registerClass(GearAnimation,"fairygui.GearAnimation");
+    egret.registerClass(GearAnimation,'fairygui.GearAnimation');
     var GearAnimationValue = (function () {
         function GearAnimationValue(playing, frame) {
             if (playing === void 0) { playing = true; }
@@ -4646,10 +4667,10 @@ var fairygui;
             this.playing = playing;
             this.frame = frame;
         }
-        var d = __define,c=GearAnimationValue;p=c.prototype;
+        var d = __define,c=GearAnimationValue,p=c.prototype;
         return GearAnimationValue;
     })();
-    egret.registerClass(GearAnimationValue,"GearAnimationValue");
+    egret.registerClass(GearAnimationValue,'GearAnimationValue');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -4660,7 +4681,7 @@ var fairygui;
             _super.call(this, owner);
             this._default = 0;
         }
-        var d = __define,c=GearColor;p=c.prototype;
+        var d = __define,c=GearColor,p=c.prototype;
         p.init = function () {
             this._default = this._owner.color;
             this._storage = {};
@@ -4696,7 +4717,7 @@ var fairygui;
         return GearColor;
     })(fairygui.GearBase);
     fairygui.GearColor = GearColor;
-    egret.registerClass(GearColor,"fairygui.GearColor");
+    egret.registerClass(GearColor,'fairygui.GearColor');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -4706,7 +4727,7 @@ var fairygui;
         function GearDisplay(owner) {
             _super.call(this, owner);
         }
-        var d = __define,c=GearDisplay;p=c.prototype;
+        var d = __define,c=GearDisplay,p=c.prototype;
         d(p, "connected"
             ,function () {
                 if (this._controller && !this._pageSet.empty)
@@ -4724,7 +4745,7 @@ var fairygui;
         return GearDisplay;
     })(fairygui.GearBase);
     fairygui.GearDisplay = GearDisplay;
-    egret.registerClass(GearDisplay,"fairygui.GearDisplay");
+    egret.registerClass(GearDisplay,'fairygui.GearDisplay');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -4734,7 +4755,7 @@ var fairygui;
         function GearLook(owner) {
             _super.call(this, owner);
         }
-        var d = __define,c=GearLook;p=c.prototype;
+        var d = __define,c=GearLook,p=c.prototype;
         p.init = function () {
             this._default = new GearLookValue(this._owner.alpha, this._owner.rotation, this._owner.grayed);
             this._storage = {};
@@ -4825,7 +4846,7 @@ var fairygui;
         return GearLook;
     })(fairygui.GearBase);
     fairygui.GearLook = GearLook;
-    egret.registerClass(GearLook,"fairygui.GearLook");
+    egret.registerClass(GearLook,'fairygui.GearLook');
     var GearLookValue = (function () {
         function GearLookValue(alpha, rotation, grayed) {
             if (alpha === void 0) { alpha = 0; }
@@ -4835,10 +4856,10 @@ var fairygui;
             this.rotation = rotation;
             this.grayed = grayed;
         }
-        var d = __define,c=GearLookValue;p=c.prototype;
+        var d = __define,c=GearLookValue,p=c.prototype;
         return GearLookValue;
     })();
-    egret.registerClass(GearLookValue,"GearLookValue");
+    egret.registerClass(GearLookValue,'GearLookValue');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -4856,7 +4877,7 @@ var fairygui;
             this._fillAlpha = 1;
             this._fillColor = 0xFFFFFF;
         }
-        var d = __define,c=GGraph;p=c.prototype;
+        var d = __define,c=GGraph,p=c.prototype;
         d(p, "graphics"
             ,function () {
                 if (this._graphics)
@@ -5029,7 +5050,7 @@ var fairygui;
         return GGraph;
     })(fairygui.GObject);
     fairygui.GGraph = GGraph;
-    egret.registerClass(GGraph,"fairygui.GGraph");
+    egret.registerClass(GGraph,'fairygui.GGraph');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -5039,7 +5060,7 @@ var fairygui;
         function GGroup() {
             _super.call(this);
         }
-        var d = __define,c=GGroup;p=c.prototype;
+        var d = __define,c=GGroup,p=c.prototype;
         p.updateBounds = function () {
             if (this._updating || !this.parent)
                 return;
@@ -5095,7 +5116,7 @@ var fairygui;
         return GGroup;
     })(fairygui.GObject);
     fairygui.GGroup = GGroup;
-    egret.registerClass(GGroup,"fairygui.GGroup");
+    egret.registerClass(GGroup,'fairygui.GGroup');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -5107,7 +5128,7 @@ var fairygui;
             this._color = 0xFFFFFF;
             this._gearColor = new fairygui.GearColor(this);
         }
-        var d = __define,c=GImage;p=c.prototype;
+        var d = __define,c=GImage,p=c.prototype;
         d(p, "color"
             ,function () {
                 return this._color;
@@ -5130,6 +5151,22 @@ var fairygui;
             this._content.transform.colorTransform = ct;
             */
         };
+        d(p, "flip"
+            ,function () {
+                return this._flip;
+            }
+            ,function (value) {
+                if (this._flip != value) {
+                    this._flip = value;
+                    this._content.scaleX = this._content.scaleY = 1;
+                    if (this._flip == fairygui.FlipType.Horizontal || this._flip == fairygui.FlipType.Both)
+                        this._content.scaleX = -1;
+                    if (this._flip == fairygui.FlipType.Vertical || this._flip == fairygui.FlipType.Both)
+                        this._content.scaleY = -1;
+                    this.handleXYChanged();
+                }
+            }
+        );
         d(p, "gearColor"
             ,function () {
                 return this._gearColor;
@@ -5161,9 +5198,16 @@ var fairygui;
             pkgItem.load();
             this._content.texture = pkgItem.texture;
         };
+        p.handleXYChanged = function () {
+            _super.prototype.handleXYChanged.call(this);
+            if (this._content.scaleX == -1)
+                this._content.x += this.width;
+            if (this._content.scaleY == -1)
+                this._content.y += this.height;
+        };
         p.handleSizeChanged = function () {
-            this._content.width = this.width * this.scaleX;
-            this._content.height = this.height * this.scaleY;
+            this._content.width = this.width * Math.abs(this.scaleX);
+            this._content.height = this.height * Math.abs(this.scaleY);
         };
         p.setup_beforeAdd = function (xml) {
             _super.prototype.setup_beforeAdd.call(this, xml);
@@ -5171,6 +5215,9 @@ var fairygui;
             str = xml.attributes.color;
             if (str)
                 this.color = fairygui.ToolSet.convertFromHtmlColor(str);
+            str = xml.attributes.flip;
+            if (str)
+                this.flip = fairygui.parseFlipType(str);
         };
         p.setup_afterAdd = function (xml) {
             _super.prototype.setup_afterAdd.call(this, xml);
@@ -5189,7 +5236,7 @@ var fairygui;
         return GImage;
     })(fairygui.GObject);
     fairygui.GImage = GImage;
-    egret.registerClass(GImage,"fairygui.GImage",["fairygui.IColorGear"]);
+    egret.registerClass(GImage,'fairygui.GImage',["fairygui.IColorGear"]);
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -5199,7 +5246,7 @@ var fairygui;
         function GLabel() {
             _super.call(this);
         }
-        var d = __define,c=GLabel;p=c.prototype;
+        var d = __define,c=GLabel,p=c.prototype;
         d(p, "icon"
             ,function () {
                 if (this._iconObject instanceof fairygui.GLoader)
@@ -5290,7 +5337,7 @@ var fairygui;
         return GLabel;
     })(fairygui.GComponent);
     fairygui.GLabel = GLabel;
-    egret.registerClass(GLabel,"fairygui.GLabel");
+    egret.registerClass(GLabel,'fairygui.GLabel');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -5309,7 +5356,7 @@ var fairygui;
             this._lastSelectedIndex = -1;
             this._selectionMode = fairygui.ListSelectionMode.Single;
         }
-        var d = __define,c=GList;p=c.prototype;
+        var d = __define,c=GList,p=c.prototype;
         p.dispose = function () {
             this._pool.clear();
             _super.prototype.dispose.call(this);
@@ -6022,14 +6069,17 @@ var fairygui;
                         url = this._defaultItem;
                     if (!url)
                         continue;
-                    var obj = this.addChild(this.getFromPool(url));
-                    if (obj instanceof fairygui.GButton) {
-                        obj.title = (cxml.attributes.title);
-                        obj.icon = (cxml.attributes.icon);
-                    }
-                    else if (obj instanceof fairygui.GLabel) {
-                        obj.title = (cxml.attributes.title);
-                        obj.icon = (cxml.attributes.icon);
+                    var obj = this.getFromPool(url);
+                    if (obj != null) {
+                        this.addChild(obj);
+                        if (obj instanceof fairygui.GButton) {
+                            obj.title = (cxml.attributes.title);
+                            obj.icon = (cxml.attributes.icon);
+                        }
+                        else if (obj instanceof fairygui.GLabel) {
+                            obj.title = (cxml.attributes.title);
+                            obj.icon = (cxml.attributes.icon);
+                        }
                     }
                 }
             }
@@ -6037,7 +6087,7 @@ var fairygui;
         return GList;
     })(fairygui.GComponent);
     fairygui.GList = GList;
-    egret.registerClass(GList,"fairygui.GList");
+    egret.registerClass(GList,'fairygui.GList');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -6047,7 +6097,7 @@ var fairygui;
             this._count = 0;
             this._pool = {};
         }
-        var d = __define,c=GObjectPool;p=c.prototype;
+        var d = __define,c=GObjectPool,p=c.prototype;
         p.clear = function () {
             var length1 = this._pool.length;
             for (var i1 = 0; i1 < length1; i1++) {
@@ -6075,8 +6125,10 @@ var fairygui;
                 return arr.pop();
             }
             var child = fairygui.UIPackage.createObjectFromURL(url);
-            if (!child)
-                throw url + " not exists";
+            if (!child) {
+                console.log("FairyGUI: getObject failed - " + url + " not exists");
+                return null;
+            }
             return child;
         };
         p.returnObject = function (obj) {
@@ -6092,7 +6144,7 @@ var fairygui;
         return GObjectPool;
     })();
     fairygui.GObjectPool = GObjectPool;
-    egret.registerClass(GObjectPool,"fairygui.GObjectPool");
+    egret.registerClass(GObjectPool,'fairygui.GObjectPool');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -6116,7 +6168,7 @@ var fairygui;
             this._gearAnimation = new fairygui.GearAnimation(this);
             this._gearColor = new fairygui.GearColor(this);
         }
-        var d = __define,c=GLoader;p=c.prototype;
+        var d = __define,c=GLoader,p=c.prototype;
         p.createDisplayObject = function () {
             this._container = new fairygui.UIContainer(this);
             this.setDisplayObject(this._container);
@@ -6485,7 +6537,7 @@ var fairygui;
         return GLoader;
     })(fairygui.GObject);
     fairygui.GLoader = GLoader;
-    egret.registerClass(GLoader,"fairygui.GLoader",["fairygui.IAnimationGear","fairygui.IColorGear"]);
+    egret.registerClass(GLoader,'fairygui.GLoader',["fairygui.IAnimationGear","fairygui.IColorGear"]);
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -6497,7 +6549,7 @@ var fairygui;
             this._gearAnimation = new fairygui.GearAnimation(this);
             this._gearColor = new fairygui.GearColor(this);
         }
-        var d = __define,c=GMovieClip;p=c.prototype;
+        var d = __define,c=GMovieClip,p=c.prototype;
         d(p, "color"
             ,function () {
                 return 0;
@@ -6599,7 +6651,7 @@ var fairygui;
         return GMovieClip;
     })(fairygui.GObject);
     fairygui.GMovieClip = GMovieClip;
-    egret.registerClass(GMovieClip,"fairygui.GMovieClip",["fairygui.IAnimationGear","fairygui.IColorGear"]);
+    egret.registerClass(GMovieClip,'fairygui.GMovieClip',["fairygui.IAnimationGear","fairygui.IColorGear"]);
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -6620,7 +6672,7 @@ var fairygui;
             this._value = 50;
             this._max = 100;
         }
-        var d = __define,c=GProgressBar;p=c.prototype;
+        var d = __define,c=GProgressBar,p=c.prototype;
         d(p, "titleType"
             ,function () {
                 return this._titleType;
@@ -6736,7 +6788,7 @@ var fairygui;
         return GProgressBar;
     })(fairygui.GComponent);
     fairygui.GProgressBar = GProgressBar;
-    egret.registerClass(GProgressBar,"fairygui.GProgressBar");
+    egret.registerClass(GProgressBar,'fairygui.GProgressBar');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -6763,7 +6815,7 @@ var fairygui;
             this._gearColor = new fairygui.GearColor(this);
             this._bitmapPool = new Array();
         }
-        var d = __define,c=GTextField;p=c.prototype;
+        var d = __define,c=GTextField,p=c.prototype;
         p.createDisplayObject = function () {
             var obj = new fairygui.UITextField(this);
             this._textField = obj.getChildAt(0);
@@ -7377,7 +7429,7 @@ var fairygui;
         return GTextField;
     })(fairygui.GObject);
     fairygui.GTextField = GTextField;
-    egret.registerClass(GTextField,"fairygui.GTextField",["fairygui.IColorGear"]);
+    egret.registerClass(GTextField,'fairygui.GTextField',["fairygui.IColorGear"]);
     var LineInfo = (function () {
         function LineInfo() {
             this.width = 0;
@@ -7385,7 +7437,7 @@ var fairygui;
             this.textHeight = 0;
             this.y = 0;
         }
-        var d = __define,c=LineInfo;p=c.prototype;
+        var d = __define,c=LineInfo,p=c.prototype;
         LineInfo.borrow = function () {
             if (LineInfo.pool.length) {
                 var ret = LineInfo.pool.pop();
@@ -7414,7 +7466,7 @@ var fairygui;
         return LineInfo;
     })();
     fairygui.LineInfo = LineInfo;
-    egret.registerClass(LineInfo,"fairygui.LineInfo");
+    egret.registerClass(LineInfo,'fairygui.LineInfo');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -7426,7 +7478,7 @@ var fairygui;
             this._textField.touchEnabled = true;
             this._textField.addEventListener(egret.TextEvent.LINK, this.__clickLink, this);
         }
-        var d = __define,c=GRichTextField;p=c.prototype;
+        var d = __define,c=GRichTextField,p=c.prototype;
         d(p, "text",undefined
             ,function (value) {
                 this._text = value;
@@ -7446,7 +7498,7 @@ var fairygui;
         return GRichTextField;
     })(fairygui.GTextField);
     fairygui.GRichTextField = GRichTextField;
-    egret.registerClass(GRichTextField,"fairygui.GRichTextField");
+    egret.registerClass(GRichTextField,'fairygui.GRichTextField');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -7463,7 +7515,7 @@ var fairygui;
             this._justClosedPopups = new Array();
             this.displayObject.addEventListener(egret.Event.ADDED_TO_STAGE, this.__addedToStage, this);
         }
-        var d = __define,c=GRoot;p=c.prototype;
+        var d = __define,c=GRoot,p=c.prototype;
         d(GRoot, "inst"
             ,function () {
                 if (GRoot._inst == null)
@@ -7847,7 +7899,7 @@ var fairygui;
         return GRoot;
     })(fairygui.GComponent);
     fairygui.GRoot = GRoot;
-    egret.registerClass(GRoot,"fairygui.GRoot");
+    egret.registerClass(GRoot,'fairygui.GRoot');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -7859,7 +7911,7 @@ var fairygui;
             this.top = 0;
             this.bottom = 0;
         }
-        var d = __define,c=Margin;p=c.prototype;
+        var d = __define,c=Margin,p=c.prototype;
         p.parse = function (str) {
             if (!str) {
                 this.left = 0;
@@ -7892,7 +7944,7 @@ var fairygui;
         return Margin;
     })();
     fairygui.Margin = Margin;
-    egret.registerClass(Margin,"fairygui.Margin");
+    egret.registerClass(Margin,'fairygui.Margin');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -7905,7 +7957,7 @@ var fairygui;
             this._itemPool = new Array();
             egret.Ticker.getInstance().register(this.__timer, this);
         }
-        var d = __define,c=GTimers;p=c.prototype;
+        var d = __define,c=GTimers,p=c.prototype;
         p.getItem = function () {
             if (this._itemPool.length)
                 return this._itemPool.pop();
@@ -7991,14 +8043,14 @@ var fairygui;
         return GTimers;
     })();
     fairygui.GTimers = GTimers;
-    egret.registerClass(GTimers,"fairygui.GTimers");
+    egret.registerClass(GTimers,'fairygui.GTimers');
     var TimerItem = (function () {
         function TimerItem() {
             this.delay = 0;
             this.counter = 0;
             this.repeat = 0;
         }
-        var d = __define,c=TimerItem;p=c.prototype;
+        var d = __define,c=TimerItem,p=c.prototype;
         p.advance = function (elapsed) {
             if (elapsed === void 0) { elapsed = 0; }
             this.counter += elapsed;
@@ -8018,7 +8070,7 @@ var fairygui;
         };
         return TimerItem;
     })();
-    egret.registerClass(TimerItem,"TimerItem");
+    egret.registerClass(TimerItem,'TimerItem');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -8030,7 +8082,7 @@ var fairygui;
             this._dragOffset = new egret.Point();
             this._scrollPerc = 0;
         }
-        var d = __define,c=GScrollBar;p=c.prototype;
+        var d = __define,c=GScrollBar,p=c.prototype;
         p.setScrollPane = function (target, vertical) {
             this._target = target;
             this._vertical = vertical;
@@ -8138,7 +8190,7 @@ var fairygui;
         return GScrollBar;
     })(fairygui.GComponent);
     fairygui.GScrollBar = GScrollBar;
-    egret.registerClass(GScrollBar,"fairygui.GScrollBar");
+    egret.registerClass(GScrollBar,'fairygui.GScrollBar');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -8158,7 +8210,7 @@ var fairygui;
             this._max = 100;
             this._clickPos = new egret.Point();
         }
-        var d = __define,c=GSlider;p=c.prototype;
+        var d = __define,c=GSlider,p=c.prototype;
         d(p, "titleType"
             ,function () {
                 return this._titleType;
@@ -8297,7 +8349,7 @@ var fairygui;
         return GSlider;
     })(fairygui.GComponent);
     fairygui.GSlider = GSlider;
-    egret.registerClass(GSlider,"fairygui.GSlider");
+    egret.registerClass(GSlider,'fairygui.GSlider');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -8310,7 +8362,7 @@ var fairygui;
             this._playing = true;
             this._gearAnimation = new fairygui.GearAnimation(this);
         }
-        var d = __define,c=GSwfObject;p=c.prototype;
+        var d = __define,c=GSwfObject,p=c.prototype;
         p.createDisplayObject = function () {
             this._container = new fairygui.UIContainer(this);
             //this.setDisplayObject(this._container);
@@ -8360,7 +8412,7 @@ var fairygui;
         return GSwfObject;
     })(fairygui.GObject);
     fairygui.GSwfObject = GSwfObject;
-    egret.registerClass(GSwfObject,"fairygui.GSwfObject",["fairygui.IAnimationGear"]);
+    egret.registerClass(GSwfObject,'fairygui.GSwfObject',["fairygui.IAnimationGear"]);
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -8377,7 +8429,7 @@ var fairygui;
             this._textField.addEventListener(egret.FocusEvent.FOCUS_IN, this.__focusIn, this);
             this._textField.addEventListener(egret.FocusEvent.FOCUS_OUT, this.__focusOut, this);
         }
-        var d = __define,c=GTextInput;p=c.prototype;
+        var d = __define,c=GTextInput,p=c.prototype;
         p.dispose = function () {
             _super.prototype.dispose.call(this);
         };
@@ -8483,7 +8535,7 @@ var fairygui;
         return GTextInput;
     })(fairygui.GTextField);
     fairygui.GTextInput = GTextInput;
-    egret.registerClass(GTextInput,"fairygui.GTextInput");
+    egret.registerClass(GTextInput,'fairygui.GTextInput');
 })(fairygui || (fairygui = {}));
 
 
@@ -8494,7 +8546,7 @@ var fairygui;
     var PageOption = (function () {
         function PageOption() {
         }
-        var d = __define,c=PageOption;p=c.prototype;
+        var d = __define,c=PageOption,p=c.prototype;
         d(p, "controller",undefined
             ,function (val) {
                 this._controller = val;
@@ -8536,7 +8588,7 @@ var fairygui;
         return PageOption;
     })();
     fairygui.PageOption = PageOption;
-    egret.registerClass(PageOption,"fairygui.PageOption");
+    egret.registerClass(PageOption,'fairygui.PageOption');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -8545,7 +8597,7 @@ var fairygui;
         function PageOptionSet() {
             this._items = [];
         }
-        var d = __define,c=PageOptionSet;p=c.prototype;
+        var d = __define,c=PageOptionSet,p=c.prototype;
         d(p, "controller",undefined
             ,function (val) {
                 this._controller = val;
@@ -8594,7 +8646,7 @@ var fairygui;
         return PageOptionSet;
     })();
     fairygui.PageOptionSet = PageOptionSet;
-    egret.registerClass(PageOptionSet,"fairygui.PageOptionSet");
+    egret.registerClass(PageOptionSet,'fairygui.PageOptionSet');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -8616,7 +8668,7 @@ var fairygui;
             this._contentPane.addRelation(this._list, fairygui.RelationType.Height);
             this._list.addEventListener(fairygui.ItemEvent.CLICK, this.__clickItem, this);
         }
-        var d = __define,c=PopupMenu;p=c.prototype;
+        var d = __define,c=PopupMenu,p=c.prototype;
         p.addItem = function (caption, callback) {
             if (callback === void 0) { callback = null; }
             var item = this._list.addItemFromPool().asButton;
@@ -8762,7 +8814,7 @@ var fairygui;
         return PopupMenu;
     })();
     fairygui.PopupMenu = PopupMenu;
-    egret.registerClass(PopupMenu,"fairygui.PopupMenu");
+    egret.registerClass(PopupMenu,'fairygui.PopupMenu');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -8772,7 +8824,7 @@ var fairygui;
             this._owner = owner;
             this._defs = new Array();
         }
-        var d = __define,c=RelationItem;p=c.prototype;
+        var d = __define,c=RelationItem,p=c.prototype;
         d(p, "owner"
             ,function () {
                 return this._owner;
@@ -9179,11 +9231,11 @@ var fairygui;
         return RelationItem;
     })();
     fairygui.RelationItem = RelationItem;
-    egret.registerClass(RelationItem,"fairygui.RelationItem");
+    egret.registerClass(RelationItem,'fairygui.RelationItem');
     var RelationDef = (function () {
         function RelationDef() {
         }
-        var d = __define,c=RelationDef;p=c.prototype;
+        var d = __define,c=RelationDef,p=c.prototype;
         p.copyFrom = function (source) {
             this.affectBySelfSizeChanged = source.affectBySelfSizeChanged;
             this.percent = source.percent;
@@ -9192,7 +9244,7 @@ var fairygui;
         return RelationDef;
     })();
     fairygui.RelationDef = RelationDef;
-    egret.registerClass(RelationDef,"fairygui.RelationDef");
+    egret.registerClass(RelationDef,'fairygui.RelationDef');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -9202,7 +9254,7 @@ var fairygui;
             this._owner = owner;
             this._items = new Array();
         }
-        var d = __define,c=Relations;p=c.prototype;
+        var d = __define,c=Relations,p=c.prototype;
         p.add = function (target, relationType, usePercent) {
             if (usePercent === void 0) { usePercent = false; }
             var length = this._items.length;
@@ -9386,7 +9438,7 @@ var fairygui;
         return Relations;
     })();
     fairygui.Relations = Relations;
-    egret.registerClass(Relations,"fairygui.Relations");
+    egret.registerClass(Relations,'fairygui.Relations');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -9477,7 +9529,7 @@ var fairygui;
             this.setContentSize(owner.bounds.width, owner.bounds.height);
             this._owner.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__mouseDown, this);
         }
-        var d = __define,c=ScrollPane;p=c.prototype;
+        var d = __define,c=ScrollPane,p=c.prototype;
         p.dispose = function () {
             this._owner.removeEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__mouseDown, this);
             this._container.removeChildren();
@@ -10223,14 +10275,14 @@ var fairygui;
         return ScrollPane;
     })();
     fairygui.ScrollPane = ScrollPane;
-    egret.registerClass(ScrollPane,"fairygui.ScrollPane");
+    egret.registerClass(ScrollPane,'fairygui.ScrollPane');
     var ThrowTween = (function () {
         function ThrowTween() {
             this.start = new egret.Point();
             this.change1 = new egret.Point();
             this.change2 = new egret.Point();
         }
-        var d = __define,c=ThrowTween;p=c.prototype;
+        var d = __define,c=ThrowTween,p=c.prototype;
         p.update = function (obj) {
             obj.x = Math.floor(this.start.x + this.change1.x * this.value + this.change2.x * this.value * this.value);
             obj.y = Math.floor(this.start.y + this.change1.y * this.value + this.change2.y * this.value * this.value);
@@ -10244,7 +10296,7 @@ var fairygui;
         ThrowTween.checkpoint = 0.05;
         return ThrowTween;
     })();
-    egret.registerClass(ThrowTween,"ThrowTween");
+    egret.registerClass(ThrowTween,'ThrowTween');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -10254,11 +10306,11 @@ var fairygui;
             this.lineHeight = 0;
             this.glyphs = {};
         }
-        var d = __define,c=BitmapFont;p=c.prototype;
+        var d = __define,c=BitmapFont,p=c.prototype;
         return BitmapFont;
     })();
     fairygui.BitmapFont = BitmapFont;
-    egret.registerClass(BitmapFont,"fairygui.BitmapFont");
+    egret.registerClass(BitmapFont,'fairygui.BitmapFont');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -10275,11 +10327,11 @@ var fairygui;
             this.lineHeight = 0;
             this.channel = 0;
         }
-        var d = __define,c=BMGlyph;p=c.prototype;
+        var d = __define,c=BMGlyph,p=c.prototype;
         return BMGlyph;
     })();
     fairygui.BMGlyph = BMGlyph;
-    egret.registerClass(BMGlyph,"fairygui.BMGlyph");
+    egret.registerClass(BMGlyph,'fairygui.BMGlyph');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -10287,7 +10339,7 @@ var fairygui;
     var UIConfig = (function () {
         function UIConfig() {
         }
-        var d = __define,c=UIConfig;p=c.prototype;
+        var d = __define,c=UIConfig,p=c.prototype;
         //Default font name
         UIConfig.defaultFont = "宋体";
         //When a modal window is in front, the background becomes dark.
@@ -10306,7 +10358,7 @@ var fairygui;
         return UIConfig;
     })();
     fairygui.UIConfig = UIConfig;
-    egret.registerClass(UIConfig,"fairygui.UIConfig");
+    egret.registerClass(UIConfig,'fairygui.UIConfig');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -10331,7 +10383,7 @@ var fairygui;
             this._handlers["font"] = this.onTag_FONT;
             this._handlers["size"] = this.onTag_SIZE;
         }
-        var d = __define,c=UBBParser;p=c.prototype;
+        var d = __define,c=UBBParser,p=c.prototype;
         p.onTag_URL = function (tagName, end, attr) {
             if (!end) {
                 if (attr != null)
@@ -10441,7 +10493,7 @@ var fairygui;
         return UBBParser;
     })();
     fairygui.UBBParser = UBBParser;
-    egret.registerClass(UBBParser,"fairygui.UBBParser");
+    egret.registerClass(UBBParser,'fairygui.UBBParser');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -10449,7 +10501,7 @@ var fairygui;
     var ToolSet = (function () {
         function ToolSet() {
         }
-        var d = __define,c=ToolSet;p=c.prototype;
+        var d = __define,c=ToolSet,p=c.prototype;
         ToolSet.getFileName = function (source) {
             var i = source.lastIndexOf("/");
             if (i != -1)
@@ -10588,7 +10640,7 @@ var fairygui;
         return ToolSet;
     })();
     fairygui.ToolSet = ToolSet;
-    egret.registerClass(ToolSet,"fairygui.ToolSet");
+    egret.registerClass(ToolSet,'fairygui.ToolSet');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -10596,7 +10648,7 @@ var fairygui;
     var UIObjectFactory = (function () {
         function UIObjectFactory() {
         }
-        var d = __define,c=UIObjectFactory;p=c.prototype;
+        var d = __define,c=UIObjectFactory,p=c.prototype;
         UIObjectFactory.setPackageItemExtension = function (url, type) {
             UIObjectFactory.packageItemExtensions[url.substring(5)] = type;
         };
@@ -10674,7 +10726,7 @@ var fairygui;
         return UIObjectFactory;
     })();
     fairygui.UIObjectFactory = UIObjectFactory;
-    egret.registerClass(UIObjectFactory,"fairygui.UIObjectFactory");
+    egret.registerClass(UIObjectFactory,'fairygui.UIObjectFactory');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -10684,7 +10736,7 @@ var fairygui;
             this._items = new Array();
             this._sprites = {};
         }
-        var d = __define,c=UIPackage;p=c.prototype;
+        var d = __define,c=UIPackage,p=c.prototype;
         UIPackage.getById = function (id) {
             return UIPackage._packageInstById[id];
         };
@@ -11152,15 +11204,15 @@ var fairygui;
         return UIPackage;
     })();
     fairygui.UIPackage = UIPackage;
-    egret.registerClass(UIPackage,"fairygui.UIPackage");
+    egret.registerClass(UIPackage,'fairygui.UIPackage');
     var AtlasSprite = (function () {
         function AtlasSprite() {
             this.rect = new egret.Rectangle();
         }
-        var d = __define,c=AtlasSprite;p=c.prototype;
+        var d = __define,c=AtlasSprite,p=c.prototype;
         return AtlasSprite;
     })();
-    egret.registerClass(AtlasSprite,"AtlasSprite");
+    egret.registerClass(AtlasSprite,'AtlasSprite');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -11176,7 +11228,7 @@ var fairygui;
             this.displayObject.addEventListener(egret.Event.REMOVED_FROM_STAGE, this.__onHidden, this);
             this.displayObject.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__mouseDown, this, true);
         }
-        var d = __define,c=Window;p=c.prototype;
+        var d = __define,c=Window,p=c.prototype;
         p.addUISource = function (source) {
             this._uiSources.push(source);
         };
@@ -11427,7 +11479,7 @@ var fairygui;
         return Window;
     })(fairygui.GComponent);
     fairygui.Window = Window;
-    egret.registerClass(Window,"fairygui.Window");
+    egret.registerClass(Window,'fairygui.Window');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -11441,7 +11493,7 @@ var fairygui;
             this._agent.sortingOrder = 1000000;
             this._agent.addEventListener(fairygui.DragEvent.DRAG_END, this.__dragEnd, this);
         }
-        var d = __define,c=DragDropManager;p=c.prototype;
+        var d = __define,c=DragDropManager,p=c.prototype;
         d(DragDropManager, "inst"
             ,function () {
                 if (DragDropManager._inst == null)
@@ -11497,6 +11549,6 @@ var fairygui;
         return DragDropManager;
     })();
     fairygui.DragDropManager = DragDropManager;
-    egret.registerClass(DragDropManager,"fairygui.DragDropManager");
+    egret.registerClass(DragDropManager,'fairygui.DragDropManager');
 })(fairygui || (fairygui = {}));
 

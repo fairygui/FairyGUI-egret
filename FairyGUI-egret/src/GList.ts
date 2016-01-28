@@ -808,14 +808,17 @@ module fairygui {
                     if (!url)
                         continue;
 
-                    var obj: GObject = this.addChild(this.getFromPool(url));
-                    if (obj instanceof GButton) {
-                        (<GButton><any> obj).title = <string><any> (cxml.attributes.title);
-                        (<GButton><any> obj).icon = <string><any> (cxml.attributes.icon);
-                    }
-                    else if (obj instanceof GLabel) {
-                        (<GLabel><any> obj).title = <string><any> (cxml.attributes.title);
-                        (<GLabel><any> obj).icon = <string><any> (cxml.attributes.icon);
+                    var obj: GObject = this.getFromPool(url);
+                    if(obj != null) {
+                        this.addChild(obj);                    
+                        if (obj instanceof GButton) {
+                            (<GButton><any> obj).title = <string><any> (cxml.attributes.title);
+                            (<GButton><any> obj).icon = <string><any> (cxml.attributes.icon);
+                        }
+                        else if (obj instanceof GLabel) {
+                            (<GLabel><any> obj).title = <string><any> (cxml.attributes.title);
+                            (<GLabel><any> obj).icon = <string><any> (cxml.attributes.icon);
+                        }
                     }
                 }
             }

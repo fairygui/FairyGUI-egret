@@ -4,6 +4,7 @@ module fairygui {
     export class GImage extends GObject implements IColorGear {
         private _content: egret.Bitmap;
         private _color: number;
+        private _flip: FlipType;
         
         private _gearColor: GearColor;
 
@@ -35,6 +36,22 @@ module fairygui {
             ct.blueMultiplier = (this._color&0xFF)/255;
             this._content.transform.colorTransform = ct;
             */
+        }
+        
+        public get flip():FlipType {
+            return this._flip;
+        }
+        
+        public set flip(value:FlipType) {
+            if(this._flip!=value) {
+                this._flip = value;
+                this._content.scaleX = this._content.scaleY = 1;  
+                if(this._flip == FlipType.Horizontal || this._flip == FlipType.Both)
+                    this._content.scaleX = -1;
+                if(this._flip == FlipType.Vertical || this._flip == FlipType.Both)
+                    this._content.scaleY = -1;
+                this.handleXYChanged();
+            }
         }
         
         public get gearColor(): GearColor {
@@ -74,10 +91,18 @@ module fairygui {
             pkgItem.load();
             this._content.texture = pkgItem.texture;
         }
+        
+        protected handleXYChanged(): void {
+            super.handleXYChanged();
+            if(this._content.scaleX==-1)
+                this._content.x += this.width;
+            if(this._content.scaleY==-1)
+                this._content.y += this.height;
+        }
 
         protected handleSizeChanged(): void {
-            this._content.width = this.width * this.scaleX;
-            this._content.height = this.height * this.scaleY;
+            this._content.width = this.width * Math.abs(this.scaleX);
+            this._content.height = this.height * Math.abs(this.scaleY);
         }
         
         public setup_beforeAdd(xml: any): void {
@@ -87,6 +112,10 @@ module fairygui {
             str = xml.attributes.color;
             if(str)
                 this.color = ToolSet.convertFromHtmlColor(str);
+                
+            str = xml.attributes.flip;
+            if(str)
+                this.flip = parseFlipType(str);	
         }
         
         public setup_afterAdd(xml: any): void {

@@ -260,6 +260,12 @@ declare module fairygui {
         Vertical = 1,
         Both = 2,
     }
+    enum FlipType {
+        None = 0,
+        Horizontal = 1,
+        Vertical = 2,
+        Both = 3,
+    }
     enum RelationType {
         Left_Left = 0,
         Left_Center = 1,
@@ -300,6 +306,7 @@ declare module fairygui {
     function parseProgressTitleType(value: string): ProgressTitleType;
     function parseScrollBarDisplayType(value: string): ScrollBarDisplayType;
     function parseScrollType(value: string): ScrollType;
+    function parseFlipType(value: string): FlipType;
     function ParseEaseType(value: string): Function;
 }
 declare module fairygui {
@@ -821,15 +828,18 @@ declare module fairygui {
     class GImage extends GObject implements IColorGear {
         private _content;
         private _color;
+        private _flip;
         private _gearColor;
         constructor();
         color: number;
         private applyColor();
+        flip: FlipType;
         gearColor: GearColor;
         handleControllerChanged(c: Controller): void;
         protected createDisplayObject(): void;
         dispose(): void;
         constructFromResource(pkgItem: PackageItem): void;
+        protected handleXYChanged(): void;
         protected handleSizeChanged(): void;
         setup_beforeAdd(xml: any): void;
         setup_afterAdd(xml: any): void;
