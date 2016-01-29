@@ -1521,9 +1521,10 @@ declare module fairygui {
 declare module fairygui {
     class BitmapFont {
         id: string;
-        lineHeight: number;
+        size: number;
         ttf: boolean;
         glyphs: any;
+        resizable: boolean;
         constructor();
     }
 }

@@ -7128,7 +7128,6 @@ var fairygui;
                 LineInfo.returnList(this._lines);
             var letterSpacing = this._letterSpacing;
             var lineSpacing = this._leading - 1;
-            var fontSize = this._textField.size;
             var rectWidth = this.width - GTextField.GUTTER_X * 2;
             var lineWidth = 0, lineHeight = 0, lineTextHeight = 0;
             var glyphWidth = 0, glyphHeight = 0;
@@ -7139,6 +7138,7 @@ var fairygui;
             var line;
             var textWidth = 0, textHeight = 0;
             var wordWrap = !this._widthAutoSize && this._textField.multiline;
+            var fontScale = this._bitmapFont.resizable ? this._fontSize / this._bitmapFont.size : 1;
             var textLength = this._text.length;
             for (var offset = 0; offset < textLength; ++offset) {
                 var ch = this._text.charAt(offset);
@@ -7149,7 +7149,7 @@ var fairygui;
                     line.width = lineWidth;
                     if (lineTextHeight == 0) {
                         if (lastLineHeight == 0)
-                            lastLineHeight = fontSize;
+                            lastLineHeight = Math.ceil(this._fontSize * fontScale);
                         if (lineHeight == 0)
                             lineHeight = lastLineHeight;
                         lineTextHeight = lineHeight;
@@ -7183,18 +7183,18 @@ var fairygui;
                     wordChars++;
                 }
                 if (ch == " ") {
-                    glyphWidth = fontSize / 2;
-                    glyphHeight = fontSize;
+                    glyphWidth = Math.ceil(this._fontSize / 2);
+                    glyphHeight = Math.ceil(this._fontSize);
                 }
                 else {
                     var glyph = this._bitmapFont.glyphs[ch];
                     if (glyph) {
-                        glyphWidth = glyph.advance;
-                        glyphHeight = glyph.lineHeight;
+                        glyphWidth = Math.ceil(glyph.advance * fontScale);
+                        glyphHeight = Math.ceil(glyph.lineHeight * fontScale);
                     }
                     else if (ch == " ") {
-                        glyphWidth = Math.ceil(this._bitmapFont.lineHeight / 2);
-                        glyphHeight = this._bitmapFont.lineHeight;
+                        glyphWidth = Math.ceil(this._bitmapFont.size * fontScale / 2);
+                        glyphHeight = Math.ceil(this._bitmapFont.size * fontScale);
                     }
                     else {
                         glyphWidth = 0;
@@ -7313,16 +7313,24 @@ var fairygui;
                     ch = line.text.charAt(j);
                     glyph = this._bitmapFont.glyphs[ch];
                     if (glyph != null) {
-                        charIndent = (line.height + line.textHeight) / 2 - glyph.lineHeight;
-                        var bm = this._bitmapPool.length ? this._bitmapPool.pop() : new egret.Bitmap();
-                        bm.x = charX + lineIndent + glyph.offsetX;
-                        bm.y = line.y + charIndent + glyph.offsetY;
+                        charIndent = (line.height + line.textHeight) / 2 - Math.ceil(glyph.lineHeight * fontScale);
+                        var bm;
+                        if (this._bitmapPool.length)
+                            bm = this._bitmapPool.pop();
+                        else {
+                            bm = new egret.Bitmap();
+                            bm.smoothing = true;
+                        }
+                        bm.x = charX + lineIndent + Math.ceil(glyph.offsetX * fontScale);
+                        bm.y = line.y + charIndent + Math.ceil(glyph.offsetY * fontScale);
                         bm.texture = glyph.texture;
+                        bm.scaleX = fontScale;
+                        bm.scaleY = fontScale;
                         container.addChild(bm);
-                        charX += letterSpacing + glyph.advance;
+                        charX += letterSpacing + Math.ceil(glyph.advance * fontScale);
                     }
                     else if (ch == " ") {
-                        charX += letterSpacing + Math.ceil(this._bitmapFont.lineHeight / 2);
+                        charX += letterSpacing + Math.ceil(this._bitmapFont.size * fontScale / 2);
                     }
                     else {
                         charX += letterSpacing;
@@ -10303,7 +10311,7 @@ var fairygui;
 (function (fairygui) {
     var BitmapFont = (function () {
         function BitmapFont() {
-            this.lineHeight = 0;
+            this.size = 0;
             this.glyphs = {};
         }
         var d = __define,c=BitmapFont,p=c.prototype;
@@ -11105,8 +11113,9 @@ var fairygui;
             var i = 0;
             var kv = {};
             var ttf = false;
-            var lineHeight = 0;
+            var size = 0;
             var xadvance = 0;
+            var resizable = false;
             var atlasOffsetX = 0, atlasOffsetY = 0;
             var charImg;
             var mainTexture;
@@ -11156,7 +11165,7 @@ var fairygui;
                         bg.texture = this.createSubTexture(mainTexture, new egret.Rectangle(bg.x + atlasOffsetX, bg.y + atlasOffsetY, bg.width, bg.height));
                     }
                     if (ttf)
-                        bg.lineHeight = lineHeight;
+                        bg.lineHeight = size;
                     else {
                         if (bg.advance == 0) {
                             if (xadvance == 0)
@@ -11165,31 +11174,39 @@ var fairygui;
                                 bg.advance = xadvance;
                         }
                         bg.lineHeight = bg.offsetY < 0 ? bg.height : (bg.offsetY + bg.height);
-                        if (bg.lineHeight < lineHeight)
-                            bg.lineHeight = lineHeight;
+                        if (bg.lineHeight < size)
+                            bg.lineHeight = size;
                     }
                     font.glyphs[String.fromCharCode(kv.id)] = bg;
                 }
                 else if (str == "info") {
                     ttf = kv.face != null;
+                    if (!isNaN(kv.size))
+                        size = parseInt(kv.size);
+                    resizable = kv.resizable == "true";
                     if (ttf) {
                         var sprite = this._sprites[item.id];
                         if (sprite != null) {
                             atlasOffsetX = sprite.rect.x;
                             atlasOffsetY = sprite.rect.y;
-                            mainTexture = this.createSpriteTexture(sprite);
+                            var atlasItem = this._itemsById[sprite.atlas];
+                            if (atlasItem != null)
+                                mainTexture = this.getItemAsset(atlasItem);
                         }
                     }
                 }
                 else if (str == "common") {
-                    if (!isNaN(kv.lineHeight))
-                        lineHeight = parseInt(kv.lineHeight);
+                    if (size == 0 && !isNaN(kv.lineHeight))
+                        size = parseInt(kv.lineHeight);
                     if (!isNaN(kv.xadvance))
                         xadvance = parseInt(kv.xadvance);
                 }
             }
+            if (size == 0 && bg)
+                size = bg.height;
             font.ttf = ttf;
-            font.lineHeight = lineHeight;
+            font.size = size;
+            font.resizable = resizable;
             item.bitmapFont = font;
         };
         //internal

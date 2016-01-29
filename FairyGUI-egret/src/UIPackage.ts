@@ -447,8 +447,9 @@ module fairygui {
             var i: number = 0;
             var kv: any = {};
             var ttf: boolean = false;
-            var lineHeight: number = 0;
+            var size: number = 0;
             var xadvance: number = 0;
+            var resizable: boolean = false;
             var atlasOffsetX: number = 0, atlasOffsetY: number = 0;
             var charImg: PackageItem;
             var mainTexture: egret.Texture;
@@ -503,7 +504,7 @@ module fairygui {
                     }
 
                     if (ttf)
-                        bg.lineHeight = lineHeight;
+                        bg.lineHeight = size;
                     else {
                         if(bg.advance == 0) {
                             if(xadvance == 0)
@@ -513,33 +514,41 @@ module fairygui {
                         }
 
                         bg.lineHeight = bg.offsetY < 0 ? bg.height : (bg.offsetY + bg.height);
-                        if (bg.lineHeight < lineHeight)
-                            bg.lineHeight = lineHeight;
+                        if (bg.lineHeight < size)
+                            bg.lineHeight = size;
                     }
                     font.glyphs[String.fromCharCode(kv.id)] = bg;
                 }
                 else if (str == "info") {
                     ttf = kv.face != null;
-
+                    if(!isNaN(kv.size))
+                        size = parseInt(kv.size);
+                    resizable = kv.resizable == "true";
                     if (ttf) {
                         var sprite: AtlasSprite = this._sprites[item.id];
                         if (sprite != null) {
                             atlasOffsetX = sprite.rect.x;
                             atlasOffsetY = sprite.rect.y;
-                            mainTexture = this.createSpriteTexture(sprite);
+                            var atlasItem: PackageItem = this._itemsById[sprite.atlas];
+                            if(atlasItem != null)
+                                mainTexture = this.getItemAsset(atlasItem);
                         }
                     }
                 }
                 else if (str == "common") {
-                    if(!isNaN(kv.lineHeight))
-                        lineHeight = parseInt(kv.lineHeight);
+                    if(size==0 && !isNaN(kv.lineHeight))
+                        size = parseInt(kv.lineHeight);
                     if(!isNaN(kv.xadvance))
                         xadvance = parseInt(kv.xadvance);
                 }
             }
+            
+            if (size == 0 && bg)
+                size = bg.height;
 
             font.ttf = ttf;
-            font.lineHeight = lineHeight;
+            font.size = size;
+            font.resizable = resizable;
             item.bitmapFont = font;
         }
     }

@@ -388,7 +388,6 @@ module fairygui {
 
             var letterSpacing: number = this._letterSpacing;
             var lineSpacing: number = this._leading - 1;
-            var fontSize: number = this._textField.size;
             var rectWidth: number = this.width - GTextField.GUTTER_X * 2;
             var lineWidth: number = 0, lineHeight: number = 0, lineTextHeight: number = 0;
             var glyphWidth: number = 0, glyphHeight: number = 0;
@@ -399,6 +398,7 @@ module fairygui {
             var line: LineInfo;
             var textWidth: number = 0, textHeight: number = 0;
             var wordWrap: boolean = !this._widthAutoSize && this._textField.multiline;
+            var fontScale: number = this._bitmapFont.resizable?this._fontSize/this._bitmapFont.size:1;
 
             var textLength: number = this._text.length;
             for (var offset: number = 0; offset < textLength; ++offset) {
@@ -411,7 +411,7 @@ module fairygui {
                     line.width = lineWidth;
                     if (lineTextHeight == 0) {
                         if (lastLineHeight == 0)
-                            lastLineHeight = fontSize;
+                            lastLineHeight = Math.ceil(this._fontSize*fontScale);
                         if (lineHeight == 0)
                             lineHeight = lastLineHeight;
                         lineTextHeight = lineHeight;
@@ -448,18 +448,18 @@ module fairygui {
                 }
 
                 if (ch == " ") {
-                    glyphWidth = fontSize / 2;
-                    glyphHeight = fontSize;
+                    glyphWidth = Math.ceil(this._fontSize / 2);
+                    glyphHeight = Math.ceil(this._fontSize);
                 }
                 else {
                     var glyph: BMGlyph = this._bitmapFont.glyphs[ch];
                     if (glyph) {
-                        glyphWidth = glyph.advance; 
-                        glyphHeight = glyph.lineHeight;
+                        glyphWidth = Math.ceil(glyph.advance*fontScale); 
+                        glyphHeight = Math.ceil(glyph.lineHeight*fontScale);
                     }
                     else if (ch == " ") {
-                        glyphWidth = Math.ceil(this._bitmapFont.lineHeight/2);
-                        glyphHeight = this._bitmapFont.lineHeight;
+                        glyphWidth = Math.ceil(this._bitmapFont.size*fontScale/2);
+                        glyphHeight = Math.ceil(this._bitmapFont.size*fontScale);
                     }
                     else {
                         glyphWidth = 0;
@@ -595,17 +595,25 @@ module fairygui {
 
                     glyph = this._bitmapFont.glyphs[ch];
                     if (glyph != null) {
-                        charIndent = (line.height + line.textHeight) / 2 - glyph.lineHeight;
-                        var bm: egret.Bitmap = this._bitmapPool.length ? this._bitmapPool.pop() : new egret.Bitmap();
-                        bm.x = charX + lineIndent + glyph.offsetX;
-                        bm.y = line.y + charIndent + glyph.offsetY;
+                        charIndent = (line.height + line.textHeight) / 2 - Math.ceil(glyph.lineHeight*fontScale);
+                        var bm: egret.Bitmap;
+                        if(this._bitmapPool.length)
+                            bm = this._bitmapPool.pop();
+                        else { 
+                            bm = new egret.Bitmap();
+                            bm.smoothing = true;
+                        }                        
+                        bm.x = charX + lineIndent + Math.ceil(glyph.offsetX*fontScale);
+                        bm.y = line.y + charIndent + Math.ceil(glyph.offsetY*fontScale);
                         bm.texture = glyph.texture;
+                        bm.scaleX = fontScale;
+                        bm.scaleY = fontScale;
                         container.addChild(bm);
 
-                        charX += letterSpacing + glyph.advance;
+                        charX += letterSpacing + Math.ceil(glyph.advance*fontScale);
                     }
                     else if (ch == " ") {
-                        charX += letterSpacing + Math.ceil(this._bitmapFont.lineHeight/2);
+                        charX += letterSpacing + Math.ceil(this._bitmapFont.size*fontScale/2);
                     }
                     else {
                         charX += letterSpacing;
