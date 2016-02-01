@@ -10209,14 +10209,26 @@ var fairygui;
                 change1.x = endX - this._maskContentHolder.x;
                 change1.y = endY - this._maskContentHolder.y;
             }
-            if (xMax < endX)
-                change2.x = xMax - this._maskContentHolder.x - change1.x;
-            else if (xMin > endX)
-                change2.x = xMin - this._maskContentHolder.x - change1.x;
-            if (yMax < endY)
-                change2.y = yMax - this._maskContentHolder.y - change1.y;
-            else if (yMin > endY)
-                change2.y = yMin - this._maskContentHolder.y - change1.y;
+            if (this._bouncebackEffect) {
+                if (xMax < endX)
+                    change2.x = xMax - this._maskContentHolder.x - change1.x;
+                else if (xMin > endX)
+                    change2.x = xMin - this._maskContentHolder.x - change1.x;
+                if (yMax < endY)
+                    change2.y = yMax - this._maskContentHolder.y - change1.y;
+                else if (yMin > endY)
+                    change2.y = yMin - this._maskContentHolder.y - change1.y;
+            }
+            else {
+                if (xMax < endX)
+                    change1.x = xMax - this._maskContentHolder.x;
+                else if (xMin > endX)
+                    change1.x = xMin - this._maskContentHolder.x;
+                if (yMax < endY)
+                    change1.y = yMax - this._maskContentHolder.y;
+                else if (yMin > endY)
+                    change1.y = yMin - this._maskContentHolder.y;
+            }
             this._throwTween.value = 0;
             this._throwTween.change1 = change1;
             this._throwTween.change2 = change2;
