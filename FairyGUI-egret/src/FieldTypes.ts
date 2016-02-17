@@ -242,7 +242,7 @@ module fairygui {
 
     var EaseMap: any =
         {
-            "Linear": egret.Ease.sineIn,
+            "Linear": egret.Ease.getPowIn(1),
             "Elastic.In": egret.Ease.elasticIn,
             "Elastic.Out": egret.Ease.elasticOut,
             "Elastic.InOut": egret.Ease.elasticInOut,

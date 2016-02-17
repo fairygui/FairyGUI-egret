@@ -372,12 +372,17 @@ declare module fairygui {
         private _onCompleteObj;
         private _onCompleteParam;
         private _options;
+        private _reversed;
+        private _maxTime;
         OPTION_IGNORE_DISPLAY_CONTROLLER: number;
         private FRAME_RATE;
         constructor(owner: GComponent);
         name: string;
         play(onComplete?: Function, onCompleteObj?: any, onCompleteParam?: any, times?: number, delay?: number): void;
+        playReverse(onComplete?: Function, onCompleteObj?: any, onCompleteParam?: any, times?: number, delay?: number): void;
+        private _play(onComplete?, onCompleteObj?, onCompleteParam?, times?, delay?, reversed?);
         stop(setToComplete?: boolean, processCallback?: boolean): void;
+        private stopItem(item, setToComplete);
         playing: boolean;
         setValue(label: string, ...args: any[]): void;
         setHook(label: string, callback: Function, thisObj: any): void;
@@ -551,6 +556,7 @@ declare module fairygui {
         private static sGlobalRect;
         private static sHelperPoint;
         private static sDragHelperRect;
+        private _touchDownPoint;
         private initDrag();
         private dragBegin(evt);
         private dragEnd();
@@ -641,7 +647,8 @@ declare module fairygui {
         opaque: boolean;
         protected updateOpaque(): void;
         protected updateMask(): void;
-        protected setupOverflowAndScroll(overflow: OverflowType, scrollBarMargin: Margin, scroll: ScrollType, scrollBarDisplay: ScrollBarDisplayType, flags?: number): void;
+        protected setupScroll(scrollBarMargin: Margin, scroll: ScrollType, scrollBarDisplay: ScrollBarDisplayType, flags: number, vtScrollBarRes: string, hzScrollBarRes: string): void;
+        protected setupOverflow(overflow: OverflowType): void;
         protected handleSizeChanged(): void;
         protected handleGrayChanged(): void;
         setBoundsChangedFlag(): void;
@@ -1011,14 +1018,20 @@ declare module fairygui {
         private _barMaxHeightDelta;
         private _barStartX;
         private _barStartY;
+        private _tweener;
+        private _tweenValue;
+        private static easeLinear;
         constructor();
         titleType: ProgressTitleType;
         max: number;
         value: number;
-        update(): void;
+        tweenValue(value: number, duration: number): void;
+        private onUpdateTween();
+        update(newValue: number): void;
         protected constructFromXML(xml: any): void;
         protected handleSizeChanged(): void;
         setup_afterAdd(xml: any): void;
+        dispose(): void;
     }
 }
 declare module fairygui {
@@ -1201,6 +1214,7 @@ declare module fairygui {
         private _target;
         private _vertical;
         private _scrollPerc;
+        private _fixedGripSize;
         private _dragOffset;
         constructor();
         setScrollPane(target: ScrollPane, vertical: boolean): void;
@@ -1457,13 +1471,12 @@ declare module fairygui {
         _isMouseMoved: boolean;
         private _holdAreaPoint;
         private _isHoldAreaDone;
-        private _holdArea;
         private _aniFlag;
         private _scrollBarVisible;
         private _hzScrollBar;
         private _vtScrollBar;
         static SCROLL: string;
-        constructor(owner: GComponent, scrollType: number, margin: Margin, scrollBarMargin: Margin, scrollBarDisplay: number, flags?: number);
+        constructor(owner: GComponent, scrollType: number, margin: Margin, scrollBarMargin: Margin, scrollBarDisplay: number, flags: number, vtScrollBarRes: string, hzScrollBarRes: string);
         dispose(): void;
         owner: GComponent;
         bouncebackEffect: boolean;
@@ -1564,6 +1577,9 @@ declare module fairygui {
         static loaderErrorSign: string;
         static tooltipsWin: string;
         static defaultComboBoxVisibleItemCount: number;
+        static touchScrollSensitivity: number;
+        static touchDragSensitivity: number;
+        static clickDragSensitivity: number;
     }
 }
 declare module fairygui {

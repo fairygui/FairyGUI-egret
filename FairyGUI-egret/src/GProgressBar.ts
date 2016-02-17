@@ -17,6 +17,11 @@ module fairygui {
         private _barMaxHeightDelta: number = 0;
         private _barStartX: number = 0;
         private _barStartY: number = 0;
+        
+        private _tweener: egret.Tween;
+        private _tweenValue: number = 0;
+        
+        private static easeLinear: Function = egret.Ease.getPowIn(1);
 
         public constructor() {
             super();
@@ -31,7 +36,10 @@ module fairygui {
         }
 
         public set titleType(value: ProgressTitleType) {
-            this._titleType = value;
+            if(this._titleType != value) {
+                this._titleType = value;
+                this.update(this._value);
+            }
         }
 
         public get max(): number {
@@ -41,7 +49,7 @@ module fairygui {
         public set max(value: number) {
             if(this._max != value) {
                 this._max = value;
-                this.update();
+                this.update(this._value);
             }
         }
 
@@ -50,14 +58,36 @@ module fairygui {
         }
 
         public set value(value: number) {
+            if(this._tweener != null) {
+                this._tweener.setPaused(true);
+                this._tweener = null;
+            }
+            
             if(this._value != value) {
                 this._value = value;
-                this.update();
+                this.update(this._value);
             }
         }
+        
+        public tweenValue(value:number, duration:number):void
+		{
+            if(this._value != value) {
+                if(this._tweener)
+                    this._tweener.setPaused(true);
+    
+                this._tweenValue = this._value;
+                this._value = value;
+                this._tweener = egret.Tween.get(this,{ onChange: this.onUpdateTween,onChangeObj: this })
+                    .to({ _tweenValue: value },duration * 1000, GProgressBar.easeLinear);
+            }
+        }
+    
+        private onUpdateTween(): void {
+            this.update(this._tweenValue);
+        }
 
-        public update(): void {
-            var percent: number = Math.min(this._value / this._max,1);
+        public update(newValue:number): void {
+            var percent: number = Math.min(newValue / this._max,1);
             if(this._titleObject) {
                 switch(this._titleType) {
                     case ProgressTitleType.Percent:
@@ -65,11 +95,11 @@ module fairygui {
                         break;
 
                     case ProgressTitleType.ValueAndMax:
-                        this._titleObject.text = this._value + "/" + this._max;
+                        this._titleObject.text = newValue + "/" + this._max;
                         break;
 
                     case ProgressTitleType.Value:
-                        this._titleObject.text = "" + this._value;
+                        this._titleObject.text = "" + newValue;
                         break;
 
                     case ProgressTitleType.Max:
@@ -140,7 +170,7 @@ module fairygui {
             if(this._barObjectV)
                 this._barMaxHeight = this.height - this._barMaxHeightDelta;
             if(!this._underConstruct)
-                this.update();
+                this.update(this._value);
         }
 
         public setup_afterAdd(xml: any): void {
@@ -151,7 +181,13 @@ module fairygui {
                 this._value = parseInt(xml.attributes.value);
                 this._max = parseInt(xml.attributes.max);
             }
-            this.update();
+            this.update(this._value);
+        }
+        
+        public dispose(): void {
+            if(this._tweener)
+                this._tweener.setPaused(true);
+            super.dispose();
         }
     }
 }

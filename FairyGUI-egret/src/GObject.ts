@@ -799,7 +799,7 @@ module fairygui {
             str = xml.attributes.pivot;
             if (str) {
                 arr = str.split(",");
-                this.setPivot(parseInt(arr[0]), parseInt(arr[1]));
+                this.setPivot(parseFloat(arr[0]),parseFloat(arr[1]));
             }
 
             str = xml.attributes.alpha;
@@ -847,7 +847,8 @@ module fairygui {
         private static sGlobalRect: egret.Rectangle = new egret.Rectangle();
         private static sHelperPoint: egret.Point = new egret.Point();
         private static sDragHelperRect: egret.Rectangle = new egret.Rectangle();
-
+        private _touchDownPoint: egret.Point;
+        
         private initDrag(): void {
             if (this._draggable)
                 this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__begin, this);
@@ -888,6 +889,11 @@ module fairygui {
         }
 
         private __begin(evt: egret.TouchEvent): void {
+            if(this._touchDownPoint==null)
+                this._touchDownPoint = new egret.Point();
+            this._touchDownPoint.x = evt.stageX;
+            this._touchDownPoint.y = evt.stageY;
+            
             GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__moving, this);
             GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__end, this);
         }
@@ -897,6 +903,12 @@ module fairygui {
         }
 
         private __moving(evt: egret.TouchEvent): void {
+            var sensitivity: number = UIConfig.touchDragSensitivity;
+            if(this._touchDownPoint != null
+                && Math.abs(this._touchDownPoint.x - evt.stageX) < sensitivity
+                && Math.abs(this._touchDownPoint.y - evt.stageY) < sensitivity)
+                return;
+            
             this.reset();
 
             var dragEvent: DragEvent = new DragEvent(DragEvent.DRAG_START);

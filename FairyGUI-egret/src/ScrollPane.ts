@@ -51,7 +51,6 @@ module fairygui {
         public _isMouseMoved: boolean;
         private _holdAreaPoint: egret.Point;
         private _isHoldAreaDone: boolean;
-        private _holdArea: number;
         private _aniFlag: boolean;
         private _scrollBarVisible: boolean;
 
@@ -65,7 +64,9 @@ module fairygui {
             margin: Margin,
             scrollBarMargin: Margin,
             scrollBarDisplay: number,
-            flags: number = 0) {
+            flags: number,
+            vtScrollBarRes: string,
+            hzScrollBarRes: string) {
             if(ScrollPane._easeTypeFunc == null)
                 ScrollPane._easeTypeFunc = egret.Ease.cubicOut;
             this._throwTween = new ThrowTween();
@@ -81,10 +82,6 @@ module fairygui {
             this._maskContentHolder.y = 0;
             this._maskHolder.addChild(this._maskContentHolder);
 
-            if(GRoot.touchScreen)
-                this._holdArea = 20;
-            else
-                this._holdArea = 5;
             this._holdAreaPoint = new egret.Point();
             this._margin = margin;
             this._scrollBarMargin = scrollBarMargin;
@@ -107,19 +104,21 @@ module fairygui {
 
             if(scrollBarDisplay != ScrollBarDisplayType.Hidden) {
                 if(this._scrollType == ScrollType.Both || this._scrollType == ScrollType.Vertical) {
-                    if(UIConfig.verticalScrollBar) {
-                        this._vtScrollBar = <GScrollBar><any> (UIPackage.createObjectFromURL(UIConfig.verticalScrollBar));
+                    var res: string = vtScrollBarRes ? vtScrollBarRes : UIConfig.verticalScrollBar;
+                    if(res) {
+                        this._vtScrollBar = <GScrollBar><any> (UIPackage.createObjectFromURL(res));
                         if(!this._vtScrollBar)
-                            throw "cannot create scrollbar from " + UIConfig.verticalScrollBar;
+                            throw "cannot create scrollbar from " + res;
                         this._vtScrollBar.setScrollPane(this,true);
                         this._container.addChild(this._vtScrollBar.displayObject);
                     }
                 }
                 if(this._scrollType == ScrollType.Both || this._scrollType == ScrollType.Horizontal) {
-                    if(UIConfig.horizontalScrollBar) {
-                        this._hzScrollBar = <GScrollBar><any> (UIPackage.createObjectFromURL(UIConfig.horizontalScrollBar));
+                    var res: string = hzScrollBarRes ? hzScrollBarRes : UIConfig.horizontalScrollBar;
+                    if(res) {
+                        this._hzScrollBar = <GScrollBar><any> (UIPackage.createObjectFromURL(res));
                         if(!this._hzScrollBar)
-                            throw "cannot create scrollbar from " + UIConfig.horizontalScrollBar;
+                            throw "cannot create scrollbar from " + res;
                         this._hzScrollBar.setScrollPane(this,false);
                         this._container.addChild(this._hzScrollBar.displayObject);
                     }
@@ -217,6 +216,7 @@ module fairygui {
                 sc = 0;
             if (sc != this._xPerc) {
                 this._xPerc = sc;
+                this._owner.dispatchEventWith(ScrollPane.SCROLL,false);
                 this.posChanged(ani);
             }
         }
@@ -236,6 +236,7 @@ module fairygui {
                 sc = 0;
             if (sc != this._yPerc) {
                 this._yPerc = sc;
+                this._owner.dispatchEventWith(ScrollPane.SCROLL,false);
                 this.posChanged(ani);
             }
         }
@@ -565,18 +566,24 @@ module fairygui {
 
             if (this._snapToItem) {
                 var pt: egret.Point = this._owner.findObjectNear(contentXLoc, contentYLoc);
+                var scrolled: boolean = false;
                 if(this._xPerc != 1 && pt.x != contentXLoc) {
                     this._xPerc = pt.x / (this._contentWidth - this._maskWidth);
                     if(this._xPerc > 1)
                         this._xPerc = 1;
                     contentXLoc = this._xPerc * (this._contentWidth - this._maskWidth);
+                    scrolled = true;
                 }
                 if(this._yPerc != 1 && pt.y != contentYLoc) {
                     this._yPerc = pt.y / (this._contentHeight - this._maskHeight);
                     if(this._yPerc > 1)
                         this._yPerc = 1;
                     contentYLoc = this._yPerc * (this._contentHeight - this._maskHeight);
+                    scrolled = true;
                 }
+                
+                if(scrolled)
+                    this._owner.dispatchEventWith(ScrollPane.SCROLL,false);
             }
             contentXLoc = Math.floor(contentXLoc);
             contentYLoc = Math.floor(contentYLoc);
@@ -702,8 +709,6 @@ module fairygui {
                     this.showScrollBar(false);
             }
             this._tweening = 0;
-            
-            this._owner.dispatchEventWith(ScrollPane.SCROLL, false);
         }
 
         private static sHelperPoint: egret.Point = new egret.Point();
@@ -732,6 +737,8 @@ module fairygui {
         }
 
         private __mouseMove(evt: egret.TouchEvent): void {
+            var sensitivity: number = UIConfig.touchScrollSensitivity;
+                
             var diff: number;
             var sv: boolean, sh: boolean, st: boolean;
 
@@ -740,7 +747,7 @@ module fairygui {
             if (this._scrollType == ScrollType.Vertical) {
                 if (!this._isHoldAreaDone) {
                     diff = Math.abs(this._holdAreaPoint.y - ScrollPane.sHelperPoint.y);
-                    if (diff < this._holdArea)
+                    if(diff < sensitivity)
                         return;
                 }
 
@@ -749,7 +756,7 @@ module fairygui {
             else if (this._scrollType == ScrollType.Horizontal) {
                 if (!this._isHoldAreaDone) {
                     diff = Math.abs(this._holdAreaPoint.x - ScrollPane.sHelperPoint.x);
-                    if (diff < this._holdArea)
+                    if(diff < sensitivity)
                         return;
                 }
 
@@ -758,9 +765,9 @@ module fairygui {
             else {
                 if (!this._isHoldAreaDone) {
                     diff = Math.abs(this._holdAreaPoint.y - ScrollPane.sHelperPoint.y);
-                    if (diff < this._holdArea) {
+                    if(diff < sensitivity) {
                         diff = Math.abs(this._holdAreaPoint.x - ScrollPane.sHelperPoint.x);
-                        if (diff < this._holdArea)
+                        if(diff < sensitivity)
                             return;
                     }
                 }
@@ -975,6 +982,7 @@ module fairygui {
             }
 
             this.onScrolling();
+            this._owner.dispatchEventWith(ScrollPane.SCROLL,false);
         }
 
         private __tweenComplete2(): void {
@@ -989,6 +997,7 @@ module fairygui {
 
             this._maskHolder.touchEnabled = true;
             this.onScrollEnd();
+            this._owner.dispatchEventWith(ScrollPane.SCROLL,false);
         }
     }
 

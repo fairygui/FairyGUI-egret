@@ -10,6 +10,7 @@ module fairygui {
 
         private _vertical: boolean;
         private _scrollPerc: number;
+        private _fixedGripSize: boolean;
 
         private _dragOffset: egret.Point;
 
@@ -26,11 +27,13 @@ module fairygui {
 
         public set displayPerc(val: number) {
             if (this._vertical) {
-                this._grip.height = val * this._bar.height;
+                if(!this._fixedGripSize)
+                    this._grip.height = val * this._bar.height;
                 this._grip.y = this._bar.y + (this._bar.height - this._grip.height) * this._scrollPerc;
             }
             else {
-                this._grip.width = val * this._bar.width;
+                if(!this._fixedGripSize)
+                    this._grip.width = val * this._bar.width;
                 this._grip.x = this._bar.x + (this._bar.width - this._grip.width) * this._scrollPerc;
             }
         }
@@ -52,6 +55,10 @@ module fairygui {
 
         protected constructFromXML(xml: any): void {
             super.constructFromXML(xml);
+            
+            xml = ToolSet.findChildNode(xml,"ScrollBar");
+            if(xml!=null)
+                this._fixedGripSize = xml.attributes.fixedGripSize == "true";
 
             this._grip = this.getChild("grip");
             if(!this._grip) {

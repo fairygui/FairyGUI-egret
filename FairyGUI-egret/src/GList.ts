@@ -729,6 +729,8 @@ module fairygui {
             super.setup_beforeAdd(xml);
 
             var str: string;
+            var arr: string[];
+            
             str = xml.attributes.layout;
             if (str)
                 this._layout = parseListLayoutType(str);
@@ -740,40 +742,50 @@ module fairygui {
             else
                 overflow = OverflowType.Visible;
 
-            var scroll: ScrollType;
-            str = xml.attributes.scroll;
-            if (str)
-                scroll = parseScrollType(str);
-            else
-                scroll = ScrollType.Vertical;
-
-            var scrollBarDisplay: ScrollBarDisplayType;
-            str = xml.attributes.scrollBar;
-            if (str)
-                scrollBarDisplay = parseScrollBarDisplayType(str);
-            else
-                scrollBarDisplay = ScrollBarDisplayType.Default;
-
-            var scrollBarFlags: number;
-            str = xml.attributes.scrollBarFlags;
-            if(str)
-                scrollBarFlags = parseInt(str);
-            else
-                scrollBarFlags = 0;
-
-            var scrollBarMargin: Margin;
-            if(overflow == OverflowType.Scroll) {
-                scrollBarMargin = new Margin();
-                str = xml.attributes.scrollBarMargin;
-                if(str)
-                    scrollBarMargin.parse(str);
-            }
-                
             str = xml.attributes.margin;
-            if (str)
+            if(str)
                 this._margin.parse(str);
                 
-            this.setupOverflowAndScroll(overflow, scrollBarMargin, scroll, scrollBarDisplay, scrollBarFlags);
+            if(overflow == OverflowType.Scroll) {
+                var scroll: ScrollType;
+                str = xml.attributes.scroll;
+                if (str)
+                    scroll = parseScrollType(str);
+                else
+                    scroll = ScrollType.Vertical;
+    
+                var scrollBarDisplay: ScrollBarDisplayType;
+                str = xml.attributes.scrollBar;
+                if (str)
+                    scrollBarDisplay = parseScrollBarDisplayType(str);
+                else
+                    scrollBarDisplay = ScrollBarDisplayType.Default;
+    
+                var scrollBarFlags: number;
+                str = xml.attributes.scrollBarFlags;
+                if(str)
+                    scrollBarFlags = parseInt(str);
+                else
+                    scrollBarFlags = 0;
+    
+                var scrollBarMargin: Margin = new Margin();
+                str = xml.attributes.scrollBarMargin;
+                if(str)
+                     scrollBarMargin.parse(str);
+                
+                var vtScrollBarRes: string;
+                var hzScrollBarRes: string;
+                str = xml.attributes.scrollBarRes;
+                if(str) {
+                    arr = str.split(",");
+                    vtScrollBarRes = arr[0];
+                    hzScrollBarRes = arr[1];
+                }
+                
+                this.setupScroll(scrollBarMargin,scroll,scrollBarDisplay,scrollBarFlags,vtScrollBarRes,hzScrollBarRes);
+            }
+            else
+                this.setupOverflow(overflow);
             
             str = xml.attributes.lineGap;
             if (str)

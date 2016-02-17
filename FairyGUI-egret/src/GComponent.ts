@@ -444,22 +444,26 @@ module fairygui {
             this._rootContainer.mask = mask;
         }
 
-        protected setupOverflowAndScroll(overflow: OverflowType,
-            scrollBarMargin: Margin,
+        protected setupScroll(scrollBarMargin: Margin,
             scroll: ScrollType,
             scrollBarDisplay: ScrollBarDisplayType,
-            flags: number = 0): void {
+            flags: number,
+            vtScrollBarRes: string,
+            hzScrollBarRes: string): void {
+            this._container = new egret.DisplayObjectContainer();
+            this._rootContainer.addChild(this._container);
+            this._scrollPane = new ScrollPane(this,scroll,this._margin,scrollBarMargin,scrollBarDisplay,flags,vtScrollBarRes,hzScrollBarRes);
+
+            this.setBoundsChangedFlag();
+        }
+        
+        protected setupOverflow(overflow: OverflowType): void {
             if(overflow == OverflowType.Hidden) {
                 this._container = new egret.DisplayObjectContainer();
                 this._rootContainer.addChild(this._container);
                 this.updateMask();
                 this._container.x = this._margin.left;
                 this._container.y = this._margin.top;
-            }
-            else if(overflow == OverflowType.Scroll) {
-                this._container = new egret.DisplayObjectContainer();
-                this._rootContainer.addChild(this._container);
-                this._scrollPane = new ScrollPane(this,scroll,this._margin,scrollBarMargin,scrollBarDisplay,flags);
             }
             else if(this._margin.left != 0 || this._margin.top != 0) {
                 this._container = new egret.DisplayObjectContainer();
@@ -653,6 +657,8 @@ module fairygui {
             this._sourceHeight = parseInt(arr[1]);
             this._initWidth = this._sourceWidth;
             this._initHeight = this._sourceHeight;
+            
+            this.setSize(this._sourceWidth,this._sourceHeight);
 
             var overflow: OverflowType;
             str = xml.attributes.overflow;
@@ -660,43 +666,51 @@ module fairygui {
                 overflow = parseOverflowType(str);
             else
                 overflow = OverflowType.Visible;
-
-            var scroll: ScrollType;
-            str = xml.attributes.scroll;
-            if (str)
-                scroll = parseScrollType(str);
-            else
-                scroll = ScrollType.Vertical;
-
-            var scrollBarDisplay: ScrollBarDisplayType;
-            str = xml.attributes.scrollBar;
-            if (str)
-                scrollBarDisplay = parseScrollBarDisplayType(str);
-            else
-                scrollBarDisplay = ScrollBarDisplayType.Default;
-            
-            var scrollBarFlags: number;
-            str = xml.attributes.scrollBarFlags;
+                
+            str = xml.attributes.margin;
             if(str)
-                scrollBarFlags = parseInt(str);
-            else
-                scrollBarFlags = 0;
-            
-            var scrollBarMargin: Margin;
-            if(overflow==OverflowType.Scroll)
-            {
-                scrollBarMargin = new Margin();
+                this._margin.parse(str);
+                
+            if(overflow==OverflowType.Scroll) {
+                var scroll: ScrollType;
+                str = xml.attributes.scroll;
+                if (str)
+                    scroll = parseScrollType(str);
+                else
+                    scroll = ScrollType.Vertical;
+    
+                var scrollBarDisplay: ScrollBarDisplayType;
+                str = xml.attributes.scrollBar;
+                if (str)
+                    scrollBarDisplay = parseScrollBarDisplayType(str);
+                else
+                    scrollBarDisplay = ScrollBarDisplayType.Default;
+                
+                var scrollBarFlags: number;
+                str = xml.attributes.scrollBarFlags;
+                if(str)
+                    scrollBarFlags = parseInt(str);
+                else
+                    scrollBarFlags = 0;
+                
+                var scrollBarMargin: Margin = new Margin();
                 str = xml.attributes.scrollBarMargin;
                 if(str)
                     scrollBarMargin.parse(str);
+                    
+                var vtScrollBarRes: string;
+                var hzScrollBarRes: string;
+                str = xml.attributes.scrollBarRes;
+                if(str) {
+                    arr = str.split(",");
+                    vtScrollBarRes = arr[0];
+                    hzScrollBarRes = arr[1];
+                }
+            
+                this.setupScroll(scrollBarMargin,scroll,scrollBarDisplay,scrollBarFlags,vtScrollBarRes,hzScrollBarRes);
             }
-
-            str = xml.attributes.margin;
-            if (str)
-                this._margin.parse(str);
-
-            this.setSize(this._sourceWidth, this._sourceHeight);
-            this.setupOverflowAndScroll(overflow, scrollBarMargin, scroll, scrollBarDisplay, scrollBarFlags);
+            else
+                this.setupOverflow(overflow);
 
             this._buildingDisplayList = true;
 

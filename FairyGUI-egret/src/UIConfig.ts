@@ -42,6 +42,16 @@ module fairygui {
         //Resources for tooltips.
         public static tooltipsWin: string;
         
-        public static defaultComboBoxVisibleItemCount:number = 10;
+        //Max items displayed in combobox without scrolling.
+        public static defaultComboBoxVisibleItemCount: number = 10;
+		
+        // Pixel offsets of finger to trigger scrolling.
+        public static touchScrollSensitivity: number = 20;
+		
+        // Pixel offsets of finger to trigger dragging.
+        public static touchDragSensitivity: number = 10;
+		
+        // Pixel offsets of mouse pointer to trigger dragging.
+        public static clickDragSensitivity: number = 2;
     }
 }

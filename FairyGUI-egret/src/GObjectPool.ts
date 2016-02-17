@@ -34,7 +34,7 @@ module fairygui {
 
             if (arr.length) {
                 this._count--;
-                return arr.pop();
+                return arr.shift();
             }
 
             var child: GObject = UIPackage.createObjectFromURL(url);

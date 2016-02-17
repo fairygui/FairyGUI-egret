@@ -13,6 +13,8 @@ module fairygui {
         private _onCompleteObj: any;
         private _onCompleteParam: any;
         private _options: number = 0;
+        private _reversed: boolean;
+        private _maxTime: number = 0;
 
         public OPTION_IGNORE_DISPLAY_CONTROLLER: number = 1;
         private FRAME_RATE: number = 24;
@@ -30,11 +32,25 @@ module fairygui {
             this._name = value;
         }
 
-        public play(onComplete: Function = null,onCompleteObj: any = null,onCompleteParam: any = null,times: number = 1,delay: number = 0) {
+        public play(onComplete: Function = null,onCompleteObj: any = null,onCompleteParam: any = null,
+            times: number = 1,delay: number = 0) {
+            this._play(onComplete,onCompleteObj,onCompleteParam,times,delay,false);
+        }
+        
+        public playReverse(onComplete: Function = null,onCompleteObj: any = null,onCompleteParam: any = null,
+            times: number = 1,delay: number = 0) {
+            this._play(onComplete,onCompleteObj,onCompleteParam,times,delay,true);
+        }
+        
+        private _play(onComplete: Function = null,onCompleteObj: any = null,onCompleteParam: any = null,
+            times: number = 1,delay: number = 0,reversed:boolean=false) {
             this.stop();
-            if(times <= 0)
+            if(times == 0)
                 times = 1;
+            else if(times==-1)
+                times = Number.MAX_VALUE;                
             this._totalTimes = times;
+            this._reversed = reversed;
             this.internalPlay(delay);
             this._playing = this._totalTasks > 0;
             if(this._playing) {
@@ -75,54 +91,72 @@ module fairygui {
                 this._owner.internalVisible--;
 
                 var cnt: number = this._items.length;
-                for(var i: number = 0;i < cnt;i++) {
-                    var item: TransitionItem = this._items[i];
-                    if(item.target == null)
-                        continue;
+                var i:number;
+                var item:TransitionItem;
+                if(this._reversed) {
+                    for(i = cnt-1;i>=0;i--) {
+                        item = this._items[i];
+                        if(item.target == null)
+                            continue;
 
-                    if((this._options & this.OPTION_IGNORE_DISPLAY_CONTROLLER) != 0) {
-                        if(item.target != this._owner)
-                            item.target.internalVisible--;
-                    }
-                    if(item.completed)
-                        continue;
-
-                    if(item.tweener != null) {
-                        item.tweener.setPaused(true);
-                        item.tweener = null;
-                    }
-
-                    if(item.type == TransitionActionType.Transition) {
-                        var trans: Transition = (<GComponent><any>(item.target)).getTransition(item.value.s);
-                        if(trans != null)
-                            trans.stop(setToComplete,false);
-                    }
-                    else if(item.type == TransitionActionType.Shake) {
-                        if(GTimers.inst.exists(this.__shake,item)) {
-                            GTimers.inst.remove(this.__shake,item);
-                            item.target._gearLocked = true;
-                            item.target.setXY(item.target.x - item.startValue.f1,item.target.y - item.startValue.f2);
-                            item.target._gearLocked = false;
-                        }
-                    }
-                    else {
-                        if(setToComplete) {
-                            if(item.tween) {
-                                if(!item.yoyo || item.repeat % 2 == 0)
-                                    this.applyValue(item,item.endValue);
-                                else
-                                    this.applyValue(item,item.startValue);
-                            }
-                            else if(item.type != TransitionActionType.Sound)
-                                this.applyValue(item,item.value);
-                        }
+                        this.stopItem(item,setToComplete);
                     }
                 }
+                else {
+                    for(i = 0;i < cnt;i++) {
+                        item = this._items[i];
+                        if(item.target == null)
+                            continue;
+
+                        this.stopItem(item,setToComplete);
+                    }
+                }
+
                 if(processCallback && func != null) {
                     if(func.length > 0)
                         func.call(thisObj,param);
                     else
                         func.call(thisObj);
+                }
+            }
+        }
+        
+        private stopItem(item:TransitionItem, setToComplete:boolean):void {
+            if((this._options & this.OPTION_IGNORE_DISPLAY_CONTROLLER) != 0) {
+                if(item.target != this._owner)
+                    item.target.internalVisible--;
+            }
+            if(item.completed)
+                return;
+
+            if(item.tweener != null) {
+                item.tweener.setPaused(true);
+                item.tweener = null;
+            }
+
+            if(item.type == TransitionActionType.Transition) {
+                var trans: Transition = (<GComponent><any>(item.target)).getTransition(item.value.s);
+                if(trans != null)
+                    trans.stop(setToComplete,false);
+            }
+            else if(item.type == TransitionActionType.Shake) {
+                if(GTimers.inst.exists(this.__shake,item)) {
+                    GTimers.inst.remove(this.__shake,item);
+                    item.target._gearLocked = true;
+                    item.target.setXY(item.target.x - item.startValue.f1,item.target.y - item.startValue.f2);
+                    item.target._gearLocked = false;
+                }
+            }
+            else {
+                if(setToComplete) {
+                    if(item.tween) {
+                        if(!item.yoyo || item.repeat % 2 == 0)
+                            this.applyValue(item,this._reversed?item.startValue:item.endValue);
+                        else
+                            this.applyValue(item,this._reversed?item.endValue:item.startValue);
+                    }
+                    else if(item.type != TransitionActionType.Sound)
+                        this.applyValue(item,item.value);
                 }
             }
         }
@@ -245,20 +279,14 @@ module fairygui {
                 var item: TransitionItem = this._items[i];
                 if(item.type == TransitionActionType.XY && item.targetId == targetId) {
                     if(item.tween) {
-                        if(item.startValue.b1)
-                            item.startValue.f1 += dx;
-                        if(item.startValue.b2)
-                            item.startValue.f2 += dy;
-                        if(item.endValue.b1)
-                            item.endValue.f1 += dx;
-                        if(item.endValue.b2)
-                            item.endValue.f2 += dy;
+                        item.startValue.f1 += dx;
+                        item.startValue.f2 += dy;
+                        item.endValue.f1 += dx;
+                        item.endValue.f2 += dy;
                     }
                     else {
-                        if(item.value.b1)
-                            item.value.f1 += dx;
-                        if(item.value.b2)
-                            item.value.f2 += dy;
+                        item.value.f1 += dx;
+                        item.value.f2 += dy;
                     }
                 }
             }
@@ -269,16 +297,22 @@ module fairygui {
             this._ownerBaseY = this._owner.y;
             this._totalTasks = 0;
             var cnt: number = this._items.length;
+            var startTime: number;
+            var item:TransitionItem;
             for(var i: number = 0;i < cnt;i++) {
-                var item: TransitionItem = this._items[i];
+                item = this._items[i];
                 if(item.targetId)
                     item.target = this._owner.getChildById(item.targetId);
                 else
                     item.target = this._owner;
                 if(item.target == null)
-                    continue;
-                var startTime: number = delay + item.time * 1000;
+                    continue;                    
+                
                 if(item.tween) {
+                    if(this._reversed)
+                        startTime = delay + (this._maxTime - item.time - item.duration)*1000;
+                    else
+                        startTime = delay + item.time * 1000;
                     item.completed = false;
                     switch(item.type) {
                         case TransitionActionType.XY:
@@ -296,7 +330,7 @@ module fairygui {
                             this._totalTasks++;
 
                             var toProps: any = {};
-                            this.prepareValue(item,toProps);
+                            this.prepareValue(item,toProps,this._reversed);
 
                             item.tweener = egret.Tween.get(item.value);
                             if(startTime > 0)
@@ -305,7 +339,7 @@ module fairygui {
                                 this.applyValue(item,item.value);
                             item.tweener.call(this.__tweenStart,this,[item])
                                 .to(toProps,item.duration * 1000,item.easeType);
-                            if(item.repeat > 0) {
+                            if(item.repeat!=0) {
                                 //egret.Tween不支持yoyo，这里自行实现
                                 item.tweenTimes = 0;
                                 item.tweener.call(this.__tweenRepeatComplete,this,[item]);
@@ -316,6 +350,10 @@ module fairygui {
                     }
                 }
                 else {
+                    if(this._reversed)
+                        startTime = delay + (this._maxTime - item.time) * 1000;
+                    else
+                        startTime = delay + item.time * 1000;
                     if(startTime == 0)
                         this.applyValue(item,item.value);
                     else {
@@ -332,32 +370,42 @@ module fairygui {
                 switch(item.type) {
                     case TransitionActionType.XY:
                         if(item.target == this._owner) {
-                            item.value.f1 = item.startValue.b1 ? item.startValue.f1 : 0;
-                            item.value.f2 = item.startValue.b2 ? item.startValue.f2 : 0;
+                            if(!item.startValue.b1)
+                                item.startValue.f1 = 0;
+                            if(!item.startValue.b2)
+                                item.startValue.f2 = 0;  
                         }
                         else {
                             if(!item.startValue.b1)
                                 item.startValue.f1 = item.target.x;
-                            item.value.f1 = item.startValue.f1;
-
                             if(!item.startValue.b2)
                                 item.startValue.f2 = item.target.y;
-                            item.value.f2 = item.startValue.f2;
                         }
-                        toProps.f1 = item.endValue.b1 ? item.endValue.f1 : item.value.f1;
-                        toProps.f2 = item.endValue.b2 ? item.endValue.f2 : item.value.f2;
+                        item.value.f1 = item.startValue.f1;
+                        item.value.f2 = item.startValue.f2;
+                        
+                        if(!item.endValue.b1)
+                            item.endValue.f1 = item.value.f1;
+                        if(!item.endValue.b2)
+                            item.endValue.f2 = item.value.f2;  
+                        toProps.f1 = item.endValue.f1;
+                        toProps.f2 = item.endValue.f2;
                         break;
 
                     case TransitionActionType.Size:
                         if(!item.startValue.b1)
                             item.startValue.f1 = item.target.width;
-                        item.value.f1 = item.startValue.f1;
-
                         if(!item.startValue.b2)
                             item.startValue.f2 = item.target.height;
+                        item.value.f1 = item.startValue.f1;
                         item.value.f2 = item.startValue.f2;
-                        toProps.f1 = item.endValue.b1 ? item.endValue.f1 : item.value.f1;
-                        toProps.f2 = item.endValue.b2 ? item.endValue.f2 : item.value.f2;
+                        
+                        if(!item.endValue.b1)
+                            item.endValue.f1 = item.value.f1;
+                        if(!item.endValue.b2)
+                            item.endValue.f2 = item.value.f2;  
+                        toProps.f1 = item.endValue.f1;
+                        toProps.f2 = item.endValue.f2;
                         break;
 
                     case TransitionActionType.Scale:
@@ -381,19 +429,10 @@ module fairygui {
             else {
                 switch(item.type) {
                     case TransitionActionType.XY:
-                        toProps.f1 = item.startValue.b1 ? item.startValue.f1 : item.value.f1;
-                        toProps.f2 = item.startValue.b2 ? item.startValue.f2 : item.value.f2;
-                        break;
-
                     case TransitionActionType.Size:
-                        toProps.f1 = item.startValue.b1 ? item.startValue.f1 : item.value.f1;
-                        toProps.f2 = item.startValue.b2 ? item.startValue.f2 : item.value.f2;
-                        break;
-
                     case TransitionActionType.Scale:
                         toProps.f1 = item.startValue.f1;
                         toProps.f2 = item.startValue.f2;
-                        break;
 
                     case TransitionActionType.Alpha:
                         toProps.f1 = item.startValue.f1;
@@ -411,7 +450,7 @@ module fairygui {
             initProps = {};
             toProps = {};
 
-            this.prepareValue(item,toProps);
+            this.prepareValue(item,toProps,this._reversed);
             this.applyValue(item,item.value);
 
             initProps.onChange = this.__tweenUpdate;
@@ -419,7 +458,7 @@ module fairygui {
 
             item.tweener = egret.Tween.get(item.value,initProps);
             item.tweener.to(toProps,item.duration * 1000,item.easeType);
-            if(item.repeat > 0) {
+            if(item.repeat != 0) {
                 item.tweenTimes = 0;
                 item.tweener.call(this.__tweenRepeatComplete,this,[item]);
             }
@@ -441,7 +480,7 @@ module fairygui {
             item.completed = true;
             this.applyValue(item,item.value);
             if(item.hook != null)
-                    item.hook.call(item.hookObj);
+                item.hook.call(item.hookObj);
             this.checkAllComplete();
         }
 
@@ -467,20 +506,29 @@ module fairygui {
             this._totalTasks--;
             item.completed = true;
             if(item.hook2 != null)
-                   item.hook2.call(item.hook2Obj);
+                item.hook2.call(item.hook2Obj);
             this.checkAllComplete();
         }
         
         private __tweenRepeatComplete(item: TransitionItem) {
             item.tweenTimes++;
-            if(item.tweenTimes < item.repeat + 1) {
+            if(item.repeat==-1 || item.tweenTimes < item.repeat + 1) {
                 var initProps: any,toProps: any;
                 initProps = {};
                 toProps = {};
 
                 initProps.onChange = this.__tweenUpdate;
                 initProps.onChangeObj = [this,item];
-                this.prepareValue(item,toProps,item.yoyo && item.tweenTimes % 2 == 1)
+                var reversed: boolean;
+                if(item.yoyo) {
+                    if(this._reversed)
+                        reversed = item.tweenTimes % 2 == 0;
+                    else
+                        reversed = item.tweenTimes % 2 == 1;
+                }
+                else
+                    reversed = this._reversed;
+                this.prepareValue(item,toProps,reversed);
                 item.tweener = egret.Tween.get(item.value,initProps);
                 item.tweener.to(toProps,item.duration * 1000,item.easeType)
                     .call(this.__tweenRepeatComplete,this,[item]);
@@ -612,11 +660,14 @@ module fairygui {
                         if(value.i == 0)
                             trans.stop(false,true);
                         else if(trans.playing)
-                            trans._totalTimes = value.i;
+                            trans._totalTimes = value.i==-1?Number.MAX_VALUE:value.i;
                         else {
                             item.completed = false;
                             this._totalTasks++;
-                            trans.play(this.__playTransComplete, this, item.value.i);
+                            if(this._reversed)
+                                trans.playReverse(this.__playTransComplete,this,item.value.i);
+                            else
+                                trans.play(this.__playTransComplete, this, item.value.i);
                         }
                     }
                     break;
@@ -736,6 +787,8 @@ module fairygui {
                 item.label = cxml.attributes.label;
                 if(item.tween) {
                     item.duration = parseInt(cxml.attributes.duration) / this.FRAME_RATE;
+                    if(item.time + item.duration > this._maxTime)
+                        this._maxTime = item.time + item.duration;
                     str = cxml.attributes.ease;
                     if(str)
                         item.easeType = ParseEaseType(str);
@@ -755,6 +808,8 @@ module fairygui {
                     }
                 }
                 else {
+                    if(item.time > this._maxTime)
+                        this._maxTime = item.time;
                     this.decodeValue(item.type,cxml.attributes.value,item.value);
                 }
             }
