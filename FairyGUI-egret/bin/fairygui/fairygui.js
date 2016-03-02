@@ -6138,6 +6138,9 @@ var fairygui;
                 this._columnGap = parseInt(str);
             else
                 this._columnGap = 0;
+            str = xml.attributes.selectionMode;
+            if (str)
+                this._selectionMode = fairygui.parseListSelectionMode(str);
             str = xml.attributes.defaultItem;
             if (str)
                 this._defaultItem = str;
@@ -6946,8 +6949,6 @@ var fairygui;
                 this._text = value;
                 if (this._text == null)
                     this._text = "";
-                this._textField.width = Math.ceil(this.width);
-                this.updateTextFieldText();
                 if (this.parent && this.parent._underConstruct)
                     this.renderNow();
                 else
@@ -7196,7 +7197,8 @@ var fairygui;
                 this.displayObject.removeChildren();
                 this.displayObject.addChild(this._textField);
             }
-            this._textField.width = Math.ceil(this.width);
+            this._textField.width = this._widthAutoSize ? 10000 : Math.ceil(this.width);
+            this.updateTextFieldText();
             this._textWidth = Math.ceil(this._textField.textWidth);
             if (this._textWidth > 0)
                 this._textWidth += 4;
@@ -7204,8 +7206,10 @@ var fairygui;
             if (this._textHeight > 0)
                 this._textHeight += 4;
             var w, h = 0;
-            if (this._widthAutoSize)
+            if (this._widthAutoSize) {
                 w = this._textWidth;
+                this._textField.width = w;
+            }
             else
                 w = this.width;
             if (this._heightAutoSize) {
@@ -9290,10 +9294,11 @@ var fairygui;
             target.removeEventListener(fairygui.GObject.SIZE_DELAY_CHANGE, this.__targetSizeWillChange, this);
         };
         p.__targetXYChanged = function (evt) {
-            if (this._owner.relations.handling != null)
+            if (this._owner.relations.handling != null || this._owner.group != null && this._owner.group._updating) {
+                this._targetX = this._target.x;
+                this._targetY = this._target.y;
                 return;
-            if (this._owner.group != null && this._owner.group._updating)
-                return;
+            }
             this._owner.relations.handling = this._target;
             var ox = this._owner.x;
             var oy = this._owner.y;

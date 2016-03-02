@@ -69,8 +69,6 @@ module fairygui {
             this._text = value;
             if(this._text == null)
                 this._text = "";
-            this._textField.width = Math.ceil(this.width);
-            this.updateTextFieldText();
             
             if(this.parent && this.parent._underConstruct)
                 this.renderNow();
@@ -335,8 +333,9 @@ module fairygui {
                 (<egret.DisplayObjectContainer>this.displayObject).removeChildren();
                 (<egret.DisplayObjectContainer>this.displayObject).addChild(this._textField);
             }
-
-            this._textField.width = Math.ceil(this.width);
+            
+            this._textField.width = this._widthAutoSize ? 10000 : Math.ceil(this.width);
+            this.updateTextFieldText();
             this._textWidth = Math.ceil(this._textField.textWidth);
             if(this._textWidth > 0)
                 this._textWidth += 4;
@@ -346,7 +345,10 @@ module fairygui {
 
             var w: number,h: number = 0;
             if(this._widthAutoSize)
+            {
                 w = this._textWidth;
+                this._textField.width = w;
+            }
             else
                 w = this.width;
 

@@ -381,11 +381,12 @@ module fairygui {
         }
 
         private __targetXYChanged(evt: Event): void {
-            if (this._owner.relations.handling != null)
+            if (this._owner.relations.handling != null || this._owner.group!=null && this._owner.group._updating)
+            {
+                this._targetX = this._target.x;
+                this._targetY = this._target.y;
                 return;
-                
-            if(this._owner.group!=null && this._owner.group._updating)
-                return;
+            }
                     
             this._owner.relations.handling = this._target;
             

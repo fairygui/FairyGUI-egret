@@ -798,6 +798,10 @@ module fairygui {
                 this._columnGap = parseInt(str);
             else
                 this._columnGap = 0;
+                
+            str = xml.attributes.selectionMode;
+            if (str)
+                this._selectionMode = parseListSelectionMode(str);
 
             str = xml.attributes.defaultItem;
             if (str)
