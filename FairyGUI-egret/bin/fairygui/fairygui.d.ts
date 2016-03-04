@@ -1078,7 +1078,7 @@ declare module fairygui {
         bold: boolean;
         italic: boolean;
         singleLine: boolean;
-        stroke: boolean;
+        stroke: number;
         strokeColor: number;
         ubbEnabled: boolean;
         autoSize: AutoSizeType;

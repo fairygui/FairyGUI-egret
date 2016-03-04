@@ -207,12 +207,12 @@ module fairygui {
             }
         }
 
-        public get stroke(): boolean {
-            return this._textField.stroke != 0;
+        public get stroke(): number {
+            return this._textField.stroke;
         }
 
-        public set stroke(value: boolean) {
-            this._textField.stroke = value ? 2 : 0;
+        public set stroke(value: number) {
+            this._textField.stroke = value;
         }
 
         public get strokeColor(): number {
@@ -712,7 +712,11 @@ module fairygui {
             str = xml.attributes.strokeColor;
             if (str) {
                 this._textField.strokeColor = ToolSet.convertFromHtmlColor(str);
-                this.stroke = true;
+                str = xml.attributes.strokeSize;
+                if(str)
+                    this.stroke = parseInt(str) + 1;
+                else
+                    this.stroke = 2;
             }
         }
 

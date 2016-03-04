@@ -7082,10 +7082,10 @@ var fairygui;
         );
         d(p, "stroke"
             ,function () {
-                return this._textField.stroke != 0;
+                return this._textField.stroke;
             }
             ,function (value) {
-                this._textField.stroke = value ? 2 : 0;
+                this._textField.stroke = value;
             }
         );
         d(p, "strokeColor"
@@ -7527,7 +7527,11 @@ var fairygui;
             str = xml.attributes.strokeColor;
             if (str) {
                 this._textField.strokeColor = fairygui.ToolSet.convertFromHtmlColor(str);
-                this.stroke = true;
+                str = xml.attributes.strokeSize;
+                if (str)
+                    this.stroke = parseInt(str) + 1;
+                else
+                    this.stroke = 2;
             }
         };
         p.setup_afterAdd = function (xml) {
