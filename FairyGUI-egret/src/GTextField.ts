@@ -3,6 +3,7 @@ module fairygui {
 
     export class GTextField extends GObject implements IColorGear {
         protected _textField: egret.TextField;
+        protected _bitmapContainer: egret.DisplayObjectContainer;
         protected _font: string;
         protected _fontSize: number = 0;
         protected _align: AlignType;
@@ -54,9 +55,19 @@ module fairygui {
         }
 
         protected createDisplayObject(): void {
-            var obj: UITextField = new UITextField(this);
-            this._textField = <egret.TextField>obj.getChildAt(0);
-            this.setDisplayObject(obj);
+            this._textField = new UITextField(this);
+            this.setDisplayObject(this._textField);
+        }
+        
+        private switchBitmapMode(val:boolean):void
+		{
+            if(val && this.displayObject == this._textField) {
+                if(this._bitmapContainer == null)
+                    this._bitmapContainer = new UIContainer(this);
+                this.switchDisplayObject(this._bitmapContainer);
+            }
+            else if(!val && this.displayObject == this._bitmapContainer)
+                this.switchDisplayObject(this._textField);
         }
 
         public dispose(): void {
@@ -329,10 +340,7 @@ module fairygui {
                 return;
             }
 
-            if(this._textField.parent == null) {
-                (<egret.DisplayObjectContainer>this.displayObject).removeChildren();
-                (<egret.DisplayObjectContainer>this.displayObject).addChild(this._textField);
-            }
+            this.switchBitmapMode(false);
             
             this._textField.width = this._widthAutoSize ? 10000 : Math.ceil(this.width);
             this.updateTextFieldText();
@@ -374,14 +382,14 @@ module fairygui {
         }
 
         private renderWithBitmapFont(updateBounds: boolean): void {
-            var container: egret.DisplayObjectContainer = (<egret.DisplayObjectContainer>this.displayObject);
-            var cnt: number = container.numChildren;
+            this.switchBitmapMode(true);
+            
+            var cnt: number = this._bitmapContainer.numChildren;
             for (var i: number = 0; i < cnt; i++) {
-                var obj: egret.DisplayObject = container.getChildAt(i);
-                if (obj instanceof egret.Bitmap)
-                    this._bitmapPool.push(<egret.Bitmap>obj);
+                var obj: egret.DisplayObject = this._bitmapContainer.getChildAt(i);
+                this._bitmapPool.push(<egret.Bitmap>obj);
             }
-            container.removeChildren();
+            this._bitmapContainer.removeChildren();
 
             if (!this._lines)
                 this._lines = new Array<LineInfo>();
@@ -610,7 +618,7 @@ module fairygui {
                         bm.texture = glyph.texture;
                         bm.scaleX = fontScale;
                         bm.scaleY = fontScale;
-                        container.addChild(bm);
+                        this._bitmapContainer.addChild(bm);
 
                         charX += letterSpacing + Math.ceil(glyph.advance*fontScale);
                     }

@@ -74,6 +74,7 @@ declare module fairygui {
         playing: boolean;
         setPlaySettings(start?: number, end?: number, times?: number, endAt?: number, endCallback?: Function, callbackObj?: any): void;
         private update();
+        private __playEnd();
         private setFrame(frame);
         $render(context: egret.sys.RenderContext): void;
         $measureContentBounds(bounds: egret.Rectangle): void;
@@ -136,9 +137,8 @@ declare module fairygui {
     }
 }
 declare module fairygui {
-    class UITextField extends egret.DisplayObjectContainer implements UIDisplayObject {
+    class UITextField extends egret.TextField implements UIDisplayObject {
         private _owner;
-        nativeTextField: egret.TextField;
         constructor(owner: GObject);
         owner: GObject;
     }
@@ -485,6 +485,7 @@ declare module fairygui {
         rotation: number;
         normalizeRotation: number;
         alpha: number;
+        protected updateAlpha(): void;
         visible: boolean;
         internalVisible: number;
         finalVisible: boolean;
@@ -545,6 +546,7 @@ declare module fairygui {
         globalToLocalRect(ax?: number, ay?: number, aWidth?: number, aHeight?: number, resultRect?: egret.Rectangle): egret.Rectangle;
         handleControllerChanged(c: Controller): void;
         protected createDisplayObject(): void;
+        protected switchDisplayObject(newObj: egret.DisplayObject): void;
         protected handleXYChanged(): void;
         protected handleSizeChanged(): void;
         protected handleGrayChanged(): void;
@@ -597,12 +599,11 @@ declare module fairygui {
 }
 declare module fairygui {
     class GComponent extends GObject {
-        private _boundsChanged;
-        private _bounds;
         private _sortingChildCount;
         private _opaque;
         protected _margin: Margin;
         protected _trackBounds: boolean;
+        protected _boundsChanged: boolean;
         _buildingDisplayList: boolean;
         _children: Array<GObject>;
         _controllers: Array<Controller>;
@@ -643,6 +644,7 @@ declare module fairygui {
         getTransitionAt(index: number): Transition;
         getTransition(transName: string): Transition;
         isChildInView(child: GObject): boolean;
+        getFirstChildInView(): number;
         scrollPane: ScrollPane;
         opaque: boolean;
         protected updateOpaque(): void;
@@ -656,7 +658,6 @@ declare module fairygui {
         ensureBoundsCorrect(): void;
         protected updateBounds(): void;
         setBounds(ax: number, ay: number, aw: number, ah?: number): void;
-        bounds: egret.Rectangle;
         viewWidth: number;
         viewHeight: number;
         findObjectNear(xValue: number, yValue: number, resultPoint?: egret.Point): egret.Point;
@@ -829,6 +830,7 @@ declare module fairygui {
         constructor();
         updateBounds(): void;
         moveChildren(dx: number, dy: number): void;
+        protected updateAlpha(): void;
     }
 }
 declare module fairygui {
@@ -868,7 +870,12 @@ declare module fairygui {
 }
 declare module fairygui {
     class GList extends GComponent {
+        /**
+         * itemRenderer(int index, GObject item);
+         */
+        itemRenderer: Function;
         private _layout;
+        private _lineItemCount;
         private _lineGap;
         private _columnGap;
         private _defaultItem;
@@ -881,6 +888,7 @@ declare module fairygui {
         dispose(): void;
         layout: ListLayoutType;
         lineGap: number;
+        lineItemCount: number;
         columnGap: number;
         defaultItem: string;
         autoResizeItem: boolean;
@@ -912,6 +920,8 @@ declare module fairygui {
         protected handleSizeChanged(): void;
         adjustItemsSize(): void;
         findObjectNear(xValue: number, yValue: number, resultPoint?: egret.Point): egret.Point;
+        scrollToView(index: number, ani?: boolean): void;
+        numItems: number;
         protected updateBounds(): void;
         setup_beforeAdd(xml: any): void;
     }
@@ -993,6 +1003,7 @@ declare module fairygui {
         protected createDisplayObject(): void;
         playing: boolean;
         frame: number;
+        setPlaySettings(start?: number, end?: number, times?: number, endAt?: number, endCallback?: Function, callbackObj?: any): void;
         gearAnimation: GearAnimation;
         gearColor: GearColor;
         handleControllerChanged(c: Controller): void;
@@ -1037,6 +1048,7 @@ declare module fairygui {
 declare module fairygui {
     class GTextField extends GObject implements IColorGear {
         protected _textField: egret.TextField;
+        protected _bitmapContainer: egret.DisplayObjectContainer;
         protected _font: string;
         protected _fontSize: number;
         protected _align: AlignType;
@@ -1064,6 +1076,7 @@ declare module fairygui {
         protected static GUTTER_Y: number;
         constructor();
         protected createDisplayObject(): void;
+        private switchBitmapMode(val);
         dispose(): void;
         text: string;
         protected updateTextFieldText(): void;
@@ -1428,7 +1441,7 @@ declare module fairygui {
     }
 }
 declare module fairygui {
-    class ScrollPane {
+    class ScrollPane extends egret.EventDispatcher {
         private _owner;
         private _container;
         private _maskHolder;
@@ -1455,6 +1468,7 @@ declare module fairygui {
         private _xPerc;
         private _vScroll;
         private _hScroll;
+        private _needRefresh;
         private static _easeTypeFunc;
         private _throwTween;
         private _tweening;
@@ -1476,8 +1490,8 @@ declare module fairygui {
         private _hzScrollBar;
         private _vtScrollBar;
         static SCROLL: string;
+        private static sHelperRect;
         constructor(owner: GComponent, scrollType: number, margin: Margin, scrollBarMargin: Margin, scrollBarDisplay: number, flags: number, vtScrollBarRes: string, hzScrollBarRes: string);
-        dispose(): void;
         owner: GComponent;
         bouncebackEffect: boolean;
         touchEffect: boolean;
@@ -1505,13 +1519,14 @@ declare module fairygui {
         scrollDown(speed?: number, ani?: boolean): void;
         scrollLeft(speed?: number, ani?: boolean): void;
         scrollRight(speed?: number, ani?: boolean): void;
-        scrollToView(obj: GObject, ani?: boolean): void;
+        scrollToView(target: any, ani?: boolean): void;
         isChildInView(obj: GObject): boolean;
         setSize(aWidth: number, aHeight: number): void;
         setContentSize(aWidth: number, aHeight: number): void;
         private handleSizeChanged();
         private posChanged(ani);
         private refresh();
+        private refresh2(contentXLoc, contentYLoc);
         private killTweens();
         private calcYPerc();
         private calcXPerc();

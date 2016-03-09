@@ -2,13 +2,12 @@
 module fairygui {
 
     export class GComponent extends GObject {
-        private _boundsChanged: boolean;
-        private _bounds: egret.Rectangle;
         private _sortingChildCount: number = 0;
         private _opaque: boolean;
 
         protected _margin: Margin;
         protected _trackBounds: boolean;
+        protected _boundsChanged: boolean;
         
         public _buildingDisplayList: boolean;
         public _children: Array<GObject>;
@@ -20,7 +19,6 @@ module fairygui {
 
         public constructor() {
             super();
-            this._bounds = new egret.Rectangle();
             this._children = new Array<GObject>();
             this._controllers = new Array<Controller>();
             this._transitions = new Array<Transition>();
@@ -38,9 +36,6 @@ module fairygui {
             var numChildren: number = this._children.length;
             for(var i: number = numChildren - 1;i >= 0;--i)
                 this._children[i].dispose();
-
-            if(this._scrollPane != null)
-                this._scrollPane.dispose();
 
             super.dispose();
         }
@@ -404,6 +399,16 @@ module fairygui {
             else
                 return true;
         }
+        
+        public getFirstChildInView(): number {
+            var cnt: number = this._children.length;
+            for(var i: number = 0;i < cnt;++i) {
+                var child: GObject = this._children[i];
+                if(this.isChildInView(child))
+                    return i;
+            }
+            return -1;
+        }
 
         public get scrollPane(): ScrollPane {
             return this._scrollPane;
@@ -562,27 +567,15 @@ module fairygui {
                 aw = 0;
                 ah = 0;
             }
-            if(ax != this._bounds.x || ay != this._bounds.y || aw != this._bounds.width || ah != this._bounds.height)
-                this.setBounds(ax,ay,aw,ah);
-            else
-                this._boundsChanged = false;
+
+            this.setBounds(ax,ay,aw,ah);
         }
 
         public setBounds(ax: number, ay: number, aw: number, ah: number = 0): void {
             this._boundsChanged = false;
-            this._bounds.x = ax;
-            this._bounds.y = ay;
-            this._bounds.width = aw;
-            this._bounds.height = ah;
 
             if (this._scrollPane)
-                this._scrollPane.setContentSize(this._bounds.x + this._bounds.width, this._bounds.y + this._bounds.height);
-        }
-
-        public get bounds(): egret.Rectangle {
-            if (this._boundsChanged)
-                this.updateBounds();
-            return this._bounds;
+                this._scrollPane.setContentSize(Math.round(ax+aw), Math.round(ay+ah));
         }
 
         public get viewWidth(): number {

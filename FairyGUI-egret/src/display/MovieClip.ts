@@ -31,6 +31,8 @@ module fairygui {
             this._playState = new PlayState();
             this._playing = true;
             this.touchEnabled = false;
+            
+            this.setPlaySettings();
         }
 
         public get frames(): Array<Frame> {
@@ -43,8 +45,13 @@ module fairygui {
                 this._frameCount = this._frames.length;
             else
                 this._frameCount = 0;
-            this._currentFrame = -1;
-            this.setPlaySettings();
+                
+            if(this._end == -1 || this._end > this._frameCount - 1)
+                this._end = this._frameCount - 1;
+            if(this._endAt == -1 || this._endAt > this._frameCount - 1)
+                this._endAt = this._frameCount - 1;
+                
+            this._currentFrame = -1;            
         }
 
         public get frameCount(): number {
@@ -67,7 +74,7 @@ module fairygui {
             if (this._currentFrame != value) {
                 this._currentFrame = value;
                 this._playState.currentFrame = value;
-                this.setFrame(this._currentFrame < this.frameCount ? this._frames[this._currentFrame] : null);
+                this.setFrame(this._currentFrame < this._frameCount ? this._frames[this._currentFrame] : null);
             }
         }
 
@@ -77,11 +84,6 @@ module fairygui {
 
         public set playing(value: boolean) {
             this._playing = value;
-
-            if (this.playing && this.frameCount != 0 && this._status != 3)
-                GTimers.inst.callBy24Fps(this.update, this);
-            else
-                GTimers.inst.remove(this.update, this);
         }
 
         //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
@@ -90,25 +92,17 @@ module fairygui {
             endCallback: Function = null, callbackObj:any = null): void {
             this._start = start;
             this._end = end;
-            if (this._end == -1)
-                this._end = this.frameCount - 1;
             this._times = times;
             this._endAt = endAt;
-            if (this._endAt == -1)
-                this._endAt = this._end;
             this._status = 0;
             this._callback = endCallback;
             this._callbackObj = callbackObj;
 
             this.currentFrame = start;
-            if (this.playing && this.frameCount != 0)
-                GTimers.inst.callBy24Fps(this.update, this);
-            else
-                GTimers.inst.remove(this.update, this);
         }
 
         private update(): void {
-            if (this.playing && this.frameCount != 0 && this._status != 3) {
+            if (this._playing && this._frameCount != 0 && this._status != 3) {
                 this._playState.update(this);
                 if (this._currentFrame != this._playState.currentFrame) {
                     if (this._status == 1) {
@@ -122,16 +116,8 @@ module fairygui {
                         this._status = 3;
 
                         //play end
-                        GTimers.inst.remove(this.update, this);
                         if (this._callback != null) {
-                            var f: Function = this._callback;
-                            var fObj: any = this._callbackObj;
-                            this._callback = null;
-                            this._callbackObj = null;                            
-                            if (f.length == 1)
-                                f.call(fObj,this);
-                            else
-                                f.call(fObj);
+                            GTimers.inst.callLater(this.__playEnd, this);
                         }
                     }
                     else {
@@ -154,6 +140,19 @@ module fairygui {
             else
                 this.setFrame(null);
         }
+        
+        private __playEnd():void {
+            if(this._callback != null) {
+                var f: Function = this._callback;
+                var fObj: any = this._callbackObj;
+                this._callback = null;
+                this._callbackObj = null;
+                if(f.length == 1)
+                    f.call(fObj,this);
+                else
+                    f.call(fObj);
+            }
+        }
 
         private setFrame(frame: Frame): void {
             if (frame == null) {
@@ -167,6 +166,8 @@ module fairygui {
         }
 
         $render(context: egret.sys.RenderContext): void {
+            this.update();
+            
             var texture = this._texture;
             if (texture) {
                 var offsetX: number = Math.round(texture._offsetX) + this._frameRect.x;

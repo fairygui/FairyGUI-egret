@@ -65,5 +65,22 @@ module fairygui {
             }
             this._updating = false;
         }
+        
+        protected updateAlpha():void {
+            super.updateAlpha();
+            
+            if(this._underConstruct)
+                return;
+                
+            var cnt:number = this._parent.numChildren;
+            var i: number;
+            var child:GObject;
+            for(i = 0;i<cnt;i++)
+            {
+                child = this._parent.getChildAt(i);
+                if(child.group == this)
+                    child.alpha = this.alpha;
+            }
+        }
     }
 }

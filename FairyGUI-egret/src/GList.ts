@@ -2,7 +2,13 @@
 module fairygui {
 
     export class GList extends GComponent {
-        private _layout: ListLayoutType;        
+        /**
+         * itemRenderer(int index, GObject item);
+         */
+        public itemRenderer:Function;
+        
+        private _layout: ListLayoutType;
+        private _lineItemCount:number = 0;
         private _lineGap: number = 0;
         private _columnGap: number = 0;
         private _defaultItem: string;
@@ -41,6 +47,17 @@ module fairygui {
 
         public get lineGap(): number {
             return this._lineGap;
+        }
+        
+        public get lineItemCount(): number {
+            return this._lineItemCount;
+        }
+
+        public set lineItemCount(value:number) {
+            if(this._lineItemCount != value) {
+                this._lineItemCount = value;
+                this.setBoundsChangedFlag();
+            }
         }
 
         public set lineGap(value: number) {
@@ -147,8 +164,8 @@ module fairygui {
         }
 
         public removeChildrenToPool(beginIndex: number= 0, endIndex: number= -1): void {
-            if (endIndex < 0 || endIndex >= this.numChildren)
-                endIndex = this.numChildren - 1;
+            if (endIndex < 0 || endIndex >= this._children.length)
+                endIndex = this._children.length - 1;
 
             for (var i: number = beginIndex; i <= endIndex; ++i)
                 this.removeChildToPoolAt(beginIndex);
@@ -187,18 +204,23 @@ module fairygui {
 
             if (this._selectionMode == ListSelectionMode.Single)
                 this.clearSelection();
+                
+            if(scrollItToView)
+                this.scrollToView(index);
+                
+            if(index >= this._children.length)
+                return;
 
             var obj: GButton = this.getChildAt(index).asButton;
-            if (obj != null) {
-                if (!obj.selected)
-                    obj.selected = true;
-                if (scrollItToView && this._scrollPane != null)
-                    this._scrollPane.scrollToView(obj);
-            }
+            if (obj != null && !obj.selected)
+                obj.selected = true;
         }
 
         public removeSelection(index: number = 0): void {
             if (this._selectionMode == ListSelectionMode.None)
+                return;
+
+            if(index >= this._children.length)
                 return;
 
             var obj: GButton = this.getChildAt(index).asButton;
@@ -379,7 +401,8 @@ module fairygui {
 
             this._selectionHandled = false;
 
-            if (UIConfig.defaultScrollTouchEffect && this.scrollPane != null)
+            if (UIConfig.defaultScrollTouchEffect 
+                && (this.scrollPane != null || this.parent != null && this.parent.scrollPane != null))
                 return;
 
             if (this._selectionMode == ListSelectionMode.Single) {
@@ -431,7 +454,7 @@ module fairygui {
                         if (this._lastSelectedIndex != -1) {
                             var min: number = Math.min(this._lastSelectedIndex, index);
                             var max: number = Math.max(this._lastSelectedIndex, index);
-                            max = Math.min(max, this.numChildren - 1);
+                            max = Math.min(max,this._children.length - 1);
                             for (var i: number = min; i <= max; i++) {
                                 var obj: GButton = this.getChildAt(i).asButton;
                                 if (obj != null && !obj.selected)
@@ -476,7 +499,7 @@ module fairygui {
         public resizeToFit(itemCount: number= Number.POSITIVE_INFINITY, minSize: number= 0): void {
             this.ensureBoundsCorrect();
 
-            var curCount: number = this.numChildren;
+            var curCount: number = this._children.length;
             if (itemCount > curCount)
                 itemCount = curCount;
 
@@ -520,7 +543,7 @@ module fairygui {
         }
 
         public getMaxItemWidth(): number {
-            var cnt: number = this.numChildren;
+            var cnt: number = this._children.length;
             var max: number = 0;
             for (var i: number = 0; i < cnt; i++) {
                 var child: GObject = this.getChildAt(i);
@@ -542,7 +565,7 @@ module fairygui {
 
         public adjustItemsSize(): void {
             if (this._layout == ListLayoutType.SingleColumn) {
-                var cnt: number = this.numChildren;
+                var cnt: number = this._children.length;
                 var cw: number = this.viewWidth;
                 for (var i: number = 0; i < cnt; i++) {
                     var child: GObject = this.getChildAt(i);
@@ -550,7 +573,7 @@ module fairygui {
                 }
             }
             else if (this._layout == ListLayoutType.SingleRow) {
-                cnt = this.numChildren;
+                cnt = this._children.length;
                 var ch: number = this.viewHeight;
                 for (i = 0; i < cnt; i++) {
                     child = this.getChildAt(i);
@@ -629,9 +652,39 @@ module fairygui {
             resultPoint.y = yValue;
             return resultPoint;
         }
+        
+        public scrollToView(index:number,ani:boolean = false):void {
+            var obj: GButton = this.getChildAt(index).asButton;
+            if(obj != null) {
+                if(this.scrollPane != null)
+                    this.scrollPane.scrollToView(obj, ani);
+                else if(this.parent != null && this.parent.scrollPane != null)
+                    this.parent.scrollPane.scrollToView(obj,ani);
+            }
+        }
+        
+        public get numItems(): number {
+            return this._children.length;
+        }
+
+        public set numItems(value: number) {
+            var cnt: number = this._children.length;
+            if(value > cnt) {
+                for(var i: number = cnt;i < value;i++)
+                    this.addItemFromPool();
+            }
+            else {
+                this.removeChildrenToPool(value,cnt);
+            }
+
+            if(this.itemRenderer != null) {
+                for(i = 0;i < value;i++)
+                    this.itemRenderer(i,this.getChildAt(i));
+            }
+        }
 
         protected updateBounds(): void {
-            var cnt: number = this.numChildren;
+            var cnt: number = this._children.length;
             var i: number = 0;
             var child: GObject;
             var curX: number = 0;
@@ -678,7 +731,8 @@ module fairygui {
                 ch = curY + maxHeight;
             }
             else if (this._layout == ListLayoutType.FlowHorizontal) {
-                cw = this.viewWidth;
+                var j: number = 0;
+                var viewWidth: number = this.viewWidth;
                 for (i = 0; i < cnt; i++) {
                     child = this.getChildAt(i);
                     if (!child.visible)
@@ -687,21 +741,29 @@ module fairygui {
                     if (curX != 0)
                         curX += this._columnGap;
 
-                    if (curX + child.width > cw && maxHeight != 0) {
+                    if(this._lineItemCount != 0 && j >= this._lineItemCount
+                        || this._lineItemCount == 0 && curX + child.width > viewWidth && maxHeight != 0) {
                         //new line
+                        curX -= this._columnGap;
+                        if(curX > maxWidth)
+                            maxWidth = curX;
                         curX = 0;
                         curY += maxHeight + this._lineGap;
                         maxHeight = 0;
+                        j = 0;
                     }
-                    child.setXY(curX, curY);
+                    child.setXY(curX,curY);
                     curX += child.width;
-                    if (child.height > maxHeight)
+                    if(child.height > maxHeight)
                         maxHeight = child.height;
+                    j++;
                 }
                 ch = curY + maxHeight;
+                cw = maxWidth;
             }
             else {
-                ch = this.viewHeight;
+                j = 0;
+                var viewHeight: number = this.viewHeight;
                 for (i = 0; i < cnt; i++) {
                     child = this.getChildAt(i);
                     if (!child.visible)
@@ -710,17 +772,24 @@ module fairygui {
                     if (curY != 0)
                         curY += this._lineGap;
 
-                    if (curY + child.height > ch && maxWidth != 0) {
+                    if(this._lineItemCount != 0 && j >= this._lineItemCount
+                        || this._lineItemCount == 0 && curY + child.height > viewHeight && maxWidth != 0) {
+                        curY -= this._lineGap;
+                        if(curY > maxHeight)
+                            maxHeight = curY;
                         curY = 0;
                         curX += maxWidth + this._columnGap;
                         maxWidth = 0;
+                        j = 0;
                     }
-                    child.setXY(curX, curY);
+                    child.setXY(curX,curY);
                     curY += child.height;
-                    if (child.width > maxWidth)
+                    if(child.width > maxWidth)
                         maxWidth = child.width;
+                    j++;
                 }
                 cw = curX + maxWidth;
+                ch = maxHeight;
             }
             this.setBounds(0, 0, cw, ch);
         }
@@ -790,14 +859,14 @@ module fairygui {
             str = xml.attributes.lineGap;
             if (str)
                 this._lineGap = parseInt(str);
-            else
-                this._lineGap = 0;
 
             str = xml.attributes.colGap;
             if (str)
                 this._columnGap = parseInt(str);
-            else
-                this._columnGap = 0;
+                
+            str = xml.attributest.lineItemCount;
+            if(str)
+                this._lineItemCount = parseInt(str);
                 
             str = xml.attributes.selectionMode;
             if (str)

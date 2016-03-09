@@ -372,9 +372,18 @@ module fairygui {
         }
 
         public set alpha(value: number) {
-            this._alpha = value;
-            if (this._displayObject)
+            if(this._alpha!=value) {
+                this._alpha = value;
+                this.updateAlpha();
+             }
+        }
+        
+        protected updateAlpha():void {
+            if(this._displayObject)
                 this._displayObject.alpha = this._alpha;
+
+            if(this._gearLook.controller)
+                this._gearLook.updateState();
         }
 
         public get visible(): boolean {
@@ -742,6 +751,28 @@ module fairygui {
         }
 
         protected createDisplayObject(): void {
+        }
+        
+        protected switchDisplayObject(newObj:egret.DisplayObject):void {
+            if(newObj == this._displayObject)
+                return;
+    
+            var old: egret.DisplayObject = this._displayObject;
+            if(this._displayObject.parent != null) {
+                var i: number = this._displayObject.parent.getChildIndex(this._displayObject);
+                this._displayObject.parent.addChildAt(newObj,i);
+                this._displayObject.parent.removeChild(this._displayObject);
+            }
+            this._displayObject = newObj;
+            this._displayObject.x = old.x;
+            this._displayObject.y = old.y;
+            this._displayObject.rotation = old.rotation;
+            this._displayObject.alpha = old.alpha;
+            this._displayObject.visible = old.visible;
+            this._displayObject.touchEnabled = old.touchEnabled;
+
+            if(this._displayObject instanceof egret.DisplayObjectContainer)
+                (<egret.DisplayObjectContainer>this._displayObject).touchChildren = this._touchable;
         }
 
         protected handleXYChanged(): void {

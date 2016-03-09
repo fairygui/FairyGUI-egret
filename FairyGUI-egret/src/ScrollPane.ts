@@ -1,7 +1,7 @@
 
 module fairygui {
 
-    export class ScrollPane {
+    export class ScrollPane extends egret.EventDispatcher {
         private _owner: GComponent;
         private _container: egret.DisplayObjectContainer;
         private _maskHolder: egret.DisplayObjectContainer;
@@ -32,6 +32,7 @@ module fairygui {
         private _xPerc: number;
         private _vScroll: boolean;
         private _hScroll: boolean;
+        private _needRefresh: boolean;
 
         private static _easeTypeFunc: any;
         private _throwTween: ThrowTween;
@@ -58,6 +59,8 @@ module fairygui {
         private _vtScrollBar: GScrollBar;
         
         public static SCROLL: string = "__scroll";
+        
+        private static sHelperRect:egret.Rectangle;
 
         public constructor(owner: GComponent,
             scrollType: number,
@@ -67,6 +70,7 @@ module fairygui {
             flags: number,
             vtScrollBarRes: string,
             hzScrollBarRes: string) {
+            super();
             if(ScrollPane._easeTypeFunc == null)
                 ScrollPane._easeTypeFunc = egret.Ease.cubicOut;
             this._throwTween = new ThrowTween();
@@ -148,18 +152,8 @@ module fairygui {
             this._contentWidth = 0;
             this._contentHeight = 0;
             this.setSize(owner.width,owner.height);
-            this.setContentSize(owner.bounds.width,owner.bounds.height);
 
             this._owner.addEventListener(egret.TouchEvent.TOUCH_BEGIN,this.__mouseDown,this);
-        }
-
-        public dispose(): void {		
-            this._owner.removeEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__mouseDown, this);
-
-            this._container.removeChildren();
-            this._maskContentHolder.x = 0;
-            this._maskContentHolder.y = 0;
-            this._container.addChild(this._maskContentHolder);
         }
         
         public get owner(): GComponent {
@@ -216,7 +210,6 @@ module fairygui {
                 sc = 0;
             if (sc != this._xPerc) {
                 this._xPerc = sc;
-                this._owner.dispatchEventWith(ScrollPane.SCROLL,false);
                 this.posChanged(ani);
             }
         }
@@ -236,13 +229,12 @@ module fairygui {
                 sc = 0;
             if (sc != this._yPerc) {
                 this._yPerc = sc;
-                this._owner.dispatchEventWith(ScrollPane.SCROLL,false);
                 this.posChanged(ani);
             }
         }
 
         public get posX(): number {
-            return this._xPerc * (this.contentWidth - this._maskWidth);
+            return this._xPerc * Math.max(0, this.contentWidth - this._maskWidth);
         }
 
         public set posX(val: number) {
@@ -250,11 +242,14 @@ module fairygui {
         }
 
         public setPosX(val: number, ani: boolean= false): void {
-            this.setPercX(val / (this.contentWidth - this._maskWidth), ani);
+            if(this._contentWidth > this._maskWidth)
+                this.setPercX(val / (this.contentWidth - this._maskWidth), ani);
+            else
+                this.setPercX(0, ani);
         }
 
         public get posY(): number {
-            return this._yPerc * (this.contentHeight - this._maskHeight);
+            return this._yPerc * Math.max(0, this.contentHeight - this._maskHeight);
         }
 
         public set posY(val: number) {
@@ -262,7 +257,10 @@ module fairygui {
         }
 
         public setPosY(val: number, ani: boolean= false): void {
-            this.setPercY(val / (this.contentHeight - this._maskHeight), ani);
+            if(this._contentWidth > this._maskWidth)
+                this.setPercY(val / (this.contentHeight - this._maskHeight), ani);
+            else
+                this.setPercY(0, ani);
         }
 
         public get isBottomMost(): boolean {
@@ -337,50 +335,67 @@ module fairygui {
             this.setPercX(this._xPerc + this.getDeltaX(this._scrollSpeed * speed), ani);
         }
 
-        public scrollToView(obj: GObject, ani: boolean= false): void {
+        public scrollToView(target: any, ani: boolean= false): void {
+            var rect:egret.Rectangle;
+            if(target instanceof GObject)
+            {
+                if(target.parent != this._owner) {
+                    target.parent.localToGlobalRect(target.x,target.y,
+                        target.width,target.height,ScrollPane.sHelperRect);
+                    rect = this._owner.globalToLocalRect(ScrollPane.sHelperRect.x,ScrollPane.sHelperRect.y,
+                        ScrollPane.sHelperRect.width,ScrollPane.sHelperRect.height,ScrollPane.sHelperRect);
+                }
+                else {
+                    rect = ScrollPane.sHelperRect;
+                    rect.setTo(target.x,target.y,target.width,target.height);
+                }
+            }
+			else
+                rect = <egret.Rectangle>target;
+        
             this._owner.ensureBoundsCorrect();
-            if (GTimers.inst.exists(this.refresh, this))
+            if(this._needRefresh)
                 this.refresh();
 
             if (this._vScroll) {
-                var top: number = (this._contentHeight - this._maskHeight) * this._yPerc;
+                var top: number = this.posY;
                 var bottom: number = top + this._maskHeight;
-                if(obj.y < top)
-                    this.setPosY(obj.y, ani);
-                else if(obj.y + obj.height > bottom) {
-                    if(obj.y + obj.height * 2 >= top)
-                        this.setPosY(obj.y + obj.height * 2 - this._maskHeight, ani);
+                if(rect.y < top)
+                    this.setPosY(rect.y, ani);
+                else if(rect.y + rect.height > bottom) {
+                    if(rect.y + rect.height * 2 >= top)
+                        this.setPosY(rect.y + rect.height * 2 - this._maskHeight, ani);
                     else
-                        this.setPosY(obj.y + obj.height - this._maskHeight, ani);
+                        this.setPosY(rect.y + rect.height - this._maskHeight, ani);
                 }
             }
             if (this._hScroll) {
-                var left: number = (this._contentWidth - this._maskWidth) * this._xPerc;
+                var left: number =  this.posX;
                 var right: number = left + this._maskWidth;
-                if(obj.x < left)
-                    this.setPosX(obj.x, ani);
-                else if(obj.x + obj.width > right) {
-                    if(obj.x + obj.width * 2 >= left)
-                        this.setPosX(obj.x + obj.width * 2 - this._maskWidth, ani);
+                if(rect.x < left)
+                    this.setPosX(rect.x, ani);
+                else if(rect.x + rect.width > right) {
+                    if(rect.x + rect.width * 2 >= left)
+                        this.setPosX(rect.x + rect.width * 2 - this._maskWidth, ani);
                     else
-                        this.setPosX(obj.x + obj.width - this._maskWidth, ani);
+                        this.setPosX(rect.x + rect.width - this._maskWidth, ani);
                 }                
             }
             
-            if (!ani && GTimers.inst.exists(this.refresh, this)) 
+            if(!ani && this._needRefresh) 
                 this.refresh();             
         }
         
         public isChildInView(obj: GObject): boolean {
             if(this._vScroll) {
-                var top: number = (this._contentHeight - this._maskHeight) * this._yPerc;
+                var top: number = this.posY;
                 var bottom: number = top + this._maskHeight;
                 if(obj.y + obj.height < top || obj.y > bottom)
                     return false;
             }
 
             if(this._hScroll) {
-                var left: number = (this._contentWidth - this._maskWidth) * this._xPerc;
+                var left: number = this.posX;
                 var right: number = left + this._maskWidth;
                 if(obj.x + obj.width < left || obj.x > right)
                     return false;
@@ -547,17 +562,15 @@ module fairygui {
             if (this._aniFlag)
                 this._aniFlag = ani;
 
+            this._needRefresh = true;
             GTimers.inst.callLater(this.refresh, this);
         }
 
         private refresh(): void {
-            if (this._isMouseMoved) {
-                GTimers.inst.callLater(this.refresh, this);
-                return;
-            }
+            this._needRefresh = false;
             GTimers.inst.remove(this.refresh, this);
-            var contentYLoc: number;
-            var contentXLoc: number;
+            var contentYLoc: number = 0;
+            var contentXLoc: number = 0;
 
             if (this._vScroll)
                 contentYLoc = this._yPerc * (this._contentHeight - this._maskHeight);
@@ -566,75 +579,86 @@ module fairygui {
 
             if (this._snapToItem) {
                 var pt: egret.Point = this._owner.findObjectNear(contentXLoc, contentYLoc);
-                var scrolled: boolean = false;
                 if(this._xPerc != 1 && pt.x != contentXLoc) {
                     this._xPerc = pt.x / (this._contentWidth - this._maskWidth);
                     if(this._xPerc > 1)
                         this._xPerc = 1;
                     contentXLoc = this._xPerc * (this._contentWidth - this._maskWidth);
-                    scrolled = true;
                 }
                 if(this._yPerc != 1 && pt.y != contentYLoc) {
                     this._yPerc = pt.y / (this._contentHeight - this._maskHeight);
                     if(this._yPerc > 1)
                         this._yPerc = 1;
                     contentYLoc = this._yPerc * (this._contentHeight - this._maskHeight);
-                    scrolled = true;
                 }
-                
-                if(scrolled)
-                    this._owner.dispatchEventWith(ScrollPane.SCROLL,false);
             }
+            
+            this.refresh2(contentXLoc,contentYLoc);
+            this.dispatchEventWith(ScrollPane.SCROLL,false);
+            if(this._needRefresh) //user change scroll pos in on scroll
+            {
+                this._needRefresh = false;
+                GTimers.inst.remove(this.refresh, this);
+
+                if(this._hScroll)
+                    contentXLoc = this._xPerc * (this._contentWidth - this._maskWidth);
+                if(this._vScroll)
+                    contentYLoc = this._yPerc * (this._contentHeight - this._maskHeight);
+                this.refresh2(contentXLoc,contentYLoc);
+            }
+
+            this._aniFlag = true;
+        }
+        
+        private refresh2(contentXLoc:number, contentYLoc:number) {
             contentXLoc = Math.floor(contentXLoc);
             contentYLoc = Math.floor(contentYLoc);
 
-            if (this._aniFlag) {
+            if(this._aniFlag && !this._isMouseMoved) {
                 var toX: number = this._maskContentHolder.x;
                 var toY: number = this._maskContentHolder.y;
-                if (this._vScroll) {
+                if(this._vScroll) {
                     toY = -contentYLoc;
                 }
                 else {
-                    if (this._maskContentHolder.y != 0)
+                    if(this._maskContentHolder.y != 0)
                         this._maskContentHolder.y = 0;
                 }
-                if (this._hScroll) {
+                if(this._hScroll) {
                     toX = -contentXLoc;
                 }
                 else {
-                    if (this._maskContentHolder.x != 0)
+                    if(this._maskContentHolder.x != 0)
                         this._maskContentHolder.x = 0;
                 }
 
-                if (toX != this._maskContentHolder.x || toY != this._maskContentHolder.y) {
+                if(toX != this._maskContentHolder.x || toY != this._maskContentHolder.y) {
                     this.killTweens();
-                    
+
                     this._maskHolder.touchEnabled = false;
                     this._tweening = 1;
 
-                    egret.Tween.get(this._maskContentHolder, { onChange: this.__tweenUpdate,onChangeObj: this })
+                    egret.Tween.get(this._maskContentHolder,{ onChange: this.__tweenUpdate,onChangeObj: this })
                         .to({ x: toX,y: toY, },500,ScrollPane._easeTypeFunc)
                         .call(this.__tweenComplete,this);
                 }
             }
             else {
                 this.killTweens();
+                
+                if(this._isMouseMoved) {
+                    this._xOffset += this._maskContentHolder.x - (-contentXLoc);
+                    this._yOffset += this._maskContentHolder.y - (-contentYLoc);
+                }
 
-                if (this._vScroll)
-                    this._maskContentHolder.y = -contentYLoc;
-                else
-                    this._maskContentHolder.y = 0;
-                if (this._hScroll)
-                    this._maskContentHolder.x = -contentXLoc;
-                else
-                    this._maskContentHolder.x = 0;
-                if (this._vtScrollBar)
+                this._maskContentHolder.y = -contentYLoc;
+                this._maskContentHolder.x = -contentXLoc;
+
+                if(this._vtScrollBar)
                     this._vtScrollBar.scrollPerc = this._yPerc;
-                if (this._hzScrollBar)
+                if(this._hzScrollBar)
                     this._hzScrollBar.scrollPerc = this._xPerc;
             }
-
-            this._aniFlag = true;
         }
         
         private killTweens(): void {
@@ -838,7 +862,7 @@ module fairygui {
             this._isHoldAreaDone = true;
             this._isMouseMoved = true;
             this.onScrolling();
-            this._owner.dispatchEventWith(ScrollPane.SCROLL,false);
+            this.dispatchEventWith(ScrollPane.SCROLL,false);
         }
 
         private __mouseUp(evt: egret.TouchEvent): void {
@@ -982,7 +1006,7 @@ module fairygui {
             }
 
             this.onScrolling();
-            this._owner.dispatchEventWith(ScrollPane.SCROLL,false);
+            this.dispatchEventWith(ScrollPane.SCROLL,false);
         }
 
         private __tweenComplete2(): void {
@@ -997,7 +1021,7 @@ module fairygui {
 
             this._maskHolder.touchEnabled = true;
             this.onScrollEnd();
-            this._owner.dispatchEventWith(ScrollPane.SCROLL,false);
+            this.dispatchEventWith(ScrollPane.SCROLL,false);
         }
     }
 
