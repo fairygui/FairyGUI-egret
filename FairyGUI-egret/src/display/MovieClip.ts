@@ -92,8 +92,12 @@ module fairygui {
             endCallback: Function = null, callbackObj:any = null): void {
             this._start = start;
             this._end = end;
+            if(this._end == -1)
+                this._end = this._frameCount - 1;
             this._times = times;
             this._endAt = endAt;
+            if(this._endAt == -1)
+                this._endAt = this._frameCount - 1;
             this._status = 0;
             this._callback = endCallback;
             this._callbackObj = callbackObj;

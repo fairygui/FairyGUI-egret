@@ -864,7 +864,7 @@ module fairygui {
             if (str)
                 this._columnGap = parseInt(str);
                 
-            str = xml.attributest.lineItemCount;
+            str = xml.attributes.lineItemCount;
             if(str)
                 this._lineItemCount = parseInt(str);
                 
