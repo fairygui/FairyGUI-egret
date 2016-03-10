@@ -60,7 +60,7 @@ module fairygui {
         
         public static SCROLL: string = "__scroll";
         
-        private static sHelperRect:egret.Rectangle;
+        private static sHelperRect:egret.Rectangle = new egret.Rectangle();
 
         public constructor(owner: GComponent,
             scrollType: number,

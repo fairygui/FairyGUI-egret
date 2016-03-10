@@ -10541,6 +10541,7 @@ var fairygui;
             this.dispatchEventWith(ScrollPane.SCROLL, false);
         };
         ScrollPane.SCROLL = "__scroll";
+        ScrollPane.sHelperRect = new egret.Rectangle();
         ScrollPane.sHelperPoint = new egret.Point();
         return ScrollPane;
     })(egret.EventDispatcher);
