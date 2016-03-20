@@ -78,6 +78,8 @@ declare module fairygui {
         private setFrame(frame);
         $render(context: egret.sys.RenderContext): void;
         $measureContentBounds(bounds: egret.Rectangle): void;
+        $onAddToStage(stage: egret.Stage, nestLevel: number): void;
+        $onRemoveFromStage(): void;
     }
 }
 declare module fairygui {
@@ -1519,7 +1521,7 @@ declare module fairygui {
         scrollDown(speed?: number, ani?: boolean): void;
         scrollLeft(speed?: number, ani?: boolean): void;
         scrollRight(speed?: number, ani?: boolean): void;
-        scrollToView(target: any, ani?: boolean): void;
+        scrollToView(target: egret.Rectangle | GObject, ani?: boolean): void;
         isChildInView(obj: GObject): boolean;
         setSize(aWidth: number, aHeight: number): void;
         setContentSize(aWidth: number, aHeight: number): void;
@@ -1722,7 +1724,6 @@ declare module fairygui {
         showOn(root: GRoot): void;
         hide(): void;
         hideImmediately(): void;
-        center(restraint?: boolean): void;
         centerOn(r: GRoot, restraint?: boolean): void;
         toggleStatus(): void;
         isShowing: boolean;

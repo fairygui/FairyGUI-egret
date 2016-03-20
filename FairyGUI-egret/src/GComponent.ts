@@ -34,8 +34,11 @@ module fairygui {
 
         public dispose(): void {
             var numChildren: number = this._children.length;
-            for(var i: number = numChildren - 1;i >= 0;--i)
-                this._children[i].dispose();
+            for(var i: number = numChildren - 1;i >= 0;--i) {
+                var obj:GObject = this._children[i];
+                obj.parent = null;//avoid removeFromParent call
+                obj.dispose();
+            }
 
             super.dispose();
         }

@@ -353,6 +353,12 @@ var fairygui;
             }
             ,function (value) {
                 this._playing = value;
+                if (value && this.stage != null) {
+                    fairygui.GTimers.inst.add(0, 0, this.update, this);
+                }
+                else {
+                    fairygui.GTimers.inst.remove(this.update, this);
+                }
             }
         );
         //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
@@ -436,7 +442,6 @@ var fairygui;
             this.$invalidateContentBounds();
         };
         p.$render = function (context) {
-            this.update();
             var texture = this._texture;
             if (texture) {
                 var offsetX = Math.round(texture._offsetX) + this._frameRect.x;
@@ -459,6 +464,16 @@ var fairygui;
             else {
                 bounds.setEmpty();
             }
+        };
+        p.$onAddToStage = function (stage, nestLevel) {
+            _super.prototype.$onAddToStage.call(this, stage, nestLevel);
+            if (this._playing)
+                fairygui.GTimers.inst.add(0, 0, this.update, this);
+        };
+        p.$onRemoveFromStage = function () {
+            _super.prototype.$onRemoveFromStage.call(this);
+            if (this._playing)
+                fairygui.GTimers.inst.remove(this.update, this);
         };
         return MovieClip;
     })(egret.DisplayObject);
@@ -2291,14 +2306,14 @@ var fairygui;
                         value.b1 = false;
                     }
                     else {
-                        value.f1 = parseInt(arr[0]);
+                        value.f1 = parseFloat(arr[0]);
                         value.b1 = true;
                     }
                     if (arr[1] == "-") {
                         value.b2 = false;
                     }
                     else {
-                        value.f2 = parseInt(arr[1]);
+                        value.f2 = parseFloat(arr[1]);
                         value.b2 = true;
                     }
                     break;
@@ -2514,11 +2529,8 @@ var fairygui;
             var r;
             if (this._parent != null)
                 r = this.parent;
-            else {
+            else
                 r = this.root;
-                if (r == null)
-                    r = fairygui.GRoot.inst;
-            }
             this.setXY((r.width - this.width) / 2, (r.height - this.height) / 2);
             if (restraint) {
                 this.addRelation(r, fairygui.RelationType.Center_Center);
@@ -2828,22 +2840,15 @@ var fairygui;
         );
         d(p, "focused"
             ,function () {
-                var r = this.root;
-                if (r)
-                    return r.focus == this;
-                else
-                    return false;
+                return this.root.focus == this;
             }
         );
         p.requestFocus = function () {
-            var r = this.root;
-            if (r) {
-                var p = this;
-                while (p && !p._focusable)
-                    p = p.parent;
-                if (p != null)
-                    r.focus = p;
-            }
+            var p = this;
+            while (p && !p._focusable)
+                p = p.parent;
+            if (p != null)
+                this.root.focus = p;
         };
         d(p, "tooltips"
             ,function () {
@@ -2940,7 +2945,7 @@ var fairygui;
                         return p;
                     p = p.parent;
                 }
-                return null;
+                return fairygui.GRoot.inst;
             }
         );
         d(p, "asCom"
@@ -3026,11 +3031,8 @@ var fairygui;
             }
         );
         p.dispose = function () {
+            this.removeFromParent();
             this._relations.dispose();
-            /*if(this._displayObject!=null){
-                this._displayObject.dispose();
-                this._displayObject = null;
-            }*/
         };
         p.addClickListener = function (listener, thisObj) {
             this.addEventListener(egret.TouchEvent.TOUCH_TAP, listener, thisObj);
@@ -3398,8 +3400,11 @@ var fairygui;
         };
         p.dispose = function () {
             var numChildren = this._children.length;
-            for (var i = numChildren - 1; i >= 0; --i)
-                this._children[i].dispose();
+            for (var i = numChildren - 1; i >= 0; --i) {
+                var obj = this._children[i];
+                obj.parent = null; //avoid removeFromParent call
+                obj.dispose();
+            }
             _super.prototype.dispose.call(this);
         };
         d(p, "displayListContainer"
@@ -4390,11 +4395,8 @@ var fairygui;
             if (this._linkedPopup != null) {
                 if (this._linkedPopup instanceof fairygui.Window)
                     (this._linkedPopup).toggleStatus();
-                else {
-                    var r = this.root;
-                    if (r)
-                        r.togglePopup(this._linkedPopup, this);
-                }
+                else
+                    this.root.togglePopup(this._linkedPopup, this);
             }
         };
         p.__mouseup = function (evt) {
@@ -4632,9 +4634,7 @@ var fairygui;
             }
             this._list.selectedIndex = -1;
             this._dropdownObject.width = this.width;
-            var r = this.root;
-            if (r)
-                r.togglePopup(this._dropdownObject, this, true);
+            this.root.togglePopup(this._dropdownObject, this, true);
             if (this._dropdownObject.parent)
                 this.setState(fairygui.GButton.DOWN);
         };
@@ -9009,12 +9009,8 @@ var fairygui;
         p.show = function (target, downward) {
             if (target === void 0) { target = null; }
             if (downward === void 0) { downward = null; }
-            var r = (target instanceof fairygui.GRoot) ? target : (target != null ? target.root : null);
-            if (!r)
-                r = fairygui.GRoot.inst;
-            if (target instanceof fairygui.GRoot)
-                target = null;
-            r.showPopup(this.contentPane, target, downward);
+            var r = target != null ? target.root : fairygui.GRoot.inst;
+            r.showPopup(this.contentPane, (target instanceof fairygui.GRoot) ? null : target, downward);
         };
         p.__clickItem = function (evt) {
             egret.setTimeout(this.__clickItem2, this, 100, evt);
@@ -9953,6 +9949,9 @@ var fairygui;
         };
         p.scrollToView = function (target, ani) {
             if (ani === void 0) { ani = false; }
+            this._owner.ensureBoundsCorrect();
+            if (this._needRefresh)
+                this.refresh();
             var rect;
             if (target instanceof fairygui.GObject) {
                 if (target.parent != this._owner) {
@@ -9966,9 +9965,6 @@ var fairygui;
             }
             else
                 rect = target;
-            this._owner.ensureBoundsCorrect();
-            if (this._needRefresh)
-                this.refresh();
             if (this._vScroll) {
                 var top = this.posY;
                 var bottom = top + this._maskHeight;
@@ -11603,13 +11599,6 @@ var fairygui;
                 r = fairygui.GRoot.inst;
             r.hideWindowImmediately(this);
         };
-        p.center = function (restraint) {
-            if (restraint === void 0) { restraint = false; }
-            var r = this.root;
-            if (!r)
-                r = fairygui.GRoot.inst;
-            this.centerOn(r, restraint);
-        };
         p.centerOn = function (r, restraint) {
             if (restraint === void 0) { restraint = false; }
             this.setXY(Math.round((r.width - this.width) / 2), Math.round((r.height - this.height) / 2));
@@ -11643,10 +11632,7 @@ var fairygui;
             }
         );
         p.bringToFront = function () {
-            var r = this.root;
-            if (!r)
-                r = fairygui.GRoot.inst;
-            r.showWindow(this);
+            this.root.showWindow(this);
         };
         p.showModalWait = function (requestingCmd) {
             if (requestingCmd === void 0) { requestingCmd = 0; }

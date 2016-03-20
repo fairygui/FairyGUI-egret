@@ -365,11 +365,8 @@ module fairygui {
             if (this._linkedPopup != null) {
                 if (this._linkedPopup instanceof Window)
                     (<Window><any> (this._linkedPopup)).toggleStatus();
-                else {
-                    var r: GRoot = this.root;
-                    if (r)
-                        r.togglePopup(this._linkedPopup, this);
-                }
+                else 
+                    this.root.togglePopup(this._linkedPopup, this);
             }
         }
 

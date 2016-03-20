@@ -151,12 +151,8 @@ module fairygui {
 
 		public show(target:GObject = null,downward:any = null)
 		{
-			var r:GRoot = (target instanceof GRoot)?<GRoot>target:(target != null?target.root:null);
-			if(!r)
-				r = GRoot.inst;
-			if(target instanceof GRoot)
-				target = null;
-			r.showPopup(this.contentPane,target,downward);
+			var r:GRoot = target != null?target.root:GRoot.inst;
+            r.showPopup(this.contentPane,(target instanceof GRoot)?null:target,downward);
 		}
 		
         private __clickItem(evt: ItemEvent): void {

@@ -335,7 +335,11 @@ module fairygui {
             this.setPercX(this._xPerc + this.getDeltaX(this._scrollSpeed * speed), ani);
         }
 
-        public scrollToView(target: any, ani: boolean= false): void {
+        public scrollToView(target: egret.Rectangle | GObject, ani: boolean= false): void {
+            this._owner.ensureBoundsCorrect();
+            if(this._needRefresh)
+                this.refresh();
+                
             var rect:egret.Rectangle;
             if(target instanceof GObject)
             {
@@ -352,10 +356,6 @@ module fairygui {
             }
 			else
                 rect = <egret.Rectangle>target;
-        
-            this._owner.ensureBoundsCorrect();
-            if(this._needRefresh)
-                this.refresh();
 
             if (this._vScroll) {
                 var top: number = this.posY;
@@ -873,7 +873,7 @@ module fairygui {
 
             this._owner.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.__mouseMove, this);
             this._owner.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__mouseUp, this);
-
+            
             if (!this._isMouseMoved)
                 return;
                 

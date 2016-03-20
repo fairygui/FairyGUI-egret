@@ -123,11 +123,9 @@ module fairygui {
             var r: GComponent;
             if(this._parent != null)
                 r = this.parent;
-            else {
+            else
                 r = this.root;
-                if(r == null)
-                    r = GRoot.inst;
-            }
+
             this.setXY((r.width - this.width) / 2,(r.height - this.height) / 2);
             if(restraint) {
                 this.addRelation(r,RelationType.Center_Center);
@@ -444,22 +442,15 @@ module fairygui {
         }
 
         public get focused(): boolean {
-            var r: GRoot = this.root;
-            if (r)
-                return r.focus == this;
-            else
-                return false;
+            return this.root.focus == this;
         }
 
         public requestFocus(): void {
-            var r: GRoot = this.root;
-            if (r) {
-                var p: GObject = this;
-                while (p && !p._focusable)
-                    p = p.parent;
-                if (p != null)
-                    r.focus = p;
-            }
+            var p: GObject = this;
+            while (p && !p._focusable)
+                p = p.parent;
+            if (p != null)
+                this.root.focus = p;
         }
 
         public get tooltips(): string {
@@ -549,7 +540,7 @@ module fairygui {
                     return <GRoot><any> p;
                 p = p.parent;
             }
-            return null;
+            return GRoot.inst;
         }
         
         public get asCom(): GComponent {
@@ -620,11 +611,8 @@ module fairygui {
         }
 
         public dispose(): void {
+            this.removeFromParent();
             this._relations.dispose();
-            /*if(this._displayObject!=null){
-                this._displayObject.dispose();
-                this._displayObject = null;
-            }*/
         }
 
         public addClickListener(listener: Function, thisObj: any): void {

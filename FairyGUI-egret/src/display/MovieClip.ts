@@ -84,6 +84,12 @@ module fairygui {
 
         public set playing(value: boolean) {
             this._playing = value;
+            
+            if(value && this.stage!=null) {
+                GTimers.inst.add(0,0,this.update,this);
+            } else {
+                GTimers.inst.remove(this.update,this);
+            }
         }
 
         //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
@@ -170,8 +176,6 @@ module fairygui {
         }
 
         $render(context: egret.sys.RenderContext): void {
-            this.update();
-            
             var texture = this._texture;
             if (texture) {
                 var offsetX: number = Math.round(texture._offsetX) + this._frameRect.x;
@@ -198,6 +202,20 @@ module fairygui {
             else {
                 bounds.setEmpty();
             }
+        }
+        
+        $onAddToStage(stage: egret.Stage, nestLevel: number): void {
+            super.$onAddToStage(stage,nestLevel);
+
+            if(this._playing)
+                GTimers.inst.add(0,0,this.update, this);
+        }
+
+        $onRemoveFromStage(): void {
+            super.$onRemoveFromStage();
+
+            if(this._playing)
+                GTimers.inst.remove(this.update, this);
         }
     }
 }

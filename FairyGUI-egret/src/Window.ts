@@ -118,13 +118,6 @@ module fairygui {
             r.hideWindowImmediately(this);
         }
 
-        public center(restraint: boolean = false): void {
-            var r: GRoot = this.root;
-            if(!r)
-                r = GRoot.inst;
-            this.centerOn(r,restraint);
-        }
-
         public centerOn(r: GRoot,restraint: boolean = false) {
             this.setXY(Math.round((r.width - this.width) / 2),Math.round((r.height - this.height) / 2));
             if(restraint) {
@@ -157,10 +150,7 @@ module fairygui {
         }
 
         public bringToFront(): void {
-            var r: GRoot = this.root;
-            if(!r)
-                r = GRoot.inst;
-            r.showWindow(this);
+            this.root.showWindow(this);
         }
 
         public showModalWait(requestingCmd: number = 0): void {
