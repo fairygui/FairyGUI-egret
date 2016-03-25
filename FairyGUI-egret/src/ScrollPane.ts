@@ -243,13 +243,13 @@ module fairygui {
 
         public setPosX(val: number, ani: boolean= false): void {
             if(this._contentWidth > this._maskWidth)
-                this.setPercX(val / (this.contentWidth - this._maskWidth), ani);
+                this.setPercX(val / (this._contentWidth - this._maskWidth), ani);
             else
                 this.setPercX(0, ani);
         }
 
         public get posY(): number {
-            return this._yPerc * Math.max(0, this.contentHeight - this._maskHeight);
+            return this._yPerc * Math.max(0,this._contentHeight - this._maskHeight);
         }
 
         public set posY(val: number) {
@@ -257,18 +257,18 @@ module fairygui {
         }
 
         public setPosY(val: number, ani: boolean= false): void {
-            if(this._contentWidth > this._maskWidth)
-                this.setPercY(val / (this.contentHeight - this._maskHeight), ani);
+            if(this._contentHeight > this._maskHeight)
+                this.setPercY(val / (this._contentHeight - this._maskHeight), ani);
             else
                 this.setPercY(0, ani);
         }
 
         public get isBottomMost(): boolean {
-            return this._yPerc == 1 || this.contentHeight <= this._maskHeight;
+            return this._yPerc == 1 || this._maskHeight <= this._maskHeight;
         }
 
         public get isRightMost(): boolean {
-            return this._xPerc == 1 || this.contentWidth <= this._maskWidth;
+            return this._xPerc == 1 || this._contentWidth <= this._maskWidth;
         }
 
         public get contentWidth(): number {
@@ -335,7 +335,7 @@ module fairygui {
             this.setPercX(this._xPerc + this.getDeltaX(this._scrollSpeed * speed), ani);
         }
 
-        public scrollToView(target: egret.Rectangle | GObject, ani: boolean= false): void {
+        public scrollToView(target: any, ani: boolean= false): void {
             this._owner.ensureBoundsCorrect();
             if(this._needRefresh)
                 this.refresh();

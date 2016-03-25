@@ -6,6 +6,7 @@ module fairygui {
          * itemRenderer(int index, GObject item);
          */
         public itemRenderer:Function;
+        public callbackThisObj:any;
         
         private _layout: ListLayoutType;
         private _lineItemCount:number = 0;
@@ -17,6 +18,16 @@ module fairygui {
         private _lastSelectedIndex: number = 0;
         private _pool: GObjectPool;
         private _selectionHandled: boolean;
+        
+        //Virtual List support
+        private _virtual:boolean;
+        private _loop: boolean;
+        private _numItems: number;
+        private _firstIndex: number; //the top left index
+        private _viewCount: number; //item count in view
+        private _curLineItemCount: number; //item count in one line
+        private _itemSize:egret.Point;
+        private _virtualScrollPane:ScrollPane;
 
         public constructor() {
             super();
@@ -31,6 +42,11 @@ module fairygui {
 
         public dispose(): void {
             this._pool.clear();
+            if(this._virtualScrollPane != null) {
+                this._virtualScrollPane.owner.removeEventListener(GObject.SIZE_CHANGED, this.refreshVirtualList, this);
+                this._virtualScrollPane.removeEventListener(ScrollPane.SCROLL, this.__scrolled, this);
+                this._virtualScrollPane = null;
+            }
             super.dispose();
         }
 
@@ -106,7 +122,9 @@ module fairygui {
             if (!url)
                 url = this._defaultItem;
 
-            return this._pool.getObject(url);
+            var obj:GObject = this._pool.getObject(url);
+            obj.visible = true;
+            return obj;
         }
 
         public returnToPool(obj: GObject): void {
@@ -175,15 +193,19 @@ module fairygui {
             var cnt: number = this._children.length;
             for (var i: number = 0; i < cnt; i++) {
                 var obj: GButton = this._children[i].asButton;
-                if (obj != null && obj.selected)
-                    return i;
+                if (obj != null && obj.selected) {
+                    var j: number = this._firstIndex + i;
+                    if(this._loop && j >= this._numItems)
+                        j -= this._numItems;
+                    return j;
+                }
             }
             return -1;
         }
 
         public set selectedIndex(value: number) {
             this.clearSelection();
-            if (value >= 0 && value < this._children.length)
+            if (value >= 0 && value < this.numItems)
                 this.addSelection(value);
         }
 
@@ -192,8 +214,12 @@ module fairygui {
             var cnt: number = this._children.length;
             for (var i: number = 0; i < cnt; i++) {
                 var obj: GButton = this._children[i].asButton;
-                if (obj != null && obj.selected)
-                    ret.push(i);
+                if (obj != null && obj.selected) {
+                    var j: number = this._firstIndex + i;
+                    if(this._loop && j >= this._numItems)
+                        j -= this._numItems;
+                    ret.push(j);
+                }
             }
             return ret;
         }
@@ -207,12 +233,19 @@ module fairygui {
                 
             if(scrollItToView)
                 this.scrollToView(index);
-                
+
+            index -= this._firstIndex;
+            if(index < 0) {
+                if(this._loop && this._numItems > 0)
+                    index += this._numItems;
+                else
+                    return;
+            }
             if(index >= this._children.length)
                 return;
 
             var obj: GButton = this.getChildAt(index).asButton;
-            if (obj != null && !obj.selected)
+            if(obj != null && !obj.selected)
                 obj.selected = true;
         }
 
@@ -220,6 +253,13 @@ module fairygui {
             if (this._selectionMode == ListSelectionMode.None)
                 return;
 
+            index -= this._firstIndex;
+            if(index < 0) {
+                if(this._loop && this._numItems > 0)
+                    index += this._numItems;
+                else
+                    return;
+            }
             if(index >= this._children.length)
                 return;
 
@@ -499,11 +539,18 @@ module fairygui {
         public resizeToFit(itemCount: number= Number.POSITIVE_INFINITY, minSize: number= 0): void {
             this.ensureBoundsCorrect();
 
-            var curCount: number = this._children.length;
+            var curCount: number = this.numItems;
             if (itemCount > curCount)
                 itemCount = curCount;
 
-            if (itemCount == 0) {
+            if(this._virtual) {
+                var lineCount: number = Math.ceil(itemCount / this._curLineItemCount);
+                if(this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal)
+                    this.viewHeight = lineCount * this._itemSize.y + Math.max(0,lineCount - 1) * this._lineGap;
+                else
+                    this.viewWidth = lineCount * this._itemSize.x + Math.max(0,lineCount - 1) * this._columnGap;
+            }
+            else if(itemCount == 0) {
                 if (this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal)
                     this.viewHeight = minSize;
                 else
@@ -559,8 +606,11 @@ module fairygui {
             if (this._autoResizeItem)
                 this.adjustItemsSize();
 
-            if (this._layout == ListLayoutType.FlowHorizontal || this._layout == ListLayoutType.FlowVertical)
+            if (this._layout == ListLayoutType.FlowHorizontal || this._layout == ListLayoutType.FlowVertical) {
                 this.setBoundsChangedFlag();
+            	if (this._virtual)
+					this.handleVirtualListSizeChanged();
+		    }
         }
 
         public adjustItemsSize(): void {
@@ -594,58 +644,78 @@ module fairygui {
             }
             
             this.ensureBoundsCorrect();
-            var obj: GObject = null;
-            var i: number = 0;
-            if (yValue != 0) {
-                for (; i < cnt; i++) {
-                    obj = this._children[i];
-                    if (yValue < obj.y) {
-                        if (i == 0) {
-                            yValue = 0;
-                            break;
-                        }
-                        else {
-                            var prev: GObject = this._children[i - 1];
-                            if (yValue < prev.y + prev.actualHeight / 2) //inside item, top half part
-                                yValue = prev.y;
-                            else if (yValue < prev.y + prev.actualHeight)//inside item, bottom half part
-                                yValue = obj.y;
-                            else //between two items
-                                yValue = obj.y + this._lineGap / 2;
-                            break;
-                        }
-                    }
-                }
-
-                if (i == cnt)
-                    yValue = obj.y;
-            }
-
-            if (xValue != 0) {
-                if (i > 0)
-                    i--;
-                for (; i < cnt; i++) {
-                    obj = this._children[i];
-                    if (xValue < obj.x) {
-                        if (i == 0) {
-                            xValue = 0;
-                            break;
-                        }
-                        else {
-                            prev = this._children[i - 1];
-                            if (xValue < prev.x + prev.actualWidth / 2) //inside item, top half part
-                                xValue = prev.x;
-                            else if (xValue < prev.x + prev.actualWidth)//inside item, bottom half part
-                                xValue = obj.x;
-                            else //between two items
-                                xValue = obj.x + this._columnGap / 2;
-                            break;
+            
+            if (this._virtual) {
+				if (this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal) {
+					var i:number = Math.floor(yValue / (this._itemSize.y + this._lineGap));
+					if (yValue > i * (this._itemSize.y + this._lineGap) + this._itemSize.y / 2)
+						i++;
+					
+                    yValue = i * (this._itemSize.y + this._lineGap);
+				}
+				else
+				{
+                    i = Math.floor(xValue / (this._itemSize.x + this._columnGap));
+                    if(xValue > i * (this._itemSize.x + this._columnGap) + this._itemSize.x / 2)
+						i++;
+					
+                    xValue = i * (this._itemSize.x + this._columnGap);
+				}
+			}
+			else {
+                var obj: GObject = null;
+                var i: number = 0;
+                if (yValue != 0) {
+                    for (; i < cnt; i++) {
+                        obj = this._children[i];
+                        if (yValue < obj.y) {
+                            if (i == 0) {
+                                yValue = 0;
+                                break;
+                            }
+                            else {
+                                var prev: GObject = this._children[i - 1];
+                                if (yValue < prev.y + prev.actualHeight / 2) //inside item, top half part
+                                    yValue = prev.y;
+                                else if (yValue < prev.y + prev.actualHeight)//inside item, bottom half part
+                                    yValue = obj.y;
+                                else //between two items
+                                    yValue = obj.y + this._lineGap / 2;
+                                break;
+                            }
                         }
                     }
+    
+                    if (i == cnt)
+                        yValue = obj.y;
                 }
-
-                if (i == cnt)
-                    xValue = obj.x;
+    
+                if (xValue != 0) {
+                    if (i > 0)
+                        i--;
+                    for (; i < cnt; i++) {
+                        obj = this._children[i];
+                        if (xValue < obj.x) {
+                            if (i == 0) {
+                                xValue = 0;
+                                break;
+                            }
+                            else {
+                                prev = this._children[i - 1];
+                                if (xValue < prev.x + prev.actualWidth / 2) //inside item, top half part
+                                    xValue = prev.x;
+                                else if (xValue < prev.x + prev.actualWidth)//inside item, bottom half part
+                                    xValue = obj.x;
+                                else //between two items
+                                    xValue = obj.x + this._columnGap / 2;
+                                break;
+                            }
+                        }
+                    }
+    
+                    if (i == cnt)
+                        xValue = obj.x;
+                }
             }
 
             resultPoint.x = xValue;
@@ -653,34 +723,405 @@ module fairygui {
             return resultPoint;
         }
         
-        public scrollToView(index:number,ani:boolean = false):void {
-            var obj: GButton = this.getChildAt(index).asButton;
-            if(obj != null) {
+        public scrollToView(index:number,ani:boolean = false):void  {				
+            if(this._virtual) {
                 if(this.scrollPane != null)
-                    this.scrollPane.scrollToView(obj, ani);
+                    this.scrollPane.scrollToView(this.getItemRect(index),ani);
                 else if(this.parent != null && this.parent.scrollPane != null)
-                    this.parent.scrollPane.scrollToView(obj,ani);
+                    this.parent.scrollPane.scrollToView(this.getItemRect(index),ani);
+            }
+            else {
+                var obj: GButton = this.getChildAt(index).asButton;
+                if(obj != null) {
+                    if(this.scrollPane != null)
+                        this.scrollPane.scrollToView(obj,ani);
+                    else if(this.parent != null && this.parent.scrollPane != null)
+                        this.parent.scrollPane.scrollToView(obj,ani);
+                }
+            }
+        }
+
+        public getFirstChildInView(): number {
+            var ret: number = super.getFirstChildInView();
+            if(ret != -1) {
+                ret += this._firstIndex;
+                if(this._loop && ret >= this._numItems)
+                    ret -= this._numItems;
+                return ret;
+            }
+            else
+                return -1;
+        }
+    
+        public setVirtual(): void {
+            this._setVirtual(false);
+        }
+		
+        /// <summary>
+        /// Set the list to be virtual list, and has loop behavior.
+        /// </summary>
+        public setVirtualAndLoop(): void {
+            this._setVirtual(true);
+        }
+		
+        /// <summary>
+        /// Set the list to be virtual list.
+        /// </summary>
+        private _setVirtual(loop: boolean): void {
+            if(!this._virtual) {
+                if(loop) {
+                    if(this.scrollPane == null)
+                        throw new Error("Loop list must be scrollable!");
+        
+                    if(this._layout == ListLayoutType.FlowHorizontal || this._layout == ListLayoutType.FlowVertical)
+                        throw new Error("Only single row or single column layout type is supported for loop list!");
+        
+                    this.scrollPane.bouncebackEffect = false;
+                }
+        
+                this._virtual = true;
+                this._loop = loop;
+                this._itemSize = new egret.Point();
+                this.removeChildrenToPool();
+        
+                var obj: GObject = this.getFromPool(null);
+                this._itemSize.x = obj.width;
+                this._itemSize.y = obj.height;
+                this.returnToPool(obj);
+        
+                if(this.scrollPane != null) {
+                    if(this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal)
+                        this.scrollPane.scrollSpeed = this._itemSize.y;
+                    else
+                        this.scrollPane.scrollSpeed = this._itemSize.x;
+        
+                    this._virtualScrollPane = this.scrollPane;        
+                }
+                else if(this.parent != null && this.parent.scrollPane != null) {
+                    this._virtualScrollPane = this.parent.scrollPane;
+                    this.parent.addEventListener(GObject.SIZE_CHANGED, this.refreshVirtualList, this);
+                }
+                else
+                    throw new Error("Virtual list must be scrollable or in scrollable container!");
+        
+                this._virtualScrollPane.addEventListener(ScrollPane.SCROLL, this.__scrolled, this);
+                this.handleVirtualListSizeChanged();
+            }
+        }
+        		
+        /// <summary>
+        /// Set the list item count. 
+        /// If the list is not virtual, specified number of items will be created. 
+        /// If the list is virtual, only items in view will be created.
+        /// </summary>
+        public get numItems():number
+        {
+            if(this._virtual)
+                return this._numItems;
+            else
+                return this._children.length;
+        }
+        
+        public set numItems(value:number)
+        {
+            if(this._virtual) {
+                this._numItems = value;
+                this.refreshVirtualList();
+            }
+			else {
+                var cnt: number = this._children.length;
+                if(value > cnt) {
+                    for(var i: number = cnt;i < value;i++)
+                        this.addItemFromPool();
+                }
+    			else {
+                     this.removeChildrenToPool(value,cnt);
+                }
+                if(this.itemRenderer != null) {
+                    for(i = 0;i < value;i++)
+                        this.itemRenderer.call(this.callbackThisObj, i, this.getChildAt(i));
+                }
             }
         }
         
-        public get numItems(): number {
-            return this._children.length;
-        }
-
-        public set numItems(value: number) {
-            var cnt: number = this._children.length;
-            if(value > cnt) {
-                for(var i: number = cnt;i < value;i++)
-                    this.addItemFromPool();
+        private handleVirtualListSizeChanged(): void {
+            var vw: number = this._virtualScrollPane.viewWidth;
+            var vh: number = this._virtualScrollPane.viewHeight;
+            if(this._virtualScrollPane != this.scrollPane) //scroll support from parent
+            {
+                vw = Math.min(vw,this.viewWidth);
+                vh = Math.min(vh,this.viewHeight);
+            }
+        
+            if(this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal) {
+                if(this._layout == ListLayoutType.SingleColumn)
+                    this._curLineItemCount = 1;
+                else if(this._lineItemCount != 0)
+                    this._curLineItemCount = this._lineItemCount;
+                else
+                    this._curLineItemCount = Math.floor((vw + this._columnGap) / (this._itemSize.x + this._columnGap));
+                this._viewCount = (Math.ceil((vh + this._lineGap) / (this._itemSize.y + this._lineGap)) + 1) * this._curLineItemCount;
+                var numChildren: number = this._children.length;
+                if(numChildren < this._viewCount) {
+                    for(var i: number = numChildren;i < this._viewCount;i++)
+                        this.addItemFromPool();
+                }
+                else if(numChildren > this._viewCount)
+                    this.removeChildrenToPool(this._viewCount,numChildren);
             }
             else {
-                this.removeChildrenToPool(value,cnt);
+                if(this._layout == ListLayoutType.SingleRow)
+                    this._curLineItemCount = 1;
+                else if(this._lineItemCount != 0)
+                    this._curLineItemCount = this._lineItemCount;
+                else
+                    this._curLineItemCount = Math.floor((vh + this._lineGap) / (this._itemSize.y + this._lineGap));
+                this._viewCount = (Math.ceil((vw + this._columnGap) / (this._itemSize.x + this._columnGap)) + 1) * this._curLineItemCount;
+                numChildren = this._children.length;
+                if(numChildren < this._viewCount) {
+                    for(i = numChildren;i < this._viewCount;i++)
+                        this.addItemFromPool();
+                }
+                else if(numChildren > this._viewCount)
+                    this.removeChildrenToPool(this._viewCount,numChildren);
             }
-
-            if(this.itemRenderer != null) {
-                for(i = 0;i < value;i++)
-                    this.itemRenderer(i,this.getChildAt(i));
+        
+            this.refreshVirtualList();
+        }
+        
+        private refreshVirtualList(): void {
+            this.ensureBoundsCorrect();
+        
+            if(this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal) {
+                if(this.scrollPane != null) {
+                    var ch: number;
+                    if(this._layout == ListLayoutType.SingleColumn) {
+                        ch = this._numItems * this._itemSize.y + Math.max(0,this._numItems - 1) * this._lineGap;
+                        if(this._loop && ch > 0)
+                            ch = ch * 2 + this._lineGap;
+                    }
+                    else {
+                        var lineCount: number = Math.ceil(this._numItems / this._curLineItemCount);
+                        ch = lineCount * this._itemSize.y + Math.max(0,lineCount - 1) * this._lineGap;
+                    }
+        
+                    this.scrollPane.setContentSize(this.scrollPane.contentWidth,ch);
+                }
+        
+                this.__scrolled(null);
             }
+            else {
+                if(this.scrollPane != null) {
+                    var cw: number;
+                    if(this._layout == ListLayoutType.SingleRow) {
+                        cw = this._numItems * this._itemSize.x + Math.max(0,this._numItems - 1) * this._columnGap;
+                        if(this._loop && cw > 0)
+                            cw = cw * 2 + this._columnGap;
+                    }
+                    else {
+                        lineCount = Math.ceil(this._numItems / this._curLineItemCount);
+                        cw = lineCount * this._itemSize.x + Math.max(0,lineCount - 1) * this._columnGap;
+                    }
+        
+                    this.scrollPane.setContentSize(cw,this.scrollPane.contentHeight);
+                }
+        
+                this.__scrolled(null);
+            }
+        }
+        
+        private renderItems(beginIndex: number,endIndex: number): void {
+            for(var i: number = 0;i < this._viewCount;i++) {
+                var obj: GObject = this.getChildAt(i);
+                var j: number = this._firstIndex + i;
+                if(this._loop && j >= this._numItems)
+                    j -= this._numItems;
+        
+                if(j < this._numItems) {
+                    obj.visible = true;
+                    if(i >= beginIndex && i < endIndex)
+                        this.itemRenderer.call(this.callbackThisObj, j,obj);
+                }
+                else
+                    obj.visible = false;
+            }
+        }
+        
+        private getItemRect(index: number): egret.Rectangle {
+            var rect: egret.Rectangle;
+            var index1: number = index / this._curLineItemCount;
+            var index2: number = index % this._curLineItemCount;
+            switch(this._layout) {
+                case ListLayoutType.SingleColumn:
+                    rect = new egret.Rectangle(0,index1 * this._itemSize.y + Math.max(0,index1 - 1) * this._lineGap,
+                        this.viewWidth,this._itemSize.y);
+                    break;
+        
+                case ListLayoutType.FlowHorizontal:
+                    rect = new egret.Rectangle(index2 * this._itemSize.x + Math.max(0,index2 - 1) * this._columnGap,
+                        index1 * this._itemSize.y + Math.max(0,index1 - 1) * this._lineGap,
+                        this._itemSize.x,this._itemSize.y);
+                    break;
+        
+                case ListLayoutType.SingleRow:
+                    rect = new egret.Rectangle(index1 * this._itemSize.x + Math.max(0,index1 - 1) * this._columnGap,0,
+                        this._itemSize.x,this.viewHeight);
+                    break;
+        
+                case ListLayoutType.FlowVertical:
+                    rect = new egret.Rectangle(index1 * this._itemSize.x + Math.max(0,index1 - 1) * this._columnGap,
+                        index2 * this._itemSize.y + Math.max(0,index2 - 1) * this._lineGap,
+                        this._itemSize.x,this._itemSize.y);
+                    break;
+            }
+            return rect;
+        }
+        
+        private __scrolled(evt: egret.Event): void {
+            if(this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal) {
+                if(this._loop) {
+                    if(this._virtualScrollPane.percY == 0)
+                        this._virtualScrollPane.posY = this._numItems * (this._itemSize.y + this._lineGap);
+                    else if(this._virtualScrollPane.percY == 1)
+                        this._virtualScrollPane.posY = this._numItems * this._itemSize.y + Math.max(0,this._numItems - 1) * this._lineGap - this.viewHeight;
+                }
+        
+                var scrollPosY: number = this._virtualScrollPane.posY;
+                if(this._virtualScrollPane != this.scrollPane) {
+                    scrollPosY -= this.y;
+                    if(scrollPosY < 0)
+                        scrollPosY = 0;
+                }
+        
+                var firstLine: number = Math.floor((scrollPosY + this._lineGap) / (this._itemSize.y + this._lineGap));
+                var newFirstIndex: number = firstLine * this._curLineItemCount;
+                for(var i: number = 0;i < this._viewCount;i++) {
+                    var obj: GObject = this.getChildAt(i);
+                    obj.y = (firstLine + (i / this._curLineItemCount)) * (this._itemSize.y + this._lineGap);
+                }
+                if(newFirstIndex >= this._numItems)
+                    newFirstIndex -= this._numItems;
+        
+                if(newFirstIndex != this._firstIndex || evt == null) {
+                    var oldFirstIndex: number = this._firstIndex;
+                    this._firstIndex = newFirstIndex;
+        
+                    if(evt == null || oldFirstIndex + this._viewCount < newFirstIndex || oldFirstIndex > newFirstIndex + this._viewCount) {
+                        //no intersection, render all
+                        for(i = 0;i < this._viewCount;i++) {
+                            obj = this.getChildAt(i);
+                            if(obj instanceof GButton)
+                                (<GButton><any>obj).selected = false;
+                        }
+                        this.renderItems(0,this._viewCount);
+                    }
+                    else if(oldFirstIndex > newFirstIndex) {
+                        var j1: number = oldFirstIndex - newFirstIndex;
+                        var j2: number = this._viewCount - j1;
+                        for(i = j2 - 1;i >= 0;i--) {
+                            var obj1: GObject = this.getChildAt(i);
+                            var obj2: GObject = this.getChildAt(i + j1);
+                            if(obj2 instanceof GButton)
+                                (<GButton><any>obj2).selected = false;
+                            var tmp: number = obj1.y;
+                            obj1.y = obj2.y;
+                            obj2.y = tmp;
+                            this.swapChildrenAt(i + j1,i);
+                        }
+                        this.renderItems(0,j1);
+                    }
+                    else {
+                        j1 = newFirstIndex - oldFirstIndex;
+                        j2 = this._viewCount - j1;
+                        for(i = 0;i < j2;i++) {
+                            obj1 = this.getChildAt(i);
+                            obj2 = this.getChildAt(i + j1);
+                            if(obj1 instanceof GButton)
+                               (<GButton><any>obj1).selected = false;
+                            tmp = obj1.y;
+                            obj1.y = obj2.y;
+                            obj2.y = tmp;
+                            this.swapChildrenAt(i + j1,i);
+                        }
+                        this.renderItems(j2,this._viewCount);
+                    }
+                }
+            }
+            else {
+                if(this._loop) {
+                    if(this._virtualScrollPane.percX == 0)
+                        this._virtualScrollPane.posX = this._numItems * (this._itemSize.x + this._columnGap);
+                    else if(this._virtualScrollPane.percX == 1)
+                        this._virtualScrollPane.posX = this._numItems * this._itemSize.x + Math.max(0,this._numItems - 1) * this._columnGap - this.viewWidth;
+                }
+        
+                var scrollPosX: number = this._virtualScrollPane.posX;
+                if(this._virtualScrollPane != this.scrollPane) {
+                    scrollPosX -= this.x;
+                    if(scrollPosX < 0)
+                        scrollPosX = 0;
+                }
+        
+                firstLine = Math.floor((scrollPosX + this._columnGap) / (this._itemSize.x + this._columnGap));
+                newFirstIndex = firstLine * this._curLineItemCount;
+        
+                for(i = 0;i < this._viewCount;i++) {
+                    obj = this.getChildAt(i);
+                    obj.x = (firstLine + (i / this._curLineItemCount)) * (this._itemSize.x + this._columnGap);
+                }
+        
+                if(newFirstIndex >= this._numItems)
+                    newFirstIndex -= this._numItems;
+        
+                if(newFirstIndex != this._firstIndex || evt == null) {
+                    oldFirstIndex = this._firstIndex;
+                    this._firstIndex = newFirstIndex;
+                    if(evt == null || oldFirstIndex + this._viewCount < newFirstIndex || oldFirstIndex > newFirstIndex + this._viewCount) {
+                        //no intersection, render all
+                        for(i = 0;i < this._viewCount;i++) {
+                            obj = this.getChildAt(i);
+                            if(obj1 instanceof GButton)
+                                (<GButton><any>obj1).selected = false;
+                        }
+        
+                        this.renderItems(0,this._viewCount);
+                    }
+                    else if(oldFirstIndex > newFirstIndex) {
+                        j1 = oldFirstIndex - newFirstIndex;
+                        j2 = this._viewCount - j1;
+                        for(i = j2 - 1;i >= 0;i--) {
+                            obj1 = this.getChildAt(i);
+                            obj2 = this.getChildAt(i + j1);
+                            if(obj2 instanceof GButton)
+                                (<GButton><any>obj2).selected = false;
+                            tmp = obj1.x;
+                            obj1.x = obj2.x;
+                            obj2.x = tmp;
+                            this.swapChildrenAt(i + j1,i);
+                        }
+        
+                        this.renderItems(0,j1);
+                    }
+                    else {
+                        j1 = newFirstIndex - oldFirstIndex;
+                        j2 = this._viewCount - j1;
+                        for(i = 0;i < j2;i++) {
+                            obj1 = this.getChildAt(i);
+                            obj2 = this.getChildAt(i + j1);
+                            if(obj1 instanceof GButton)
+                                (<GButton><any>obj1).selected = false;
+                            tmp = obj1.x;
+                            obj1.x = obj2.x;
+                            obj2.x = tmp;
+                            this.swapChildrenAt(i + j1,i);
+                        }
+        
+                        this.renderItems(j2,this._viewCount);
+                    }
+                }
+            }
+        
+            this._boundsChanged = false;
         }
 
         protected updateBounds(): void {

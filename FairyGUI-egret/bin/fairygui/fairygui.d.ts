@@ -876,6 +876,7 @@ declare module fairygui {
          * itemRenderer(int index, GObject item);
          */
         itemRenderer: Function;
+        callbackThisObj: any;
         private _layout;
         private _lineItemCount;
         private _lineGap;
@@ -886,6 +887,14 @@ declare module fairygui {
         private _lastSelectedIndex;
         private _pool;
         private _selectionHandled;
+        private _virtual;
+        private _loop;
+        private _numItems;
+        private _firstIndex;
+        private _viewCount;
+        private _curLineItemCount;
+        private _itemSize;
+        private _virtualScrollPane;
         constructor();
         dispose(): void;
         layout: ListLayoutType;
@@ -923,7 +932,16 @@ declare module fairygui {
         adjustItemsSize(): void;
         findObjectNear(xValue: number, yValue: number, resultPoint?: egret.Point): egret.Point;
         scrollToView(index: number, ani?: boolean): void;
+        getFirstChildInView(): number;
+        setVirtual(): void;
+        setVirtualAndLoop(): void;
+        private _setVirtual(loop);
         numItems: number;
+        private handleVirtualListSizeChanged();
+        private refreshVirtualList();
+        private renderItems(beginIndex, endIndex);
+        private getItemRect(index);
+        private __scrolled(evt);
         protected updateBounds(): void;
         setup_beforeAdd(xml: any): void;
     }
@@ -1521,7 +1539,7 @@ declare module fairygui {
         scrollDown(speed?: number, ani?: boolean): void;
         scrollLeft(speed?: number, ani?: boolean): void;
         scrollRight(speed?: number, ani?: boolean): void;
-        scrollToView(target: egret.Rectangle | GObject, ani?: boolean): void;
+        scrollToView(target: any, ani?: boolean): void;
         isChildInView(obj: GObject): boolean;
         setSize(aWidth: number, aHeight: number): void;
         setContentSize(aWidth: number, aHeight: number): void;
