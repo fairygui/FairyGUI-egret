@@ -2939,6 +2939,8 @@ var fairygui;
         };
         d(p, "root"
             ,function () {
+                if (this instanceof fairygui.GRoot)
+                    return this;
                 var p = this._parent;
                 while (p) {
                     if (p instanceof fairygui.GRoot)
@@ -10311,10 +10313,11 @@ var fairygui;
             this._holdAreaPoint.y = ScrollPane.sHelperPoint.y;
             this._isHoldAreaDone = false;
             this._isMouseMoved = false;
-            this._owner.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__mouseMove, this);
-            this._owner.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_END, this.__mouseUp, this);
+            this._owner.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__touchMove, this);
+            this._owner.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_END, this.__touchEnd, this);
+            this._owner.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_TAP, this.__touchTap, this);
         };
-        p.__mouseMove = function (evt) {
+        p.__touchMove = function (evt) {
             var sensitivity = fairygui.UIConfig.touchScrollSensitivity;
             var diff;
             var sv, sh, st;
@@ -10404,16 +10407,15 @@ var fairygui;
             this.onScrolling();
             this.dispatchEventWith(ScrollPane.SCROLL, false);
         };
-        p.__mouseUp = function (evt) {
+        p.__touchEnd = function (evt) {
             if (!this._touchEffect) {
                 this._isMouseMoved = false;
                 return;
             }
-            this._owner.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.__mouseMove, this);
-            this._owner.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__mouseUp, this);
+            this._owner.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.__touchMove, this);
+            this._owner.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__touchEnd, this);
             if (!this._isMouseMoved)
                 return;
-            this._isMouseMoved = false;
             var time = (egret.getTimer() - this._time2) / 1000;
             if (time == 0)
                 time = 0.001;
@@ -10481,6 +10483,9 @@ var fairygui;
             egret.Tween.get(this._throwTween, { onChange: this.__tweenUpdate2, onChangeObj: this })
                 .to({ value: 1 }, duration * 1000, ScrollPane._easeTypeFunc)
                 .call(this.__tweenComplete2, this);
+        };
+        p.__touchTap = function (evt) {
+            this._isMouseMoved = false;
         };
         p.__rollOver = function (evt) {
             this.showScrollBar(true);

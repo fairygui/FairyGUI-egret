@@ -1536,8 +1536,9 @@ declare module fairygui {
         private onScrollEnd();
         private static sHelperPoint;
         private __mouseDown(evt);
-        private __mouseMove(evt);
-        private __mouseUp(evt);
+        private __touchMove(evt);
+        private __touchEnd(evt);
+        private __touchTap(evt);
         private __rollOver(evt);
         private __rollOut(evt);
         private showScrollBar(val);
