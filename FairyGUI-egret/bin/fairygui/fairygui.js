@@ -5457,6 +5457,10 @@ var fairygui;
             this._lineGap = 0;
             this._columnGap = 0;
             this._lastSelectedIndex = 0;
+            this._numItems = 0;
+            this._firstIndex = 0; //the top left index
+            this._viewCount = 0; //item count in view
+            this._curLineItemCount = 0; //item count in one line
             this._trackBounds = true;
             this._pool = new fairygui.GObjectPool();
             this._layout = fairygui.ListLayoutType.SingleColumn;
@@ -5551,6 +5555,7 @@ var fairygui;
             return obj;
         };
         p.returnToPool = function (obj) {
+            obj.displayObject.cacheAsBitmap = false;
             this._pool.returnObject(obj);
         };
         p.addChildAt = function (child, index) {

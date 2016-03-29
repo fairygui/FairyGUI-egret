@@ -22,10 +22,10 @@ module fairygui {
         //Virtual List support
         private _virtual:boolean;
         private _loop: boolean;
-        private _numItems: number;
-        private _firstIndex: number; //the top left index
-        private _viewCount: number; //item count in view
-        private _curLineItemCount: number; //item count in one line
+        private _numItems: number = 0;
+        private _firstIndex: number = 0; //the top left index
+        private _viewCount: number = 0; //item count in view
+        private _curLineItemCount: number = 0; //item count in one line
         private _itemSize:egret.Point;
         private _virtualScrollPane:ScrollPane;
 
@@ -128,6 +128,7 @@ module fairygui {
         }
 
         public returnToPool(obj: GObject): void {
+            obj.displayObject.cacheAsBitmap = false;
             this._pool.returnObject(obj);
         }
 
