@@ -950,7 +950,7 @@ module fairygui {
         
         private getItemRect(index: number): egret.Rectangle {
             var rect: egret.Rectangle;
-            var index1: number = index / this._curLineItemCount;
+            var index1: number = Math.floor(index / this._curLineItemCount);
             var index2: number = index % this._curLineItemCount;
             switch(this._layout) {
                 case ListLayoutType.SingleColumn:
@@ -998,7 +998,7 @@ module fairygui {
                 var newFirstIndex: number = firstLine * this._curLineItemCount;
                 for(var i: number = 0;i < this._viewCount;i++) {
                     var obj: GObject = this.getChildAt(i);
-                    obj.y = (firstLine + (i / this._curLineItemCount)) * (this._itemSize.y + this._lineGap);
+                    obj.y = (firstLine + Math.floor(i / this._curLineItemCount)) * (this._itemSize.y + this._lineGap);
                 }
                 if(newFirstIndex >= this._numItems)
                     newFirstIndex -= this._numItems;
@@ -1068,7 +1068,7 @@ module fairygui {
         
                 for(i = 0;i < this._viewCount;i++) {
                     obj = this.getChildAt(i);
-                    obj.x = (firstLine + (i / this._curLineItemCount)) * (this._itemSize.x + this._columnGap);
+                    obj.x = (firstLine + Math.floor(i / this._curLineItemCount)) * (this._itemSize.x + this._columnGap);
                 }
         
                 if(newFirstIndex >= this._numItems)

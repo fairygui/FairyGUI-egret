@@ -360,10 +360,10 @@ module fairygui {
             if (this._vScroll) {
                 var top: number = this.posY;
                 var bottom: number = top + this._maskHeight;
-                if(rect.y < top)
+                if(rect.y < top || rect.height >= this._maskHeight)
                     this.setPosY(rect.y, ani);
                 else if(rect.y + rect.height > bottom) {
-                    if(rect.y + rect.height * 2 >= top)
+                    if(rect.height <= this._maskHeight/2)
                         this.setPosY(rect.y + rect.height * 2 - this._maskHeight, ani);
                     else
                         this.setPosY(rect.y + rect.height - this._maskHeight, ani);
@@ -372,10 +372,10 @@ module fairygui {
             if (this._hScroll) {
                 var left: number =  this.posX;
                 var right: number = left + this._maskWidth;
-                if(rect.x < left)
+                if(rect.x < left || rect.width >= this._maskWidth)
                     this.setPosX(rect.x, ani);
                 else if(rect.x + rect.width > right) {
-                    if(rect.x + rect.width * 2 >= left)
+                    if(rect.width <= this._maskWidth/2)
                         this.setPosX(rect.x + rect.width * 2 - this._maskWidth, ani);
                     else
                         this.setPosX(rect.x + rect.width - this._maskWidth, ani);

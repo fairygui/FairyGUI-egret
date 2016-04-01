@@ -6297,7 +6297,7 @@ var fairygui;
         };
         p.getItemRect = function (index) {
             var rect;
-            var index1 = index / this._curLineItemCount;
+            var index1 = Math.floor(index / this._curLineItemCount);
             var index2 = index % this._curLineItemCount;
             switch (this._layout) {
                 case fairygui.ListLayoutType.SingleColumn:
@@ -6333,7 +6333,7 @@ var fairygui;
                 var newFirstIndex = firstLine * this._curLineItemCount;
                 for (var i = 0; i < this._viewCount; i++) {
                     var obj = this.getChildAt(i);
-                    obj.y = (firstLine + (i / this._curLineItemCount)) * (this._itemSize.y + this._lineGap);
+                    obj.y = (firstLine + Math.floor(i / this._curLineItemCount)) * (this._itemSize.y + this._lineGap);
                 }
                 if (newFirstIndex >= this._numItems)
                     newFirstIndex -= this._numItems;
@@ -6398,7 +6398,7 @@ var fairygui;
                 newFirstIndex = firstLine * this._curLineItemCount;
                 for (i = 0; i < this._viewCount; i++) {
                     obj = this.getChildAt(i);
-                    obj.x = (firstLine + (i / this._curLineItemCount)) * (this._itemSize.x + this._columnGap);
+                    obj.x = (firstLine + Math.floor(i / this._curLineItemCount)) * (this._itemSize.x + this._columnGap);
                 }
                 if (newFirstIndex >= this._numItems)
                     newFirstIndex -= this._numItems;
@@ -10353,10 +10353,10 @@ var fairygui;
             if (this._vScroll) {
                 var top = this.posY;
                 var bottom = top + this._maskHeight;
-                if (rect.y < top)
+                if (rect.y < top || rect.height >= this._maskHeight)
                     this.setPosY(rect.y, ani);
                 else if (rect.y + rect.height > bottom) {
-                    if (rect.y + rect.height * 2 >= top)
+                    if (rect.height <= this._maskHeight / 2)
                         this.setPosY(rect.y + rect.height * 2 - this._maskHeight, ani);
                     else
                         this.setPosY(rect.y + rect.height - this._maskHeight, ani);
@@ -10365,10 +10365,10 @@ var fairygui;
             if (this._hScroll) {
                 var left = this.posX;
                 var right = left + this._maskWidth;
-                if (rect.x < left)
+                if (rect.x < left || rect.width >= this._maskWidth)
                     this.setPosX(rect.x, ani);
                 else if (rect.x + rect.width > right) {
-                    if (rect.x + rect.width * 2 >= left)
+                    if (rect.width <= this._maskWidth / 2)
                         this.setPosX(rect.x + rect.width * 2 - this._maskWidth, ani);
                     else
                         this.setPosX(rect.x + rect.width - this._maskWidth, ani);

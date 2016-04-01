@@ -534,6 +534,9 @@ module fairygui {
         }
 
         public get root(): GRoot {
+            if(this instanceof GRoot)
+                return <GRoot><any>this;
+                
             var p: GObject = this._parent;
             while (p) {
                 if (p instanceof GRoot)
@@ -690,7 +693,6 @@ module fairygui {
         }
         
         public localToRoot(ax: number = 0,ay: number = 0,resultPoint?: egret.Point): egret.Point {
-
             var pt: egret.Point = this._displayObject.localToGlobal(ax,ay,resultPoint);
             pt.x /= GRoot.contentScaleFactor;
             pt.y /= GRoot.contentScaleFactor;
