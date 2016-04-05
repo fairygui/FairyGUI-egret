@@ -4079,7 +4079,7 @@ var fairygui;
             var cnt = this._transitions.length;
             for (var i = 0; i < cnt; ++i) {
                 var trans = this._transitions[i];
-                trans.stop();
+                trans.stop(false, true);
             }
         };
         p.constructChild = function (xml) {
@@ -7933,6 +7933,7 @@ var fairygui;
             var charX = GTextField.GUTTER_X;
             var lineIndent = 0;
             var charIndent = 0;
+            rectWidth = this.width - GTextField.GUTTER_X * 2;
             var lineCount = this._lines.length;
             for (var i = 0; i < lineCount; i++) {
                 line = this._lines[i];

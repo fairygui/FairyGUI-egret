@@ -803,7 +803,7 @@ module fairygui {
             var cnt: number = this._transitions.length;
             for(var i: number = 0;i < cnt;++i) {
                 var trans: Transition = this._transitions[i];
-                trans.stop();
+                trans.stop(false, true);
             }
         }
 

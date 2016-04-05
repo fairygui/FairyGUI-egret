@@ -587,7 +587,7 @@ module fairygui {
             var charX: number = GTextField.GUTTER_X;
             var lineIndent: number = 0;
             var charIndent: number = 0;
-
+            rectWidth = this.width - GTextField.GUTTER_X * 2;
             var lineCount: number = this._lines.length;
             for (var i: number = 0; i < lineCount; i++) {
                 line = this._lines[i];
@@ -612,7 +612,7 @@ module fairygui {
                         else { 
                             bm = new egret.Bitmap();
                             bm.smoothing = true;
-                        }                        
+                        }                      
                         bm.x = charX + lineIndent + Math.ceil(glyph.offsetX*fontScale);
                         bm.y = line.y + charIndent + Math.ceil(glyph.offsetY*fontScale);
                         bm.texture = glyph.texture;
