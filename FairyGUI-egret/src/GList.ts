@@ -123,7 +123,8 @@ module fairygui {
                 url = this._defaultItem;
 
             var obj:GObject = this._pool.getObject(url);
-            obj.visible = true;
+            if(obj!=null)
+                obj.visible = true;
             return obj;
         }
 

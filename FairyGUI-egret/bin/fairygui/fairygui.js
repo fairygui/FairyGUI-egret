@@ -1399,6 +1399,16 @@ var fairygui;
             gv.scaleX = this._owner.scaleX;
             gv.scaleY = this._owner.scaleY;
         };
+        p.updateFromRelations = function (dx, dy) {
+            for (var key in this._storage) {
+                var gv = this._storage[key];
+                gv.width += dx;
+                gv.height += dy;
+            }
+            this._default.width += dx;
+            this._default.height += dy;
+            this.updateState();
+        };
         return GearSize;
     })(fairygui.GearBase);
     fairygui.GearSize = GearSize;
@@ -1522,6 +1532,8 @@ var fairygui;
 (function (fairygui) {
     var Transition = (function () {
         function Transition(owner) {
+            this.autoPlayRepeat = 1;
+            this.autoPlayDelay = 0;
             this._ownerBaseX = 0;
             this._ownerBaseY = 0;
             this._totalTimes = 0;
@@ -1535,14 +1547,6 @@ var fairygui;
             this._items = new Array();
         }
         var d = __define,c=Transition,p=c.prototype;
-        d(p, "name"
-            ,function () {
-                return this._name;
-            }
-            ,function (value) {
-                this._name = value;
-            }
-        );
         p.play = function (onComplete, onCompleteObj, onCompleteParam, times, delay) {
             if (onComplete === void 0) { onComplete = null; }
             if (onCompleteObj === void 0) { onCompleteObj = null; }
@@ -2209,6 +2213,17 @@ var fairygui;
             var str = xml.attributes.options;
             if (str)
                 this._options = parseInt(str);
+            str = xml.attributes.autoPlay;
+            if (str)
+                this.autoPlay = str == "true";
+            if (this.autoPlay) {
+                str = xml.attributes.autoPlayRepeat;
+                if (str)
+                    this.autoPlayRepeat = parseInt(str);
+                str = xml.attributes.autoPlayDelay;
+                if (str)
+                    this.autoPlayDelay = parseFloat(str);
+            }
             var col = xml.children;
             var length1 = col.length;
             for (var i1 = 0; i1 < length1; i1++) {
@@ -3181,8 +3196,8 @@ var fairygui;
         };
         p.handleXYChanged = function () {
             if (this._displayObject) {
-                this._displayObject.x = this._x + this._pivotOffsetX;
-                this._displayObject.y = this._y + this._pivotOffsetY;
+                this._displayObject.x = Math.floor(this._x + this._pivotOffsetX);
+                this._displayObject.y = Math.floor(this._y + this._pivotOffsetY);
             }
         };
         p.handleSizeChanged = function () {
@@ -4037,6 +4052,10 @@ var fairygui;
                         trans.setup(cxml);
                     }
                 }
+                if (this._transitions.length > 0) {
+                    this.displayObject.addEventListener(egret.Event.ADDED_TO_STAGE, this.___added, this);
+                    this.displayObject.addEventListener(egret.Event.REMOVED_FROM_STAGE, this.___removed, this);
+                }
             }
             this.applyAllControllers();
             this._buildingDisplayList = false;
@@ -4046,6 +4065,21 @@ var fairygui;
                 var child = this._children[i1];
                 if (child.displayObject != null && child.finalVisible)
                     this._container.addChild(child.displayObject);
+            }
+        };
+        p.___added = function (evt) {
+            var cnt = this._transitions.length;
+            for (var i = 0; i < cnt; ++i) {
+                var trans = this._transitions[i];
+                if (trans.autoPlay)
+                    trans.play(null, null, null, trans.autoPlayRepeat, trans.autoPlayDelay);
+            }
+        };
+        p.___removed = function (evt) {
+            var cnt = this._transitions.length;
+            for (var i = 0; i < cnt; ++i) {
+                var trans = this._transitions[i];
+                trans.stop();
             }
         };
         p.constructChild = function (xml) {
@@ -5551,7 +5585,8 @@ var fairygui;
             if (!url)
                 url = this._defaultItem;
             var obj = this._pool.getObject(url);
-            obj.visible = true;
+            if (obj != null)
+                obj.visible = true;
             return obj;
         };
         p.returnToPool = function (obj) {
@@ -6687,10 +6722,6 @@ var fairygui;
                 return arr.shift();
             }
             var child = fairygui.UIPackage.createObjectFromURL(url);
-            if (!child) {
-                console.log("FairyGUI: getObject failed - " + url + " not exists");
-                return null;
-            }
             return child;
         };
         p.returnObject = function (obj) {
@@ -9700,7 +9731,10 @@ var fairygui;
                         v = this._owner._rawWidth - this._targetWidth;
                     if (info.percent)
                         v = v / this._targetWidth * this._target._rawWidth;
-                    this._owner.width = this._target._rawWidth + v;
+                    if (this._target == this._owner.parent)
+                        this._owner.setSize(this._target._rawWidth + v, this._owner._rawHeight, true);
+                    else
+                        this._owner.width = this._target._rawWidth + v;
                     break;
                 case fairygui.RelationType.Height:
                     if (this._owner._underConstruct && this._owner == this._target.parent)
@@ -9709,7 +9743,10 @@ var fairygui;
                         v = this._owner._rawHeight - this._targetHeight;
                     if (info.percent)
                         v = v / this._targetHeight * this._target._rawHeight;
-                    this._owner.height = this._target._rawHeight + v;
+                    if (this._target == this._owner.parent)
+                        this._owner.setSize(this._owner._rawWidth, this._target._rawHeight + v, true);
+                    else
+                        this._owner.height = this._target._rawHeight + v;
                     break;
                 case fairygui.RelationType.LeftExt_Left:
                     break;
@@ -9820,6 +9857,8 @@ var fairygui;
             this._owner.relations.handling = this._target;
             var ox = this._owner.x;
             var oy = this._owner.y;
+            var ow = this._owner._rawWidth;
+            var oh = this._owner._rawHeight;
             var length = this._defs.length;
             for (var i = 0; i < length; i++) {
                 var info = this._defs[i];
@@ -9840,6 +9879,12 @@ var fairygui;
                         }
                     }
                 }
+            }
+            if (ow != this._owner._rawWidth || oh != this._owner._rawHeight) {
+                ow = this._owner._rawWidth - ow;
+                oh = this._owner._rawHeight - oh;
+                if (this._owner.gearSize.controller != null)
+                    this._owner.gearSize.updateFromRelations(ow, oh);
             }
             this._owner.relations.handling = null;
         };

@@ -767,8 +767,8 @@ module fairygui {
 
         protected handleXYChanged(): void {
             if(this._displayObject) {
-                this._displayObject.x = this._x + this._pivotOffsetX;
-                this._displayObject.y = this._y + this._pivotOffsetY;
+                this._displayObject.x = Math.floor(this._x + this._pivotOffsetX);
+                this._displayObject.y = Math.floor(this._y + this._pivotOffsetY);
             }
         }
 

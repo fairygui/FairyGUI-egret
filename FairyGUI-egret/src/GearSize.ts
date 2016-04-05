@@ -110,6 +110,18 @@ module fairygui {
             gv.scaleX = this._owner.scaleX;
             gv.scaleY = this._owner.scaleY;
         }
+        
+        public updateFromRelations(dx: number,dy: number): void {
+            for(var key in this._storage) {
+                var gv: GearSizeValue = this._storage[key];
+                gv.width += dx;
+                gv.height += dy;
+            }
+            this._default.width += dx;
+            this._default.height += dy;
+
+            this.updateState();
+        }
     }
     
     class GearSizeValue

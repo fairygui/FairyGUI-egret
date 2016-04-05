@@ -344,6 +344,7 @@ declare module fairygui {
         protected addStatus(pageId: string, value: string): void;
         apply(): void;
         updateState(): void;
+        updateFromRelations(dx: number, dy: number): void;
     }
 }
 declare module fairygui {
@@ -362,7 +363,10 @@ declare module fairygui {
 }
 declare module fairygui {
     class Transition {
-        private _name;
+        name: string;
+        autoPlay: boolean;
+        autoPlayRepeat: number;
+        autoPlayDelay: number;
         private _owner;
         private _ownerBaseX;
         private _ownerBaseY;
@@ -379,7 +383,6 @@ declare module fairygui {
         OPTION_IGNORE_DISPLAY_CONTROLLER: number;
         private FRAME_RATE;
         constructor(owner: GComponent);
-        name: string;
         play(onComplete?: Function, onCompleteObj?: any, onCompleteParam?: any, times?: number, delay?: number): void;
         playReverse(onComplete?: Function, onCompleteObj?: any, onCompleteParam?: any, times?: number, delay?: number): void;
         private _play(onComplete?, onCompleteObj?, onCompleteParam?, times?, delay?, reversed?);
@@ -666,6 +669,8 @@ declare module fairygui {
         childSortingOrderChanged(child: GObject, oldValue: number, newValue?: number): void;
         constructFromResource(pkgItem: PackageItem): void;
         protected constructFromXML(xml: any): void;
+        private ___added(evt);
+        private ___removed(evt);
         private constructChild(xml);
     }
 }

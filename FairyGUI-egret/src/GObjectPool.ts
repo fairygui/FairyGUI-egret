@@ -38,11 +38,6 @@ module fairygui {
             }
 
             var child: GObject = UIPackage.createObjectFromURL(url);
-            if (!child) {
-                console.log("FairyGUI: getObject failed - " + url + " not exists");
-                return null;
-            }
-
             return child;
         }
 

@@ -295,7 +295,10 @@ module fairygui {
                         v = this._owner._rawWidth - this._targetWidth;
                     if (info.percent)
                         v = v / this._targetWidth * this._target._rawWidth;
-                    this._owner.width = this._target._rawWidth + v;
+                    if(this._target == this._owner.parent)
+                        this._owner.setSize(this._target._rawWidth + v,this._owner._rawHeight,true);
+                    else
+                        this._owner.width = this._target._rawWidth + v;
                     break;
                 case RelationType.Height:
                     if(this._owner._underConstruct && this._owner==this._target.parent)
@@ -304,7 +307,10 @@ module fairygui {
                         v = this._owner._rawHeight - this._targetHeight;
                     if (info.percent)
                         v = v / this._targetHeight * this._target._rawHeight;
-                    this._owner.height = this._target._rawHeight + v;
+                    if(this._target == this._owner.parent)
+                        this._owner.setSize(this._owner._rawWidth,this._target._rawHeight + v,true);
+                    else
+                        this._owner.height = this._target._rawHeight + v;
                     break;
 
                 case RelationType.LeftExt_Left:
@@ -429,6 +435,8 @@ module fairygui {
             
             var ox: number = this._owner.x;
             var oy: number = this._owner.y;
+            var ow: number = this._owner._rawWidth;
+            var oh: number = this._owner._rawHeight;
             var length: number = this._defs.length;
             for (var i: number = 0; i < length; i++) {
                 var info: RelationDef = this._defs[i];
@@ -453,6 +461,15 @@ module fairygui {
                     }
                 }
             }
+            
+            if(ow != this._owner._rawWidth || oh != this._owner._rawHeight) {
+                ow = this._owner._rawWidth - ow;
+                oh = this._owner._rawHeight - oh;
+
+                if(this._owner.gearSize.controller != null)
+                    this._owner.gearSize.updateFromRelations(ow,oh);
+            }
+            
             this._owner.relations.handling = null;
         }
 

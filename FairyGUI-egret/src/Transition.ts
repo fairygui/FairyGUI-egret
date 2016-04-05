@@ -1,7 +1,11 @@
 module fairygui {
     export class Transition {
 
-        private _name: string;
+        public name: string;
+        public autoPlay: boolean;
+        public autoPlayRepeat: number = 1;
+        public autoPlayDelay: number = 0;
+        
         private _owner: GComponent;
         private _ownerBaseX: number = 0;
         private _ownerBaseY: number = 0;
@@ -22,14 +26,6 @@ module fairygui {
         public constructor(owner: GComponent) {
             this._owner = owner;
             this._items = new Array<TransitionItem>();
-        }
-
-        public get name(): string {
-            return this._name;
-        }
-
-        public set name(value: string) {
-            this._name = value;
         }
 
         public play(onComplete: Function = null,onCompleteObj: any = null,onCompleteParam: any = null,
@@ -727,6 +723,18 @@ module fairygui {
             var str: string = xml.attributes.options;
             if(str)
                 this._options = parseInt(str);
+            str = xml.attributes.autoPlay;
+            if(str)
+                this.autoPlay = str=="true";
+            if(this.autoPlay) {
+                str = xml.attributes.autoPlayRepeat;
+                if(str)
+                    this.autoPlayRepeat = parseInt(str);
+                str = xml.attributes.autoPlayDelay;
+                if(str)
+                    this.autoPlayDelay = parseFloat(str);
+            }
+                
             var col: any = xml.children;
             var length1: number = col.length;
             for(var i1: number = 0;i1 < length1;i1++) {

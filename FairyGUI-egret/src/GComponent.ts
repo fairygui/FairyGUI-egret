@@ -769,6 +769,12 @@ module fairygui {
                         trans.setup(cxml);
                     }
                 }
+                
+                if(this._transitions.length>0)
+                {
+                    this.displayObject.addEventListener(egret.Event.ADDED_TO_STAGE, this.___added, this);
+                    this.displayObject.addEventListener(egret.Event.REMOVED_FROM_STAGE,this.___removed,this);
+                }
             }
 
             this.applyAllControllers();
@@ -781,6 +787,23 @@ module fairygui {
                 var child: GObject = this._children[i1];
                 if (child.displayObject != null && child.finalVisible)
                     this._container.addChild(child.displayObject);
+            }
+        }
+        
+        private ___added(evt:egret.Event):void {
+            var cnt: number = this._transitions.length;
+            for(var i: number = 0;i < cnt;++i) {
+                var trans: Transition = this._transitions[i];
+                if(trans.autoPlay)
+                    trans.play(null, null, null, trans.autoPlayRepeat, trans.autoPlayDelay);
+            }
+        }
+        
+        private ___removed(evt: egret.Event): void {
+            var cnt: number = this._transitions.length;
+            for(var i: number = 0;i < cnt;++i) {
+                var trans: Transition = this._transitions[i];
+                trans.stop();
             }
         }
 
