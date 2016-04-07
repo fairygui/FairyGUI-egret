@@ -38,6 +38,7 @@ module fairygui {
             this._autoResizeItem = true;
             this._lastSelectedIndex = -1;
             this._selectionMode = ListSelectionMode.Single;
+            this.opaque = true;
         }
 
         public dispose(): void {

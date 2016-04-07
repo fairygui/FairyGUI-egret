@@ -23,7 +23,6 @@ module fairygui {
             this._controllers = new Array<Controller>();
             this._transitions = new Array<Transition>();
             this._margin = new Margin();
-            this.opaque = true;
         }
 
         protected createDisplayObject(): void {
@@ -656,6 +655,9 @@ module fairygui {
             
             this.setSize(this._sourceWidth,this._sourceHeight);
 
+            str = xml.attributes.opaque;
+            this.opaque = str != "false";
+            
             var overflow: OverflowType;
             str = xml.attributes.overflow;
             if (str)
