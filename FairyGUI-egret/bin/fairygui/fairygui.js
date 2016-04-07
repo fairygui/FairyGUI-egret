@@ -582,6 +582,8 @@ var fairygui;
         );
         p.$hitTest = function (stageX, stageY) {
             var ret = _super.prototype.$hitTest.call(this, stageX, stageY);
+            if (ret == this && !this.touchEnabled)
+                return null;
             if (ret == null && this.touchEnabled && this._hitArea != null) {
                 var m = this.$getInvertedConcatenatedMatrix();
                 var localX = m.a * stageX + m.c * stageY + m.tx;
@@ -673,6 +675,8 @@ var fairygui;
         );
         p.$hitTest = function (stageX, stageY) {
             var ret = _super.prototype.$hitTest.call(this, stageX, stageY);
+            if (ret == this && !this.touchEnabled)
+                return null;
             if (ret == null && this.touchEnabled && this._hitArea != null) {
                 var m = this.$getInvertedConcatenatedMatrix();
                 var localX = m.a * stageX + m.c * stageY + m.tx;
@@ -5139,7 +5143,9 @@ var fairygui;
             var str;
             var type = xml.attributes.type;
             if (type && type != "empty") {
-                this.setDisplayObject(new fairygui.UISprite(this));
+                var sprite = new fairygui.UISprite(this);
+                sprite.name = "abc";
+                this.setDisplayObject(sprite);
             }
             _super.prototype.setup_beforeAdd.call(this, xml);
             if (this.displayObject != null) {

@@ -32,6 +32,8 @@ module fairygui {
 
         public $hitTest(stageX: number, stageY: number): egret.DisplayObject {
             var ret: egret.DisplayObject = super.$hitTest(stageX, stageY);
+            if(ret==this && !this.touchEnabled) //本来this不可触摸时，这里ret不应该返回this，然后egret并没有，所以我自己判断
+                return null;
             if(ret == null && this.touchEnabled && this._hitArea != null) {
                 var m = this.$getInvertedConcatenatedMatrix();
                 var localX = m.a * stageX + m.c * stageY + m.tx;
