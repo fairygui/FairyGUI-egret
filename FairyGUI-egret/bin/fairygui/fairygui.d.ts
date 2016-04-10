@@ -76,7 +76,7 @@ declare module fairygui {
         private update();
         private __playEnd();
         private setFrame(frame);
-        $render(context: egret.sys.RenderContext): void;
+        $render(): void;
         $measureContentBounds(bounds: egret.Rectangle): void;
         $onAddToStage(stage: egret.Stage, nestLevel: number): void;
         $onRemoveFromStage(): void;

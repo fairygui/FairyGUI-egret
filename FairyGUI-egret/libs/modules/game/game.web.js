@@ -44,7 +44,7 @@ var egret;
             function HTML5NetContext() {
                 _super.call(this);
             }
-            var d = __define,c=HTML5NetContext;p=c.prototype;
+            var d = __define,c=HTML5NetContext,p=c.prototype;
             /**
              * @private
              *
@@ -108,6 +108,12 @@ var egret;
                         case egret.URLLoaderDataFormat.VARIABLES:
                             loader.data = new egret.URLVariables(httpLoader.response);
                             break;
+                        //case URLLoaderDataFormat.TEXT:
+                        //    loader.data = httpLoader.response;
+                        //    break;
+                        //case URLLoaderDataFormat.BINARY:
+                        //    loader.data = httpLoader.response;
+                        //    break;
                         default:
                             loader.data = httpLoader.response;
                             break;
@@ -144,6 +150,7 @@ var egret;
              * @param loader
              */
             p.loadSound = function (loader) {
+                var self = this;
                 var virtualUrl = this.getVirtualUrl(loader._request.url);
                 var sound = new egret.Sound();
                 sound.addEventListener(egret.Event.COMPLETE, onLoadComplete, self);
@@ -162,7 +169,7 @@ var egret;
                     loader.data = sound;
                     window.setTimeout(function () {
                         loader.dispatchEventWith(egret.Event.COMPLETE);
-                    }, self);
+                    }, 0);
                 }
                 function removeListeners() {
                     sound.removeEventListener(egret.Event.COMPLETE, onLoadComplete, self);
@@ -231,9 +238,9 @@ var egret;
                 return HTML5NetContext._instance;
             };
             return HTML5NetContext;
-        })(egret.HashObject);
+        }(egret.HashObject));
         web.HTML5NetContext = HTML5NetContext;
-        egret.registerClass(HTML5NetContext,"egret.web.HTML5NetContext",["egret.NetContext"]);
+        egret.registerClass(HTML5NetContext,'egret.web.HTML5NetContext',["egret.NetContext"]);
         egret.NetContext = HTML5NetContext;
     })(web = egret.web || (egret.web = {}));
 })(egret || (egret = {}));

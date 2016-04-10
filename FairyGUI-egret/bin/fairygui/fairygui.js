@@ -298,7 +298,7 @@ var fairygui;
             this._times = 0;
             this._endAt = 0;
             this._status = 0; //0-none, 1-next loop, 2-ending, 3-ended
-            this.$renderRegion = new egret.sys.Region();
+            this.$renderNode = new egret.sys.BitmapNode();
             this._playState = new fairygui.PlayState();
             this._playing = true;
             this.touchEnabled = false;
@@ -441,16 +441,18 @@ var fairygui;
             }
             this.$invalidateContentBounds();
         };
-        p.$render = function (context) {
+        p.$render = function () {
             var texture = this._texture;
             if (texture) {
                 var offsetX = Math.round(texture._offsetX) + this._frameRect.x;
                 var offsetY = Math.round(texture._offsetY) + this._frameRect.y;
                 var bitmapWidth = texture._bitmapWidth;
                 var bitmapHeight = texture._bitmapHeight;
+                var textureWidth = texture.$getTextureWidth();
+                var textureHeight = texture.$getTextureHeight();
                 var destW = Math.round(texture.$getScaleBitmapWidth());
                 var destH = Math.round(texture.$getScaleBitmapHeight());
-                context.drawImage(texture._bitmapData, texture._bitmapX, texture._bitmapY, bitmapWidth, bitmapHeight, offsetX, offsetY, destW, destH);
+                egret.Bitmap.$drawImage(this.$renderNode, texture._bitmapData, texture._bitmapX, texture._bitmapY, bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight, destW, destH, null, egret.BitmapFillMode.SCALE, true);
             }
         };
         p.$measureContentBounds = function (bounds) {
@@ -5143,9 +5145,7 @@ var fairygui;
             var str;
             var type = xml.attributes.type;
             if (type && type != "empty") {
-                var sprite = new fairygui.UISprite(this);
-                sprite.name = "abc";
-                this.setDisplayObject(sprite);
+                this.setDisplayObject(new fairygui.UISprite(this));
             }
             _super.prototype.setup_beforeAdd.call(this, xml);
             if (this.displayObject != null) {

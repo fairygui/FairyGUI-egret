@@ -26,7 +26,7 @@ module fairygui {
 
         public constructor() {
             super();
-            this.$renderRegion = new egret.sys.Region();
+            this.$renderNode = new egret.sys.BitmapNode();
             
             this._playState = new PlayState();
             this._playing = true;
@@ -175,18 +175,20 @@ module fairygui {
             this.$invalidateContentBounds();
         }
 
-        $render(context: egret.sys.RenderContext): void {
+        $render(): void {
             var texture = this._texture;
             if (texture) {
                 var offsetX: number = Math.round(texture._offsetX) + this._frameRect.x;
                 var offsetY: number = Math.round(texture._offsetY) + this._frameRect.y;
                 var bitmapWidth: number = texture._bitmapWidth;
                 var bitmapHeight: number = texture._bitmapHeight;
+                var textureWidth: number = texture.$getTextureWidth();
+                var textureHeight: number = texture.$getTextureHeight();
                 var destW:number = Math.round(texture.$getScaleBitmapWidth());
                 var destH:number = Math.round(texture.$getScaleBitmapHeight());
                 
-                context.drawImage(texture._bitmapData,  texture._bitmapX, texture._bitmapY,
-                    bitmapWidth, bitmapHeight, offsetX, offsetY, destW, destH);
+                egret.Bitmap.$drawImage(<egret.sys.BitmapNode>this.$renderNode, texture._bitmapData, texture._bitmapX, texture._bitmapY,
+                    bitmapWidth,bitmapHeight,offsetX,offsetY,textureWidth,textureHeight,destW,destH,null,egret.BitmapFillMode.SCALE, true);
             }
         }
         

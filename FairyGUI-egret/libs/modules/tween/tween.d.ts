@@ -2,14 +2,14 @@ declare module egret {
     /**
      * @language en_US
      * Easing function set. Different easing functions are used to make an animation proceed according to the corresponding equation
-     * @see http://bbs.egret-labs.org/thread-392-1-1.html Tween and Ease
+     * @see http://edn.egret.com/cn/index.php/article/index/id/53 Easing effect Demo
      * @version Egret 2.4
      * @platform Web,Native
      */
     /**
      * @language zh_CN
      * 缓动函数集合，使用不同的缓动函数使得动画按照对应的方程进行
-     * @see http://bbs.egret-labs.org/thread-392-1-1.html Tween和Ease
+     * @see http://edn.egret.com/cn/index.php/article/index/id/53 缓动效果演示
      * @version Egret 2.4
      * @platform Web,Native
      */
@@ -20,246 +20,482 @@ declare module egret {
          */
         constructor();
         /**
-         *
-         * @param amount
-         * @returns
+         * @language en_US
+         * get.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * get。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static get(amount: any): Function;
         /**
-         *
-         * @param pow
-         * @returns
+         * @language en_US
+         * get pow in.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * get pow in。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static getPowIn(pow: any): Function;
         /**
-         *
-         * @param pow
-         * @returns
+         * @language en_US
+         * get pow out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * get pow out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static getPowOut(pow: any): Function;
         /**
-         *
-         * @param pow
-         * @returns
+         * @language en_US
+         * get pow in out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * get pow in out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static getPowInOut(pow: any): Function;
         /**
+         * @language en_US
+         * quad in.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * quad in。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static quadIn: Function;
         /**
+         * @language en_US
+         * quad out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * quad out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static quadOut: Function;
         /**
+         * @language en_US
+         * quad in out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * quad in out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static quadInOut: Function;
         /**
+         * @language en_US
+         * cubic in.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * cubic in。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static cubicIn: Function;
         /**
+         * @language en_US
+         * cubic out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * cubic out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static cubicOut: Function;
         /**
+         * @language en_US
+         * cubic in out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * cubic in out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static cubicInOut: Function;
         /**
+         * @language en_US
+         * quart in.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * quart in。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static quartIn: Function;
         /**
+         * @language en_US
+         * quart out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * quart out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static quartOut: Function;
         /**
+         * @language en_US
+         * quart in out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * quart in out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static quartInOut: Function;
         /**
+         * @language en_US
+         * quint in.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * quint in。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static quintIn: Function;
         /**
+         * @language en_US
+         * quint out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * quint out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static quintOut: Function;
         /**
+         * @language en_US
+         * quint in out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * quint in out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static quintInOut: Function;
         /**
-         *
-         * @param t
-         * @returns
+         * @language en_US
+         * sine in.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * sine in。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static sineIn(t: any): number;
         /**
-         *
-         * @param t
-         * @returns
+         * @language en_US
+         * sine out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * sine out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static sineOut(t: any): number;
         /**
-         *
-         * @param t
-         * @returns
+         * @language en_US
+         * sine in out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * sine in out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static sineInOut(t: any): number;
         /**
-         *
-         * @param amount
-         * @returns
+         * @language en_US
+         * get back in.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * get back in。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static getBackIn(amount: any): Function;
         /**
+         * @language en_US
+         * back in.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * back in。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static backIn: Function;
         /**
-         *
-         * @param amount
-         * @returns
+         * @language en_US
+         * get back out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * get back out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static getBackOut(amount: any): Function;
         /**
+         * @language en_US
+         * back out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * back out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static backOut: Function;
         /**
-         *
-         * @param amount
-         * @returns
+         * @language en_US
+         * get back in out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * get back in out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static getBackInOut(amount: any): Function;
         /**
+         * @language en_US
+         * back in out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * back in out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static backInOut: Function;
         /**
-         *
-         * @param t
-         * @returns
+         * @language en_US
+         * circ in.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * circ in。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static circIn(t: any): number;
         /**
-         *
-         * @param t
-         * @returns
+         * @language en_US
+         * circ out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * circ out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static circOut(t: any): number;
         /**
-         *
-         * @param t
-         * @returns
+         * @language en_US
+         * circ in out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * circ in out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static circInOut(t: any): number;
         /**
-         *
-         * @param t
-         * @returns
+         * @language en_US
+         * bounce in.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * bounce in。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static bounceIn(t: any): number;
         /**
-         *
-         * @param t
-         * @returns
+         * @language en_US
+         * bounce out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * bounce out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static bounceOut(t: any): number;
         /**
-         *
-         * @param t
-         * @returns
+         * @language en_US
+         * bounce in out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * bounce in out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static bounceInOut(t: any): number;
         /**
-         *
-         * @param amplitude
-         * @param period
-         * @returns
+         * @language en_US
+         * get elastic in.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * get elastic in。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static getElasticIn(amplitude: any, period: any): Function;
         /**
+         * @language en_US
+         * elastic in.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * elastic in。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static elasticIn: Function;
         /**
-         *
-         * @param amplitude
-         * @param period
-         * @returns
+         * @language en_US
+         * get elastic out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * get elastic out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static getElasticOut(amplitude: any, period: any): Function;
         /**
+         * @language en_US
+         * elastic out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * elastic out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static elasticOut: Function;
         /**
-         *
-         * @param amplitude
-         * @param period
-         * @returns
+         * @language en_US
+         * get elastic in out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * get elastic in out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
         static getElasticInOut(amplitude: any, period: any): Function;
         /**
+         * @language en_US
+         * elastic in out.See example.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * elastic in out。请查看示例
          * @version Egret 2.4
          * @platform Web,Native
          */
@@ -389,6 +625,7 @@ declare module egret {
          * @param props {any} Parameters, support loop onChange onChangeObj
          * @param pluginData {any} Write realized
          * @param override {boolean} Whether to remove the object before adding a tween, the default value false
+         * Not recommended, you can use Tween.removeTweens(target) instead.
          * @version Egret 2.4
          * @platform Web,Native
          */
@@ -398,7 +635,8 @@ declare module egret {
          * @param target {any} 要激活 Tween 的对象
          * @param props {any} 参数，支持loop(循环播放) onChange(变化函数) onChangeObj(变化函数作用域)
          * @param pluginData {any} 暂未实现
-         * @param override {boolean} 是否移除对象之前添加的tween，默认值false
+         * @param override {boolean} 是否移除对象之前添加的tween，默认值false。
+         * 不建议使用，可使用 Tween.removeTweens(target) 代替。
          * @version Egret 2.4
          * @platform Web,Native
          */
@@ -615,6 +853,13 @@ declare module egret {
          * @returns {egret.Tween} Tween object itself
          * @version Egret 2.4
          * @platform Web,Native
+         * @example
+         * <pre>
+         *  egret.Tween.get(display).call(function (a:number, b:string) {
+         *      console.log("a: " + a); // the first parameter passed 233
+         *      console.log("b: " + b); // the second parameter passed “hello”
+         *  }, this, [233, "hello"]);
+         * </pre>
          */
         /**
          * @language zh_CN
@@ -625,6 +870,13 @@ declare module egret {
          * @returns {egret.Tween} Tween对象本身
          * @version Egret 2.4
          * @platform Web,Native
+         * @example
+         * <pre>
+         *  egret.Tween.get(display).call(function (a:number, b:string) {
+         *      console.log("a: " + a); //对应传入的第一个参数 233
+         *      console.log("b: " + b); //对应传入的第二个参数 “hello”
+         *  }, this, [233, "hello"]);
+         * </pre>
          */
         call(callback: Function, thisObj?: any, params?: Array<any>): Tween;
         /**

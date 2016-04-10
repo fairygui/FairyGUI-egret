@@ -50,7 +50,7 @@ var egret;
         if (DEBUG) {
             egret.sys.$logToFPS("Error #" + code + ": " + text);
         }
-        throw new Error("#" + code + ": " + text);
+        throw new Error("#" + code + ": " + text); //使用这种方式报错能够终止后续代码继续运行
     }
     egret.$error = _error;
     function _warn(code) {
@@ -242,9 +242,7 @@ function __extends(d, b) {
     __.prototype = b.prototype;
     d.prototype = new __();
 }
-var __define = this.__define || function (o, p, g, s) {
-    Object.defineProperty(o, p, { configurable: true, enumerable: true, get: g, set: s });
-};
+var __define = this.__define || function (o, p, g, s) { Object.defineProperty(o, p, { configurable: true, enumerable: true, get: g, set: s }); };
 var egret;
 (function (egret) {
     /**
@@ -281,7 +279,7 @@ var egret;
         function HashObject() {
             this.$hashCode = egret.$hashCount++;
         }
-        var d = __define,c=HashObject;p=c.prototype;
+        var d = __define,c=HashObject,p=c.prototype;
         d(p, "hashCode"
             /**
              * @language en_US
@@ -300,9 +298,9 @@ var egret;
             }
         );
         return HashObject;
-    })();
+    }());
     egret.HashObject = HashObject;
-    egret.registerClass(HashObject,"egret.HashObject",["egret.IHashObject"]);
+    egret.registerClass(HashObject,'egret.HashObject',["egret.IHashObject"]);
     if (DEBUG) {
         egret.$markReadOnly(HashObject, "hashCode");
     }
@@ -402,7 +400,7 @@ var egret;
                 3: 0
             };
         }
-        var d = __define,c=EventDispatcher;p=c.prototype;
+        var d = __define,c=EventDispatcher,p=c.prototype;
         /**
          * @private
          *
@@ -461,13 +459,8 @@ var egret;
                 }
             }
             var eventBin = {
-                type: type,
-                listener: listener,
-                thisObject: thisObject,
-                priority: priority,
-                target: this,
-                useCapture: useCapture,
-                dispatchOnce: !!dispatchOnce
+                type: type, listener: listener, thisObject: thisObject, priority: priority,
+                target: this, useCapture: useCapture, dispatchOnce: !!dispatchOnce
             };
             if (insertIndex !== -1) {
                 list.splice(insertIndex, 0, eventBin);
@@ -599,1372 +592,10 @@ var egret;
             return true;
         };
         return EventDispatcher;
-    })(egret.HashObject);
+    }(egret.HashObject));
     egret.EventDispatcher = EventDispatcher;
-    egret.registerClass(EventDispatcher,"egret.EventDispatcher",["egret.IEventDispatcher"]);
+    egret.registerClass(EventDispatcher,'egret.EventDispatcher',["egret.IEventDispatcher"]);
 })(egret || (egret = {}));
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-2015, Egret Technology Inc.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
-var egret;
-(function (egret) {
-    var sys;
-    (function (sys) {
-        if (DEBUG) {
-            function isF(num) {
-                return num % 1 !== 0;
-            }
-        }
-        /**
-         * @private
-         */
-        function unionArea(r1, r2) {
-            var minX = r1.minX < r2.minX ? r1.minX : r2.minX;
-            var minY = r1.minY < r2.minY ? r1.minY : r2.minY;
-            var maxX = r1.maxX > r2.maxX ? r1.maxX : r2.maxX;
-            var maxY = r1.maxY > r2.maxY ? r1.maxY : r2.maxY;
-            return (maxX - minX) * (maxY - minY);
-        }
-        /**
-         * @private
-         * 脏矩形计算工具类
-         */
-        var DirtyRegion = (function () {
-            function DirtyRegion() {
-                /**
-                 * @private
-                 */
-                this.dirtyList = [];
-                /**
-                 * @private
-                 */
-                this.hasClipRect = false;
-                /**
-                 * @private
-                 */
-                this.clipWidth = 0;
-                /**
-                 * @private
-                 */
-                this.clipHeight = 0;
-                /**
-                 * @private
-                 */
-                this.clipArea = 0;
-                /**
-                 * @private
-                 */
-                this.clipRectChanged = false;
-            }
-            var d = __define,c=DirtyRegion;p=c.prototype;
-            /**
-             * @private
-             * 设置剪裁边界，超过边界的节点将跳过绘制。
-             */
-            p.setClipRect = function (width, height) {
-                this.hasClipRect = true;
-                this.clipRectChanged = true;
-                this.clipWidth = Math.ceil(width);
-                this.clipHeight = Math.ceil(height);
-                this.clipArea = this.clipWidth * this.clipHeight;
-            };
-            /**
-             * @private
-             * 添加一个脏矩形区域，返回是否添加成功，当矩形为空或者在屏幕之外时返回false。
-             */
-            p.addRegion = function (target) {
-                var minX = target.minX, minY = target.minY, maxX = target.maxX, maxY = target.maxY;
-                if (DEBUG) {
-                    if (isF(minX) || isF(minY) || isF(maxX) || isF(maxY)) {
-                        egret.log("addRegion error:", minX, minY, maxX, maxY);
-                    }
-                }
-                if (this.hasClipRect) {
-                    if (minX < 0) {
-                        minX = 0;
-                    }
-                    if (minY < 0) {
-                        minY = 0;
-                    }
-                    if (maxX > this.clipWidth) {
-                        maxX = this.clipWidth;
-                    }
-                    if (maxY > this.clipHeight) {
-                        maxY = this.clipHeight;
-                    }
-                }
-                if (minX >= maxX || minY >= maxY) {
-                    return false;
-                }
-                if (this.clipRectChanged) {
-                    return true;
-                }
-                var dirtyList = this.dirtyList;
-                var region = sys.Region.create();
-                dirtyList.push(region.setTo(minX, minY, maxX, maxY));
-                this.mergeDirtyList(dirtyList);
-                return true;
-            };
-            /**
-             * @private
-             */
-            p.clear = function () {
-                var dirtyList = this.dirtyList;
-                var length = dirtyList.length;
-                for (var i = 0; i < length; i++) {
-                    sys.Region.release(dirtyList[i]);
-                }
-                dirtyList.length = 0;
-            };
-            /**
-             * @private
-             * 获取最终的脏矩形列表
-             */
-            p.getDirtyRegions = function () {
-                var dirtyList = this.dirtyList;
-                if (egret.Capabilities.runtimeType == egret.RuntimeType.NATIVE) {
-                    //todo 现在为全部dirty
-                    this.clipRectChanged = true; //阻止所有的addRegion()
-                    this.clear();
-                    var region = sys.Region.create();
-                    if (this.hasClipRect) {
-                        dirtyList.push(region.setTo(0, 0, this.clipWidth, this.clipHeight));
-                    }
-                    else {
-                        var bounds = this.displayList.root.$getOriginalBounds();
-                        dirtyList.push(region.setTo(bounds.x, bounds.y, bounds.width, bounds.height));
-                    }
-                }
-                else if (this.clipRectChanged) {
-                    this.clipRectChanged = false;
-                    this.clear();
-                    var region = sys.Region.create();
-                    dirtyList.push(region.setTo(0, 0, this.clipWidth, this.clipHeight));
-                }
-                else {
-                    while (this.mergeDirtyList(dirtyList)) {
-                    }
-                }
-                return this.dirtyList;
-            };
-            /**
-             * @private
-             * 合并脏矩形列表
-             */
-            p.mergeDirtyList = function (dirtyList) {
-                var length = dirtyList.length;
-                if (length < 2) {
-                    return false;
-                }
-                var hasClipRect = this.hasClipRect;
-                var bestDelta = length > 3 ? Number.POSITIVE_INFINITY : 0;
-                var mergeA = 0;
-                var mergeB = 0;
-                var totalArea = 0;
-                for (var i = 0; i < length - 1; i++) {
-                    var regionA = dirtyList[i];
-                    hasClipRect && (totalArea += regionA.area);
-                    for (var j = i + 1; j < length; j++) {
-                        var regionB = dirtyList[j];
-                        var delta = unionArea(regionA, regionB) - regionA.area - regionB.area;
-                        if (bestDelta > delta) {
-                            mergeA = i;
-                            mergeB = j;
-                            bestDelta = delta;
-                        }
-                    }
-                }
-                if (hasClipRect && (totalArea / this.clipArea) > 0.95) {
-                    this.clipRectChanged = true;
-                }
-                if (mergeA != mergeB) {
-                    var region = dirtyList[mergeB];
-                    dirtyList[mergeA].union(region);
-                    sys.Region.release(region);
-                    dirtyList.splice(mergeB, 1);
-                    return true;
-                }
-                return false;
-            };
-            return DirtyRegion;
-        })();
-        sys.DirtyRegion = DirtyRegion;
-        egret.registerClass(DirtyRegion,"egret.sys.DirtyRegion");
-    })(sys = egret.sys || (egret.sys = {}));
-})(egret || (egret = {}));
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-2015, Egret Technology Inc.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
-var egret;
-(function (egret) {
-    var PI = Math.PI;
-    var HalfPI = PI / 2;
-    var PacPI = PI + HalfPI;
-    var TwoPI = PI * 2;
-    var DEG_TO_RAD = Math.PI / 180;
-    /**
-     * @private
-     */
-    function cos(angle) {
-        switch (angle) {
-            case HalfPI:
-            case -PacPI:
-                return 0;
-            case PI:
-            case -PI:
-                return -1;
-            case PacPI:
-            case -HalfPI:
-                return 0;
-            default:
-                return Math.cos(angle);
-        }
-    }
-    /**
-     * @private
-     */
-    function sin(angle) {
-        switch (angle) {
-            case HalfPI:
-            case -PacPI:
-                return 1;
-            case PI:
-            case -PI:
-                return 0;
-            case PacPI:
-            case -HalfPI:
-                return -1;
-            default:
-                return Math.sin(angle);
-        }
-    }
-    var matrixPool = [];
-    /**
-     * @language en_US
-     * The Matrix class represents a transformation matrix that determines how to map points from one coordinate space to
-     * another. You can perform various graphical transformations on a display object by setting the properties of a Matrix
-     * object, applying that Matrix object to the matrix property of a display object, These transformation functions include
-     * translation (x and y repositioning), rotation, scaling, and skewing.
-     * @version Egret 2.4
-     * @platform Web,Native
-     * @includeExample egret/geom/Matrix.ts
-     */
-    /**
-     * @language zh_CN
-     * Matrix 类表示一个转换矩阵，它确定如何将点从一个坐标空间映射到另一个坐标空间。
-     * 您可以对一个显示对象执行不同的图形转换，方法是设置 Matrix 对象的属性，将该 Matrix
-     * 对象应用于显示对象的 matrix 属性。这些转换函数包括平移（x 和 y 重新定位）、旋转、缩放和倾斜。
-     * @version Egret 2.4
-     * @platform Web,Native
-     * @includeExample egret/geom/Matrix.ts
-     */
-    var Matrix = (function (_super) {
-        __extends(Matrix, _super);
-        /**
-         * @language en_US
-         * Creates a new Matrix object with the specified parameters.
-         * @param a The value that affects the positioning of pixels along the x axis when scaling or rotating an image.
-         * @param b The value that affects the positioning of pixels along the y axis when rotating or skewing an image.
-         * @param c The value that affects the positioning of pixels along the x axis when rotating or skewing an image.
-         * @param d The value that affects the positioning of pixels along the y axis when scaling or rotating an image..
-         * @param tx The distance by which to translate each point along the x axis.
-         * @param ty The distance by which to translate each point along the y axis.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 使用指定参数创建一个 Matrix 对象
-         * @param a 缩放或旋转图像时影响像素沿 x 轴定位的值。
-         * @param b 旋转或倾斜图像时影响像素沿 y 轴定位的值。
-         * @param c 旋转或倾斜图像时影响像素沿 x 轴定位的值。
-         * @param d 缩放或旋转图像时影响像素沿 y 轴定位的值。
-         * @param tx 沿 x 轴平移每个点的距离。
-         * @param ty 沿 y 轴平移每个点的距离。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        function Matrix(a, b, c, d, tx, ty) {
-            if (a === void 0) { a = 1; }
-            if (b === void 0) { b = 0; }
-            if (c === void 0) { c = 0; }
-            if (d === void 0) { d = 1; }
-            if (tx === void 0) { tx = 0; }
-            if (ty === void 0) { ty = 0; }
-            _super.call(this);
-            this.a = a;
-            this.b = b;
-            this.c = c;
-            this.d = d;
-            this.tx = tx;
-            this.ty = ty;
-        }
-        var d = __define,c=Matrix;p=c.prototype;
-        /**
-         * @language en_US
-         * Releases a matrix instance to the object pool
-         * @param matrix matrix that Needs to be recycled
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 释放一个Matrix实例到对象池
-         * @param matrix 需要回收的 matrix
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        Matrix.release = function (matrix) {
-            if (!matrix) {
-                return;
-            }
-            matrixPool.push(matrix);
-        };
-        /**
-         * @language en_US
-         * get a matrix instance from the object pool or create a new one.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 从对象池中取出或创建一个新的Matrix对象。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        Matrix.create = function () {
-            var matrix = matrixPool.pop();
-            if (!matrix) {
-                matrix = new Matrix();
-            }
-            return matrix;
-        };
-        /**
-         * @language en_US
-         * Returns a new Matrix object that is a clone of this matrix, with an exact copy of the contained object.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 返回一个新的 Matrix 对象，它是此矩阵的克隆，带有与所含对象完全相同的副本。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.clone = function () {
-            return new Matrix(this.a, this.b, this.c, this.d, this.tx, this.ty);
-        };
-        /**
-         * @language en_US
-         * Concatenates a matrix with the current matrix, effectively combining the geometric effects of the two. In mathematical
-         * terms, concatenating two matrixes is the same as combining them using matrix multiplication.
-         * @param other The matrix to be concatenated to the source matrix.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 将某个矩阵与当前矩阵连接，从而将这两个矩阵的几何效果有效地结合在一起。在数学术语中，将两个矩阵连接起来与使用矩阵乘法将它们结合起来是相同的。
-         * @param other 要连接到源矩阵的矩阵。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.concat = function (other) {
-            var a = this.a * other.a;
-            var b = 0.0;
-            var c = 0.0;
-            var d = this.d * other.d;
-            var tx = this.tx * other.a + other.tx;
-            var ty = this.ty * other.d + other.ty;
-            if (this.b !== 0.0 || this.c !== 0.0 || other.b !== 0.0 || other.c !== 0.0) {
-                a += this.b * other.c;
-                d += this.c * other.b;
-                b += this.a * other.b + this.b * other.d;
-                c += this.c * other.a + this.d * other.c;
-                tx += this.ty * other.c;
-                ty += this.tx * other.b;
-            }
-            this.a = a;
-            this.b = b;
-            this.c = c;
-            this.d = d;
-            this.tx = tx;
-            this.ty = ty;
-        };
-        /**
-         * @language en_US
-         * Copies all of the matrix data from the source Point object into the calling Matrix object.
-         * @param other  The Matrix object from which to copy the data.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 将源 Matrix 对象中的所有矩阵数据复制到调用方 Matrix 对象中。
-         * @param other 要拷贝的目标矩阵
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.copyFrom = function (other) {
-            this.a = other.a;
-            this.b = other.b;
-            this.c = other.c;
-            this.d = other.d;
-            this.tx = other.tx;
-            this.ty = other.ty;
-            return this;
-        };
-        /**
-         * @language en_US
-         * Sets each matrix property to a value that causes a null transformation. An object transformed by applying an
-         * identity matrix will be identical to the original. After calling the identity() method, the resulting matrix
-         * has the following properties: a=1, b=0, c=0, d=1, tx=0, ty=0.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 为每个矩阵属性设置一个值，该值将导致矩阵无转换。通过应用恒等矩阵转换的对象将与原始对象完全相同。
-         * 调用 identity() 方法后，生成的矩阵具有以下属性：a=1、b=0、c=0、d=1、tx=0 和 ty=0。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.identity = function () {
-            this.a = this.d = 1;
-            this.b = this.c = this.tx = this.ty = 0;
-        };
-        /**
-         * @language en_US
-         * Performs the opposite transformation of the original matrix. You can apply an inverted matrix to an object to
-         * undo the transformation performed when applying the original matrix.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 执行原始矩阵的逆转换。
-         * 您可以将一个逆矩阵应用于对象来撤消在应用原始矩阵时执行的转换。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.invert = function () {
-            this.$invertInto(this);
-        };
-        /**
-         * @private
-         */
-        p.$invertInto = function (target) {
-            var a = this.a;
-            var b = this.b;
-            var c = this.c;
-            var d = this.d;
-            var tx = this.tx;
-            var ty = this.ty;
-            if (b == 0 && c == 0) {
-                target.b = target.c = 0;
-                if (a == 0 || d == 0) {
-                    target.a = target.d = target.tx = target.ty = 0;
-                }
-                else {
-                    a = target.a = 1 / a;
-                    d = target.d = 1 / d;
-                    target.tx = -a * tx;
-                    target.ty = -d * ty;
-                }
-                return;
-            }
-            var determinant = a * d - b * c;
-            if (determinant == 0) {
-                target.identity();
-                return;
-            }
-            determinant = 1 / determinant;
-            var k = target.a = d * determinant;
-            b = target.b = -b * determinant;
-            c = target.c = -c * determinant;
-            d = target.d = a * determinant;
-            target.tx = -(k * tx + c * ty);
-            target.ty = -(b * tx + d * ty);
-        };
-        /**
-         * @language en_US
-         * Applies a rotation transformation to the Matrix object.
-         * The rotate() method alters the a, b, c, and d properties of the Matrix object.
-         * @param angle The rotation angle in radians.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 对 Matrix 对象应用旋转转换。
-         * rotate() 方法将更改 Matrix 对象的 a、b、c 和 d 属性。
-         * @param angle 以弧度为单位的旋转角度。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.rotate = function (angle) {
-            angle = +angle;
-            if (angle !== 0) {
-                var u = cos(angle);
-                var v = sin(angle);
-                var ta = this.a;
-                var tb = this.b;
-                var tc = this.c;
-                var td = this.d;
-                var ttx = this.tx;
-                var tty = this.ty;
-                this.a = ta * u - tb * v;
-                this.b = ta * v + tb * u;
-                this.c = tc * u - td * v;
-                this.d = tc * v + td * u;
-                this.tx = ttx * u - tty * v;
-                this.ty = ttx * v + tty * u;
-            }
-        };
-        /**
-         * @language en_US
-         * Applies a scaling transformation to the matrix. The x axis is multiplied by sx, and the y axis it is multiplied by sy.
-         * The scale() method alters the a and d properties of the Matrix object.
-         * @param sx A multiplier used to scale the object along the x axis.
-         * @param sy A multiplier used to scale the object along the y axis.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 对矩阵应用缩放转换。x 轴乘以 sx，y 轴乘以 sy。
-         * scale() 方法将更改 Matrix 对象的 a 和 d 属性。
-         * @param sx 用于沿 x 轴缩放对象的乘数。
-         * @param sy 用于沿 y 轴缩放对象的乘数。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.scale = function (sx, sy) {
-            if (sx !== 1) {
-                this.a *= sx;
-                this.c *= sx;
-                this.tx *= sx;
-            }
-            if (sy !== 1) {
-                this.b *= sy;
-                this.d *= sy;
-                this.ty *= sy;
-            }
-        };
-        /**
-         * @language en_US
-         * Sets the members of Matrix to the specified values
-         * @param a The value that affects the positioning of pixels along the x axis when scaling or rotating an image.
-         * @param b The value that affects the positioning of pixels along the y axis when rotating or skewing an image.
-         * @param c The value that affects the positioning of pixels along the x axis when rotating or skewing an image.
-         * @param d The value that affects the positioning of pixels along the y axis when scaling or rotating an image..
-         * @param tx The distance by which to translate each point along the x axis.
-         * @param ty The distance by which to translate each point along the y axis.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 将 Matrix 的成员设置为指定值
-         * @param a 缩放或旋转图像时影响像素沿 x 轴定位的值。
-         * @param b 旋转或倾斜图像时影响像素沿 y 轴定位的值。
-         * @param c 旋转或倾斜图像时影响像素沿 x 轴定位的值。
-         * @param d 缩放或旋转图像时影响像素沿 y 轴定位的值。
-         * @param tx 沿 x 轴平移每个点的距离。
-         * @param ty 沿 y 轴平移每个点的距离。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.setTo = function (a, b, c, d, tx, ty) {
-            this.a = a;
-            this.b = b;
-            this.c = c;
-            this.d = d;
-            this.tx = tx;
-            this.ty = ty;
-            return this;
-        };
-        /**
-         * @language en_US
-         * Returns the result of applying the geometric transformation represented by the Matrix object to the specified point.
-         * @param pointX The x coordinate for which you want to get the result of the Matrix transformation.
-         * @param pointY The y coordinate for which you want to get the result of the Matrix transformation.
-         * @param resultPoint A reusable instance of Point for saving the results. Passing this parameter can reduce the
-         * number of reallocate objects, which allows you to get better code execution performance.
-         * @returns The point resulting from applying the Matrix transformation.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 返回将 Matrix 对象表示的几何转换应用于指定点所产生的结果。
-         * @param pointX 想要获得其矩阵转换结果的点的x坐标。
-         * @param pointY 想要获得其矩阵转换结果的点的y坐标。
-         * @param resultPoint 框架建议尽可能减少创建对象次数来优化性能，可以从外部传入一个复用的Point对象来存储结果，若不传入将创建一个新的Point对象返回。
-         * @returns 由应用矩阵转换所产生的点。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.transformPoint = function (pointX, pointY, resultPoint) {
-            var x = this.a * pointX + this.c * pointY + this.tx;
-            var y = this.b * pointX + this.d * pointY + this.ty;
-            if (resultPoint) {
-                resultPoint.setTo(x, y);
-                return resultPoint;
-            }
-            return new egret.Point(x, y);
-        };
-        /**
-         * @language en_US
-         * Translates the matrix along the x and y axes, as specified by the dx and dy parameters.
-         * @param dx The amount of movement along the x axis to the right, in pixels.
-         * @param dy The amount of movement down along the y axis, in pixels.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 沿 x 和 y 轴平移矩阵，由 dx 和 dy 参数指定。
-         * @param dx 沿 x 轴向右移动的量（以像素为单位）。
-         * @param dy 沿 y 轴向下移动的量（以像素为单位）。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.translate = function (dx, dy) {
-            this.tx += dx;
-            this.ty += dy;
-        };
-        /**
-         * @language en_US
-         * Determines whether two matrixes are equal.
-         * @param other The matrix to be compared.
-         * @returns A value of true if the object is equal to this Matrix object; false if it is not equal.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 是否与另一个矩阵数据相等
-         * @param other 要比较的另一个矩阵对象。
-         * @returns 是否相等，ture表示相等。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.equals = function (other) {
-            return this.a == other.a && this.b == other.b && this.c == other.c && this.d == other.d && this.tx == other.tx && this.ty == other.ty;
-        };
-        /**
-         * @language en_US
-         * prepend matrix
-         * @param a The value that affects the positioning of pixels along the x axis when scaling or rotating an image.
-         * @param b The value that affects the positioning of pixels along the y axis when rotating or skewing an image.
-         * @param c The value that affects the positioning of pixels along the x axis when rotating or skewing an image.
-         * @param d The value that affects the positioning of pixels along the y axis when scaling or rotating an image..
-         * @param tx The distance by which to translate each point along the x axis.
-         * @param ty The distance by which to translate each point along the y axis.
-         * @returns matrix
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 前置矩阵
-         * @param a 缩放或旋转图像时影响像素沿 x 轴定位的值
-         * @param b 缩放或旋转图像时影响像素沿 y 轴定位的值
-         * @param c 缩放或旋转图像时影响像素沿 x 轴定位的值
-         * @param d 缩放或旋转图像时影响像素沿 y 轴定位的值
-         * @param tx 沿 x 轴平移每个点的距离
-         * @param ty 沿 y 轴平移每个点的距离
-         * @returns 矩阵自身
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.prepend = function (a, b, c, d, tx, ty) {
-            var tx1 = this.tx;
-            if (a != 1 || b != 0 || c != 0 || d != 1) {
-                var a1 = this.a;
-                var c1 = this.c;
-                this.a = a1 * a + this.b * c;
-                this.b = a1 * b + this.b * d;
-                this.c = c1 * a + this.d * c;
-                this.d = c1 * b + this.d * d;
-            }
-            this.tx = tx1 * a + this.ty * c + tx;
-            this.ty = tx1 * b + this.ty * d + ty;
-            return this;
-        };
-        /**
-         * @language en_US
-         * append matrix
-         * @param a The value that affects the positioning of pixels along the x axis when scaling or rotating an image.
-         * @param b The value that affects the positioning of pixels along the y axis when rotating or skewing an image.
-         * @param c The value that affects the positioning of pixels along the x axis when rotating or skewing an image.
-         * @param d The value that affects the positioning of pixels along the y axis when scaling or rotating an image..
-         * @param tx The distance by which to translate each point along the x axis.
-         * @param ty The distance by which to translate each point along the y axis.
-         * @returns matrix
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 后置矩阵
-         * @param a 缩放或旋转图像时影响像素沿 x 轴定位的值
-         * @param b 缩放或旋转图像时影响像素沿 y 轴定位的值
-         * @param c 缩放或旋转图像时影响像素沿 x 轴定位的值
-         * @param d 缩放或旋转图像时影响像素沿 y 轴定位的值
-         * @param tx 沿 x 轴平移每个点的距离
-         * @param ty 沿 y 轴平移每个点的距离
-         * @returns 矩阵自身
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.append = function (a, b, c, d, tx, ty) {
-            var a1 = this.a;
-            var b1 = this.b;
-            var c1 = this.c;
-            var d1 = this.d;
-            if (a != 1 || b != 0 || c != 0 || d != 1) {
-                this.a = a * a1 + b * c1;
-                this.b = a * b1 + b * d1;
-                this.c = c * a1 + d * c1;
-                this.d = c * b1 + d * d1;
-            }
-            this.tx = tx * a1 + ty * c1 + this.tx;
-            this.ty = tx * b1 + ty * d1 + this.ty;
-            return this;
-        };
-        /**
-         * @language en_US
-         * Given a point in the pretransform coordinate space, returns the coordinates of that point after the transformation occurs.
-         * Unlike the standard transformation applied using the transformPoint() method, the deltaTransformPoint() method's transformation does not consider the translation parameters tx and ty.
-         * @param point The point for which you want to get the result of the matrix transformation.
-         * @returns The point resulting from applying the matrix transformation.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 如果给定预转换坐标空间中的点，则此方法返回发生转换后该点的坐标。
-         * 与使用 transformPoint() 方法应用的标准转换不同，deltaTransformPoint() 方法的转换不考虑转换参数 tx 和 ty。
-         * @param point 想要获得其矩阵转换结果的点
-         * @returns 由应用矩阵转换所产生的点
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.deltaTransformPoint = function (point) {
-            var self = this;
-            var x = self.a * point.x + self.c * point.y;
-            var y = self.b * point.x + self.d * point.y;
-            return new egret.Point(x, y);
-        };
-        /**
-         * @language en_US
-         * Returns a text value listing the properties of the Matrix object.
-         * @returns A string containing the values of the properties of the Matrix object: a, b, c, d, tx, and ty.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 返回将 Matrix 对象表示的几何转换应用于指定点所产生的结果。
-         * @returns 一个字符串，它包含 Matrix 对象的属性值：a、b、c、d、tx 和 ty。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.toString = function () {
-            return "(a=" + this.a + ", b=" + this.b + ", c=" + this.c + ", d=" + this.d + ", tx=" + this.tx + ", ty=" + this.ty + ")";
-        };
-        /**
-         * @language en_US
-         * Includes parameters for scaling, rotation, and translation. When applied to a matrix it sets the matrix's values based on those parameters.
-         * @param scaleX The factor by which to scale horizontally.
-         * @param scaleY The factor by which scale vertically.
-         * @param rotation The amount to rotate, in radians.
-         * @param tx The number of pixels to translate (move) to the right along the x axis.
-         * @param ty The number of pixels to translate (move) down along the y axis.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 包括用于缩放、旋转和转换的参数。当应用于矩阵时，该方法会基于这些参数设置矩阵的值。
-         * @param scaleX 水平缩放所用的系数
-         * @param scaleY 垂直缩放所用的系数
-         * @param rotation 旋转量（以弧度为单位）
-         * @param tx 沿 x 轴向右平移（移动）的像素数
-         * @param ty 沿 y 轴向下平移（移动）的像素数
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.createBox = function (scaleX, scaleY, rotation, tx, ty) {
-            if (rotation === void 0) { rotation = 0; }
-            if (tx === void 0) { tx = 0; }
-            if (ty === void 0) { ty = 0; }
-            var self = this;
-            if (rotation !== 0) {
-                rotation = rotation / DEG_TO_RAD;
-                var u = egret.NumberUtils.cos(rotation);
-                var v = egret.NumberUtils.sin(rotation);
-                self.a = u * scaleX;
-                self.b = v * scaleY;
-                self.c = -v * scaleX;
-                self.d = u * scaleY;
-            }
-            else {
-                self.a = scaleX;
-                self.b = 0;
-                self.c = 0;
-                self.d = scaleY;
-            }
-            self.tx = tx;
-            self.ty = ty;
-        };
-        /**
-         * @language en_US
-         * Creates the specific style of matrix expected by the beginGradientFill() and lineGradientStyle() methods of the Graphics class.
-         * Width and height are scaled to a scaleX/scaleY pair and the tx/ty values are offset by half the width and height.
-         * @param width The width of the gradient box.
-         * @param height The height of the gradient box.
-         * @param rotation The amount to rotate, in radians.
-         * @param tx The distance, in pixels, to translate to the right along the x axis. This value is offset by half of the width parameter.
-         * @param ty The distance, in pixels, to translate down along the y axis. This value is offset by half of the height parameter.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 创建 Graphics 类的 beginGradientFill() 和 lineGradientStyle() 方法所需的矩阵的特定样式。
-         * 宽度和高度被缩放为 scaleX/scaleY 对，而 tx/ty 值偏移了宽度和高度的一半。
-         * @param width 渐变框的宽度
-         * @param height 渐变框的高度
-         * @param rotation 旋转量（以弧度为单位）
-         * @param tx 沿 x 轴向右平移的距离（以像素为单位）。此值将偏移 width 参数的一半
-         * @param ty 沿 y 轴向下平移的距离（以像素为单位）。此值将偏移 height 参数的一半
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.createGradientBox = function (width, height, rotation, tx, ty) {
-            if (rotation === void 0) { rotation = 0; }
-            if (tx === void 0) { tx = 0; }
-            if (ty === void 0) { ty = 0; }
-            this.createBox(width / 1638.4, height / 1638.4, rotation, tx + width / 2, ty + height / 2);
-        };
-        /**
-         * @private
-         */
-        p.$transformBounds = function (bounds) {
-            var a = this.a;
-            var b = this.b;
-            var c = this.c;
-            var d = this.d;
-            var tx = this.tx;
-            var ty = this.ty;
-            var x = bounds.x;
-            var y = bounds.y;
-            var xMax = x + bounds.width;
-            var yMax = y + bounds.height;
-            var x0 = a * x + c * y + tx;
-            var y0 = b * x + d * y + ty;
-            var x1 = a * xMax + c * y + tx;
-            var y1 = b * xMax + d * y + ty;
-            var x2 = a * xMax + c * yMax + tx;
-            var y2 = b * xMax + d * yMax + ty;
-            var x3 = a * x + c * yMax + tx;
-            var y3 = b * x + d * yMax + ty;
-            var tmp = 0;
-            if (x0 > x1) {
-                tmp = x0;
-                x0 = x1;
-                x1 = tmp;
-            }
-            if (x2 > x3) {
-                tmp = x2;
-                x2 = x3;
-                x3 = tmp;
-            }
-            bounds.x = Math.floor(x0 < x2 ? x0 : x2);
-            bounds.width = Math.ceil((x1 > x3 ? x1 : x3) - bounds.x);
-            if (y0 > y1) {
-                tmp = y0;
-                y0 = y1;
-                y1 = tmp;
-            }
-            if (y2 > y3) {
-                tmp = y2;
-                y2 = y3;
-                y3 = tmp;
-            }
-            bounds.y = Math.floor(y0 < y2 ? y0 : y2);
-            bounds.height = Math.ceil((y1 > y3 ? y1 : y3) - bounds.y);
-        };
-        /**
-         * @private
-         */
-        p.getDeterminant = function () {
-            return this.a * this.d - this.b * this.c;
-        };
-        /**
-         * @private
-         */
-        p.$getScaleX = function () {
-            var m = this;
-            if (m.a == 1 && m.b == 0) {
-                return 1;
-            }
-            var result = Math.sqrt(m.a * m.a + m.b * m.b);
-            return this.getDeterminant() < 0 ? -result : result;
-        };
-        /**
-         * @private
-         */
-        p.$getScaleY = function () {
-            var m = this;
-            if (m.c == 0 && m.d == 1) {
-                return 1;
-            }
-            var result = Math.sqrt(m.c * m.c + m.d * m.d);
-            return this.getDeterminant() < 0 ? -result : result;
-        };
-        /**
-         * @private
-         */
-        p.$getSkewX = function () {
-            return Math.atan2(this.d, this.c) - (PI / 2);
-        };
-        /**
-         * @private
-         */
-        p.$getSkewY = function () {
-            return Math.atan2(this.b, this.a);
-        };
-        /**
-         * @private
-         */
-        p.$updateScaleAndRotation = function (scaleX, scaleY, skewX, skewY) {
-            if ((skewX == 0 || skewX == TwoPI) && (skewY == 0 || skewY == TwoPI)) {
-                this.a = scaleX;
-                this.b = this.c = 0;
-                this.d = scaleY;
-                return;
-            }
-            var u = cos(skewX);
-            var v = sin(skewX);
-            if (skewX == skewY) {
-                this.a = u * scaleX;
-                this.b = v * scaleX;
-            }
-            else {
-                this.a = cos(skewY) * scaleX;
-                this.b = sin(skewY) * scaleX;
-            }
-            this.c = -v * scaleY;
-            this.d = u * scaleY;
-        };
-        /**
-         * @private
-         * target = other * this
-         */
-        p.$preMultiplyInto = function (other, target) {
-            var a = other.a * this.a;
-            var b = 0.0;
-            var c = 0.0;
-            var d = other.d * this.d;
-            var tx = other.tx * this.a + this.tx;
-            var ty = other.ty * this.d + this.ty;
-            if (other.b !== 0.0 || other.c !== 0.0 || this.b !== 0.0 || this.c !== 0.0) {
-                a += other.b * this.c;
-                d += other.c * this.b;
-                b += other.a * this.b + other.b * this.d;
-                c += other.c * this.a + other.d * this.c;
-                tx += other.ty * this.c;
-                ty += other.tx * this.b;
-            }
-            target.a = a;
-            target.b = b;
-            target.c = c;
-            target.d = d;
-            target.tx = tx;
-            target.ty = ty;
-        };
-        return Matrix;
-    })(egret.HashObject);
-    egret.Matrix = Matrix;
-    egret.registerClass(Matrix,"egret.Matrix");
-    /**
-     * @private
-     * 仅供框架内复用，要防止暴露引用到外部。
-     */
-    egret.$TempMatrix = new Matrix();
-})(egret || (egret = {}));
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-2015, Egret Technology Inc.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
-var egret;
-(function (egret) {
-    var sys;
-    (function (sys) {
-        var regionPool = [];
-        /**
-         * @private
-         */
-        var Region = (function () {
-            function Region() {
-                /**
-                 * @private
-                 */
-                this.minX = 0;
-                /**
-                 * @private
-                 */
-                this.minY = 0;
-                /**
-                 * @private
-                 */
-                this.maxX = 0;
-                /**
-                 * @private
-                 */
-                this.maxY = 0;
-                /**
-                 * @private
-                 */
-                this.width = 0;
-                /**
-                 * @private
-                 */
-                this.height = 0;
-                /**
-                 * @private
-                 */
-                this.area = 0;
-                /**
-                 * @private
-                 * 是否发生移动
-                 */
-                this.moved = false;
-            }
-            var d = __define,c=Region;p=c.prototype;
-            /**
-             * @private
-             * 释放一个Region实例到对象池
-             */
-            Region.release = function (region) {
-                regionPool.push(region);
-            };
-            /**
-             * @private
-             * 从对象池中取出或创建一个新的Region对象。
-             * 建议对于一次性使用的对象，均使用此方法创建，而不是直接new一个。
-             * 使用完后调用对应的release()静态方法回收对象，能有效减少对象创建数量造成的性能开销。
-             */
-            Region.create = function () {
-                var region = regionPool.pop();
-                if (!region) {
-                    region = new Region();
-                }
-                return region;
-            };
-            /**
-             * @private
-             */
-            p.setTo = function (minX, minY, maxX, maxY) {
-                this.minX = minX;
-                this.minY = minY;
-                this.maxX = maxX;
-                this.maxY = maxY;
-                this.updateArea();
-                return this;
-            };
-            /**
-             * @private
-             */
-            p.updateArea = function () {
-                this.width = this.maxX - this.minX;
-                this.height = this.maxY - this.minY;
-                this.area = this.width * this.height;
-            };
-            /**
-             * @private
-             * 注意！由于性能优化，此方法不判断自身是否为空，必须在外部确认自身和目标区域都不为空再调用合并。否则结果始终从0，0点开始。
-             */
-            p.union = function (target) {
-                if (this.minX > target.minX) {
-                    this.minX = target.minX;
-                }
-                if (this.minY > target.minY) {
-                    this.minY = target.minY;
-                }
-                if (this.maxX < target.maxX) {
-                    this.maxX = target.maxX;
-                }
-                if (this.maxY < target.maxY) {
-                    this.maxY = target.maxY;
-                }
-                this.updateArea();
-            };
-            /**
-             * @private
-             * 注意！由于性能优化，此方法不判断自身是否为空，必须在外部确认自身和目标区域都不为空再调用合并。否则结果始终从0，0点开始。
-             */
-            p.intersect = function (target) {
-                if (this.minX < target.minX) {
-                    this.minX = target.minX;
-                }
-                if (this.maxX > target.maxX) {
-                    this.maxX = target.maxX;
-                }
-                if (this.minX >= this.maxX) {
-                    this.setEmpty();
-                    return;
-                }
-                if (this.minY < target.minY) {
-                    this.minY = target.minY;
-                }
-                if (this.maxY > target.maxY) {
-                    this.maxY = target.maxY;
-                }
-                if (this.minY >= this.maxY) {
-                    this.setEmpty();
-                    return;
-                }
-                this.updateArea();
-            };
-            /**
-             * @private
-             */
-            p.setEmpty = function () {
-                this.minX = 0;
-                this.minY = 0;
-                this.maxX = 0;
-                this.maxY = 0;
-                this.width = 0;
-                this.height = 0;
-                this.area = 0;
-            };
-            /**
-             * @private
-             * 确定此 Region 对象是否为空。
-             */
-            p.isEmpty = function () {
-                return this.width <= 0 || this.height <= 0;
-            };
-            /**
-             * @private
-             */
-            p.intersects = function (target) {
-                var max = this.minX > target.minX ? this.minX : target.minX;
-                var min = this.maxX < target.maxX ? this.maxX : target.maxX;
-                if (max > min) {
-                    return false;
-                }
-                max = this.minY > target.minY ? this.minY : target.minY;
-                min = this.maxY < target.maxY ? this.maxY : target.maxY;
-                return max <= min;
-            };
-            /**
-             * @private
-             */
-            p.updateRegion = function (bounds, matrix) {
-                var m = matrix;
-                var a = m.a;
-                var b = m.b;
-                var c = m.c;
-                var d = m.d;
-                var tx = m.tx;
-                var ty = m.ty;
-                var x = bounds.x;
-                var y = bounds.y;
-                var xMax = x + bounds.width;
-                var yMax = y + bounds.height;
-                var minX, minY, maxX, maxY;
-                //优化，通常情况下不缩放旋转的对象占多数，直接加上偏移量即可。
-                if (a == 1.0 && b == 0.0 && c == 0.0 && d == 1.0) {
-                    minX = Math.floor(x + tx) - 1;
-                    minY = Math.floor(y + ty) - 1;
-                    maxX = Math.ceil(xMax + tx) + 1;
-                    maxY = Math.ceil(yMax + ty) + 1;
-                }
-                else {
-                    var x0 = a * x + c * y + tx;
-                    var y0 = b * x + d * y + ty;
-                    var x1 = a * xMax + c * y + tx;
-                    var y1 = b * xMax + d * y + ty;
-                    var x2 = a * xMax + c * yMax + tx;
-                    var y2 = b * xMax + d * yMax + ty;
-                    var x3 = a * x + c * yMax + tx;
-                    var y3 = b * x + d * yMax + ty;
-                    var tmp = 0;
-                    if (x0 > x1) {
-                        tmp = x0;
-                        x0 = x1;
-                        x1 = tmp;
-                    }
-                    if (x2 > x3) {
-                        tmp = x2;
-                        x2 = x3;
-                        x3 = tmp;
-                    }
-                    minX = Math.floor(x0 < x2 ? x0 : x2) - 1;
-                    maxX = Math.ceil(x1 > x3 ? x1 : x3) + 1;
-                    if (y0 > y1) {
-                        tmp = y0;
-                        y0 = y1;
-                        y1 = tmp;
-                    }
-                    if (y2 > y3) {
-                        tmp = y2;
-                        y2 = y3;
-                        y3 = tmp;
-                    }
-                    minY = Math.floor(y0 < y2 ? y0 : y2) - 1;
-                    maxY = Math.ceil(y1 > y3 ? y1 : y3) + 1;
-                }
-                this.minX = minX;
-                this.minY = minY;
-                this.maxX = maxX;
-                this.maxY = maxY;
-                this.width = maxX - minX;
-                this.height = maxY - minY;
-                this.area = this.width * this.height;
-            };
-            return Region;
-        })();
-        sys.Region = Region;
-        egret.registerClass(Region,"egret.sys.Region");
-    })(sys = egret.sys || (egret.sys = {}));
-})(egret || (egret = {}));
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-2015, Egret Technology Inc.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-2015, Egret Technology Inc.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2014-2015, Egret Technology Inc.
@@ -2111,7 +742,7 @@ var egret;
              * @private
              */
             this.$alpha = 1;
-            this.$touchEnabled = false;
+            this.$touchEnabled = DisplayObject.defaultTouchEnabled;
             /**
              * @private
              */
@@ -2139,25 +770,10 @@ var egret;
             this.$parentDisplayList = null;
             /**
              * @private
-             * 是否需要重绘的标志，此属性在渲染时会被访问，所以单独声明一个直接的变量。
+             * 渲染节点,不为空表示自身有绘制到屏幕的内容
              */
-            this.$isDirty = false;
-            /**
-             * @private
-             * 这个对象在舞台上的整体透明度
-             */
-            this.$renderAlpha = 1;
-            /**
-             * @private
-             * 相对于显示列表根节点或位图缓存根节点上的矩阵对象
-             */
-            this.$renderMatrix = new egret.Matrix();
-            /**
-             * @private
-             * 此显示对象自身（不包括子项）在显示列表根节点或位图缓存根节点上的显示尺寸。
-             */
-            this.$renderRegion = null;
-            this.$displayFlags = 880 /* InitFlags */;
+            this.$renderNode = null;
+            this.$displayFlags = 2032 /* InitFlags */;
             this.$DisplayObject = {
                 0: 1,
                 1: 1,
@@ -2174,10 +790,13 @@ var egret;
                 12: 0,
                 13: 0,
                 14: NaN,
-                15: NaN //explicitHeight,
+                15: NaN,
+                16: 0,
+                17: 0,
+                18: 0 //concatenatedAlpha
             };
         }
-        var d = __define,c=DisplayObject;p=c.prototype;
+        var d = __define,c=DisplayObject,p=c.prototype;
         /**
          * @private
          * 添加一个标志量
@@ -2255,7 +874,8 @@ var egret;
          */
         p.invalidatePosition = function () {
             this.$invalidateTransform();
-            this.$propagateFlagsDown(16 /* InvalidConcatenatedMatrix */ | 32 /* InvalidInvertedConcatenatedMatrix */);
+            this.$propagateFlagsDown(16 /* InvalidConcatenatedMatrix */ |
+                32 /* InvalidInvertedConcatenatedMatrix */);
             if (this.$parent) {
                 this.$parent.$propagateFlagsUp(4 /* InvalidBounds */);
             }
@@ -2414,6 +1034,8 @@ var egret;
                 values[1 /* scaleY */] = m.$getScaleY();
                 values[2 /* skewX */] = matrix.$getSkewX();
                 values[3 /* skewY */] = matrix.$getSkewY();
+                values[16 /* skewXdeg */] = clampRotation(values[2 /* skewX */] * 180 / Math.PI);
+                values[17 /* skewYdeg */] = clampRotation(values[3 /* skewY */] * 180 / Math.PI);
                 values[4 /* rotation */] = clampRotation(values[3 /* skewY */] * 180 / Math.PI);
             }
             this.$removeFlags(8 /* InvalidMatrix */);
@@ -2429,25 +1051,25 @@ var egret;
             if (this.$hasFlags(16 /* InvalidConcatenatedMatrix */)) {
                 if (this.$parent) {
                     this.$parent.$getConcatenatedMatrix().$preMultiplyInto(this.$getMatrix(), matrix);
-                    var values = this.$DisplayObject;
-                    var offsetX = values[12 /* anchorOffsetX */];
-                    var offsetY = values[13 /* anchorOffsetY */];
-                    var rect = this.$scrollRect;
-                    if (rect) {
-                        matrix.$preMultiplyInto(egret.$TempMatrix.setTo(1, 0, 0, 1, -rect.x - offsetX, -rect.y - offsetY), matrix);
-                    }
-                    else if (offsetX != 0 || offsetY != 0) {
-                        matrix.$preMultiplyInto(egret.$TempMatrix.setTo(1, 0, 0, 1, -offsetX, -offsetY), matrix);
-                    }
                 }
                 else {
                     matrix.copyFrom(this.$getMatrix());
                 }
-                if (this.$displayList) {
-                    this.$displayList.$renderRegion.moved = true;
+                var values = this.$DisplayObject;
+                var offsetX = values[12 /* anchorOffsetX */];
+                var offsetY = values[13 /* anchorOffsetY */];
+                var rect = this.$scrollRect;
+                if (rect) {
+                    matrix.$preMultiplyInto(egret.$TempMatrix.setTo(1, 0, 0, 1, -rect.x - offsetX, -rect.y - offsetY), matrix);
                 }
-                if (this.$renderRegion) {
-                    this.$renderRegion.moved = true;
+                else if (offsetX != 0 || offsetY != 0) {
+                    matrix.$preMultiplyInto(egret.$TempMatrix.setTo(1, 0, 0, 1, -offsetX, -offsetY), matrix);
+                }
+                if (this.$displayList) {
+                    this.$displayList.$renderNode.moved = true;
+                }
+                if (this.$renderNode) {
+                    this.$renderNode.moved = true;
                 }
                 this.$removeFlags(16 /* InvalidConcatenatedMatrix */);
             }
@@ -2506,7 +1128,7 @@ var egret;
          * 设置x坐标
          */
         p.$setX = function (value) {
-            value = egret.sys.getNumber(value);
+            value = +value || 0;
             var m = this.$DisplayObject[6 /* matrix */];
             if (value == m.tx) {
                 return false;
@@ -2556,7 +1178,7 @@ var egret;
          * 设置y坐标
          */
         p.$setY = function (value) {
-            value = egret.sys.getNumber(value);
+            value = +value || 0;
             var m = this.$DisplayObject[6 /* matrix */];
             if (value == m.ty) {
                 return false;
@@ -2602,7 +1224,7 @@ var egret;
          * 设置水平缩放值
          */
         p.$setScaleX = function (value) {
-            value = egret.sys.getNumber(value);
+            value = +value || 0;
             var values = this.$DisplayObject;
             if (value == values[0 /* scaleX */]) {
                 return false;
@@ -2647,7 +1269,7 @@ var egret;
          * 设置垂直缩放值
          */
         p.$setScaleY = function (value) {
-            value = egret.sys.getNumber(value);
+            value = +value || 0;
             if (value == this.$DisplayObject[1 /* scaleY */]) {
                 return false;
             }
@@ -2691,7 +1313,7 @@ var egret;
             return this.$DisplayObject[4 /* rotation */];
         };
         p.$setRotation = function (value) {
-            value = egret.sys.getNumber(value);
+            value = +value || 0;
             value = clampRotation(value);
             var values = this.$DisplayObject;
             if (value == values[4 /* rotation */]) {
@@ -2714,7 +1336,7 @@ var egret;
              * @platform Web,Native
              */
             ,function () {
-                return this.$DisplayObject[2 /* skewX */];
+                return this.$DisplayObject[16 /* skewXdeg */];
             }
             ,function (value) {
                 this.$setSkewX(value);
@@ -2726,13 +1348,14 @@ var egret;
          * @param value
          */
         p.$setSkewX = function (value) {
-            value = egret.sys.getNumber(value);
-            value = clampRotation(value);
-            value = value / 180 * Math.PI;
+            value = +value || 0;
             var values = this.$DisplayObject;
-            if (value == values[2 /* skewX */]) {
+            if (value == values[16 /* skewXdeg */]) {
                 return false;
             }
+            values[16 /* skewXdeg */] = value;
+            value = clampRotation(value);
+            value = value / 180 * Math.PI;
             values[2 /* skewX */] = value;
             this.invalidateMatrix();
             return true;
@@ -2746,7 +1369,7 @@ var egret;
              * @platform Web,Native
              */
             ,function () {
-                return this.$DisplayObject[3 /* skewY */];
+                return this.$DisplayObject[17 /* skewYdeg */];
             }
             ,function (value) {
                 this.$setSkewY(value);
@@ -2758,13 +1381,14 @@ var egret;
          * @param value
          */
         p.$setSkewY = function (value) {
-            value = egret.sys.getNumber(value);
-            value = clampRotation(value);
-            value = value / 180 * Math.PI;
+            value = +value || 0;
             var values = this.$DisplayObject;
-            if (value == values[3 /* skewY */]) {
+            if (value == values[17 /* skewYdeg */]) {
                 return false;
             }
+            values[17 /* skewYdeg */] = value;
+            value = clampRotation(value);
+            value = value / 180 * Math.PI;
             values[3 /* skewY */] = value;
             this.invalidateMatrix();
             return true;
@@ -2943,12 +1567,18 @@ var egret;
         );
         /**
          * @private
+         */
+        p.$getAnchorOffsetX = function () {
+            return this.$DisplayObject[12 /* anchorOffsetX */];
+        };
+        /**
+         * @private
          *
          * @param value
          * @returns
          */
         p.$setAnchorOffsetX = function (value) {
-            value = egret.sys.getNumber(value);
+            value = +value || 0;
             if (value == this.$DisplayObject[12 /* anchorOffsetX */]) {
                 return false;
             }
@@ -2980,12 +1610,18 @@ var egret;
         );
         /**
          * @private
+         */
+        p.$getAnchorOffsetY = function () {
+            return this.$DisplayObject[13 /* anchorOffsetY */];
+        };
+        /**
+         * @private
          *
          * @param value
          * @returns
          */
         p.$setAnchorOffsetY = function (value) {
-            value = egret.sys.getNumber(value);
+            value = +value || 0;
             if (value == this.$DisplayObject[13 /* anchorOffsetY */]) {
                 return false;
             }
@@ -3022,8 +1658,27 @@ var egret;
                 return false;
             }
             this.$visible = value;
+            this.$propagateFlagsDown(1024 /* InvalidConcatenatedVisible */);
             this.$invalidateTransform();
             return true;
+        };
+        /**
+         * @private
+         * 获取这个显示对象跟它所有父级透明度的乘积
+         */
+        p.$getConcatenatedVisible = function () {
+            var values = this.$DisplayObject;
+            if (this.$hasFlags(1024 /* InvalidConcatenatedVisible */)) {
+                if (this.$parent) {
+                    var parentVisible = this.$parent.$getConcatenatedVisible();
+                    values[19 /* concatenatedVisible */] = parentVisible && this.$visible;
+                }
+                else {
+                    values[19 /* concatenatedVisible */] = this.$visible;
+                }
+                this.$removeFlags(1024 /* InvalidConcatenatedVisible */);
+            }
+            return values[19 /* concatenatedVisible */];
         };
         d(p, "cacheAsBitmap"
             /**
@@ -3063,14 +1718,12 @@ var egret;
                     if (displayList) {
                         this.$displayList = displayList;
                         if (this.$parentDisplayList) {
-                            displayList.setDevicePixelRatio(this.$parentDisplayList.$ratioMatrix.a);
                             this.$parentDisplayList.markDirty(displayList);
                         }
                         this.$cacheAsBitmapChanged();
                     }
                 }
                 else {
-                    egret.sys.DisplayList.release(this.$displayList);
                     this.$displayList = null;
                     this.$cacheAsBitmapChanged();
                 }
@@ -3082,10 +1735,11 @@ var egret;
          */
         p.$cacheAsBitmapChanged = function () {
             var parentCache = this.$displayList || this.$parentDisplayList;
-            if (this.$renderRegion) {
+            if (this.$renderNode) {
                 parentCache.markDirty(this);
             }
-            this.$propagateFlagsDown(16 /* InvalidConcatenatedMatrix */ | 32 /* InvalidInvertedConcatenatedMatrix */);
+            this.$propagateFlagsDown(16 /* InvalidConcatenatedMatrix */ |
+                32 /* InvalidInvertedConcatenatedMatrix */);
         };
         d(p, "alpha"
             /**
@@ -3117,13 +1771,13 @@ var egret;
          * @param value
          */
         p.$setAlpha = function (value) {
-            value = egret.sys.getNumber(value);
+            value = +value || 0;
             if (value == this.$alpha) {
                 return false;
             }
             this.$alpha = value;
             this.$propagateFlagsDown(64 /* InvalidConcatenatedAlpha */);
-            this.$invalidate(true);
+            this.$invalidate();
             return true;
         };
         /**
@@ -3131,17 +1785,18 @@ var egret;
          * 获取这个显示对象跟它所有父级透明度的乘积
          */
         p.$getConcatenatedAlpha = function () {
+            var values = this.$DisplayObject;
             if (this.$hasFlags(64 /* InvalidConcatenatedAlpha */)) {
                 if (this.$parent) {
                     var parentAlpha = this.$parent.$getConcatenatedAlpha();
-                    this.$renderAlpha = parentAlpha * this.$alpha;
+                    values[18 /* concatenatedAlpha */] = parentAlpha * this.$alpha;
                 }
                 else {
-                    this.$renderAlpha = this.$alpha;
+                    values[18 /* concatenatedAlpha */] = this.$alpha;
                 }
                 this.$removeFlags(64 /* InvalidConcatenatedAlpha */);
             }
-            return this.$renderAlpha;
+            return values[18 /* concatenatedAlpha */];
         };
         d(p, "touchEnabled"
             /**
@@ -3516,7 +2171,7 @@ var egret;
                 this.$measureChildBounds(bounds);
                 this.$removeFlags(4 /* InvalidBounds */);
                 if (this.$displayList) {
-                    this.$displayList.$renderRegion.moved = true;
+                    this.$displayList.$renderNode.moved = true;
                 }
             }
             return bounds;
@@ -3535,8 +2190,8 @@ var egret;
             var bounds = this.$DisplayObject[10 /* contentBounds */];
             if (this.$hasFlags(2 /* InvalidContentBounds */)) {
                 this.$measureContentBounds(bounds);
-                if (this.$renderRegion) {
-                    this.$renderRegion.moved = true;
+                if (this.$renderNode) {
+                    this.$renderNode.moved = true;
                 }
                 this.$removeFlags(2 /* InvalidContentBounds */);
             }
@@ -3552,13 +2207,13 @@ var egret;
         /**
          * @private
          * 标记此显示对象需要重绘。此方法会触发自身的cacheAsBitmap重绘。如果只是矩阵改变，自身显示内容并不改变，应该调用$invalidateTransform().
-         * @param notiryChildren 是否标记子项也需要重绘。传入false或不传入，将只标记自身需要重绘。通常只有alpha属性改变会需要通知子项重绘。
+         * @param notiryChildren 是否标记子项也需要重绘。传入false或不传入，将只标记自身需要重绘。注意:当子项cache时不会继续向下标记
          */
         p.$invalidate = function (notifyChildren) {
-            if (!this.$renderRegion || this.$hasFlags(256 /* DirtyRender */)) {
+            if (!this.$renderNode || this.$hasFlags(256 /* DirtyRender */)) {
                 return;
             }
-            this.$setFlags(256 /* DirtyRender */);
+            this.$setFlags(256 /* DirtyRender */ | 128 /* InvalidRenderNodes */);
             var displayList = this.$displayList ? this.$displayList : this.$parentDisplayList;
             if (displayList) {
                 displayList.markDirty(this);
@@ -3575,39 +2230,57 @@ var egret;
             }
             this.$setFlags(512 /* DirtyChildren */);
             var displayList = this.$displayList;
-            if ((displayList || this.$renderRegion) && this.$parentDisplayList) {
+            if ((displayList || this.$renderNode) && this.$parentDisplayList) {
                 this.$parentDisplayList.markDirty(displayList || this);
             }
         };
         /**
          * @private
-         * 更新对象在舞台上的显示区域和透明度,返回显示区域是否发生改变。
+         * 获取渲染节点
          */
-        p.$update = function () {
+        p.$getRenderNode = function () {
+            var node = this.$renderNode;
+            if (!node) {
+                return null;
+            }
+            if (this.$displayFlags & 128 /* InvalidRenderNodes */) {
+                node.cleanBeforeRender();
+                this.$render();
+                this.$removeFlags(128 /* InvalidRenderNodes */);
+                node = this.$renderNode;
+            }
+            return node;
+        };
+        /**
+         * @private
+         * 更新对象在舞台上的显示区域,返回显示区域是否发生改变。
+         */
+        p.$update = function (bounds) {
             this.$removeFlagsUp(768 /* Dirty */);
-            this.$getConcatenatedAlpha();
+            var node = this.$renderNode;
             //必须在访问moved属性前调用以下两个方法，因为moved属性在以下两个方法内重置。
             var concatenatedMatrix = this.$getConcatenatedMatrix();
-            var bounds = this.$getContentBounds();
+            var renderBounds = bounds || this.$getContentBounds();
+            node.renderAlpha = this.$getConcatenatedAlpha();
+            node.renderVisible = this.$getConcatenatedVisible();
             var displayList = this.$displayList || this.$parentDisplayList;
-            var region = this.$renderRegion;
+            var region = node.renderRegion;
             if (!displayList) {
                 region.setTo(0, 0, 0, 0);
-                region.moved = false;
+                node.moved = false;
                 return false;
             }
-            if (!region.moved && !displayList.$ratioChanged) {
+            if (!node.moved) {
                 return false;
             }
-            region.moved = false;
-            var matrix = this.$renderMatrix;
+            node.moved = false;
+            var matrix = node.renderMatrix;
             matrix.copyFrom(concatenatedMatrix);
             var root = displayList.root;
             if (root !== this.$stage) {
                 this.$getConcatenatedMatrixAt(root, matrix);
             }
-            displayList.$ratioMatrix.$preMultiplyInto(matrix, matrix);
-            region.updateRegion(bounds, matrix);
+            region.updateRegion(renderBounds, matrix);
             return true;
         };
         /**
@@ -3635,20 +2308,40 @@ var egret;
                 invertMatrix.$preMultiplyInto(matrix, matrix);
             }
         };
+        p.$getConcatenatedAlphaAt = function (root, alpha) {
+            var rootAlpha = root.$getConcatenatedAlpha();
+            if (rootAlpha === 0) {
+                alpha = 1;
+                var target = this;
+                var rootLevel = root.$nestLevel;
+                while (target.$nestLevel > rootLevel) {
+                    alpha *= target.$alpha;
+                    target = target.$parent;
+                }
+            }
+            else {
+                alpha /= rootAlpha;
+            }
+            return alpha;
+        };
         /**
          * @private
          * 执行渲染,绘制自身到屏幕
          */
-        p.$render = function (context) {
+        p.$render = function () {
         };
         /**
          * @private
          */
         p.$hitTest = function (stageX, stageY) {
-            if (!this.$renderRegion || !this.$visible) {
+            var values = this.$DisplayObject;
+            if (!this.$renderNode || !this.$visible || values[0 /* scaleX */] == 0 || values[1 /* scaleY */] == 0) {
                 return null;
             }
             var m = this.$getInvertedConcatenatedMatrix();
+            if (m.a == 0 && m.b == 0 && m.c == 0 && m.d == 0) {
+                return null;
+            }
             var bounds = this.$getContentBounds();
             var localX = m.a * stageX + m.c * stageY + m.tx;
             var localY = m.b * stageX + m.d * stageY + m.ty;
@@ -3683,13 +2376,66 @@ var egret;
          * 注意，不要在大量物体中使用精确碰撞像素检测，这回带来巨大的性能开销
          * @param x {number}  要测试的此对象的 x 坐标。
          * @param y {number}  要测试的此对象的 y 坐标。
-         * @param shapeFlag {boolean} 是检查对象 (true) 的实际像素，还是检查边框 (false) 的实际像素。暂未实现。
+         * @param shapeFlag {boolean} 是检查对象 (true) 的实际像素，还是检查边框 (false) 的实际像素。
          * @returns {boolean} 如果显示对象与指定的点重叠或相交，则为 true；否则为 false。
          * @version Egret 2.4
          * @platform Web,Native
          */
         p.hitTestPoint = function (x, y, shapeFlag) {
-            return !!this.$hitTest(x, y);
+            if (!shapeFlag) {
+                var values = this.$DisplayObject;
+                if (values[0 /* scaleX */] == 0 || values[1 /* scaleY */] == 0) {
+                    return false;
+                }
+                var m = this.$getInvertedConcatenatedMatrix();
+                var bounds = this.getBounds(null, false);
+                var localX = m.a * x + m.c * y + m.tx;
+                var localY = m.b * x + m.d * y + m.ty;
+                if (bounds.contains(localX, localY)) {
+                    //这里不考虑设置mask的情况
+                    var rect = this.$scrollRect ? this.$scrollRect : this.$maskRect;
+                    if (rect && !rect.contains(localX, localY)) {
+                        return false;
+                    }
+                    return true;
+                }
+                return false;
+            }
+            else {
+                var m = this.$getInvertedConcatenatedMatrix();
+                var localX = m.a * x + m.c * y + m.tx;
+                var localY = m.b * x + m.d * y + m.ty;
+                var data;
+                var displayList = this.$displayList;
+                if (displayList) {
+                    var buffer = displayList.renderBuffer;
+                    try {
+                        data = buffer.getPixel(localX - displayList.offsetX, localY - displayList.offsetY);
+                    }
+                    catch (e) {
+                        throw new Error(egret.sys.tr(1039));
+                    }
+                }
+                else {
+                    var buffer = egret.sys.hitTestBuffer;
+                    buffer.resize(3, 3);
+                    var matrix = egret.Matrix.create();
+                    matrix.identity();
+                    matrix.translate(1 - localX, 1 - localY);
+                    egret.sys.systemRenderer.render(this, buffer, matrix, null, true);
+                    egret.Matrix.release(matrix);
+                    try {
+                        data = buffer.getPixel(1, 1);
+                    }
+                    catch (e) {
+                        throw new Error(egret.sys.tr(1039));
+                    }
+                }
+                if (data[3] === 0) {
+                    return false;
+                }
+                return true;
+            }
         };
         /**
          * @private
@@ -3797,6 +2543,23 @@ var egret;
         };
         /**
          * @private
+         * @language en_US
+         * The default touchEnabled property of DisplayObject
+         * @default false
+         * @version Egret 2.5
+         * @platform Web,Native
+         */
+        /**
+         * @private
+         * @language zh_CN
+         * 显示对象默认的 touchEnabled 属性
+         * @default false
+         * @version Egret 2.5
+         * @platform Web,Native
+         */
+        DisplayObject.defaultTouchEnabled = false;
+        /**
+         * @private
          */
         DisplayObject.$enterFrameCallBackList = [];
         /**
@@ -3804,678 +2567,13 @@ var egret;
          */
         DisplayObject.$renderCallBackList = [];
         return DisplayObject;
-    })(egret.EventDispatcher);
+    }(egret.EventDispatcher));
     egret.DisplayObject = DisplayObject;
-    egret.registerClass(DisplayObject,"egret.DisplayObject",["egret.sys.Renderable"]);
+    egret.registerClass(DisplayObject,'egret.DisplayObject',["egret.sys.Renderable"]);
     if (DEBUG) {
         egret.$markReadOnly(DisplayObject, "parent");
         egret.$markReadOnly(DisplayObject, "stage");
     }
-})(egret || (egret = {}));
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-2015, Egret Technology Inc.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
-var egret;
-(function (egret) {
-    var sys;
-    (function (sys) {
-        var displayListPool = [];
-        var blendModes = ["source-over", "lighter", "destination-out"];
-        var defaultCompositeOp = "source-over";
-        /**
-         * @private
-         * 显示列表
-         */
-        var DisplayList = (function (_super) {
-            __extends(DisplayList, _super);
-            /**
-             * @private
-             * 创建一个DisplayList对象
-             */
-            function DisplayList(root) {
-                _super.call(this);
-                /**
-                 * @private
-                 * 是否需要重绘
-                 */
-                this.$isDirty = false;
-                /**
-                 * @private
-                 * 在舞台上的透明度
-                 */
-                this.$renderAlpha = 1;
-                /**
-                 * @private
-                 * 相对于显示列表根节点或位图缓存根节点的矩阵对象
-                 */
-                this.$renderMatrix = new egret.Matrix();
-                this.$ratioMatrix = new egret.Matrix();
-                this.$ratioChanged = false;
-                this.$pixelRatio = 1;
-                /**
-                 * @private
-                 * 在显示列表根节点或位图缓存根节点上的显示区域
-                 */
-                this.$renderRegion = new sys.Region();
-                /**
-                 * @private
-                 * 呈现绘制结果的目标画布
-                 */
-                this.surface = null;
-                /**
-                 * @private
-                 */
-                this.offsetX = 0;
-                /**
-                 * @private
-                 */
-                this.offsetY = 0;
-                /**
-                 * @private
-                 */
-                this.needRedraw = false;
-                /**
-                 * @private
-                 */
-                this.rootMatrix = new egret.Matrix();
-                /**
-                 * @private
-                 * 显示对象的渲染节点发生改变时，把自身的IRenderable对象注册到此列表上。
-                 */
-                this.dirtyNodes = {};
-                /**
-                 * @private
-                 */
-                this.dirtyNodeList = [];
-                /**
-                 * @private
-                 */
-                this.dirtyList = null;
-                /**
-                 * @private
-                 */
-                this.dirtyRegion = new sys.DirtyRegion();
-                /**
-                 * @private
-                 */
-                this.sizeChanged = false;
-                this.root = root;
-                this.dirtyRegion.displayList = this;
-            }
-            var d = __define,c=DisplayList;p=c.prototype;
-            /**
-             * @private
-             * 释放一个DisplayList实例到对象池
-             */
-            DisplayList.release = function (displayList) {
-                sys.surfaceFactory.release(displayList.surface);
-                egret.Matrix.release(displayList.$renderMatrix);
-                egret.Matrix.release(displayList.$ratioMatrix);
-                displayList.surface = null;
-                displayList.renderContext = null;
-                displayList.root = null;
-                displayList.$renderMatrix = null;
-                displayList.$ratioMatrix = null;
-                displayList.needRedraw = false;
-                displayList.$isDirty = false;
-                displayListPool.push(displayList);
-            };
-            /**
-             * @private
-             * 从对象池中取出或创建一个新的DisplayList对象。
-             */
-            DisplayList.create = function (target) {
-                var displayList = displayListPool.pop();
-                if (!displayList) {
-                    displayList = new egret.sys.DisplayList(target);
-                }
-                var surface = sys.surfaceFactory.create();
-                if (!surface) {
-                    return null;
-                }
-                displayList.surface = surface;
-                displayList.renderContext = surface.renderContext;
-                displayList.root = target;
-                displayList.$renderMatrix = egret.Matrix.create();
-                displayList.$renderMatrix.setTo(1, 0, 0, 1, 0, 0);
-                displayList.$pixelRatio = 1;
-                displayList.$ratioMatrix = egret.Matrix.create();
-                displayList.$ratioMatrix.setTo(1, 0, 0, 1, 0, 0);
-                displayList.needRedraw = true;
-                displayList.$isDirty = true;
-                return displayList;
-            };
-            /**
-             * @private
-             * 更新对象在舞台上的显示区域和透明度,返回显示区域是否发生改变。
-             */
-            p.$update = function () {
-                var target = this.root;
-                //当cache对象的显示列表已经加入dirtyList，对象又取消cache的时候，root为空
-                if (target == null) {
-                    return false;
-                }
-                target.$removeFlagsUp(768 /* Dirty */);
-                this.$renderAlpha = target.$getConcatenatedAlpha();
-                //必须在访问moved属性前调用以下两个方法，因为moved属性在以下两个方法内重置。
-                var concatenatedMatrix = target.$getConcatenatedMatrix();
-                var bounds = target.$getOriginalBounds();
-                var displayList = target.$parentDisplayList;
-                var pixelRatio = 1;
-                if (displayList)
-                    pixelRatio = displayList.$pixelRatio;
-                else if (target.stage && target.stage.$displayList)
-                    pixelRatio = target.stage.$displayList.$pixelRatio;
-                this.setDevicePixelRatio(pixelRatio);
-                var region = this.$renderRegion;
-                if (this.needRedraw) {
-                    this.updateDirtyRegions();
-                }
-                if (!displayList) {
-                    region.setTo(0, 0, 0, 0);
-                    region.moved = false;
-                    return false;
-                }
-                if (!region.moved && !displayList.$ratioChanged) {
-                    return false;
-                }
-                region.moved = false;
-                var matrix = this.$renderMatrix;
-                matrix.copyFrom(concatenatedMatrix);
-                var root = displayList.root;
-                if (root !== target.$stage) {
-                    target.$getConcatenatedMatrixAt(root, matrix);
-                }
-                this.$ratioMatrix.$preMultiplyInto(matrix, matrix);
-                region.updateRegion(bounds, matrix);
-                return true;
-            };
-            /**
-             * @private
-             *
-             * @param context
-             */
-            p.$render = function (context) {
-                var data = this.surface;
-                if (data) {
-                    context.drawImage(data, this.offsetX, this.offsetY, data.width / this.$pixelRatio, data.height / this.$pixelRatio);
-                }
-            };
-            /**
-             * @private
-             * 设置剪裁边界，不再绘制完整目标对象，画布尺寸由外部决定，超过边界的节点将跳过绘制。
-             */
-            p.setClipRect = function (width, height) {
-                width *= this.$pixelRatio;
-                height *= this.$pixelRatio;
-                this.dirtyRegion.setClipRect(width, height);
-                this.rootMatrix = null; //只有舞台画布才能设置ClipRect
-                var surface = this.renderContext.surface;
-                surface.width = width;
-                surface.height = height;
-                this.surface = surface;
-            };
-            /**
-             * @private
-             * 标记一个节点需要重新渲染
-             */
-            p.markDirty = function (node) {
-                var key = node.$hashCode;
-                if (this.dirtyNodes[key]) {
-                    return;
-                }
-                this.dirtyNodes[key] = true;
-                this.dirtyNodeList.push(node);
-                if (!this.needRedraw) {
-                    this.needRedraw = true;
-                    var parentCache = this.root.$parentDisplayList;
-                    if (parentCache) {
-                        parentCache.markDirty(this);
-                    }
-                }
-            };
-            /**
-             * @private
-             * 更新节点属性并返回脏矩形列表。
-             */
-            p.updateDirtyRegions = function () {
-                var nodeList = this.dirtyNodeList;
-                this.dirtyNodeList = [];
-                this.dirtyNodes = {};
-                var dirtyRegion = this.dirtyRegion;
-                var length = nodeList.length;
-                for (var i = 0; i < length; i++) {
-                    var node = nodeList[i];
-                    var region = node.$renderRegion;
-                    if (node.$renderAlpha > 0) {
-                        if (dirtyRegion.addRegion(region)) {
-                            node.$isDirty = true;
-                        }
-                    }
-                    var moved = node.$update();
-                    if (node.$renderAlpha > 0 && (moved || !node.$isDirty)) {
-                        if (dirtyRegion.addRegion(region)) {
-                            node.$isDirty = true;
-                        }
-                    }
-                }
-                this.dirtyList = dirtyRegion.getDirtyRegions();
-                return this.dirtyList;
-            };
-            /**
-             * @private
-             * 绘制根节点显示对象到目标画布，返回draw的次数。
-             */
-            p.drawToSurface = function () {
-                var m = this.rootMatrix;
-                if (m) {
-                    this.changeSurfaceSize();
-                }
-                var context = this.renderContext;
-                //绘制脏矩形区域
-                context.save();
-                context.beginPath();
-                if (m) {
-                    context.setTransform(1, 0, 0, 1, -this.offsetX * this.$pixelRatio, -this.offsetY * this.$pixelRatio);
-                }
-                var dirtyList = this.dirtyList;
-                this.dirtyList = null;
-                var length = dirtyList.length;
-                for (var i = 0; i < length; i++) {
-                    var region = dirtyList[i];
-                    context.clearRect(region.minX, region.minY, region.width, region.height);
-                    context.rect(region.minX, region.minY, region.width, region.height);
-                }
-                context.clip();
-                if (m) {
-                    context.setTransform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-                }
-                //绘制显示对象
-                var drawCalls = this.drawDisplayObject(this.root, context, dirtyList, m, null, null);
-                //清除脏矩形区域
-                context.restore();
-                this.dirtyRegion.clear();
-                this.needRedraw = false;
-                this.$ratioChanged = false;
-                return drawCalls;
-            };
-            /**
-             * @private
-             * 绘制一个显示对象
-             */
-            p.drawDisplayObject = function (displayObject, context, dirtyList, rootMatrix, displayList, clipRegion) {
-                var drawCalls = 0;
-                var node;
-                var globalAlpha;
-                if (displayList) {
-                    if (displayList.needRedraw) {
-                        drawCalls += displayList.drawToSurface();
-                    }
-                    node = displayList;
-                    globalAlpha = 1; //这里不用读取displayList.$renderAlpha,因为它已经绘制到了displayList.surface的内部。
-                }
-                else if (displayObject.$renderRegion) {
-                    node = displayObject;
-                    globalAlpha = displayObject.$renderAlpha;
-                }
-                if (node) {
-                    var renderRegion = node.$renderRegion;
-                    if (clipRegion && !clipRegion.intersects(renderRegion)) {
-                        node.$isDirty = false;
-                    }
-                    else if (!node.$isDirty) {
-                        var l = dirtyList.length;
-                        for (var j = 0; j < l; j++) {
-                            if (renderRegion.intersects(dirtyList[j])) {
-                                node.$isDirty = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (node.$isDirty) {
-                        drawCalls++;
-                        context.globalAlpha = globalAlpha;
-                        var m = node.$renderMatrix;
-                        if (rootMatrix) {
-                            context.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-                            node.$render(context);
-                            context.setTransform(rootMatrix.a, rootMatrix.b, rootMatrix.c, rootMatrix.d, rootMatrix.tx * this.$pixelRatio, rootMatrix.ty * this.$pixelRatio);
-                        }
-                        else {
-                            context.setTransform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-                            node.$render(context);
-                        }
-                        node.$isDirty = false;
-                    }
-                }
-                if (displayList) {
-                    return drawCalls;
-                }
-                var children = displayObject.$children;
-                if (children) {
-                    var length = children.length;
-                    for (var i = 0; i < length; i++) {
-                        var child = children[i];
-                        if (!child.$visible || child.$alpha <= 0 || child.$maskedObject) {
-                            continue;
-                        }
-                        if (child.$blendMode !== 0 || (child.$mask && child.$mask.$parentDisplayList)) {
-                            drawCalls += this.drawWithClip(child, context, dirtyList, rootMatrix, clipRegion);
-                        }
-                        else if (child.$scrollRect || child.$maskRect) {
-                            drawCalls += this.drawWithScrollRect(child, context, dirtyList, rootMatrix, clipRegion);
-                        }
-                        else {
-                            if (DEBUG && child["isFPS"]) {
-                                this.drawDisplayObject(child, context, dirtyList, rootMatrix, child.$displayList, clipRegion);
-                            }
-                            else {
-                                drawCalls += this.drawDisplayObject(child, context, dirtyList, rootMatrix, child.$displayList, clipRegion);
-                            }
-                        }
-                    }
-                }
-                return drawCalls;
-            };
-            /**
-             * @private
-             */
-            p.drawWithClip = function (displayObject, context, dirtyList, rootMatrix, clipRegion) {
-                var drawCalls = 0;
-                var hasBlendMode = (displayObject.$blendMode !== 0);
-                if (hasBlendMode) {
-                    var compositeOp = blendModes[displayObject.$blendMode];
-                    if (!compositeOp) {
-                        compositeOp = defaultCompositeOp;
-                    }
-                }
-                var scrollRect = displayObject.$scrollRect ? displayObject.$scrollRect : displayObject.$maskRect;
-                var mask = displayObject.$mask;
-                if (mask && !mask.$parentDisplayList) {
-                    mask = null; //如果遮罩不在显示列表中，放弃绘制遮罩。
-                }
-                //计算scrollRect和mask的clip区域是否需要绘制，不需要就直接返回，跳过所有子项的遍历。
-                var maskRegion;
-                var displayMatrix = egret.Matrix.create();
-                displayMatrix.copyFrom(displayObject.$getConcatenatedMatrix());
-                var root = displayObject.$parentDisplayList.root;
-                var invertedMatrix;
-                if (root !== displayObject.$stage) {
-                    invertedMatrix = root.$getInvertedConcatenatedMatrix();
-                    invertedMatrix.$preMultiplyInto(displayMatrix, displayMatrix);
-                }
-                this.$ratioMatrix.$preMultiplyInto(displayMatrix, displayMatrix);
-                if (mask) {
-                    var bounds = mask.$getOriginalBounds();
-                    maskRegion = sys.Region.create();
-                    var m = egret.Matrix.create();
-                    m.copyFrom(mask.$getConcatenatedMatrix());
-                    if (invertedMatrix) {
-                        invertedMatrix.$preMultiplyInto(m, m);
-                    }
-                    this.$ratioMatrix.$preMultiplyInto(m, m);
-                    maskRegion.updateRegion(bounds, m);
-                    egret.Matrix.release(m);
-                }
-                var region;
-                if (scrollRect) {
-                    region = sys.Region.create();
-                    region.updateRegion(scrollRect, displayMatrix);
-                }
-                if (region && maskRegion) {
-                    region.intersect(maskRegion);
-                    sys.Region.release(maskRegion);
-                }
-                else if (!region && maskRegion) {
-                    region = maskRegion;
-                }
-                if (region) {
-                    if (region.isEmpty() || (clipRegion && !clipRegion.intersects(region))) {
-                        sys.Region.release(region);
-                        egret.Matrix.release(displayMatrix);
-                        return drawCalls;
-                    }
-                }
-                else {
-                    region = sys.Region.create();
-                    bounds = displayObject.$getOriginalBounds();
-                    region.updateRegion(bounds, displayMatrix);
-                }
-                var found = false;
-                var l = dirtyList.length;
-                for (var j = 0; j < l; j++) {
-                    if (region.intersects(dirtyList[j])) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    sys.Region.release(region);
-                    egret.Matrix.release(displayMatrix);
-                    return drawCalls;
-                }
-                //绘制显示对象自身，若有scrollRect，应用clip
-                var displayContext = this.createRenderContext(region.width, region.height);
-                if (!displayContext) {
-                    drawCalls += this.drawDisplayObject(displayObject, context, dirtyList, rootMatrix, displayObject.$displayList, clipRegion);
-                    sys.Region.release(region);
-                    egret.Matrix.release(displayMatrix);
-                    return drawCalls;
-                }
-                if (scrollRect) {
-                    var m = displayMatrix;
-                    displayContext.setTransform(m.a, m.b, m.c, m.d, m.tx - region.minX, m.ty - region.minY);
-                    displayContext.beginPath();
-                    displayContext.rect(scrollRect.x, scrollRect.y, scrollRect.width, scrollRect.height);
-                    displayContext.clip();
-                }
-                displayContext.setTransform(1, 0, 0, 1, -region.minX, -region.minY);
-                var rootM = egret.Matrix.create().setTo(1, 0, 0, 1, -region.minX, -region.minY);
-                drawCalls += this.drawDisplayObject(displayObject, displayContext, dirtyList, rootM, displayObject.$displayList, region);
-                egret.Matrix.release(rootM);
-                //绘制遮罩
-                if (mask) {
-                    var maskContext = this.createRenderContext(region.width, region.height);
-                    if (!maskContext) {
-                        drawCalls += this.drawDisplayObject(displayObject, context, dirtyList, rootMatrix, displayObject.$displayList, clipRegion);
-                        sys.surfaceFactory.release(displayContext.surface);
-                        sys.Region.release(region);
-                        egret.Matrix.release(displayMatrix);
-                        return drawCalls;
-                    }
-                    maskContext.setTransform(1, 0, 0, 1, -region.minX, -region.minY);
-                    rootM = egret.Matrix.create().setTo(1, 0, 0, 1, -region.minX, -region.minY);
-                    var calls = this.drawDisplayObject(mask, maskContext, dirtyList, rootM, mask.$displayList, region);
-                    egret.Matrix.release(rootM);
-                    if (calls > 0) {
-                        drawCalls += calls;
-                        displayContext.globalCompositeOperation = "destination-in";
-                        displayContext.setTransform(1, 0, 0, 1, 0, 0);
-                        displayContext.globalAlpha = 1;
-                        displayContext.drawImage(maskContext.surface, 0, 0);
-                    }
-                    sys.surfaceFactory.release(maskContext.surface);
-                }
-                //绘制结果到屏幕
-                if (drawCalls > 0) {
-                    drawCalls++;
-                    if (hasBlendMode) {
-                        context.globalCompositeOperation = compositeOp;
-                    }
-                    if (rootMatrix) {
-                        context.translate(region.minX, region.minY);
-                        context.drawImage(displayContext.surface, 0, 0);
-                        context.setTransform(rootMatrix.a, rootMatrix.b, rootMatrix.c, rootMatrix.d, rootMatrix.tx * this.$pixelRatio, rootMatrix.ty * this.$pixelRatio);
-                    }
-                    else {
-                        context.setTransform(1, 0, 0, 1, region.minX, region.minY);
-                        context.drawImage(displayContext.surface, 0, 0);
-                    }
-                    if (hasBlendMode) {
-                        context.globalCompositeOperation = defaultCompositeOp;
-                    }
-                }
-                sys.surfaceFactory.release(displayContext.surface);
-                sys.Region.release(region);
-                egret.Matrix.release(displayMatrix);
-                return drawCalls;
-            };
-            /**
-             * @private
-             */
-            p.drawWithScrollRect = function (displayObject, context, dirtyList, rootMatrix, clipRegion) {
-                var drawCalls = 0;
-                var scrollRect = displayObject.$scrollRect ? displayObject.$scrollRect : displayObject.$maskRect;
-                var m = egret.Matrix.create();
-                m.copyFrom(displayObject.$getConcatenatedMatrix());
-                var root = displayObject.$parentDisplayList.root;
-                if (root !== displayObject.$stage) {
-                    root.$getInvertedConcatenatedMatrix().$preMultiplyInto(m, m);
-                }
-                this.$ratioMatrix.$preMultiplyInto(m, m);
-                var region = sys.Region.create();
-                if (!scrollRect.isEmpty()) {
-                    region.updateRegion(scrollRect, m);
-                }
-                if (region.isEmpty() || (clipRegion && !clipRegion.intersects(region))) {
-                    sys.Region.release(region);
-                    egret.Matrix.release(m);
-                    return drawCalls;
-                }
-                var found = false;
-                var l = dirtyList.length;
-                for (var j = 0; j < l; j++) {
-                    if (region.intersects(dirtyList[j])) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    sys.Region.release(region);
-                    egret.Matrix.release(m);
-                    return drawCalls;
-                }
-                //绘制显示对象自身
-                context.save();
-                if (rootMatrix) {
-                    context.setTransform(rootMatrix.a, rootMatrix.b, rootMatrix.c, rootMatrix.d, rootMatrix.tx * this.$pixelRatio, rootMatrix.ty * this.$pixelRatio);
-                    context.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-                }
-                else {
-                    context.setTransform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-                }
-                context.beginPath();
-                context.rect(scrollRect.x, scrollRect.y, scrollRect.width, scrollRect.height);
-                context.clip();
-                if (rootMatrix) {
-                    context.setTransform(rootMatrix.a, rootMatrix.b, rootMatrix.c, rootMatrix.d, rootMatrix.tx * this.$pixelRatio, rootMatrix.ty * this.$pixelRatio);
-                }
-                drawCalls += this.drawDisplayObject(displayObject, context, dirtyList, rootMatrix, displayObject.$displayList, region);
-                context.restore();
-                sys.Region.release(region);
-                egret.Matrix.release(m);
-                return drawCalls;
-            };
-            /**
-             * @private
-             */
-            p.createRenderContext = function (width, height) {
-                var surface = sys.surfaceFactory.create(true);
-                if (!surface) {
-                    return null;
-                }
-                if (egret.Capabilities.runtimeType == egret.RuntimeType.WEB) {
-                    //在chrome里，小等于256*256的canvas会不启用GPU加速。
-                    surface.width = Math.max(257, width);
-                    surface.height = Math.max(257, height);
-                }
-                else {
-                    surface.width = width;
-                    surface.height = height;
-                }
-                return surface.renderContext;
-            };
-            /**
-             * @private
-             * 改变画布的尺寸，由于画布尺寸修改会清空原始画布。所以这里将原始画布绘制到一个新画布上，再与原始画布交换。
-             */
-            p.changeSurfaceSize = function () {
-                var root = this.root;
-                var oldOffsetX = this.offsetX;
-                var oldOffsetY = this.offsetY;
-                var bounds = this.root.$getOriginalBounds();
-                var scaleX = this.$pixelRatio;
-                var scaleY = this.$pixelRatio;
-                this.offsetX = bounds.x;
-                this.offsetY = bounds.y;
-                var oldContext = this.renderContext;
-                var oldSurface = oldContext.surface;
-                if (!this.sizeChanged) {
-                    this.sizeChanged = true;
-                    oldSurface.width = bounds.width * scaleX;
-                    oldSurface.height = bounds.height * scaleY;
-                }
-                else {
-                    var newContext = sys.sharedRenderContext;
-                    var newSurface = newContext.surface;
-                    sys.sharedRenderContext = oldContext;
-                    this.renderContext = newContext;
-                    this.surface = newSurface;
-                    newSurface.width = bounds.width * scaleX;
-                    newSurface.height = bounds.height * scaleY;
-                    if (oldSurface.width !== 0 && oldSurface.height !== 0) {
-                        newContext.setTransform(1, 0, 0, 1, 0, 0);
-                        newContext.drawImage(oldSurface, (oldOffsetX - this.offsetX) * scaleX, (oldOffsetY - this.offsetY) * scaleY);
-                    }
-                    if (egret.Capabilities.runtimeType != egret.RuntimeType.NATIVE) {
-                        oldSurface.height = 1;
-                        oldSurface.width = 1;
-                    }
-                }
-                this.rootMatrix.setTo(1, 0, 0, 1, -this.offsetX, -this.offsetY);
-                this.renderContext.setTransform(1, 0, 0, 1, -bounds.x, -bounds.y);
-            };
-            p.setDevicePixelRatio = function (ratio) {
-                if (ratio === void 0) { ratio = 1; }
-                if (this.$pixelRatio == ratio && this.$ratioMatrix)
-                    return;
-                if (!this.$ratioMatrix)
-                    this.$ratioMatrix = egret.Matrix.create();
-                this.$ratioChanged = true;
-                this.$pixelRatio = ratio;
-                this.$ratioMatrix.setTo(ratio, 0, 0, ratio, 0, 0);
-                this.root.$invalidate(true);
-            };
-            return DisplayList;
-        })(egret.HashObject);
-        sys.DisplayList = DisplayList;
-        egret.registerClass(DisplayList,"egret.sys.DisplayList",["egret.sys.Renderable"]);
-    })(sys = egret.sys || (egret.sys = {}));
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -4541,18 +2639,18 @@ var egret;
         /**
          * @language en_US
          * Initializes a Bitmap object to refer to the specified BitmapData|Texture object.
-         * @param bitmapData The BitmapData object being referenced.
+         * @param value The BitmapData|Texture object being referenced.
          * @version Egret 2.4
          * @platform Web,Native
          */
         /**
          * @language zh_CN
          * 创建一个引用指定 BitmapData|Texture 实例的 Bitmap 对象
-         * @param bitmapData 被引用的 BitmapData 实例
+         * @param value 被引用的 BitmapData|Texture 实例
          * @version Egret 2.4
          * @platform Web,Native
          */
-        function Bitmap(bitmapData) {
+        function Bitmap(value) {
             _super.call(this);
             /**
              * @private
@@ -4562,12 +2660,8 @@ var egret;
              * @private
              */
             this.$fillMode = "scale";
-            /**
-             * @private
-             */
-            this.$smoothing = true;
             this._pixelHitTest = false;
-            this.$renderRegion = new egret.sys.Region();
+            this.$renderNode = new egret.sys.BitmapNode();
             this.$Bitmap = {
                 0: null,
                 1: null,
@@ -4579,13 +2673,13 @@ var egret;
                 7: 0,
                 8: 0,
                 9: 0,
-                10: true,
+                10: Bitmap.defaultSmoothing,
                 11: NaN,
                 12: NaN //explicitBitmapHeight,
             };
-            this.$setBitmapData(bitmapData);
+            this.$setBitmapData(value);
         }
-        var d = __define,c=Bitmap;p=c.prototype;
+        var d = __define,c=Bitmap,p=c.prototype;
         /**
          * @private
          * 显示对象添加到舞台
@@ -4594,12 +2688,7 @@ var egret;
             _super.prototype.$onAddToStage.call(this, stage, nestLevel);
             var bitmapData = this.$Bitmap[0 /* bitmapData */];
             if (bitmapData) {
-                if (bitmapData instanceof egret.Texture) {
-                    egret.Texture.$addDisplayObject(this, bitmapData._bitmapData.hashCode);
-                }
-                else {
-                    egret.Texture.$addDisplayObject(this, bitmapData.hashCode);
-                }
+                egret.Texture.$addDisplayObject(this, bitmapData);
             }
         };
         /**
@@ -4610,29 +2699,32 @@ var egret;
             _super.prototype.$onRemoveFromStage.call(this);
             var bitmapData = this.$Bitmap[0 /* bitmapData */];
             if (bitmapData) {
-                if (bitmapData instanceof egret.Texture) {
-                    egret.Texture.$removeDisplayObject(this, bitmapData._bitmapData.hashCode);
-                }
-                else {
-                    egret.Texture.$removeDisplayObject(this, bitmapData.hashCode);
-                }
+                egret.Texture.$removeDisplayObject(this, bitmapData);
             }
         };
         d(p, "bitmapData"
             /**
              * @language en_US
-             * The BitmapData|Texture object being referenced.
+             * The BitmapData object being referenced.
+             * If you pass the constructor of type Texture or last set for texture, this value returns null.
              * @version Egret 2.4
              * @platform Web,Native
              */
             /**
              * @language zh_CN
-             * 被引用的 BitmapData|Texture 对象。
+             * 被引用的 BitmapData 对象。
+             * 如果传入构造函数的类型为 Texture 或者最后设置的为 texture，则此值返回 null。
              * @version Egret 2.4
              * @platform Web,Native
              */
             ,function () {
-                return this.$Bitmap[0 /* bitmapData */];
+                var value = this.$Bitmap[0 /* bitmapData */];
+                if (value instanceof egret.Texture) {
+                    return null;
+                }
+                else {
+                    return value;
+                }
             }
             ,function (value) {
                 this.$setBitmapData(value);
@@ -4640,12 +2732,27 @@ var egret;
         );
         d(p, "texture"
             /**
-             * @copy #bitmapData
+             * @language en_US
+             * The Texture object being referenced.
+             * If you pass the constructor of type BitmapData or last set for bitmapData, this value returns null.
+             * @version Egret 2.4
+             * @platform Web,Native
+             */
+            /**
+             * @language zh_CN
+             * 被引用的 Texture 对象。
+             * 如果传入构造函数的类型为 BitmapData 或者最后设置的为 bitmapData，则此值返回 null。
              * @version Egret 2.4
              * @platform Web,Native
              */
             ,function () {
-                return this.$Bitmap[0 /* bitmapData */];
+                var value = this.$Bitmap[0 /* bitmapData */];
+                if (value instanceof egret.Texture) {
+                    return value;
+                }
+                else {
+                    return null;
+                }
             }
             ,function (value) {
                 this.$setBitmapData(value);
@@ -4656,18 +2763,13 @@ var egret;
          */
         p.$setBitmapData = function (value) {
             var values = this.$Bitmap;
-            if (value == values[0 /* bitmapData */]) {
+            var oldBitmapData = values[0 /* bitmapData */];
+            if (value == oldBitmapData) {
                 return false;
             }
             values[0 /* bitmapData */] = value;
             if (value) {
-                if (value instanceof egret.Texture) {
-                    var texture = value;
-                    this.setImageData(texture._bitmapData, texture._bitmapX, texture._bitmapY, texture._bitmapWidth, texture._bitmapHeight, texture._offsetX, texture._offsetY, texture.$getTextureWidth(), texture.$getTextureHeight());
-                }
-                else {
-                    this.setImageData(value, 0, 0, value.width, value.height, 0, 0, value.width, value.height);
-                }
+                this.$refreshImageData();
             }
             else {
                 this.setImageData(null, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -4675,12 +2777,28 @@ var egret;
                 return true;
             }
             if (this.$stage) {
-                if (value instanceof egret.Texture) {
-                    egret.Texture.$addDisplayObject(this, value._bitmapData.hashCode);
+                if (oldBitmapData) {
+                    var oldHashCode;
+                    if (oldBitmapData._bitmapData && oldBitmapData._bitmapData.hashCode) {
+                        oldHashCode = oldBitmapData._bitmapData.hashCode;
+                    }
+                    else {
+                        oldHashCode = oldBitmapData.hashCode;
+                    }
+                    var newHashCode;
+                    if (value._bitmapData && value._bitmapData.hashCode) {
+                        newHashCode = value._bitmapData.hashCode;
+                    }
+                    else {
+                        newHashCode = value.hashCode;
+                    }
+                    if (oldHashCode == newHashCode) {
+                        this.$invalidateContentBounds();
+                        return true;
+                    }
+                    egret.Texture.$removeDisplayObject(this, oldBitmapData);
                 }
-                else {
-                    egret.Texture.$addDisplayObject(this, value.hashCode);
-                }
+                egret.Texture.$addDisplayObject(this, value);
             }
             this.$invalidateContentBounds();
             return true;
@@ -4688,17 +2806,33 @@ var egret;
         /**
          * @private
          */
-        p.setImageData = function (image, clipX, clipY, clipWidth, clipHeight, offsetX, offsetY, width, height) {
+        p.$refreshImageData = function () {
+            var values = this.$Bitmap;
+            var bitmapData = values[0 /* bitmapData */];
+            if (bitmapData) {
+                if (bitmapData instanceof egret.Texture) {
+                    var texture = bitmapData;
+                    this.setImageData(texture._bitmapData, texture._bitmapX, texture._bitmapY, texture._bitmapWidth, texture._bitmapHeight, texture._offsetX, texture._offsetY, texture.$getTextureWidth(), texture.$getTextureHeight());
+                }
+                else {
+                    this.setImageData(bitmapData, 0, 0, bitmapData.width, bitmapData.height, 0, 0, bitmapData.width, bitmapData.height);
+                }
+            }
+        };
+        /**
+         * @private
+         */
+        p.setImageData = function (image, bitmapX, bitmapY, bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight) {
             var values = this.$Bitmap;
             values[1 /* image */] = image;
-            values[2 /* clipX */] = clipX;
-            values[3 /* clipY */] = clipY;
-            values[4 /* clipWidth */] = clipWidth;
-            values[5 /* clipHeight */] = clipHeight;
+            values[2 /* bitmapX */] = bitmapX;
+            values[3 /* bitmapY */] = bitmapY;
+            values[4 /* bitmapWidth */] = bitmapWidth;
+            values[5 /* bitmapHeight */] = bitmapHeight;
             values[6 /* offsetX */] = offsetX;
             values[7 /* offsetY */] = offsetY;
-            values[8 /* width */] = width;
-            values[9 /* height */] = height;
+            values[8 /* textureWidth */] = textureWidth;
+            values[9 /* textureHeight */] = textureHeight;
         };
         d(p, "scale9Grid"
             /**
@@ -4730,7 +2864,6 @@ var egret;
             /**
              * @language en_US
              * Determines how the bitmap fills in the dimensions.
-             * ends at the edge of the region.</p>
              * <p>When set to <code>BitmapFillMode.REPEAT</code>, the bitmap
              * repeats to fill the region.</p>
              * <p>When set to <code>BitmapFillMode.SCALE</code>, the bitmap
@@ -4772,26 +2905,26 @@ var egret;
             /**
              * @language en_US
              * Whether or not the bitmap is smoothed when scaled.
-             * @default true。
              * @version Egret 2.4
              * @platform Web
              */
             /**
              * @language zh_CN
              * 控制在缩放时是否对位图进行平滑处理。
-             * @default true。
              * @version Egret 2.4
              * @platform Web
              */
             ,function () {
-                return this.$smoothing;
+                var values = this.$Bitmap;
+                return values[10 /* smoothing */];
             }
             ,function (value) {
                 value = !!value;
-                if (value == this.$smoothing) {
+                var values = this.$Bitmap;
+                if (value == values[10 /* smoothing */]) {
                     return;
                 }
-                this.$smoothing = value;
+                values[10 /* smoothing */] = value;
                 this.$invalidate();
             }
         );
@@ -4848,23 +2981,25 @@ var egret;
             var values = this.$Bitmap;
             if (values[1 /* image */]) {
                 var values = this.$Bitmap;
-                var w = !isNaN(values[11 /* explicitBitmapWidth */]) ? values[11 /* explicitBitmapWidth */] : values[8 /* width */];
-                var h = !isNaN(values[12 /* explicitBitmapHeight */]) ? values[12 /* explicitBitmapHeight */] : values[9 /* height */];
+                var w = !isNaN(values[11 /* explicitBitmapWidth */]) ? values[11 /* explicitBitmapWidth */] : values[8 /* textureWidth */];
+                var h = !isNaN(values[12 /* explicitBitmapHeight */]) ? values[12 /* explicitBitmapHeight */] : values[9 /* textureHeight */];
                 bounds.setTo(0, 0, w, h);
             }
             else {
-                bounds.setEmpty();
+                w = !isNaN(values[11 /* explicitBitmapWidth */]) ? values[11 /* explicitBitmapWidth */] : 0;
+                h = !isNaN(values[12 /* explicitBitmapHeight */]) ? values[12 /* explicitBitmapHeight */] : 0;
+                bounds.setTo(0, 0, w, h);
             }
         };
         /**
          * @private
          */
-        p.$render = function (context) {
+        p.$render = function () {
             var values = this.$Bitmap;
             if (values[1 /* image */]) {
-                var destW = !isNaN(values[11 /* explicitBitmapWidth */]) ? values[11 /* explicitBitmapWidth */] : values[8 /* width */];
-                var destH = !isNaN(values[12 /* explicitBitmapHeight */]) ? values[12 /* explicitBitmapHeight */] : values[9 /* height */];
-                Bitmap.$drawImage(context, values[1 /* image */], values[2 /* clipX */], values[3 /* clipY */], values[4 /* clipWidth */], values[5 /* clipHeight */], values[6 /* offsetX */], values[7 /* offsetY */], values[8 /* width */], values[9 /* height */], destW, destH, this.scale9Grid, this.fillMode, this.$smoothing);
+                var destW = !isNaN(values[11 /* explicitBitmapWidth */]) ? values[11 /* explicitBitmapWidth */] : values[8 /* textureWidth */];
+                var destH = !isNaN(values[12 /* explicitBitmapHeight */]) ? values[12 /* explicitBitmapHeight */] : values[9 /* textureHeight */];
+                Bitmap.$drawImage(this.$renderNode, values[1 /* image */], values[2 /* bitmapX */], values[3 /* bitmapY */], values[4 /* bitmapWidth */], values[5 /* bitmapHeight */], values[6 /* offsetX */], values[7 /* offsetY */], values[8 /* textureWidth */], values[9 /* textureHeight */], destW, destH, this.scale9Grid || values[0 /* bitmapData */]["scale9Grid"], this.fillMode, values[10 /* smoothing */]);
             }
         };
         d(p, "pixelHitTest"
@@ -4907,19 +3042,34 @@ var egret;
             var m = this.$getInvertedConcatenatedMatrix();
             var localX = m.a * stageX + m.c * stageY + m.tx;
             var localY = m.b * stageX + m.d * stageY + m.ty;
-            var context;
             var data;
             var displayList = this.$displayList;
             if (displayList) {
-                context = displayList.renderContext;
-                data = context.getImageData(localX - displayList.offsetX, localY - displayList.offsetY, 1, 1).data;
+                var buffer = displayList.renderBuffer;
+                try {
+                    data = buffer.getPixel(localX - displayList.offsetX, localY - displayList.offsetY);
+                }
+                catch (e) {
+                    console.log(this.$Bitmap[0 /* bitmapData */]);
+                    throw new Error(egret.sys.tr(1039));
+                }
             }
             else {
-                context = egret.sys.sharedRenderContext;
-                context.surface.width = context.surface.height = 3;
-                context.translate(1 - localX, 1 - localY);
-                this.$render(context);
-                data = context.getImageData(1, 1, 1, 1).data;
+                var buffer = egret.sys.hitTestBuffer;
+                buffer.resize(3, 3);
+                var node = this.$getRenderNode();
+                var matrix = egret.Matrix.create();
+                matrix.identity();
+                matrix.translate(1 - localX, 1 - localY);
+                egret.sys.systemRenderer.drawNodeToBuffer(node, buffer, matrix, true);
+                egret.Matrix.release(matrix);
+                try {
+                    data = buffer.getPixel(1, 1);
+                }
+                catch (e) {
+                    console.log(this.$Bitmap[0 /* bitmapData */]);
+                    throw new Error(egret.sys.tr(1039));
+                }
             }
             if (data[3] === 0) {
                 return null;
@@ -4928,43 +3078,38 @@ var egret;
         };
         /**
          * @private
-         *
-         * @param context
-         * @param texture
-         * @param destW
-         * @param destH
-         * @param scale9Grid
-         * @param fillMode
-         * @param smoothing
          */
-        Bitmap.$drawImage = function (context, image, clipX, clipY, clipWidth, clipHeight, offsetX, offsetY, textureWidth, textureHeight, destW, destH, scale9Grid, fillMode, smoothing) {
+        Bitmap.$drawImage = function (node, image, bitmapX, bitmapY, bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight, destW, destH, scale9Grid, fillMode, smoothing) {
             if (!image) {
                 return;
             }
-            context.imageSmoothingEnabled = smoothing;
+            var scale = egret.$TextureScaleFactor;
+            node.smoothing = smoothing;
+            node.image = image;
             if (scale9Grid) {
-                Bitmap.$drawScale9GridImage(context, image, scale9Grid, clipX, clipY, clipWidth, clipHeight, offsetX, offsetY, textureWidth, textureHeight, destW, destH);
+                Bitmap.drawScale9GridImage(node, scale9Grid, bitmapX, bitmapY, bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight, destW, destH);
             }
             else if (fillMode == egret.BitmapFillMode.SCALE) {
-                context.drawImage(image, clipX, clipY, clipWidth, clipHeight, offsetX, offsetY, clipWidth / textureWidth * destW, clipHeight / textureHeight * destH);
+                var tsX = destW / textureWidth;
+                var tsY = destH / textureHeight;
+                node.drawImage(bitmapX, bitmapY, bitmapWidth, bitmapHeight, offsetX * tsX, offsetY * tsY, tsX * bitmapWidth, tsY * bitmapHeight);
+            }
+            else if (fillMode == egret.BitmapFillMode.CLIP) {
+                var displayW = Math.min(textureWidth, destW);
+                var displayH = Math.min(textureHeight, destH);
+                var scaledBitmapW = bitmapWidth * scale;
+                var scaledBitmapH = bitmapHeight * scale;
+                drawClipImage(node, scale, bitmapX, bitmapY, scaledBitmapW, scaledBitmapH, offsetX, offsetY, displayW, displayH);
             }
             else {
-                var tempImage = image;
-                var tempCanvas;
-                if (tempImage.width != clipWidth || tempImage.height != clipHeight || egret.$TextureScaleFactor != 1) {
-                    tempCanvas = egret.sys.surfaceFactory.create(true);
-                    tempCanvas.width = textureWidth;
-                    tempCanvas.height = textureHeight;
-                    tempCanvas.renderContext.drawImage(tempImage, clipX, clipY, clipWidth, clipHeight, offsetX, offsetY, clipWidth * egret.$TextureScaleFactor, clipHeight * egret.$TextureScaleFactor);
-                    tempImage = tempCanvas;
-                }
-                var pattern = context.createPattern(tempImage, "repeat");
-                context.beginPath();
-                context.rect(0, 0, destW, destH);
-                context.fillStyle = pattern;
-                context.fill();
-                if (tempCanvas) {
-                    egret.sys.surfaceFactory.release(tempCanvas);
+                var scaledBitmapW = bitmapWidth * scale;
+                var scaledBitmapH = bitmapHeight * scale;
+                for (var startX = 0; startX < destW; startX += textureWidth) {
+                    for (var startY = 0; startY < destH; startY += textureHeight) {
+                        var displayW = Math.min(destW - startX, textureWidth);
+                        var displayH = Math.min(destH - startY, textureHeight);
+                        drawClipImage(node, scale, bitmapX, bitmapY, scaledBitmapW, scaledBitmapH, offsetX, offsetY, displayW, displayH, startX, startY);
+                    }
                 }
             }
         };
@@ -4972,11 +3117,11 @@ var egret;
          * @private
          * 绘制九宫格位图
          */
-        Bitmap.$drawScale9GridImage = function (context, image, scale9Grid, clipX, clipY, clipWidth, clipHeight, offsetX, offsetY, textureWidth, textureHeight, surfaceWidth, surfaceHeight) {
-            var imageWidth = clipWidth;
-            var imageHeight = clipHeight;
-            surfaceWidth = surfaceWidth - (textureWidth - clipWidth * egret.$TextureScaleFactor);
-            surfaceHeight = surfaceHeight - (textureHeight - clipHeight * egret.$TextureScaleFactor);
+        Bitmap.drawScale9GridImage = function (node, scale9Grid, bitmapX, bitmapY, bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight, destW, destH) {
+            var imageWidth = bitmapWidth;
+            var imageHeight = bitmapHeight;
+            destW = destW - (textureWidth - bitmapWidth * egret.$TextureScaleFactor);
+            destH = destH - (textureHeight - bitmapHeight * egret.$TextureScaleFactor);
             var targetW0 = scale9Grid.x - offsetX;
             var targetH0 = scale9Grid.y - offsetY;
             var sourceW0 = targetW0 / egret.$TextureScaleFactor;
@@ -4996,28 +3141,28 @@ var egret;
                     sourceW0--;
                 }
             }
-            var sourceX0 = clipX;
+            var sourceX0 = bitmapX;
             var sourceX1 = sourceX0 + sourceW0;
             var sourceX2 = sourceX1 + sourceW1;
             var sourceW2 = imageWidth - sourceW0 - sourceW1;
-            var sourceY0 = clipY;
+            var sourceY0 = bitmapY;
             var sourceY1 = sourceY0 + sourceH0;
             var sourceY2 = sourceY1 + sourceH1;
             var sourceH2 = imageHeight - sourceH0 - sourceH1;
             var targetW2 = sourceW2 * egret.$TextureScaleFactor;
             var targetH2 = sourceH2 * egret.$TextureScaleFactor;
-            if ((sourceW0 + sourceW2) * egret.$TextureScaleFactor > surfaceWidth || (sourceH0 + sourceH2) * egret.$TextureScaleFactor > surfaceHeight) {
-                context.drawImage(image, 0, 0, surfaceWidth, surfaceHeight);
+            if ((sourceW0 + sourceW2) * egret.$TextureScaleFactor > destW || (sourceH0 + sourceH2) * egret.$TextureScaleFactor > destH) {
+                node.drawImage(bitmapX, bitmapY, bitmapWidth, bitmapHeight, offsetX, offsetY, destW, destH);
                 return;
             }
             var targetX0 = offsetX;
             var targetX1 = targetX0 + targetW0;
-            var targetX2 = targetX0 + (surfaceWidth - targetW2);
-            var targetW1 = surfaceWidth - targetW0 - targetW2;
+            var targetX2 = targetX0 + (destW - targetW2);
+            var targetW1 = destW - targetW0 - targetW2;
             var targetY0 = offsetY;
             var targetY1 = targetY0 + targetH0;
-            var targetY2 = targetY0 + surfaceHeight - targetH2;
-            var targetH1 = surfaceHeight - targetH0 - targetH2;
+            var targetY2 = targetY0 + destH - targetH2;
+            var targetH1 = destH - targetH0 - targetH2;
             //
             //             x0     x1     x2
             //          y0 +------+------+------+
@@ -5032,21 +3177,97 @@ var egret;
             //             +------+------+------+
             //                w0     w1     w2
             //
-            context.drawImage(image, sourceX0, sourceY0, sourceW0, sourceH0, targetX0, targetY0, targetW0, targetH0);
-            context.drawImage(image, sourceX1, sourceY0, sourceW1, sourceH0, targetX1, targetY0, targetW1, targetH0);
-            context.drawImage(image, sourceX2, sourceY0, sourceW2, sourceH0, targetX2, targetY0, targetW2, targetH0);
-            context.drawImage(image, sourceX0, sourceY1, sourceW0, sourceH1, targetX0, targetY1, targetW0, targetH1);
-            context.drawImage(image, sourceX1, sourceY1, sourceW1, sourceH1, targetX1, targetY1, targetW1, targetH1);
-            context.drawImage(image, sourceX2, sourceY1, sourceW2, sourceH1, targetX2, targetY1, targetW2, targetH1);
-            context.drawImage(image, sourceX0, sourceY2, sourceW0, sourceH2, targetX0, targetY2, targetW0, targetH2);
-            context.drawImage(image, sourceX1, sourceY2, sourceW1, sourceH2, targetX1, targetY2, targetW1, targetH2);
-            context.drawImage(image, sourceX2, sourceY2, sourceW2, sourceH2, targetX2, targetY2, targetW2, targetH2);
+            if (sourceH0 > 0) {
+                if (sourceW0 > 0)
+                    node.drawImage(sourceX0, sourceY0, sourceW0, sourceH0, targetX0, targetY0, targetW0, targetH0);
+                if (sourceW1 > 0)
+                    node.drawImage(sourceX1, sourceY0, sourceW1, sourceH0, targetX1, targetY0, targetW1, targetH0);
+                if (sourceW2 > 0)
+                    node.drawImage(sourceX2, sourceY0, sourceW2, sourceH0, targetX2, targetY0, targetW2, targetH0);
+            }
+            if (sourceH1 > 0) {
+                if (sourceW0 > 0)
+                    node.drawImage(sourceX0, sourceY1, sourceW0, sourceH1, targetX0, targetY1, targetW0, targetH1);
+                if (sourceW1 > 0)
+                    node.drawImage(sourceX1, sourceY1, sourceW1, sourceH1, targetX1, targetY1, targetW1, targetH1);
+                if (sourceW2 > 0)
+                    node.drawImage(sourceX2, sourceY1, sourceW2, sourceH1, targetX2, targetY1, targetW2, targetH1);
+            }
+            if (sourceH2 > 0) {
+                if (sourceW0 > 0)
+                    node.drawImage(sourceX0, sourceY2, sourceW0, sourceH2, targetX0, targetY2, targetW0, targetH2);
+                if (sourceW1 > 0)
+                    node.drawImage(sourceX1, sourceY2, sourceW1, sourceH2, targetX1, targetY2, targetW1, targetH2);
+                if (sourceW2 > 0)
+                    node.drawImage(sourceX2, sourceY2, sourceW2, sourceH2, targetX2, targetY2, targetW2, targetH2);
+            }
         };
+        /**
+         * @language en_US
+         * The default value of whether or not is smoothed when scaled.
+         * When object such as Bitmap is created,smoothing property will be set to this value.
+         * @default true。
+         * @version Egret 3.0
+         * @platform Web
+         */
+        /**
+         * @language zh_CN
+         * 控制在缩放时是否进行平滑处理的默认值。
+         * 在 Bitmap 等对象创建时,smoothing 属性会被设置为该值。
+         * @default true。
+         * @version Egret 3.0
+         * @platform Web
+         */
+        Bitmap.defaultSmoothing = true;
         return Bitmap;
-    })(egret.DisplayObject);
+    }(egret.DisplayObject));
     egret.Bitmap = Bitmap;
-    egret.registerClass(Bitmap,"egret.Bitmap");
+    egret.registerClass(Bitmap,'egret.Bitmap');
+    /**
+     * @private
+     */
+    function drawClipImage(node, scale, bitmapX, bitmapY, scaledBitmapW, scaledBitmapH, offsetX, offsetY, destW, destH, startX, startY) {
+        if (startX === void 0) { startX = 0; }
+        if (startY === void 0) { startY = 0; }
+        var offset = offsetX + scaledBitmapW - destW;
+        if (offset > 0) {
+            scaledBitmapW -= offset;
+        }
+        offset = offsetY + scaledBitmapH - destH;
+        if (offset > 0) {
+            scaledBitmapH -= offset;
+        }
+        node.drawImage(bitmapX, bitmapY, scaledBitmapW / scale, scaledBitmapH / scale, startX + offsetX, startY + offsetY, scaledBitmapW, scaledBitmapH);
+    }
 })(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2014-2015, Egret Technology Inc.
@@ -5098,7 +3319,7 @@ var egret;
     var BitmapFillMode = (function () {
         function BitmapFillMode() {
         }
-        var d = __define,c=BitmapFillMode;p=c.prototype;
+        var d = __define,c=BitmapFillMode,p=c.prototype;
         /**
          * @language en_US
          * Repeat the bitmap to fill area.
@@ -5125,10 +3346,23 @@ var egret;
          * @platform Web,Native
          */
         BitmapFillMode.SCALE = "scale";
+        /**
+         * @language en_US
+         * The bitmap ends at the edge of the region.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 在区域的边缘处截断不显示位图。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        BitmapFillMode.CLIP = "clip";
         return BitmapFillMode;
-    })();
+    }());
     egret.BitmapFillMode = BitmapFillMode;
-    egret.registerClass(BitmapFillMode,"egret.BitmapFillMode");
+    egret.registerClass(BitmapFillMode,'egret.BitmapFillMode');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -5184,7 +3418,7 @@ var egret;
     var BlendMode = (function () {
         function BlendMode() {
         }
-        var d = __define,c=BlendMode;p=c.prototype;
+        var d = __define,c=BlendMode,p=c.prototype;
         /**
          * @language en_US
          * The display object appears in front of the background. Pixel values of the display object override the pixel
@@ -5232,9 +3466,9 @@ var egret;
          */
         BlendMode.ERASE = "erase";
         return BlendMode;
-    })();
+    }());
     egret.BlendMode = BlendMode;
-    egret.registerClass(BlendMode,"egret.BlendMode");
+    egret.registerClass(BlendMode,'egret.BlendMode');
 })(egret || (egret = {}));
 var egret;
 (function (egret) {
@@ -5253,7 +3487,7 @@ var egret;
          */
         function blendModeToNumber(blendMode) {
             var num = blendModeNumber[blendMode];
-            return egret.sys.isUndefined(num) ? 0 : num;
+            return num === undefined ? 0 : num;
         }
         sys.blendModeToNumber = blendModeToNumber;
         /**
@@ -5262,10 +3496,180 @@ var egret;
          */
         function numberToBlendMode(blendMode) {
             var str = blendModeString[blendMode];
-            return egret.sys.isUndefined(str) ? "normal" : str;
+            return str === undefined ? "normal" : str;
         }
         sys.numberToBlendMode = numberToBlendMode;
     })(sys = egret.sys || (egret.sys = {}));
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    /**
+     * @language en_US
+     * The CapsStyle class is an enumeration of constant values that specify the caps style to use in drawing lines.
+     * The constants are provided for use as values in the caps parameter of the egret.Graphics.lineStyle() method.
+     * @see egret.Graphics#lineStyle()
+     * @version Egret 2.5
+     * @platform Web,Native
+     */
+    /**
+     * @language zh_CN
+     * CapsStyle 类是可指定在绘制线条中使用的端点样式的常量值枚举。常量可用作 egret.Graphics.lineStyle() 方法的 caps 参数中的值。
+     * @see egret.Graphics#lineStyle()
+     * @version Egret 2.5
+     * @platform Web,Native
+     */
+    var CapsStyle = (function () {
+        function CapsStyle() {
+        }
+        var d = __define,c=CapsStyle,p=c.prototype;
+        /**
+         * @language en_US
+         * Used to specify no caps in the caps parameter of the egret.Graphics.lineStyle() method.
+         * @version Egret 2.5
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 用于在 egret.Graphics.lineStyle() 方法的 caps 参数中指定没有端点。
+         * @version Egret 2.5
+         * @platform Web,Native
+         */
+        CapsStyle.NONE = "none";
+        /**
+         * @language en_US
+         * Used to specify round caps in the caps parameter of the egret.Graphics.lineStyle() method.
+         * @version Egret 2.5
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 用于在 egret.Graphics.lineStyle() 方法的 caps 参数中指定圆头端点。
+         * @version Egret 2.5
+         * @platform Web,Native
+         */
+        CapsStyle.ROUND = "round";
+        /**
+         * @language en_US
+         * Used to specify square caps in the caps parameter of the egret.Graphics.lineStyle() method.
+         * @version Egret 2.5
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 用于在 egret.Graphics.lineStyle() 方法的 caps 参数中指定方头端点。
+         * @version Egret 2.5
+         * @platform Web,Native
+         */
+        CapsStyle.SQUARE = "square";
+        return CapsStyle;
+    }());
+    egret.CapsStyle = CapsStyle;
+    egret.registerClass(CapsStyle,'egret.CapsStyle');
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    /**
+     * @language en_US
+     * Values for the dirty region policy
+     * @version Egret 2.5
+     * @platform Web,Native
+     */
+    /**
+     * @language zh_CN
+     * 脏矩形策略常量。
+     * @version Egret 2.5
+     * @platform Web,Native
+     */
+    var DirtyRegionPolicy = (function () {
+        function DirtyRegionPolicy() {
+        }
+        var d = __define,c=DirtyRegionPolicy,p=c.prototype;
+        /**
+         * @language en_US
+         * Close automatic detection of dirty region
+         * @version Egret 2.5
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 关闭自动脏矩形检测
+         * @version Egret 2.5
+         * @platform Web,Native
+         */
+        DirtyRegionPolicy.OFF = "off";
+        /**
+         * @language en_US
+         * Open automatic detection of dirty region
+         * @version Egret 2.5
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 开启自动脏矩形检测
+         * @version Egret 2.5
+         * @platform Web,Native
+         */
+        DirtyRegionPolicy.ON = "on";
+        return DirtyRegionPolicy;
+    }());
+    egret.DirtyRegionPolicy = DirtyRegionPolicy;
+    egret.registerClass(DirtyRegionPolicy,'egret.DirtyRegionPolicy');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -5330,7 +3734,7 @@ var egret;
             this.$touchChildren = true;
             this.$children = [];
         }
-        var d = __define,c=DisplayObjectContainer;p=c.prototype;
+        var d = __define,c=DisplayObjectContainer,p=c.prototype;
         /**
          * @private
          */
@@ -5346,7 +3750,14 @@ var egret;
         };
         d(p, "numChildren"
             /**
-             * @inheritDoc
+             * @language en_US
+             * Returns the number of children of this object.
+             * @version Egret 2.4
+             * @platform Web,Native
+             */
+            /**
+             * @language zh_CN
+             * 返回此对象的子项数目。
              * @version Egret 2.4
              * @platform Web,Native
              */
@@ -5355,7 +3766,24 @@ var egret;
             }
         );
         /**
-         * @inheritDoc
+         * @language en_US
+         * Adds a child DisplayObject instance to this DisplayObjectContainer instance. The child is added to the front
+         * (top) of all other children in this DisplayObjectContainer instance. (To add a child to a specific index position,
+         * use the addChildAt() method.)If you add a child object that already has a different display object container
+         * as a parent, the object is removed from the child list of the other display object container.
+         * @param child The DisplayObject instance to add as a child of this DisplayObjectContainer instance.
+         * @returns 在 child The DisplayObject instance that you pass in the child parameter.
+         * @see #addChildAt()
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 将一个 DisplayObject 子实例添加到该 DisplayObjectContainer 实例中。子项将被添加到该 DisplayObjectContainer 实例中其他
+         * 所有子项的前（上）面。（要将某子项添加到特定索引位置，请使用 addChildAt() 方法。）
+         * @param child 要作为该 DisplayObjectContainer 实例的子项添加的 DisplayObject 实例。
+         * @returns 在 child 参数中传递的 DisplayObject 实例。
+         * @see #addChildAt()
          * @version Egret 2.4
          * @platform Web,Native
          */
@@ -5366,7 +3794,27 @@ var egret;
             return this.$doAddChild(child, index);
         };
         /**
-         * @inheritDoc
+         * @language en_US
+         * Adds a child DisplayObject instance to this DisplayObjectContainer instance. The child is added at the index position
+         * specified. An index of 0 represents the back (bottom) of the display list for this DisplayObjectContainer object.
+         * If you add a child object that already has a different display object container as a parent, the object is removed
+         * from the child list of the other display object container.
+         * @param child The DisplayObject instance to add as a child of this DisplayObjectContainer instance.
+         * @param index The index position to which the child is added. If you specify a currently occupied index position,
+         * the child object that exists at that position and all higher positions are moved up one position in the child list.
+         * @returns The DisplayObject instance that you pass in the child parameter.
+         * @see #addChild()
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 将一个 DisplayObject 子实例添加到该 DisplayObjectContainer 实例中。该子项将被添加到指定的索引位置。索引为 0 表示该
+         * DisplayObjectContainer 对象的显示列表的后（底）部。如果添加一个已将其它显示对象容器作为父项的子对象，则会从其它显示对象容器的子列表中删除该对象。
+         * @param child 要作为该 DisplayObjectContainer 实例的子项添加的 DisplayObject 实例。
+         * @param index 添加该子项的索引位置。 如果指定当前占用的索引位置，则该位置以及所有更高位置上的子对象会在子级列表中上移一个位置。
+         * @returns 在 child 参数中传递的 DisplayObject 实例。
+         * @see #addChild()
          * @version Egret 2.4
          * @platform Web,Native
          */
@@ -5421,13 +3869,27 @@ var egret;
             }
             var displayList = this.$displayList || this.$parentDisplayList;
             this.assignParentDisplayList(child, displayList, displayList);
-            child.$propagateFlagsDown(624 /* DownOnAddedOrRemoved */);
+            child.$propagateFlagsDown(1648 /* DownOnAddedOrRemoved */);
             this.$propagateFlagsUp(4 /* InvalidBounds */);
             this.$childAdded(child, index);
             return child;
         };
         /**
-         * @inheritDoc
+         * @language en_US
+         * Determines whether the specified display object is a child of the DisplayObjectContainer instance or the instance
+         * itself. The search includes the entire display list including this DisplayObjectContainer instance. Grandchildren,
+         * great-grandchildren, and so on each return true.
+         * @param child The child object to test.
+         * @returns true if the child object is a child of the DisplayObjectContainer or the container itself; otherwise false.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 确定指定显示对象是 DisplayObjectContainer 实例的子项还是该实例本身。搜索包括整个显示列表（其中包括此 DisplayObjectContainer 实例）。
+         * 孙项、曾孙项等，每项都返回 true。
+         * @param child 要测试的子对象。
+         * @returns 如果指定的显示对象为 DisplayObjectContainer 该实例本身，则返回true，如果指定的显示对象为当前实例子项，则返回false。
          * @version Egret 2.4
          * @platform Web,Native
          */
@@ -5441,7 +3903,20 @@ var egret;
             return false;
         };
         /**
-         * @inheritDoc
+         * @language en_US
+         * Returns the child display object instance that exists at the specified index.
+         * @param index The index position of the child object.
+         * @returns The child display object at the specified index position.
+         * @see #getChildByName()
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 返回位于指定索引处的子显示对象实例。
+         * @param index 子对象的索引位置。
+         * @returns 位于指定索引位置处的子显示对象。
+         * @see #getChildByName()
          * @version Egret 2.4
          * @platform Web,Native
          */
@@ -5456,7 +3931,18 @@ var egret;
             }
         };
         /**
-         * @inheritDoc
+         * @language en_US
+         * Returns the index position of a child DisplayObject instance.
+         * @param child The DisplayObject instance to identify.
+         * @returns The index position of the child display object to identify.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 返回 DisplayObject 的 child 实例的索引位置。
+         * @param child 要测试的子对象。
+         * @returns 要查找的子显示对象的索引位置。
          * @version Egret 2.4
          * @platform Web,Native
          */
@@ -5464,7 +3950,26 @@ var egret;
             return this.$children.indexOf(child);
         };
         /**
-         * @inheritDoc
+         * @language en_US
+         * Returns the child display object that exists with the specified name. If more that one child display object has
+         * the specified name, the method returns the first object in the child list.The getChildAt() method is faster than
+         * the getChildByName() method. The getChildAt() method accesses a child from a cached array, whereas the getChildByName()
+         * method has to traverse a linked list to access a child.
+         * @param name The name of the child to return.
+         * @returns The child display object with the specified name.
+         * @see #getChildAt()
+         * @see egret.DisplayObject#name
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 返回具有指定名称的子显示对象。如果多个子显示对象具有指定名称，则该方法会返回子级列表中的第一个对象。
+         * getChildAt() 方法比 getChildByName() 方法快。getChildAt() 方法从缓存数组中访问子项，而 getChildByName() 方法则必须遍历链接的列表来访问子项。
+         * @param name 要返回的子项的名称。
+         * @returns 具有指定名称的子显示对象。
+         * @see #getChildAt()
+         * @see egret.DisplayObject#name
          * @version Egret 2.4
          * @platform Web,Native
          */
@@ -5481,7 +3986,24 @@ var egret;
             return null;
         };
         /**
-         * @inheritDoc
+         * @language en_US
+         * Removes the specified child DisplayObject instance from the child list of the DisplayObjectContainer instance.
+         * The parent property of the removed child is set to null , and the object is garbage collected if no other references
+         * to the child exist. The index positions of any display objects above the child in the DisplayObjectContainer are
+         * decreased by 1.
+         * @param child The DisplayObject instance to remove.
+         * @returns The DisplayObject instance that you pass in the child parameter.
+         * @see #removeChildAt()
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 从 DisplayObjectContainer 实例的子列表中删除指定的 child DisplayObject 实例。将已删除子项的 parent 属性设置为 null；
+         * 如果不存在对该子项的任何其它引用，则将该对象作为垃圾回收。DisplayObjectContainer 中该子项之上的任何显示对象的索引位置都减去 1。
+         * @param child 要删除的 DisplayObject 实例。
+         * @returns 在 child 参数中传递的 DisplayObject 实例。
+         * @see #removeChildAt()
          * @version Egret 2.4
          * @platform Web,Native
          */
@@ -5496,7 +4018,23 @@ var egret;
             }
         };
         /**
-         * @inheritDoc
+         * @language en_US
+         * Removes a child DisplayObject from the specified index position in the child list of the DisplayObjectContainer.
+         * The parent property of the removed child is set to null, and the object is garbage collected if no other references
+         * to the child exist. The index positions of any display objects above the child in the DisplayObjectContainer are decreased by 1.
+         * @param index The child index of the DisplayObject to remove.
+         * @returns The DisplayObject instance that was removed.
+         * @see #removeChild()
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 从 DisplayObjectContainer 的子列表中指定的 index 位置删除子 DisplayObject。将已删除子项的 parent 属性设置为 null；
+         * 如果没有对该子项的任何其他引用，则将该对象作为垃圾回收。DisplayObjectContainer 中该子项之上的任何显示对象的索引位置都减去 1。
+         * @param index 要删除的 DisplayObject 的子索引。
+         * @returns 已删除的 DisplayObject 实例。
+         * @see #removeChild()
          * @version Egret 2.4
          * @platform Web,Native
          */
@@ -5535,14 +4073,30 @@ var egret;
             }
             var displayList = this.$displayList || this.$parentDisplayList;
             this.assignParentDisplayList(child, displayList, null);
-            child.$propagateFlagsDown(624 /* DownOnAddedOrRemoved */);
+            child.$propagateFlagsDown(1648 /* DownOnAddedOrRemoved */);
             child.$setParent(null);
-            children.splice(index, 1);
+            var indexNow = children.indexOf(child);
+            children.splice(indexNow, 1);
             this.$propagateFlagsUp(4 /* InvalidBounds */);
             return child;
         };
         /**
-         * @inheritDoc
+         * @language en_US
+         * Changes the position of an existing child in the display object container. This affects the layering of child objects.
+         * @param child The child DisplayObject instance for which you want to change the index number.
+         * @param index The resulting index number for the child display object.
+         * @see #addChildAt()
+         * @see #getChildAt()
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 更改现有子项在显示对象容器中的位置。这会影响子对象的分层。
+         * @param child 要为其更改索引编号的 DisplayObject 子实例。
+         * @param index 生成的 child 显示对象的索引编号。当新的索引编号小于0或大于已有子元件数量时，新加入的DisplayObject对象将会放置于最上层。
+         * @see #addChildAt()
+         * @see #getChildAt()
          * @version Egret 2.4
          * @platform Web,Native
          */
@@ -5574,7 +4128,21 @@ var egret;
             this.$propagateFlagsUp(4 /* InvalidBounds */);
         };
         /**
-         * @inheritDoc
+         * @language en_US
+         * Swaps the z-order (front-to-back order) of the child objects at the two specified index positions in the child
+         * list. All other child objects in the display object container remain in the same index positions.
+         * @param index1 The index position of the first child object.
+         * @param index2 The index position of the second child object.
+         * @see #swapChildren()
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 在子级列表中两个指定的索引位置，交换子对象的 Z 轴顺序（前后顺序）。显示对象容器中所有其他子对象的索引位置保持不变。
+         * @param index1 第一个子对象的索引位置。
+         * @param index2 第二个子对象的索引位置。
+         * @see #swapChildren()
          * @version Egret 2.4
          * @platform Web,Native
          */
@@ -5589,7 +4157,21 @@ var egret;
             }
         };
         /**
-         * @inheritDoc
+         * @language en_US
+         * Swaps the z-order (front-to-back order) of the two specified child objects. All other child objects in the
+         * display object container remain in the same index positions.
+         * @param child1 The first child object.
+         * @param child2 The second child object.
+         * @see #swapChildrenAt()
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 交换两个指定子对象的 Z 轴顺序（从前到后顺序）。显示对象容器中所有其他子对象的索引位置保持不变。
+         * @param child1 第一个子对象。
+         * @param child2 第二个子对象。
+         * @see #swapChildrenAt()
          * @version Egret 2.4
          * @platform Web,Native
          */
@@ -5629,7 +4211,19 @@ var egret;
             this.$propagateFlagsUp(4 /* InvalidBounds */);
         };
         /**
-         * @inheritDoc
+         * @language en_US
+         * Removes all child DisplayObject instances from the child list of the DisplayObjectContainer instance. The parent
+         * property of the removed children is set to null , and the objects are garbage collected if no other references to the children exist.
+         * @see #removeChild()
+         * @see #removeChildAt()
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 从 DisplayObjectContainer 实例的子级列表中删除所有 child DisplayObject 实例。
+         * @see #removeChild()
+         * @see #removeChildAt()
          * @version Egret 2.4
          * @platform Web,Native
          */
@@ -5713,7 +4307,17 @@ var egret;
         };
         d(p, "touchChildren"
             /**
-             * @inheritDoc
+             * @language en_US
+             * Determines whether or not the children of the object are touch, or user input device, enabled. If an object is
+             * enabled, a user can interact with it by using a touch or user input device.
+             * @default true
+             * @version Egret 2.4
+             * @platform Web,Native
+             */
+            /**
+             * @language zh_CN
+             * 确定对象的子级是否支持触摸或用户输入设备。如果对象支持触摸或用户输入设备，用户可以通过使用触摸或用户输入设备与之交互。
+             * @default true
              * @version Egret 2.4
              * @platform Web,Native
              */
@@ -5770,6 +4374,7 @@ var egret;
         };
         /**
          * @private
+         * 标记所有子项失效,若遇到cacheAsBitmap的节点,直接停止继续遍历其子项.
          */
         p.markChildDirty = function (child, parentCache) {
             if (child.$hasFlags(512 /* DirtyChildren */)) {
@@ -5777,7 +4382,7 @@ var egret;
             }
             child.$setFlags(512 /* DirtyChildren */);
             var displayList = child.$displayList;
-            if ((displayList || child.$renderRegion) && parentCache) {
+            if ((displayList || child.$renderNode) && parentCache) {
                 parentCache.markDirty(displayList || child);
             }
             if (displayList) {
@@ -5808,7 +4413,7 @@ var egret;
             child.$parentDisplayList = newParent;
             child.$setFlags(512 /* DirtyChildren */);
             var displayList = child.$displayList;
-            if ((child.$renderRegion || displayList) && parentCache) {
+            if ((child.$renderNode || displayList) && parentCache) {
                 parentCache.markDirty(displayList || child);
             }
             if (displayList) {
@@ -5869,6 +4474,37 @@ var egret;
         };
         /**
          * @private
+         * 子项有可能会被cache而导致标记失效。重写此方法,以便在赋值时对子项深度遍历标记脏区域
+         */
+        p.$setAlpha = function (value) {
+            value = +value || 0;
+            if (value == this.$alpha) {
+                return false;
+            }
+            this.$alpha = value;
+            this.$propagateFlagsDown(64 /* InvalidConcatenatedAlpha */);
+            this.$invalidate();
+            this.$invalidateAllChildren();
+            return true;
+        };
+        /**
+         * @private
+         * 标记所有子项失效,与markChildDirty不同,此方法无视子项是否启用cacheAsBitmap,必须遍历完所有子项.通常只有alpha属性改变需要采用这种操作.
+         */
+        p.$invalidateAllChildren = function () {
+            var children = this.$children;
+            if (children) {
+                for (var i = children.length - 1; i >= 0; i--) {
+                    var child = children[i];
+                    child.$invalidate();
+                    if (child.$children) {
+                        child.$invalidateAllChildren();
+                    }
+                }
+            }
+        };
+        /**
+         * @private
          */
         DisplayObjectContainer.$EVENT_ADD_TO_STAGE_LIST = [];
         /**
@@ -5876,33 +4512,65 @@ var egret;
          */
         DisplayObjectContainer.$EVENT_REMOVE_FROM_STAGE_LIST = [];
         return DisplayObjectContainer;
-    })(egret.DisplayObject);
+    }(egret.DisplayObject));
     egret.DisplayObjectContainer = DisplayObjectContainer;
-    egret.registerClass(DisplayObjectContainer,"egret.DisplayObjectContainer",["egret.IDisplayObjectContainer"]);
+    egret.registerClass(DisplayObjectContainer,'egret.DisplayObjectContainer');
     if (DEBUG) {
         egret.$markReadOnly(DisplayObjectContainer, "numChildren");
     }
 })(egret || (egret = {}));
 var egret;
 (function (egret) {
+    /**
+     * @language en_US
+     * The GradientType class provides values for the type parameter in the beginGradientFill() methods of the egret.Graphics class.
+     *
+     * @see egret.Graphics#beginGradientFill()
+     * @version Egret 2.4
+     * @platform Web,Native
+     */
+    /**
+     * @language zh_CN
+     * GradientType 类为 egret.Graphics 类的 beginGradientFill() 方法中的 type 参数提供值。
+     *
+     * @see egret.Graphics#beginGradientFill()
+     * @version Egret 2.4
+     * @platform Web,Native
+     */
     var GradientType = (function () {
         function GradientType() {
         }
-        var d = __define,c=GradientType;p=c.prototype;
+        var d = __define,c=GradientType,p=c.prototype;
         /**
+         * @language en_US
+         * Value used to specify a linear gradient fill.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
          * 用于指定线性渐变填充的值
-         * @method egret.GradientType.LINEAR
+         * @version Egret 2.4
+         * @platform Web,Native
          */
         GradientType.LINEAR = "linear";
         /**
+         * @language en_US
+         * Value used to specify a radial gradient fill.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
          * 用于指定放射状渐变填充的值
-         * @method egret.GradientType.RADIAL
+         * @version Egret 2.4
+         * @platform Web,Native
          */
         GradientType.RADIAL = "radial";
         return GradientType;
-    })();
+    }());
     egret.GradientType = GradientType;
-    egret.registerClass(GradientType,"egret.GradientType");
+    egret.registerClass(GradientType,'egret.GradientType');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -5934,6 +4602,17 @@ var egret;
 //////////////////////////////////////////////////////////////////////////////////////
 var egret;
 (function (egret) {
+    /**
+     * @private
+     * 格式化弧线角度的值
+     */
+    function clampAngle(value) {
+        value %= Math.PI * 2;
+        if (value < 0) {
+            value += Math.PI * 2;
+        }
+        return value;
+    }
     /**
      * @language en_US
      * The Graphics class contains a set of methods for creating vector shape. Display objects that support drawing include Sprite and Shape objects. Each class in these classes includes the graphics attribute that is a Graphics object.
@@ -5961,96 +4640,89 @@ var egret;
         function Graphics() {
             _super.call(this);
             /**
-             * @private
+             * 当前移动到的坐标X
              */
-            this.$renderContext = null;
+            this.lastX = 0;
+            /**
+             * 当前移动到的坐标Y
+             */
+            this.lastY = 0;
+            /**
+             * 当前正在绘制的填充
+             */
+            this.fillPath = null;
+            /**
+             * 当前正在绘制的线条
+             */
+            this.strokePath = null;
+            /**
+             * 线条的左上方宽度
+             */
+            this.topLeftStrokeWidth = 0;
+            /**
+             * 线条的右下方宽度
+             */
+            this.bottomRightStrokeWidth = 0;
             /**
              * @private
              */
-            this.strokeStyleColor = null;
+            this.minX = Infinity;
             /**
              * @private
              */
-            this.fillStyle = null;
+            this.minY = Infinity;
             /**
              * @private
              */
-            this._dirty = false;
+            this.maxX = -Infinity;
             /**
              * @private
              */
-            this.lineX = 0;
+            this.maxY = -Infinity;
             /**
-             * @private
+             * 是否已经包含上一次moveTo的坐标点
              */
-            this.lineY = 0;
-            /**
-             * @private
-             */
-            this._firstCheck = true;
-            /**
-             * @private
-             */
-            this._minX = 0;
-            /**
-             * @private
-             */
-            this._minY = 0;
-            /**
-             * @private
-             */
-            this._maxX = 0;
-            /**
-             * @private
-             */
-            this._maxY = 0;
-            this.$renderContext = new egret.GraphicsRenderContext();
+            this.includeLastPosition = true;
+            this.$renderNode = new egret.sys.GraphicsNode();
         }
-        var d = __define,c=Graphics;p=c.prototype;
-        d(p, "graphicsRenderContext"
-            /**
-             * @private
-             */
-            ,function () {
-                return this.$renderContext;
-            }
-        );
+        var d = __define,c=Graphics,p=c.prototype;
         /**
          * @private
+         * 设置绑定到的目标显示对象
          */
-        p.$hitTest = function (stageX, stageY) {
-            var target = this.$renderContext.$targetDisplay;
-            var m = target.$getInvertedConcatenatedMatrix();
-            var localX = m.a * stageX + m.c * stageY + m.tx;
-            var localY = m.b * stageX + m.d * stageY + m.ty;
-            var context = egret.sys.sharedRenderContext;
-            context.surface.width = context.surface.height = 3;
-            context.translate(1 - localX, 1 - localY);
-            this.$renderContext.$render(context, true);
-            var data = context.getImageData(1, 1, 1, 1).data;
-            if (data[3] === 0) {
-                return null;
+        p.$setTarget = function (target) {
+            if (this.targetDisplay) {
+                this.targetDisplay.$renderNode = null;
             }
-            return target;
+            target.$renderNode = this.$renderNode;
+            this.targetDisplay = target;
         };
         /**
-         * @private
+         * 对1像素和3像素特殊处理，向右下角偏移0.5像素，以显示清晰锐利的线条。
          */
-        p.$measureContentBounds = function (bounds) {
-            this.$renderContext.$measureContentBounds(bounds);
-        };
-        /**
-         * @private
-         */
-        p.$render = function (context) {
-            this.$renderContext.$render(context);
+        p.setStrokeWidth = function (width) {
+            switch (width) {
+                case 1:
+                    this.topLeftStrokeWidth = 0;
+                    this.bottomRightStrokeWidth = 1;
+                    break;
+                case 3:
+                    this.topLeftStrokeWidth = 1;
+                    this.bottomRightStrokeWidth = 2;
+                    break;
+                default:
+                    var half = Math.ceil(width * 0.5) | 0;
+                    this.topLeftStrokeWidth = half;
+                    this.bottomRightStrokeWidth = half;
+                    break;
+            }
         };
         /**
          * @language en_US
          * Specify a simple single color fill that will be used for subsequent calls to other Graphics methods (for example, lineTo() and drawCircle()) when drawing.
          * Calling the clear() method will clear the fill.
-         * @param color {number} Filled color
-         * @param alpha {number} Filled Alpha value
+         * @param color Filled color
+         * @param alpha Filled Alpha value
          * @version Egret 2.4
          * @platform Web,Native
          */
@@ -6058,37 +4730,17 @@ var egret;
          * @language zh_CN
          * 指定一种简单的单一颜色填充，在绘制时该填充将在随后对其他 Graphics 方法（如 lineTo() 或 drawCircle()）的调用中使用。
          * 调用 clear() 方法会清除填充。
-         * @param color {number} 填充的颜色
-         * @param alpha {number} 填充的 Alpha 值
+         * @param color 填充的颜色
+         * @param alpha 填充的 Alpha 值
          * @version Egret 2.4
          * @platform Web,Native
          */
         p.beginFill = function (color, alpha) {
             if (alpha === void 0) { alpha = 1; }
-            this.fillStyle = this._parseColor(color, alpha);
-            this._setStyle(this.fillStyle);
-        };
-        /**
-         * @private
-         *
-         * @param color
-         * @param alpha
-         * @returns
-         */
-        p._parseColor = function (color, alpha) {
-            var _colorBlue = color & 0x0000FF;
-            var _colorGreen = (color & 0x00ff00) >> 8;
-            var _colorRed = color >> 16;
-            return "rgba(" + _colorRed + "," + _colorGreen + "," + _colorBlue + "," + alpha + ")";
-        };
-        /**
-         * @private
-         *
-         * @param colorStr
-         */
-        p._setStyle = function (colorStr) {
-            this.$renderContext.fillStyle = colorStr;
-            this.$renderContext.beginPath();
+            color = +color || 0;
+            alpha = +alpha || 0;
+            this.fillPath = this.$renderNode.beginFill(color, alpha, this.strokePath);
+            this.fillPath.moveTo(this.lastX, this.lastY);
         };
         /**
          * @language en_US
@@ -6099,7 +4751,7 @@ var egret;
          * @param colors An array of RGB hexadecimal color values used in the gradient; for example, red is 0xFF0000, blue is 0x0000FF, and so on. You can specify up to 15 colors. For each color, specify a corresponding value in the alphas and ratios parameters.
          * @param alphas An array of alpha values for the corresponding colors in the colors array;
          * @param ratios An array of color distribution ratios; valid values are 0-255.
-         * @param matrix A transformation matrix as defined by the flash.geom.Matrix class. The flash.geom.Matrix class includes a createGradientBox() method, which lets you conveniently set up the matrix for use with the beginGradientFill() method.
+         * @param matrix A transformation matrix as defined by the egret.Matrix class. The egret.Matrix class includes a createGradientBox() method, which lets you conveniently set up the matrix for use with the beginGradientFill() method.
          * @platform Web
          * @version Egret 2.4
          */
@@ -6118,216 +4770,49 @@ var egret;
          */
         p.beginGradientFill = function (type, colors, alphas, ratios, matrix) {
             if (matrix === void 0) { matrix = null; }
-            var gradient = this.getGradient(type, colors, alphas, ratios, matrix);
-            this.fillStyle = gradient;
-            this._setStyle(this.fillStyle);
-        };
-        p.getGradient = function (type, colors, alphas, ratios, matrix) {
-            var surface = egret.sys.surfaceFactory.create(true);
-            var context = surface.renderContext;
-            var m = new egret.Matrix();
-            if (matrix) {
-                m.a = matrix.a * 819.2;
-                m.b = matrix.b * 819.2;
-                m.c = matrix.c * 819.2;
-                m.d = matrix.d * 819.2;
-                m.tx = matrix.tx;
-                m.ty = matrix.ty;
-            }
-            else {
-                //默认值
-                m.a = 100;
-                m.d = 100;
-            }
-            var gradient;
-            if (type == egret.GradientType.LINEAR) {
-                gradient = context.createLinearGradient(-1, 0, 1, 0);
-            }
-            else {
-                gradient = context.createRadialGradient(0, 0, 0, 0, 0, 1);
-            }
-            //todo colors alphas ratios数量不一致情况处理
-            var l = colors.length;
-            for (var i = 0; i < l; i++) {
-                gradient.addColorStop(ratios[i] / 255, this._parseColor(colors[i], alphas[i]));
-            }
-            gradient["matrix"] = m;
-            egret.sys.surfaceFactory.release(surface);
-            return gradient;
+            this.fillPath = this.$renderNode.beginGradientFill(type, colors, alphas, ratios, matrix, this.strokePath);
+            this.fillPath.moveTo(this.lastX, this.lastY);
         };
         /**
          * @language en_US
-         * Draw a rectangle
-         * @param x {number} x position of the center, relative to the registration point of the parent display object (in pixels).
-         * @param y {number} y position of the center, relative to the registration point of the parent display object (in pixels).
-         * @param width {number} Width of the rectangle (in pixels).
-         * @param height {number} Height of the rectangle (in pixels).
+         * Apply fill to the lines and curves added after the previous calling to the beginFill() method.
          * @version Egret 2.4
          * @platform Web,Native
          */
         /**
          * @language zh_CN
-         * 绘制一个矩形
-         * @param x {number} 圆心相对于父显示对象注册点的 x 位置（以像素为单位）。
-         * @param y {number} 相对于父显示对象注册点的圆心的 y 位置（以像素为单位）。
-         * @param width {number} 矩形的宽度（以像素为单位）。
-         * @param height {number} 矩形的高度（以像素为单位）。
+         * 对从上一次调用 beginFill()方法之后添加的直线和曲线应用填充。
          * @version Egret 2.4
          * @platform Web,Native
          */
-        p.drawRect = function (x, y, width, height) {
-            if (DEBUG) {
-                if (isNaN(x) || isNaN(y) || isNaN(width) || isNaN(height)) {
-                    egret.$error(1013);
-                }
-            }
-            this.$renderContext.beginPath();
-            this.$renderContext.rect(x, y, width, height);
-            this.$renderContext.closePath();
-        };
-        /**
-         * @language en_US
-         * Draw a circle.
-         * @param x {number} x position of the center, relative to the registration point of the parent display object (in pixels).
-         * @param y {number} y position of the center, relative to the registration point of the parent display object (in pixels).
-         * @param r {number} Radius of the circle (in pixels).
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 绘制一个圆。
-         * @param x {number} 圆心相对于父显示对象注册点的 x 位置（以像素为单位）。
-         * @param y {number} 相对于父显示对象注册点的圆心的 y 位置（以像素为单位）。
-         * @param r {number} 圆的半径（以像素为单位）。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.drawCircle = function (x, y, r) {
-            if (DEBUG) {
-                if (isNaN(x) || isNaN(y) || isNaN(r)) {
-                    egret.$error(1013);
-                }
-            }
-            this.$renderContext.beginPath();
-            this.$renderContext.arc(x, y, r, 0, Math.PI * 2);
-            this.$renderContext.closePath();
-        };
-        /**
-         * @language en_US
-         * Draw a rectangle with rounded corners.
-         * @param x {number} x position of the center, relative to the registration point of the parent display object (in pixels).
-         * @param y {number} y position of the center, relative to the registration point of the parent display object (in pixels).
-         * @param width {number} Width of the rectangle (in pixels).
-         * @param height {number} Height of the rectangle (in pixels).
-         * @param ellipseWidth {number} Width used to draw an ellipse with rounded corners (in pixels).
-         * @param ellipseHeight {number} Height used to draw an ellipse with rounded corners (in pixels). (Optional) If no value is specified, the default value matches the value of the ellipseWidth parameter.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 绘制一个圆角矩形。
-         * @param x {number} 圆心相对于父显示对象注册点的 x 位置（以像素为单位）。
-         * @param y {number} 相对于父显示对象注册点的圆心的 y 位置（以像素为单位）。
-         * @param width {number} 矩形的宽度（以像素为单位）。
-         * @param height {number} 矩形的高度（以像素为单位）。
-         * @param ellipseWidth {number} 用于绘制圆角的椭圆的宽度（以像素为单位）。
-         * @param ellipseHeight {number} 用于绘制圆角的椭圆的高度（以像素为单位）。 （可选）如果未指定值，则默认值与为 ellipseWidth 参数提供的值相匹配。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.drawRoundRect = function (x, y, width, height, ellipseWidth, ellipseHeight) {
-            if (DEBUG) {
-                if (isNaN(x) || isNaN(y) || isNaN(width) || isNaN(height)) {
-                    egret.$error(1013);
-                }
-            }
-            var _x = x; //控制X偏移
-            var _y = y; //控制Y偏移
-            var _w = width;
-            var _h = height;
-            var _ew = ellipseWidth / 2;
-            var _eh = ellipseHeight ? ellipseHeight / 2 : _ew;
-            var right = _x + _w;
-            var bottom = _y + _h;
-            var ax = right;
-            var ay = bottom - _eh;
-            this.$renderContext.beginPath();
-            this.$renderContext.moveTo(ax, ay);
-            this.$renderContext.quadraticCurveTo(right, bottom, right - _ew, bottom);
-            this.$renderContext.lineTo(_x + _ew, bottom);
-            this.$renderContext.quadraticCurveTo(_x, bottom, _x, bottom - _eh);
-            this.$renderContext.lineTo(_x, _y + _eh);
-            this.$renderContext.quadraticCurveTo(_x, _y, _x + _ew, _y);
-            this.$renderContext.lineTo(right - _ew, _y);
-            this.$renderContext.quadraticCurveTo(right, _y, right, _y + _eh);
-            this.$renderContext.lineTo(ax, ay);
-            this.$renderContext.closePath();
-        };
-        /**
-         * @language en_US
-         * Draw an ellipse.
-         * @param x {number} A number indicating the horizontal position, relative to the registration point of the parent display object (in pixels).
-         * @param y {number} A number indicating the vertical position, relative to the registration point of the parent display object (in pixels).
-         * @param width {number} Width of the rectangle (in pixels).
-         * @param height {number} Height of the rectangle (in pixels).
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 绘制一个椭圆。
-         * @param x {number} 一个表示相对于父显示对象注册点的水平位置的数字（以像素为单位）。
-         * @param y {number} 一个表示相对于父显示对象注册点的垂直位置的数字（以像素为单位）。
-         * @param width {number} 矩形的宽度（以像素为单位）。
-         * @param height {number} 矩形的高度（以像素为单位）。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.drawEllipse = function (x, y, width, height) {
-            if (DEBUG) {
-                if (isNaN(x) || isNaN(y) || isNaN(width) || isNaN(height)) {
-                    egret.$error(1013);
-                }
-            }
-            var _x = x + width / 2; //控制X偏移
-            var _y = y + height / 2; //控制Y偏移
-            var r = (width > height) ? width : height; //选宽高较大者做为arc半径参数
-            var ratioX = width / r; //横轴缩放比率
-            var ratioY = height / r; //纵轴缩放比率
-            r /= 2;
-            this.$renderContext.scale(ratioX, ratioY); //进行缩放(均匀压缩)
-            this.$renderContext.beginPath();
-            this.$renderContext.arc(_x / ratioX, _y / ratioY, r, 0, 2 * Math.PI);
-            this.$renderContext.closePath();
-            this.$renderContext.scale(1 / ratioX, 1 / ratioY); //缩放回去
+        p.endFill = function () {
+            this.fillPath = null;
         };
         /**
          * @language en_US
          * Specify a line style that will be used for subsequent calls to Graphics methods such as lineTo() and drawCircle().
-         * @param thickness {number} An integer, indicating the thickness of the line in points. Valid values are 0 to 255. If a number is not specified, or if the parameter is undefined, a line is not drawn. If a value less than 0 is passed, the default value is 0. Value 0 indicates hairline thickness; the maximum thickness is 255. If a value greater than 255 is passed, the default value is 255.
-         * @param color {number} A hexadecimal color value of the line (for example, red is 0xFF0000, and blue is 0x0000FF, etc.). If no value is specified, the default value is 0x000000 (black). Optional.
-         * @param alpha {number} Indicates Alpha value of the line's color. Valid values are 0 to 1. If no value is specified, the default value is 1 (solid). If the value is less than 0, the default value is 0. If the value is greater than 1, the default value is 1.
-         * @param pixelHinting {boolean} A boolean value that specifies whether to hint strokes to full pixels. This affects both the position of anchors of a curve and the line stroke size itself. With pixelHinting set to true, the line width is adjusted to full pixel width. With pixelHinting set to false, disjoints can appear for curves and straight lines.
-         * @param scaleMode {string} Specifies the scale mode to be used
-         * @param caps {string} Specifies the value of the CapsStyle class of the endpoint type at the end of the line.
-         * @param joints {string} Specifies the type of joint appearance of corner.
-         * @param miterLimit {number} Indicates the limit number of cut miter.
+         * @param thickness An integer, indicating the thickness of the line in points. Valid values are 0 to 255. If a number is not specified, or if the parameter is undefined, a line is not drawn. If a value less than 0 is passed, the default value is 0. Value 0 indicates hairline thickness; the maximum thickness is 255. If a value greater than 255 is passed, the default value is 255.
+         * @param color A hexadecimal color value of the line (for example, red is 0xFF0000, and blue is 0x0000FF, etc.). If no value is specified, the default value is 0x000000 (black). Optional.
+         * @param alpha Indicates Alpha value of the line's color. Valid values are 0 to 1. If no value is specified, the default value is 1 (solid). If the value is less than 0, the default value is 0. If the value is greater than 1, the default value is 1.
+         * @param pixelHinting A boolean value that specifies whether to hint strokes to full pixels. This affects both the position of anchors of a curve and the line stroke size itself. With pixelHinting set to true, the line width is adjusted to full pixel width. With pixelHinting set to false, disjoints can appear for curves and straight lines.
+         * @param scaleMode Specifies the scale mode to be used
+         * @param caps Specifies the value of the CapsStyle class of the endpoint type at the end of the line. (default = CapsStyle.ROUND)
+         * @param joints Specifies the type of joint appearance of corner.  (default = JointStyle.ROUND)
+         * @param miterLimit Indicates the limit number of cut miter.
          * @version Egret 2.4
          * @platform Web,Native
          */
         /**
          * @language zh_CN
          * 指定一种线条样式以用于随后对 lineTo() 或 drawCircle() 等 Graphics 方法的调用。
-         * @param thickness {number} 一个整数，以点为单位表示线条的粗细，有效值为 0 到 255。如果未指定数字，或者未定义该参数，则不绘制线条。如果传递的值小于 0，则默认值为 0。值 0 表示极细的粗细；最大粗细为 255。如果传递的值大于 255，则默认值为 255。
-         * @param color {number} 线条的十六进制颜色值（例如，红色为 0xFF0000，蓝色为 0x0000FF 等）。如果未指明值，则默认值为 0x000000（黑色）。可选。
-         * @param alpha {number} 表示线条颜色的 Alpha 值的数字；有效值为 0 到 1。如果未指明值，则默认值为 1（纯色）。如果值小于 0，则默认值为 0。如果值大于 1，则默认值为 1。
-         * @param pixelHinting {boolean} 布尔型值，指定是否提示笔触采用完整像素。它同时影响曲线锚点的位置以及线条笔触大小本身。在 pixelHinting 设置为 true 的情况下，线条宽度会调整到完整像素宽度。在 pixelHinting 设置为 false 的情况下，对于曲线和直线可能会出现脱节。
-         * @param scaleMode {string} 用于指定要使用的比例模式
-         * @param caps {string} 用于指定线条末端处端点类型的 CapsStyle 类的值。
-         * @param joints {string} 指定用于拐角的连接外观的类型。
-         * @param miterLimit {number} 用于表示剪切斜接的极限值的数字。
+         * @param thickness 一个整数，以点为单位表示线条的粗细，有效值为 0 到 255。如果未指定数字，或者未定义该参数，则不绘制线条。如果传递的值小于 0，则默认值为 0。值 0 表示极细的粗细；最大粗细为 255。如果传递的值大于 255，则默认值为 255。
+         * @param color 线条的十六进制颜色值（例如，红色为 0xFF0000，蓝色为 0x0000FF 等）。如果未指明值，则默认值为 0x000000（黑色）。可选。
+         * @param alpha 表示线条颜色的 Alpha 值的数字；有效值为 0 到 1。如果未指明值，则默认值为 1（纯色）。如果值小于 0，则默认值为 0。如果值大于 1，则默认值为 1。
+         * @param pixelHinting 布尔型值，指定是否提示笔触采用完整像素。它同时影响曲线锚点的位置以及线条笔触大小本身。在 pixelHinting 设置为 true 的情况下，线条宽度会调整到完整像素宽度。在 pixelHinting 设置为 false 的情况下，对于曲线和直线可能会出现脱节。
+         * @param scaleMode 用于指定要使用的比例模式
+         * @param caps 用于指定线条末端处端点类型的 CapsStyle 类的值。默认值：CapsStyle.ROUND
+         * @param joints 指定用于拐角的连接外观的类型。默认值：JointStyle.ROUND
+         * @param miterLimit 用于表示剪切斜接的极限值的数字。
          * @version Egret 2.4
          * @platform Web,Native
          */
@@ -6340,45 +4825,219 @@ var egret;
             if (caps === void 0) { caps = null; }
             if (joints === void 0) { joints = null; }
             if (miterLimit === void 0) { miterLimit = 3; }
-            if (this.strokeStyleColor) {
-                this._createEndLineCommand();
+            thickness = +thickness || 0;
+            if (thickness <= 0) {
+                this.strokePath = null;
+                this.setStrokeWidth(0);
             }
-            this.strokeStyleColor = this._parseColor(color, alpha);
-            this.moveTo(this.lineX, this.lineY);
-            this.$renderContext.lineWidth = thickness;
-            this.$renderContext.strokeStyle = this.strokeStyleColor;
-            this.$renderContext.beginPath();
+            else {
+                color = +color || 0;
+                alpha = +alpha || 0;
+                miterLimit = +miterLimit || 0;
+                this.setStrokeWidth(thickness);
+                this.strokePath = this.$renderNode.lineStyle(thickness, color, alpha, caps, joints, miterLimit);
+                this.strokePath.moveTo(this.lastX, this.lastY);
+            }
+        };
+        /**
+         * @language en_US
+         * Draw a rectangle
+         * @param x x position of the center, relative to the registration point of the parent display object (in pixels).
+         * @param y y position of the center, relative to the registration point of the parent display object (in pixels).
+         * @param width Width of the rectangle (in pixels).
+         * @param height Height of the rectangle (in pixels).
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 绘制一个矩形
+         * @param x 圆心相对于父显示对象注册点的 x 位置（以像素为单位）。
+         * @param y 相对于父显示对象注册点的圆心的 y 位置（以像素为单位）。
+         * @param width 矩形的宽度（以像素为单位）。
+         * @param height 矩形的高度（以像素为单位）。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.drawRect = function (x, y, width, height) {
+            x = +x || 0;
+            y = +y || 0;
+            width = +width || 0;
+            height = +height || 0;
+            var fillPath = this.fillPath;
+            var strokePath = this.strokePath;
+            fillPath && fillPath.drawRect(x, y, width, height);
+            strokePath && strokePath.drawRect(x, y, width, height);
+            this.extendBoundsByPoint(x + width, y + height);
+            this.updatePosition(x, y);
+        };
+        /**
+         * @language en_US
+         * Draw a rectangle with rounded corners.
+         * @param x x position of the center, relative to the registration point of the parent display object (in pixels).
+         * @param y y position of the center, relative to the registration point of the parent display object (in pixels).
+         * @param width Width of the rectangle (in pixels).
+         * @param height Height of the rectangle (in pixels).
+         * @param ellipseWidth Width used to draw an ellipse with rounded corners (in pixels).
+         * @param ellipseHeight Height used to draw an ellipse with rounded corners (in pixels). (Optional) If no value is specified, the default value matches the value of the ellipseWidth parameter.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 绘制一个圆角矩形。
+         * @param x 圆心相对于父显示对象注册点的 x 位置（以像素为单位）。
+         * @param y 相对于父显示对象注册点的圆心的 y 位置（以像素为单位）。
+         * @param width 矩形的宽度（以像素为单位）。
+         * @param height 矩形的高度（以像素为单位）。
+         * @param ellipseWidth 用于绘制圆角的椭圆的宽度（以像素为单位）。
+         * @param ellipseHeight 用于绘制圆角的椭圆的高度（以像素为单位）。 （可选）如果未指定值，则默认值与为 ellipseWidth 参数提供的值相匹配。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.drawRoundRect = function (x, y, width, height, ellipseWidth, ellipseHeight) {
+            x = +x || 0;
+            y = +y || 0;
+            width = +width || 0;
+            height = +height || 0;
+            ellipseWidth = +ellipseWidth || 0;
+            ellipseHeight = +ellipseHeight || 0;
+            var fillPath = this.fillPath;
+            var strokePath = this.strokePath;
+            fillPath && fillPath.drawRoundRect(x, y, width, height, ellipseWidth, ellipseHeight);
+            strokePath && strokePath.drawRoundRect(x, y, width, height, ellipseWidth, ellipseHeight);
+            var radiusX = (ellipseWidth * 0.5) | 0;
+            var radiusY = ellipseHeight ? (ellipseHeight * 0.5) | 0 : radiusX;
+            var right = x + width;
+            var bottom = y + height;
+            var ybw = bottom - radiusY;
+            this.extendBoundsByPoint(x, y);
+            this.extendBoundsByPoint(right, bottom);
+            this.updatePosition(right, ybw);
+        };
+        /**
+         * @language en_US
+         * Draw a circle.
+         * @param x x position of the center, relative to the registration point of the parent display object (in pixels).
+         * @param y y position of the center, relative to the registration point of the parent display object (in pixels).
+         * @param r Radius of the circle (in pixels).
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 绘制一个圆。
+         * @param x 圆心相对于父显示对象注册点的 x 位置（以像素为单位）。
+         * @param y 相对于父显示对象注册点的圆心的 y 位置（以像素为单位）。
+         * @param radius 圆的半径（以像素为单位）。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.drawCircle = function (x, y, radius) {
+            x = +x || 0;
+            y = +y || 0;
+            radius = +radius || 0;
+            var fillPath = this.fillPath;
+            var strokePath = this.strokePath;
+            fillPath && fillPath.drawCircle(x, y, radius);
+            strokePath && strokePath.drawCircle(x, y, radius);
+            this.extendBoundsByPoint(x - radius, y - radius);
+            this.extendBoundsByPoint(x + radius, y + radius);
+            this.updatePosition(x + radius, y);
+        };
+        /**
+         * @language en_US
+         * Draw an ellipse.
+         * @param x A number indicating the horizontal position, relative to the registration point of the parent display object (in pixels).
+         * @param y A number indicating the vertical position, relative to the registration point of the parent display object (in pixels).
+         * @param width Width of the rectangle (in pixels).
+         * @param height Height of the rectangle (in pixels).
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 绘制一个椭圆。
+         * @param x 一个表示相对于父显示对象注册点的水平位置的数字（以像素为单位）。
+         * @param y 一个表示相对于父显示对象注册点的垂直位置的数字（以像素为单位）。
+         * @param width 矩形的宽度（以像素为单位）。
+         * @param height 矩形的高度（以像素为单位）。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.drawEllipse = function (x, y, width, height) {
+            x = +x || 0;
+            y = +y || 0;
+            width = +width || 0;
+            height = +height || 0;
+            var fillPath = this.fillPath;
+            var strokePath = this.strokePath;
+            fillPath && fillPath.drawEllipse(x, y, width, height);
+            strokePath && strokePath.drawEllipse(x, y, width, height);
+            this.extendBoundsByPoint(x + width, y + height);
+            this.updatePosition(x, y);
+        };
+        /**
+         * @language en_US
+         * Move the current drawing position to (x, y). If any of these parameters is missed, calling this method will fail and the current drawing position keeps unchanged.
+         * @param x A number indicating the horizontal position, relative to the registration point of the parent display object (in pixels).
+         * @param y A number indicating the vertical position, relative to the registration point of the parent display object (in pixels).
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 将当前绘图位置移动到 (x, y)。如果缺少任何一个参数，则此方法将失败，并且当前绘图位置不改变。
+         * @param x 一个表示相对于父显示对象注册点的水平位置的数字（以像素为单位）。
+         * @param y 一个表示相对于父显示对象注册点的垂直位置的数字（以像素为单位）。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.moveTo = function (x, y) {
+            x = +x || 0;
+            y = +y || 0;
+            var fillPath = this.fillPath;
+            var strokePath = this.strokePath;
+            fillPath && fillPath.moveTo(x, y);
+            strokePath && strokePath.moveTo(x, y);
+            this.includeLastPosition = false;
+            this.lastX = x;
+            this.lastY = y;
         };
         /**
          * @language en_US
          * Draw a straight line from the current drawing position to (x, y) using the current line style; the current drawing position is then set to (x, y).
-         * @param x {number} A number indicating the horizontal position, relative to the registration point of the parent display object (in pixels).
-         * @param y {number} A number indicating the vertical position, relative to the registration point of the parent display object (in pixels).
+         * @param x A number indicating the horizontal position, relative to the registration point of the parent display object (in pixels).
+         * @param y A number indicating the vertical position, relative to the registration point of the parent display object (in pixels).
          * @version Egret 2.4
          * @platform Web,Native
          */
         /**
          * @language zh_CN
          * 使用当前线条样式绘制一条从当前绘图位置开始到 (x, y) 结束的直线；当前绘图位置随后会设置为 (x, y)。
-         * @param x {number} 一个表示相对于父显示对象注册点的水平位置的数字（以像素为单位）。
-         * @param y {number} 一个表示相对于父显示对象注册点的垂直位置的数字（以像素为单位）。
+         * @param x 一个表示相对于父显示对象注册点的水平位置的数字（以像素为单位）。
+         * @param y 一个表示相对于父显示对象注册点的垂直位置的数字（以像素为单位）。
          * @version Egret 2.4
          * @platform Web,Native
          */
         p.lineTo = function (x, y) {
-            this.lineX = x;
-            this.lineY = y;
-            this.$renderContext.lineTo(x, y);
+            x = +x || 0;
+            y = +y || 0;
+            var fillPath = this.fillPath;
+            var strokePath = this.strokePath;
+            fillPath && fillPath.lineTo(x, y);
+            strokePath && strokePath.lineTo(x, y);
+            this.updatePosition(x, y);
         };
         /**
          * @language en_US
          * Draw a quadratic Bezier curve from the current drawing position to (anchorX, anchorY) using the current line style according to the control points specified by (controlX, controlY). The current drawing position is then set to (anchorX, anchorY).
          * If the curveTo() method is called before the moveTo() method, the default value of the current drawing position is (0, 0). If any of these parameters is missed, calling this method will fail and the current drawing position keeps unchanged.
          * The drawn curve is a quadratic Bezier curve. A quadratic Bezier curve contains two anchor points and one control point. The curve interpolates the two anchor points and bends to the control point.
-         * @param controlX {number} A number indicating the horizontal position of the control point, relative to the registration point of the parent display object.
-         * @param controlY {number} A number indicating the vertical position of the control point, relative to the registration point of the parent display object.
-         * @param anchorX {number} A number indicating the horizontal position of the next anchor point, relative to the registration point of the parent display object.
-         * @param anchorY {number} A number indicating the vertical position of the next anchor point, relative to the registration point of the parent display object.
+         * @param controlX A number indicating the horizontal position of the control point, relative to the registration point of the parent display object.
+         * @param controlY A number indicating the vertical position of the control point, relative to the registration point of the parent display object.
+         * @param anchorX A number indicating the horizontal position of the next anchor point, relative to the registration point of the parent display object.
+         * @param anchorY A number indicating the vertical position of the next anchor point, relative to the registration point of the parent display object.
          * @version Egret 2.4
          * @platform Web,Native
          */
@@ -6387,17 +5046,65 @@ var egret;
          * 使用当前线条样式和由 (controlX, controlY) 指定的控制点绘制一条从当前绘图位置开始到 (anchorX, anchorY) 结束的二次贝塞尔曲线。当前绘图位置随后设置为 (anchorX, anchorY)。
          * 如果在调用 moveTo() 方法之前调用了 curveTo() 方法，则当前绘图位置的默认值为 (0, 0)。如果缺少任何一个参数，则此方法将失败，并且当前绘图位置不改变。
          * 绘制的曲线是二次贝塞尔曲线。二次贝塞尔曲线包含两个锚点和一个控制点。该曲线内插这两个锚点，并向控制点弯曲。
-         * @param controlX {number} 一个数字，指定控制点相对于父显示对象注册点的水平位置。
-         * @param controlY {number} 一个数字，指定控制点相对于父显示对象注册点的垂直位置。
-         * @param anchorX {number} 一个数字，指定下一个锚点相对于父显示对象注册点的水平位置。
-         * @param anchorY {number} 一个数字，指定下一个锚点相对于父显示对象注册点的垂直位置。
+         * @param controlX 一个数字，指定控制点相对于父显示对象注册点的水平位置。
+         * @param controlY 一个数字，指定控制点相对于父显示对象注册点的垂直位置。
+         * @param anchorX 一个数字，指定下一个锚点相对于父显示对象注册点的水平位置。
+         * @param anchorY 一个数字，指定下一个锚点相对于父显示对象注册点的垂直位置。
          * @version Egret 2.4
          * @platform Web,Native
          */
         p.curveTo = function (controlX, controlY, anchorX, anchorY) {
-            this.lineX = anchorX;
-            this.lineY = anchorY;
-            this.$renderContext.quadraticCurveTo(controlX, controlY, anchorX, anchorY);
+            controlX = +controlX || 0;
+            controlY = +controlY || 0;
+            anchorX = +anchorX || 0;
+            anchorY = +anchorY || 0;
+            var fillPath = this.fillPath;
+            var strokePath = this.strokePath;
+            fillPath && fillPath.curveTo(controlX, controlY, anchorX, anchorY);
+            strokePath && strokePath.curveTo(controlX, controlY, anchorX, anchorY);
+            this.extendBoundsByPoint(controlX, controlY);
+            this.extendBoundsByPoint(anchorX, anchorY);
+            this.updatePosition(anchorX, anchorY);
+        };
+        /**
+         * @language en_US
+         * Draws a cubic Bezier curve from the current drawing position to the specified anchor. Cubic Bezier curves consist of two anchor points and two control points. The curve interpolates the two anchor points and two control points to the curve.
+         * @param controlX1 Specifies the first control point relative to the registration point of the parent display the horizontal position of the object.
+         * @param controlY1 Specifies the first control point relative to the registration point of the parent display the vertical position of the object.
+         * @param controlX2 Specify the second control point relative to the registration point of the parent display the horizontal position of the object.
+         * @param controlY2 Specify the second control point relative to the registration point of the parent display the vertical position of the object.
+         * @param anchorX Specifies the anchor point relative to the registration point of the parent display the horizontal position of the object.
+         * @param anchorY Specifies the anchor point relative to the registration point of the parent display the vertical position of the object.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 从当前绘图位置到指定的锚点绘制一条三次贝塞尔曲线。三次贝塞尔曲线由两个锚点和两个控制点组成。该曲线内插这两个锚点，并向两个控制点弯曲。
+         * @param controlX1 指定首个控制点相对于父显示对象的注册点的水平位置。
+         * @param controlY1 指定首个控制点相对于父显示对象的注册点的垂直位置。
+         * @param controlX2 指定第二个控制点相对于父显示对象的注册点的水平位置。
+         * @param controlY2 指定第二个控制点相对于父显示对象的注册点的垂直位置。
+         * @param anchorX 指定锚点相对于父显示对象的注册点的水平位置。
+         * @param anchorY 指定锚点相对于父显示对象的注册点的垂直位置。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.cubicCurveTo = function (controlX1, controlY1, controlX2, controlY2, anchorX, anchorY) {
+            controlX1 = +controlX1 || 0;
+            controlY1 = +controlY1 || 0;
+            controlX2 = +controlX2 || 0;
+            controlY2 = +controlY2 || 0;
+            anchorX = +anchorX || 0;
+            anchorY = +anchorY || 0;
+            var fillPath = this.fillPath;
+            var strokePath = this.strokePath;
+            fillPath && fillPath.cubicCurveTo(controlX1, controlY1, controlX2, controlY2, anchorX, anchorY);
+            strokePath && strokePath.cubicCurveTo(controlX1, controlY1, controlX2, controlY2, anchorX, anchorY);
+            this.extendBoundsByPoint(controlX1, controlY1);
+            this.extendBoundsByPoint(controlX2, controlY2);
+            this.extendBoundsByPoint(anchorX, anchorY);
+            this.updatePosition(anchorX, anchorY);
         };
         /**
          * @language en_US
@@ -6419,65 +5126,83 @@ var egret;
          * @param y 圆弧中心（圆心）的 y 轴坐标。
          * @param radius 圆弧的半径。
          * @param startAngle 圆弧的起始点， x轴方向开始计算，单位以弧度表示。
-         * @param endAngle 圆弧的重点， 单位以弧度表示。
+         * @param endAngle 圆弧的终点， 单位以弧度表示。
          * @param anticlockwise 如果为 true，逆时针绘制圆弧，反之，顺时针绘制。
          * @version Egret 2.4
          * @platform Web,Native
          */
         p.drawArc = function (x, y, radius, startAngle, endAngle, anticlockwise) {
-            this.lineX = Math.cos(endAngle) + x;
-            this.lineY = Math.sin(endAngle) + y;
-            this.$renderContext.arc(x, y, radius, startAngle, endAngle, anticlockwise);
+            if (radius < 0 || startAngle === endAngle) {
+                return;
+            }
+            x = +x || 0;
+            y = +y || 0;
+            radius = +radius || 0;
+            startAngle = +startAngle || 0;
+            endAngle = +endAngle || 0;
+            anticlockwise = !!anticlockwise;
+            startAngle = clampAngle(startAngle);
+            endAngle = clampAngle(endAngle);
+            var fillPath = this.fillPath;
+            var strokePath = this.strokePath;
+            fillPath && fillPath.drawArc(x, y, radius, startAngle, endAngle, anticlockwise);
+            strokePath && strokePath.drawArc(x, y, radius, startAngle, endAngle, anticlockwise);
+            if (anticlockwise) {
+                this.arcBounds(x, y, radius, endAngle, startAngle);
+            }
+            else {
+                this.arcBounds(x, y, radius, startAngle, endAngle);
+            }
+            var endX = x + egret.$cos(endAngle) * radius;
+            var endY = y + egret.$sin(endAngle) * radius;
+            this.updatePosition(endX, endY);
         };
         /**
-         * @language en_US
-         * Draws a cubic Bezier curve from the current drawing position to the specified anchor. Cubic Bezier curves consist of two anchor points and two control points. The curve interpolates the two anchor points and two control points to the curve.
-         * @param controlX1 {number} Specifies the first control point relative to the registration point of the parent display the horizontal position of the object.
-         * @param controlY1 {number} Specifies the first control point relative to the registration point of the parent display the vertical position of the object.
-         * @param controlX2 {number} Specify the second control point relative to the registration point of the parent display the horizontal position of the object.
-         * @param controlY2 {number} Specify the second control point relative to the registration point of the parent display the vertical position of the object.
-         * @param anchorX {number} Specifies the anchor point relative to the registration point of the parent display the horizontal position of the object.
-         * @param anchorY {number} Specifies the anchor point relative to the registration point of the parent display the vertical position of the object.
-         * @version Egret 2.4
-         * @platform Web,Native
+         * @private
+         * 测量圆弧的矩形大小
          */
-        /**
-         * @language zh_CN
-         * 从当前绘图位置到指定的锚点绘制一条三次贝塞尔曲线。三次贝塞尔曲线由两个锚点和两个控制点组成。该曲线内插这两个锚点，并向两个控制点弯曲。
-         * @param controlX1 {number} 指定首个控制点相对于父显示对象的注册点的水平位置。
-         * @param controlY1 {number} 指定首个控制点相对于父显示对象的注册点的垂直位置。
-         * @param controlX2 {number} 指定第二个控制点相对于父显示对象的注册点的水平位置。
-         * @param controlY2 {number} 指定第二个控制点相对于父显示对象的注册点的垂直位置。
-         * @param anchorX {number} 指定锚点相对于父显示对象的注册点的水平位置。
-         * @param anchorY {number} 指定锚点相对于父显示对象的注册点的垂直位置。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.cubicCurveTo = function (controlX1, controlY1, controlX2, controlY2, anchorX, anchorY) {
-            this.lineX = anchorX;
-            this.lineY = anchorY;
-            this.$renderContext.bezierCurveTo(controlX1, controlY1, controlX2, controlY2, anchorX, anchorY);
-        };
-        /**
-         * @language en_US
-         * Move the current drawing position to (x, y). If any of these parameters is missed, calling this method will fail and the current drawing position keeps unchanged.
-         * @param x {number} A number indicating the horizontal position, relative to the registration point of the parent display object (in pixels).
-         * @param y {number} A number indicating the vertical position, relative to the registration point of the parent display object (in pixels).
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 将当前绘图位置移动到 (x, y)。如果缺少任何一个参数，则此方法将失败，并且当前绘图位置不改变。
-         * @param x {number} 一个表示相对于父显示对象注册点的水平位置的数字（以像素为单位）。
-         * @param y {number} 一个表示相对于父显示对象注册点的垂直位置的数字（以像素为单位）。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.moveTo = function (x, y) {
-            this.lineX = x;
-            this.lineY = y;
-            this.$renderContext.moveTo(x, y);
+        p.arcBounds = function (x, y, radius, startAngle, endAngle) {
+            var PI = Math.PI;
+            if (Math.abs(startAngle - endAngle) < 0.01) {
+                this.extendBoundsByPoint(x - radius, y - radius);
+                this.extendBoundsByPoint(x + radius, y + radius);
+                return;
+            }
+            if (startAngle > endAngle) {
+                endAngle += PI * 2;
+            }
+            var startX = Math.cos(startAngle) * radius;
+            var endX = Math.cos(endAngle) * radius;
+            var xMin = Math.min(startX, endX);
+            var xMax = Math.max(startX, endX);
+            var startY = Math.sin(startAngle) * radius;
+            var endY = Math.sin(endAngle) * radius;
+            var yMin = Math.min(startY, endY);
+            var yMax = Math.max(startY, endY);
+            var startRange = startAngle / (PI * 0.5);
+            var endRange = endAngle / (PI * 0.5);
+            for (var i = Math.ceil(startRange); i <= endRange; i++) {
+                switch (i % 4) {
+                    case 0:
+                        xMax = radius;
+                        break;
+                    case 1:
+                        yMax = radius;
+                        break;
+                    case 2:
+                        xMin = -radius;
+                        break;
+                    case 3:
+                        yMin = -radius;
+                        break;
+                }
+            }
+            xMin = Math.floor(xMin);
+            yMin = Math.floor(yMin);
+            xMax = Math.ceil(xMax);
+            yMax = Math.ceil(yMax);
+            this.extendBoundsByPoint(xMin + x, yMin + y);
+            this.extendBoundsByPoint(xMax + x, yMax + y);
         };
         /**
          * @language en_US
@@ -6492,125 +5217,104 @@ var egret;
          * @platform Web,Native
          */
         p.clear = function () {
-            this.lineX = 0;
-            this.lineY = 0;
-            this.strokeStyleColor = null;
-            this.fillStyle = null;
-            this._minX = 0;
-            this._minY = 0;
-            this._maxX = 0;
-            this._maxY = 0;
-            this._firstCheck = true;
-            this._dirty = true;
-            this.$renderContext.clear();
+            this.$renderNode.clear();
+            this.updatePosition(0, 0);
+            this.minX = Infinity;
+            this.minY = Infinity;
+            this.maxX = -Infinity;
+            this.maxY = -Infinity;
         };
         /**
-         * @language en_US
-         * Apply fill to the lines and curves added after the previous calling to the beginFill() method.
-         * @version Egret 2.4
-         * @platform Web,Native
+         * @private
          */
+        p.extendBoundsByPoint = function (x, y) {
+            this.extendBoundsByX(x);
+            this.extendBoundsByY(y);
+        };
         /**
-         * @language zh_CN
-         * 对从上一次调用 beginFill()方法之后添加的直线和曲线应用填充。
-         * @version Egret 2.4
-         * @platform Web,Native
+         * @private
          */
-        p.endFill = function () {
-            if (this.fillStyle != null || this.strokeStyleColor != null) {
-                this._fill();
-                this.fillStyle = null;
+        p.extendBoundsByX = function (x) {
+            this.minX = Math.min(this.minX, x - this.topLeftStrokeWidth);
+            this.maxX = Math.max(this.maxX, x + this.bottomRightStrokeWidth);
+            this.updateNodeBounds();
+        };
+        /**
+         * @private
+         */
+        p.extendBoundsByY = function (y) {
+            this.minY = Math.min(this.minY, y - this.topLeftStrokeWidth);
+            this.maxY = Math.max(this.maxY, y + this.bottomRightStrokeWidth);
+            this.updateNodeBounds();
+        };
+        /**
+         * @private
+         */
+        p.updateNodeBounds = function () {
+            var node = this.$renderNode;
+            node.x = this.minX;
+            node.y = this.minY;
+            node.width = this.maxX - this.minX;
+            node.height = this.maxY - this.minY;
+        };
+        /**
+         * 更新当前的lineX和lineY值，并标记尺寸失效。
+         * @private
+         */
+        p.updatePosition = function (x, y) {
+            if (!this.includeLastPosition) {
+                this.extendBoundsByPoint(this.lastX, this.lastY);
+                this.includeLastPosition = true;
+            }
+            this.lastX = x;
+            this.lastY = y;
+            this.extendBoundsByPoint(x, y);
+            this.targetDisplay.$invalidateContentBounds();
+        };
+        /**
+         * @private
+         */
+        p.$measureContentBounds = function (bounds) {
+            if (this.minX === Infinity) {
+                bounds.setEmpty();
+            }
+            else {
+                bounds.setTo(this.minX, this.minY, this.maxX - this.minX, this.maxY - this.minY);
             }
         };
         /**
          * @private
          *
          */
-        p._createEndFillCommand = function () {
-            this.$renderContext.fill();
-            this.$renderContext.closePath();
-        };
-        /**
-         * @private
-         *
-         */
-        p._fill = function () {
-            if (this.fillStyle) {
-                this._createEndFillCommand();
+        p.$hitTest = function (stageX, stageY) {
+            var target = this.targetDisplay;
+            var m = target.$getInvertedConcatenatedMatrix();
+            var localX = m.a * stageX + m.c * stageY + m.tx;
+            var localY = m.b * stageX + m.d * stageY + m.ty;
+            var buffer = egret.sys.hitTestBuffer;
+            buffer.resize(3, 3);
+            var node = this.$renderNode;
+            var matrix = egret.Matrix.create();
+            matrix.identity();
+            matrix.translate(1 - localX, 1 - localY);
+            egret.sys.systemRenderer.drawNodeToBuffer(node, buffer, matrix, true);
+            egret.Matrix.release(matrix);
+            try {
+                var data = buffer.getPixel(1, 1);
             }
-            if (this.strokeStyleColor) {
-                this._createEndLineCommand();
+            catch (e) {
+                throw new Error(egret.sys.tr(1039));
             }
-        };
-        /**
-         * @private
-         *
-         */
-        p._createEndLineCommand = function () {
-            this.$renderContext.stroke();
-            this.$renderContext.closePath();
+            if (data[3] === 0) {
+                return null;
+            }
+            return target;
         };
         return Graphics;
-    })(egret.HashObject);
+    }(egret.HashObject));
     egret.Graphics = Graphics;
-    egret.registerClass(Graphics,"egret.Graphics");
+    egret.registerClass(Graphics,'egret.Graphics');
 })(egret || (egret = {}));
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-2015, Egret Technology Inc.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-2015, Egret Technology Inc.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2014-2015, Egret Technology Inc.
@@ -6641,903 +5345,68 @@ var egret;
 //////////////////////////////////////////////////////////////////////////////////////
 var egret;
 (function (egret) {
-    var PI = Math.PI;
-    var HalfPI = PI / 2;
-    var PacPI = PI + HalfPI;
-    var TwoPI = PI * 2;
-    var vector = { x: 0, y: 0 };
-    var vector1 = { x: 0, y: 0 };
-    var vector3 = { x: 0, y: 0 };
     /**
-     * @private
-     * 格式化弧线角度的值
-     */
-    function clampAngle(value) {
-        value %= PI * 2;
-        if (value < 0) {
-            value += PI * 2;
-        }
-        return value;
-    }
-    /**
-     * @private
-     * 两个点距离
-     */
-    function distance(x1, y1, x2, y2) {
-        return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
-    }
-    /**
-     * @private
-     * 取两点之间的向量
-     */
-    function getVector(x1, y1, x2, y2, v) {
-        var l = distance(x1, y1, x2, y2);
-        v.x = (x2 - x1) / l;
-        v.y = (y2 - y1) / l;
-    }
-    /**
-     * @private
      * @language en_US
-     * The Graphics class contains a set of methods that you can use to create a vector shape. the Shape object that support
-     * drawing includes a graphics property that is a Graphics object. The following are among those helper functions provided
-     * @see egret.Shape
-     * @version Egret 2.4
+     * The JointStyle class is an enumeration of constant values that specify the joint style to use in drawing lines.
+     * These constants are provided for use as values in the joints parameter of the egret.Graphics.lineStyle() method.
+     * @see egret.Graphics#lineStyle()
+     * @version Egret 2.5
      * @platform Web,Native
      */
     /**
-     * @private
      * @language zh_CN
-     * Graphics 类包含一组可用来创建矢量形状的方法。Shape是支持矢量绘制的显示对象。它含有一个 graphics 属性，该属性是一个 Graphics 对象。
-     * @see egret.Shape
-     * @version Egret 2.4
+     * JointStyle 类是指定要在绘制线条中使用的联接点样式的常量值枚举。提供的这些常量用作 egret.Graphics.lineStyle() 方法的 joints 参数中的值。
+     * @see egret.Graphics#lineStyle()
+     * @version Egret 2.5
      * @platform Web,Native
      */
-    var GraphicsRenderContext = (function (_super) {
-        __extends(GraphicsRenderContext, _super);
-        /**
-         * @private
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        function GraphicsRenderContext() {
-            _super.call(this);
-            /**
-             * @private
-             * 绘图命令列表
-             */
-            this.$commands = [];
-            this.reset();
+    var JointStyle = (function () {
+        function JointStyle() {
         }
-        var d = __define,c=GraphicsRenderContext;p=c.prototype;
+        var d = __define,c=JointStyle,p=c.prototype;
         /**
          * @language en_US
-         * creates a radial gradient given by the coordinates of the two circles represented by the parameters.
-         * This method returns a radial GraphicsGradient.
-         * @param x0 The x axis of the coordinate of the start circle.
-         * @param y0 The y axis of the coordinate of the start circle.
-         * @param r0 The radius of the start circle.
-         * @param x1 The x axis of the coordinate of the end circle.
-         * @param y1 The y axis of the coordinate of the end circle.
-         * @param r1 The radius of the end circle.
-         * @see egret.GraphicsGradient
-         * @version Egret 2.4
+         * Specifies beveled joints in the joints parameter of the egret.Graphics.lineStyle() method.
+         * @version Egret 2.5
          * @platform Web,Native
          */
         /**
          * @language zh_CN
-         * 根据参数确定的两个圆的坐标，创建一个放射性渐变。该方法返回一个放射性的 GraphicsGradient。
-         * @param x0 开始圆形的 x 轴坐标。
-         * @param y0 开始圆形的 y 轴坐标。
-         * @param r0 开始圆形的半径。
-         * @param x1 结束圆形的 x 轴坐标。
-         * @param y1 结束圆形的 y 轴坐标。
-         * @param r1 结束圆形的半径。
-         * @see egret.GraphicsGradient
-         * @version Egret 2.4
+         * 在 egret.Graphics.lineStyle() 方法的 joints 参数中指定斜角连接。
+         * @version Egret 2.5
          * @platform Web,Native
          */
-        GraphicsRenderContext.createRadialGradient = function (x0, y0, r0, x1, y1, r1) {
-            return egret.sys.sharedRenderContext.createRadialGradient(x0, y0, r0, x1, y1, r1);
-        };
+        JointStyle.BEVEL = "bevel";
         /**
          * @language en_US
-         * reates a gradient along the line given by the coordinates represented by the parameters.This method returns a linear GraphicsGradient.
-         * @see egret.GraphicsGradient
-         * @param x0 The x axis of the coordinate of the start point.
-         * @param y0 The y axis of the coordinate of the start point.
-         * @param x1 The x axis of the coordinate of the end point.
-         * @param y1 The y axis of the coordinate of the end point.
-         * @version Egret 2.4
+         * Specifies mitered joints in the joints parameter of the egret.Graphics.lineStyle() method.
+         * @version Egret 2.5
          * @platform Web,Native
          */
         /**
          * @language zh_CN
-         * 创建一个沿参数坐标指定的直线的渐变。该方法返回一个线性的 GraphicsGradient 对象。
-         * @param x0 起点的 x 轴坐标。
-         * @param y0 起点的 y 轴坐标。
-         * @param x1 终点的 x 轴坐标。
-         * @param y1 终点的 y 轴坐标。
-         * @see egret.GraphicsGradient
-         * @version Egret 2.4
+         * 在 egret.Graphics.lineStyle() 方法的 joints 参数中指定尖角连接。
+         * @version Egret 2.5
          * @platform Web,Native
          */
-        GraphicsRenderContext.createLinearGradient = function (x0, y0, x1, y1) {
-            return egret.sys.sharedRenderContext.createLinearGradient(x0, y0, x1, y1);
-        };
+        JointStyle.MITER = "miter";
         /**
          * @language en_US
-         * creates a pattern using the specified image (BitmapData). It repeats the source in the directions specified by
-         * the repetition argument. This method returns a GraphicsPattern.
-         * @param bitmapData A BitmapData instance to be used as image to repeat.
-         * @param repetition  indicating how to repeat the image. Possible values are:
-         * "repeat" (both directions),
-         * "repeat-x" (horizontal only),
-         * "repeat-y" (vertical only), or
-         * "no-repeat" (neither).
-         * @see egret.GraphicsPattern
-         * @version Egret 2.4
+         * Specifies round joints in the joints parameter of the egret.Graphics.lineStyle() method.
+         * @version Egret 2.5
          * @platform Web,Native
          */
         /**
          * @language zh_CN
-         * 基于指定的源图象(BitmapData)创建一个模板，通过repetition参数指定源图像在什么方向上进行重复，返回一个GraphicsPattern对象。
-         * @param bitmapData 做为重复图像源的 BitmapData 对象。
-         * @param repetition 指定如何重复图像。
-         * 可能的值有："repeat" (两个方向重复),"repeat-x" (仅水平方向重复),"repeat-y" (仅垂直方向重复),"no-repeat" (不重复).
-         * @see egret.GraphicsPattern
-         * @version Egret 2.4
+         * 在 egret.Graphics.lineStyle() 方法的 joints 参数中指定圆角连接。
+         * @version Egret 2.5
          * @platform Web,Native
          */
-        GraphicsRenderContext.createPattern = function (bitmapData, repetition) {
-            return egret.sys.sharedRenderContext.createPattern(bitmapData, repetition);
-        };
-        d(p, "fillStyle"
-            /**
-             * @language en_US
-             * specifies the color or style to use inside shapes.
-             * @default "#000000"
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            /**
-             * @language zh_CN
-             * 设置要在图形内部填充的颜色或样式
-             * @default "#000000"
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            ,function () {
-                return this._fillStyle;
-            }
-            ,function (value) {
-                if (typeof value == "number") {
-                    value = egret.toColorString(value);
-                }
-                this._fillStyle = value;
-                this.pushCommand(5 /* fillStyle */, arguments);
-            }
-        );
-        d(p, "lineWidth"
-            /**
-             * @language en_US
-             * sets the thickness of lines in pixels.
-             * setting zero, negative, Infinity and NaN values are ignored
-             * @default 1
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            /**
-             * @language zh_CN
-             * 设置线条粗细，以像素为单位。设置为0，负数，Infinity 或 NaN 将会被忽略。
-             * @default 1
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            ,function () {
-                return this._lineWidth;
-            }
-            ,function (value) {
-                this._lineWidth = value;
-                this.pushCommand(3 /* lineWidth */, arguments);
-            }
-        );
-        d(p, "lineCap"
-            /**
-             * @language en_US
-             * determines how the end points of every line are drawn. There are three possible values for this property and those are:<br/>
-             * <ul>
-             * <li>"butt": The ends of lines are squared off at the endpoints.</li>
-             * <li>"round": The ends of lines are rounded.</li>
-             * <li>"square": The ends of lines are squared off by adding a box with an equal width and half the height of the line's thickness.</li>
-             * </ul>
-             * @default "butt"
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            /**
-             * @language zh_CN
-             * 指定如何绘制每一条线段末端的属性。有3个可能的值，分别是：<br/>
-             * <ul>
-             * <li>"butt": 线段末端以方形结束。</li>
-             * <li>"round": 线段末端以圆形结束。</li>
-             * <li>"square": 线段末端以方形结束，但是增加了一个宽度和线段相同，高度是线段厚度一半的矩形区域。</li>
-             * </ul>
-             * @default "butt"
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            ,function () {
-                return this._lineCap;
-            }
-            ,function (value) {
-                this._lineCap = value;
-                this.pushCommand(1 /* lineCap */, arguments);
-            }
-        );
-        d(p, "strokeStyle"
-            /**
-             * @language en_US
-             * specifies the color or style to use for the lines around shapes.
-             * @default "#000000"
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            /**
-             * @language zh_CN
-             * 设置要在图形边线填充的颜色或样式
-             * @default "#000000"
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            ,function () {
-                return this._strokeStyle;
-            }
-            ,function (value) {
-                if (typeof value == "number") {
-                    value = egret.toColorString(value);
-                }
-                this._strokeStyle = value;
-                this.pushCommand(4 /* strokeStyle */, arguments);
-            }
-        );
-        d(p, "lineJoin"
-            /**
-             * @language en_US
-             * specifies the type of joint appearance used at angles.There are three possible values for this property and those are:<br/>
-             * <ul>
-             * <li>"round": Rounds off the corners of a shape by filling an additional sector of disc centered at the common endpoint
-             * of connected segments. The radius for these rounded corners is equal to the line width.</li>
-             * <li>"bevel": Fills an additional triangular area between the common endpoint of connected segments, and the separate
-             * outside rectangular corners of each segment.</li>
-             * <li>"miter": Connected segments are joined by extending their outside edges to connect at a single point, with the
-             * effect of filling an additional lozenge-shaped area. This setting is effected by the miterLimit property.</li>
-             * </ul>
-             * @default "miter"
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            /**
-             * @language zh_CN
-             * 指定用于拐角的连接外观的类型,有3个可能的值，分别是：<br/>
-             * <ul>
-             * <li>"round": 圆角连接</li>
-             * <li>"bevel": 斜角连接。</li>
-             * <li>"miter": 尖角连接。当使用尖角模式时，还可以同时使用 miterLimit 参数限制尖角的长度。</li>
-             * </ul>
-             * @default "miter"
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            ,function () {
-                return this._lineJoin;
-            }
-            ,function (value) {
-                this._lineJoin = value;
-                this.pushCommand(2 /* lineJoin */, arguments);
-            }
-        );
-        d(p, "miterLimit"
-            /**
-             * @language en_US
-             * A number that indicates the limit at which a miter is cut off.
-             * @default 10
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            /**
-             * @language zh_CN
-             * 用于表示剪切斜接的极限值的数字。
-             * @default 10
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            ,function () {
-                return this._miterLimit;
-            }
-            ,function (value) {
-                this._miterLimit = value;
-                this.pushCommand(0 /* miterLimit */, arguments);
-            }
-        );
-        /**
-         *
-         * @param x0
-         * @param y0
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.scale = function (x0, y0) {
-            this.pushCommand(19 /* scale */, arguments);
-        };
-        /**
-         * @language en_US
-         * adds an arc to the path which is centered at (x, y) position with radius r starting at startAngle and ending
-         * at endAngle going in the given direction by anticlockwise (defaulting to clockwise).
-         * @param x The x coordinate of the arc's center.
-         * @param y The y coordinate of the arc's center.
-         * @param radius The arc's radius.
-         * @param startAngle The angle at which the arc starts, measured clockwise from the positive x axis and expressed in radians.
-         * @param endAngle The angle at which the arc ends, measured clockwise from the positive x axis and expressed in radians.
-         * @param anticlockwise if true, causes the arc to be drawn counter-clockwise between the two angles. By default it is drawn clockwise.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 绘制一段圆弧路径。圆弧路径的圆心在 (x, y) 位置，半径为 r ，根据anticlockwise （默认为顺时针）指定的方向从 startAngle 开始绘制，到 endAngle 结束。
-         * @param x 圆弧中心（圆心）的 x 轴坐标。
-         * @param y 圆弧中心（圆心）的 y 轴坐标。
-         * @param radius 圆弧的半径。
-         * @param startAngle 圆弧的起始点， x轴方向开始计算，单位以弧度表示。
-         * @param endAngle 圆弧的重点， 单位以弧度表示。
-         * @param anticlockwise 如果为 true，逆时针绘制圆弧，反之，顺时针绘制。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.arc = function (x, y, radius, startAngle, endAngle, anticlockwise) {
-            this.pushCommand(6 /* arc */, arguments);
-            if (radius < 0) {
-                return;
-            }
-            if (anticlockwise) {
-                var temp = endAngle;
-                endAngle = startAngle;
-                startAngle = temp;
-            }
-            this.arcBounds(x, y, radius, startAngle, endAngle);
-        };
-        /**
-         * @private
-         * 测量圆弧的矩形大小
-         */
-        p.arcBounds = function (x, y, radius, startAngle, endAngle) {
-            startAngle = clampAngle(startAngle);
-            endAngle = clampAngle(endAngle);
-            if (Math.abs(startAngle - endAngle) < 0.01) {
-                this.extendByPoint(x - radius, y - radius);
-                this.extendByPoint(x + radius, y + radius);
-                return;
-            }
-            var offset = 0;
-            if (startAngle > endAngle) {
-                offset = TwoPI;
-                endAngle += offset;
-            }
-            var startX = Math.cos(startAngle) * radius;
-            var endX = Math.cos(endAngle) * radius;
-            var xMin = Math.min(startX, endX);
-            var xMax = Math.max(startX, endX);
-            if (startAngle <= (PI + offset) && endAngle >= (PI + offset)) {
-                xMin = -radius;
-            }
-            if (startAngle <= offset && endAngle >= offset) {
-                xMax = radius;
-            }
-            var startY = Math.sin(startAngle) * radius;
-            var endY = Math.sin(endAngle) * radius;
-            var yMin = Math.min(startY, endY);
-            var yMax = Math.max(startY, endY);
-            if (startAngle <= (PacPI + offset) && endAngle >= (PacPI + offset)) {
-                yMin = -radius;
-            }
-            if (startAngle <= (HalfPI + offset) && endAngle >= (HalfPI + offset)) {
-                yMax = radius;
-            }
-            this.extendByPoint(xMin + x, yMin + y);
-            this.extendByPoint(xMax + x, yMax + y);
-        };
-        /**
-         * @language en_US
-         * adds a quadratic Bézier curve to the path. It requires two points. The first point is a control point and the
-         * second one is the end point. The starting point is the last point in the current path, which can be changed using
-         * moveTo() before creating the quadratic Bézier curve.
-         * @param cpx The x axis of the coordinate for the control point.
-         * @param cpy The y axis of the coordinate for the control point.
-         * @param x The x axis of the coordinate for the end point.
-         * @param y The y axis of the coordinate for the end point.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 绘制一段二次贝塞尔曲线路径。它需要2个点。 第一个点是控制点，第二个点是终点。 起始点是当前路径最新的点，当创建二次贝赛尔曲线之前，可以使用 moveTo() 方法进行改变。
-         * @param cpx 控制点的 x 轴坐标。
-         * @param cpy 控制点的 y 轴坐标。
-         * @param x 终点的 x 轴坐标。
-         * @param y 终点的 y 轴坐标。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.quadraticCurveTo = function (cpx, cpy, x, y) {
-            this.pushCommand(7 /* quadraticCurveTo */, arguments);
-            this.checkMoveTo();
-            this.extendByPoint(cpx, cpy);
-            this.extendByPoint(x, y);
-        };
-        /**
-         * @language en_US
-         * adds a cubic Bézier curve to the path. It requires three points. The first two points are control points and
-         * the third one is the end point. The starting point is the last point in the current path, which can be changed
-         * using moveTo() before creating the Bézier curve.
-         * @param cp1x The x axis of the coordinate for the first control point.
-         * @param cp1y The y axis of the coordinate for first control point.
-         * @param cp2x The x axis of the coordinate for the second control point.
-         * @param cp2y The y axis of the coordinate for the second control point.
-         * @param x The x axis of the coordinate for the end point.
-         * @param y The y axis of the coordinate for the end point.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 绘制一段三次贝赛尔曲线路径。该方法需要三个点。 第一、第二个点是控制点，第三个点是结束点。起始点是当前路径的最后一个点，
-         * 绘制贝赛尔曲线前，可以通过调用 moveTo() 进行修改。
-         * @param cp1x 第一个控制点的 x 轴坐标。
-         * @param cp1y 第一个控制点的 y 轴坐标。
-         * @param cp2x 第二个控制点的 x 轴坐标。
-         * @param cp2y 第二个控制点的 y 轴坐标。
-         * @param x 结束点的 x 轴坐标。
-         * @param y 结束点的 y 轴坐标。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y) {
-            this.pushCommand(14 /* bezierCurveTo */, arguments);
-            this.checkMoveTo();
-            this.extendByPoint(cp1x, cp1y);
-            this.extendByPoint(cp2x, cp2y);
-            this.extendByPoint(x, y);
-        };
-        /**
-         * @language en_US
-         * connects the last point in the sub-path to the x, y coordinates with a straight line
-         * @param x The x axis of the coordinate for the end of the line.
-         * @param y The y axis of the coordinate for the end of the line.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 使用直线连接子路径的终点到x，y坐标。
-         * @param x 直线终点的 x 轴坐标。
-         * @param y 直线终点的 y 轴坐标。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.lineTo = function (x, y) {
-            this.pushCommand(8 /* lineTo */, arguments);
-            this.checkMoveTo();
-            this.extendByPoint(x, y);
-        };
-        /**
-         * @language en_US
-         * fills the current or given path with the current fill style using the non-zero or even-odd winding rule.
-         * @param fillRule The algorithm by which to determine if a point is inside a path or outside a path. Possible values:
-         * "nonzero": The non-zero winding rule, which is the default rule.
-         * "evenodd": The even-odd winding rule.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 根据当前的填充样式，填充当前或已存在的路径的方法。采取非零环绕或者奇偶环绕规则。
-         * @param fillRule 一种算法，决定点是在路径内还是在路径外。允许的值：
-         * "nonzero": 非零环绕规则， 默认的规则。
-         * "evenodd": 奇偶环绕规则。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.fill = function (fillRule) {
-            this.pushCommand(9 /* fill */, arguments);
-            this.hasFill = true;
-        };
-        /**
-         * @language en_US
-         * causes the point of the pen to move back to the start of the current sub-path. It tries to add a straight line
-         * (but does not actually draw it) from the current point to the start. If the shape has already been closed or
-         * has only one point, this function does nothing.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 使笔点返回到当前子路径的起始点。它尝试从当前点到起始点绘制一条直线。如果图形已经是封闭的或者只有一个点，那么此方法不会做任何操作。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.closePath = function () {
-            this.pushCommand(10 /* closePath */, arguments);
-        };
-        /**
-         * @language en_US
-         * creates a path for a rectangle at position (x, y) with a size that is determined by width and height. Those
-         * four points are connected by straight lines and the sub-path is marked as closed, so that you can fill or stroke this rectangle.
-         * @param x The x axis of the coordinate for the rectangle starting point.
-         * @param y The y axis of the coordinate for the rectangle starting point.
-         * @param w The rectangle's width.
-         * @param h The rectangle's height.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 创建一段矩形路径，矩形的起点位置是 (x, y) ，尺寸为 width 和 height。矩形的4个点通过直线连接，子路径做为闭合的标记，所以你可以填充或者描边矩形。
-         * @param x 矩形起点的 x 轴坐标。
-         * @param y 矩形起点的 y 轴坐标。
-         * @param width 矩形的宽度。
-         * @param height 矩形的高度。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.rect = function (x, y, width, height) {
-            this.pushCommand(11 /* rect */, arguments);
-            this.extendByPoint(x, y);
-            this.extendByPoint(x + width, y + height);
-        };
-        /**
-         * @language en_US
-         * moves the starting point of a new sub-path to the (x, y) coordinates.
-         * @param x The x axis of the point.
-         * @param y The y axis of the point.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 将一个新的子路径的起始点移动到(x，y)坐标
-         * @param x 点的 x 轴
-         * @param y 点的 y 轴
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.moveTo = function (x, y) {
-            this.pushCommand(12 /* moveTo */, arguments);
-            this.moveToX = x;
-            this.moveToY = y;
-            this.hasMoved = true;
-        };
-        /**
-         * @language en_US
-         * draws a filled rectangle at (x, y) position whose size is determined by width and height and whose style is
-         * determined by the fillStyle attribute.
-         * @param x The x axis of the coordinate for the rectangle starting point.
-         * @param y The y axis of the coordinate for the rectangle starting point.
-         * @param w The rectangle's width.
-         * @param h The rectangle's height.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 绘制一个填充矩形。矩形的起点在 (x, y) 位置，矩形的尺寸是 width 和 height ，fillStyle 属性决定矩形的样式。
-         * @param x 矩形起始点的 x 轴坐标。
-         * @param y 矩形起始点的 y 轴坐标。
-         * @param width 矩形的宽度。
-         * @param height 矩形的高度。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.fillRect = function (x, y, width, height) {
-            this.pushCommand(13 /* fillRect */, arguments);
-            this.extendByPoint(x, y);
-            this.extendByPoint(x + width, y + height);
-            this.hasFill = true;
-        };
-        /**
-         * @language en_US
-         * strokes the current or given path with the current stroke style.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 根据当前的画线样式，绘制当前或已经存在的路径的方法。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.stroke = function () {
-            this.pushCommand(15 /* stroke */, arguments);
-            this.hasStroke = true;
-        };
-        /**
-         * @language en_US
-         * paints a rectangle which has a starting point at (x, y) and has a w width and an h height onto the surface,
-         * using the current stroke style.
-         * @param x The x axis of the coordinate for the rectangle starting point.
-         * @param y The y axis of the coordinate for the rectangle starting point.
-         * @param w The rectangle's width.
-         * @param h The rectangle's height.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 使用当前的绘画样式，描绘一个起点在 (x, y) 、宽度为 w 、高度为 h 的矩形的方法。
-         * @param x 矩形起点的 x 轴坐标。
-         * @param y 矩形起点的 y 轴坐标。
-         * @param width 矩形的宽度。
-         * @param height 矩形的高度。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.strokeRect = function (x, y, width, height) {
-            this.pushCommand(16 /* strokeRect */, arguments);
-            this.hasStroke = true;
-            this.extendByPoint(x, y);
-            this.extendByPoint(x + width, y + height);
-        };
-        /**
-         * @language en_US
-         * starts a new path by emptying the list of sub-paths. Call this method when you want to create a new path.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 清空子路径列表开始一个新路径。 当你想创建一个新的路径时，调用此方法。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.beginPath = function () {
-            this.pushCommand(17 /* beginPath */, arguments);
-            this.hasMoved = false;
-            this.moveToX = NaN;
-            this.moveToY = NaN;
-        };
-        /**
-         * @language en_US
-         * adds an arc to the path with the given control points and radius, connected to the previous point by a straight line.
-         * @param x1 The x axis of the coordinate for the first control point.
-         * @param y1 The y axis of the coordinate for the first control point.
-         * @param x2 The x axis of the coordinate for the second control point.
-         * @param y2 The y axis of the coordinate for the second control point.
-         * @param radius The arc's radius.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 根据控制点和半径绘制一段圆弧路径，使用直线连接前一个点。
-         * @param x1 第一个控制点的 x 轴坐标。
-         * @param y1 第一个控制点的 y 轴坐标。
-         * @param x2 第二个控制点的 x 轴坐标。
-         * @param y2 第二个控制点的 y 轴坐标。
-         * @param radius 圆弧的半径。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.arcTo = function (x1, y1, x2, y2, radius) {
-            this.pushCommand(18 /* arcTo */, arguments);
-            if (isNaN(this.moveToX)) {
-                return;
-            }
-            this.checkMoveTo();
-            getVector(this.moveToX, this.moveToY, x1, y1, vector1);
-            getVector(x2, y2, x1, y1, vector3);
-            //角平分线
-            vector.x = vector1.x + vector3.x;
-            vector.y = vector1.y + vector3.y;
-            //角平分向量归1
-            getVector(vector.x, vector.y, 0, 0, vector);
-            //向量夹角
-            var cross = vector1.x * vector.x + vector1.y * vector.y;
-            var l1 = distance(vector1.x, vector1.y, 0, 0);
-            var l2 = distance(vector.x, vector.y, 0, 0);
-            var cos = cross / (l1 * l2);
-            var a = Math.acos(cos);
-            var l = radius / Math.sin(a);
-            //圆心
-            var centerX = x1 + vector.x * l;
-            var centerY = y1 + vector.y * l;
-            var L10 = radius / Math.tan(a);
-            var x10 = x1 + vector1.x * L10;
-            var y10 = y1 + vector1.y * L10;
-            var x12 = x1 + vector3.x * L10;
-            var y12 = y1 + vector3.y * L10;
-            getVector(centerX, centerY, x10, y10, vector);
-            var startAngle = Math.atan2(vector.y, vector.x);
-            getVector(centerX, centerY, x12, y12, vector);
-            var endAngle = Math.atan2(vector.y, vector.x);
-            var offset = endAngle - startAngle;
-            offset = clampAngle(offset);
-            if (offset > PI) {
-                var temp = endAngle;
-                endAngle = startAngle;
-                startAngle = temp;
-            }
-            this.arcBounds(centerX, centerY, radius, startAngle, endAngle);
-        };
-        /**
-         * @language en_US
-         * Clears the graphics that were drawn to this Graphics object, and resets fill and line style settings.
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 清除绘制到此 Graphics 对象的图形，并重置填充和线条样式设置。
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        p.clear = function () {
-            this.reset();
-            this.$commands.length = 0;
-            this.$targetDisplay.$invalidateContentBounds();
-        };
-        /**
-         * @private
-         *
-         */
-        p.reset = function () {
-            this._fillStyle = null;
-            this._lineCap = "butt";
-            this._lineJoin = "miter";
-            this._lineWidth = 1;
-            this._miterLimit = 10;
-            this._strokeStyle = null;
-            this.hasMoved = false;
-            this.minX = 0;
-            this.minY = 0;
-            this.maxX = 0;
-            this.maxY = 0;
-            this.isFirst = true;
-            this.moveToX = NaN;
-            this.moveToY = NaN;
-            this.hasStroke = false;
-            this.hasFill = false;
-        };
-        /**
-         * @private
-         */
-        p.pushCommand = function (graphicsType, args) {
-            this.$commands.push({ type: graphicsType, arguments: args });
-            this.$targetDisplay.$invalidateContentBounds();
-        };
-        /**
-         * @private
-         */
-        p.checkMoveTo = function () {
-            if (this.hasMoved) {
-                this.hasMoved = false;
-                this.extendByPoint(this.moveToX, this.moveToY);
-            }
-        };
-        /**
-         * @private
-         */
-        p.extendByPoint = function (x, y) {
-            if (this.isFirst) {
-                this.isFirst = false;
-                this.maxX = this.minX = x;
-                this.maxY = this.minY = y;
-            }
-            else {
-                this.minX = Math.min(this.minX, x);
-                this.minY = Math.min(this.minY, y);
-                this.maxX = Math.max(this.maxX, x);
-                this.maxY = Math.max(this.maxY, y);
-            }
-        };
-        /**
-         * @private
-         */
-        p.$measureContentBounds = function (bounds) {
-            if (!this.hasFill && !this.hasStroke) {
-                bounds.setEmpty();
-                return;
-            }
-            if (this.hasStroke) {
-                var lineWidth = this._lineWidth;
-                var half = lineWidth * 0.5;
-            }
-            else {
-                half = lineWidth = 0;
-            }
-            bounds.setTo(this.minX - half, this.minY - half, this.maxX - this.minX + lineWidth, this.maxY - this.minY + lineWidth);
-        };
-        /**
-         * @private
-         */
-        p.$render = function (context, forHitTest) {
-            context.save();
-            context.fillStyle = "#000000";
-            context.lineCap = "butt";
-            context.lineJoin = "miter";
-            context.lineWidth = 1;
-            context.miterLimit = 10;
-            context.strokeStyle = "#000000";
-            context.beginPath(); //清理之前的缓存的路径
-            var map = context["graphicsMap"];
-            if (!map) {
-                map = mapGraphicsFunction(context);
-            }
-            var commands = this.$commands;
-            var length = commands.length;
-            if (forHitTest) {
-                for (var i = 0; i < length; i++) {
-                    var command = commands[i];
-                    if (command.type == 5 /* fillStyle */ || command.type == 4 /* strokeStyle */) {
-                        map[command.type].apply(context, ["rgba(1,1,1,1)"]);
-                    }
-                    else {
-                        map[command.type].apply(context, command.arguments);
-                    }
-                }
-            }
-            else {
-                for (var i = 0; i < length; i++) {
-                    var command = commands[i];
-                    map[command.type].apply(context, command.arguments);
-                }
-            }
-            context.restore();
-        };
-        return GraphicsRenderContext;
-    })(egret.HashObject);
-    egret.GraphicsRenderContext = GraphicsRenderContext;
-    egret.registerClass(GraphicsRenderContext,"egret.GraphicsRenderContext");
-    /**
-     * @private
-     *
-     * @param context
-     * @returns
-     */
-    function mapGraphicsFunction(context) {
-        var map = context["graphicsMap"] = {};
-        map[6 /* arc */] = context.arc;
-        map[18 /* arcTo */] = context.arcTo;
-        map[17 /* beginPath */] = context.beginPath;
-        map[14 /* bezierCurveTo */] = context.bezierCurveTo;
-        map[10 /* closePath */] = context.closePath;
-        map[9 /* fill */] = context.fill;
-        map[13 /* fillRect */] = context.fillRect;
-        map[8 /* lineTo */] = context.lineTo;
-        map[12 /* moveTo */] = context.moveTo;
-        map[7 /* quadraticCurveTo */] = context.quadraticCurveTo;
-        map[11 /* rect */] = context.rect;
-        map[15 /* stroke */] = context.stroke;
-        map[16 /* strokeRect */] = context.strokeRect;
-        map[19 /* scale */] = context.scale;
-        map[3 /* lineWidth */] = function (value) {
-            context.lineWidth = value;
-        };
-        map[0 /* miterLimit */] = function (value) {
-            context.miterLimit = value;
-        };
-        map[5 /* fillStyle */] = function (value) {
-            context.fillStyle = value;
-        };
-        map[1 /* lineCap */] = function (value) {
-            context.lineCap = value;
-        };
-        map[2 /* lineJoin */] = function (value) {
-            context.lineJoin = value;
-        };
-        map[4 /* strokeStyle */] = function (value) {
-            context.strokeStyle = value;
-        };
-        return map;
-    }
+        JointStyle.ROUND = "round";
+        return JointStyle;
+    }());
+    egret.JointStyle = JointStyle;
+    egret.registerClass(JointStyle,'egret.JointStyle');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -7567,6 +5436,36 @@ var egret;
 //  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    /**
+     * OrientationMode 类为舞台初始旋转模式提供值。
+     */
+    var OrientationMode = (function () {
+        function OrientationMode() {
+        }
+        var d = __define,c=OrientationMode,p=c.prototype;
+        /**
+         * 适配屏幕
+         */
+        OrientationMode.AUTO = "auto";
+        /**
+         * 默认竖屏
+         */
+        OrientationMode.PORTRAIT = "portrait";
+        /**
+         * 默认横屏，舞台顺时针旋转90度
+         */
+        OrientationMode.LANDSCAPE = "landscape";
+        /**
+         * 默认横屏，舞台逆时针旋转90度
+         */
+        OrientationMode.LANDSCAPE_FLIPPED = "landscapeFlipped";
+        return OrientationMode;
+    }());
+    egret.OrientationMode = OrientationMode;
+    egret.registerClass(OrientationMode,'egret.OrientationMode');
+})(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2014-2015, Egret Technology Inc.
@@ -7693,17 +5592,17 @@ var egret;
              */
             this._bitmapData = null;
         }
-        var d = __define,c=Texture;p=c.prototype;
+        var d = __define,c=Texture,p=c.prototype;
         d(p, "textureWidth"
             /**
              * @language en_US
-             * Texture width
+             * Texture width, read only
              * @version Egret 2.4
              * @platform Web,Native
              */
             /**
              * @language zh_CN
-             * 纹理宽度
+             * 纹理宽度，只读属性，不可以设置
              * @version Egret 2.4
              * @platform Web,Native
              */
@@ -7717,13 +5616,13 @@ var egret;
         d(p, "textureHeight"
             /**
              * @language en_US
-             * Texture height
+             * Texture height, read only
              * @version Egret 2.4
              * @platform Web,Native
              */
             /**
              * @language zh_CN
-             * 纹理高度
+             * 纹理高度，只读属性，不可以设置
              * @version Egret 2.4
              * @platform Web,Native
              */
@@ -7794,6 +5693,8 @@ var egret;
             this._textureHeight = textureHeight;
             this._sourceWidth = sourceWidth;
             this._sourceHeight = sourceHeight;
+            //todo
+            Texture.$invalidate(this);
         };
         /**
          * @language en_US
@@ -7873,13 +5774,25 @@ var egret;
          */
         p.dispose = function () {
             if (this._bitmapData) {
-                Texture.$dispose(this._bitmapData.hashCode);
-                console.log("dispose Texture");
+                if (this._bitmapData.dispose) {
+                    this._bitmapData.dispose();
+                }
+                Texture.$dispose(this);
+                //console.log("dispose Texture");
                 this._bitmapData = null;
             }
         };
-        Texture.$addDisplayObject = function (displayObject, bitmapDataHashCode) {
-            var hashCode = bitmapDataHashCode;
+        Texture.$addDisplayObject = function (displayObject, bitmapData) {
+            var hashCode;
+            if (bitmapData._bitmapData && bitmapData._bitmapData.hashCode) {
+                hashCode = bitmapData._bitmapData.hashCode;
+            }
+            else {
+                hashCode = bitmapData.hashCode;
+            }
+            if (!hashCode) {
+                return;
+            }
             if (!Texture._displayList[hashCode]) {
                 Texture._displayList[hashCode] = [displayObject];
                 return;
@@ -7889,8 +5802,17 @@ var egret;
                 tempList.push(displayObject);
             }
         };
-        Texture.$removeDisplayObject = function (displayObject, bitmapDataHashCode) {
-            var hashCode = bitmapDataHashCode;
+        Texture.$removeDisplayObject = function (displayObject, bitmapData) {
+            var hashCode;
+            if (bitmapData._bitmapData && bitmapData._bitmapData.hashCode) {
+                hashCode = bitmapData._bitmapData.hashCode;
+            }
+            else {
+                hashCode = bitmapData.hashCode;
+            }
+            if (!hashCode) {
+                return;
+            }
             if (!Texture._displayList[hashCode]) {
                 return;
             }
@@ -7900,18 +5822,39 @@ var egret;
                 tempList.splice(index);
             }
         };
-        Texture.$invalidate = function (bitmapDataHashCode) {
-            var hashCode = bitmapDataHashCode;
+        Texture.$invalidate = function (bitmapData) {
+            var hashCode;
+            if (bitmapData._bitmapData && bitmapData._bitmapData.hashCode) {
+                hashCode = bitmapData._bitmapData.hashCode;
+            }
+            else {
+                hashCode = bitmapData.hashCode;
+            }
+            if (!hashCode) {
+                return;
+            }
             if (!Texture._displayList[hashCode]) {
                 return;
             }
             var tempList = Texture._displayList[hashCode];
             for (var i = 0; i < tempList.length; i++) {
+                if (tempList[i] instanceof egret.Bitmap) {
+                    tempList[i].$refreshImageData();
+                }
                 tempList[i].$invalidateContentBounds();
             }
         };
-        Texture.$dispose = function (bitmapDataHashCode) {
-            var hashCode = bitmapDataHashCode;
+        Texture.$dispose = function (bitmapData) {
+            var hashCode;
+            if (bitmapData._bitmapData && bitmapData._bitmapData.hashCode) {
+                hashCode = bitmapData._bitmapData.hashCode;
+            }
+            else {
+                hashCode = bitmapData.hashCode;
+            }
+            if (!hashCode) {
+                return;
+            }
             if (!Texture._displayList[hashCode]) {
                 return;
             }
@@ -7922,12 +5865,17 @@ var egret;
                 }
                 tempList[i].$invalidateContentBounds();
             }
+            delete Texture._displayList[hashCode];
         };
         Texture._displayList = {};
         return Texture;
-    })(egret.HashObject);
+    }(egret.HashObject));
     egret.Texture = Texture;
-    egret.registerClass(Texture,"egret.Texture");
+    egret.registerClass(Texture,'egret.Texture');
+    if (DEBUG) {
+        egret.$markReadOnly(Texture, "textureWidth");
+        egret.$markReadOnly(Texture, "textureHeight");
+    }
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -7959,8 +5907,6 @@ var egret;
 //////////////////////////////////////////////////////////////////////////////////////
 var egret;
 (function (egret) {
-    var blendModes = ["source-over", "lighter", "destination-out"];
-    var defaultCompositeOp = "source-over";
     /**
      * @language en_US
      * RenderTexture is a dynamic texture
@@ -7981,8 +5927,10 @@ var egret;
         __extends(RenderTexture, _super);
         function RenderTexture() {
             _super.call(this);
+            this.renderBuffer = new egret.sys.RenderBuffer();
+            this._setBitmapData(this.renderBuffer.surface);
         }
-        var d = __define,c=RenderTexture;p=c.prototype;
+        var d = __define,c=RenderTexture,p=c.prototype;
         /**
          * @language en_US
          * The specified display object is drawn as a texture
@@ -8003,237 +5951,56 @@ var egret;
          */
         p.drawToTexture = function (displayObject, clipBounds, scale) {
             if (scale === void 0) { scale = 1; }
-            this.dispose();
+            if (clipBounds && (clipBounds.width == 0 || clipBounds.height == 0)) {
+                return false;
+            }
+            var bounds = clipBounds || displayObject.$getOriginalBounds();
+            if (bounds.width == 0 || bounds.height == 0) {
+                return false;
+            }
             scale /= egret.$TextureScaleFactor;
-            var c1 = new egret.DisplayObjectContainer();
-            c1.$children.push(displayObject);
-            c1.scaleX = c1.scaleY = scale;
+            var width = (bounds.x + bounds.width) * scale;
+            var height = (bounds.y + bounds.height) * scale;
             if (clipBounds) {
-                var scrollRect = new egret.Rectangle();
-                scrollRect.setTo(clipBounds.x, clipBounds.y, clipBounds.width, clipBounds.height);
-                c1.scrollRect = scrollRect;
+                width = bounds.width * scale;
+                height = bounds.height * scale;
             }
-            var root = new egret.DisplayObjectContainer();
-            this.rootDisplayList = egret.sys.DisplayList.create(root);
-            root.$displayList = this.rootDisplayList;
-            root.addChild(c1);
-            this.$update(displayObject);
-            root.$displayList = null;
-            var bounds = displayObject.getBounds();
-            this.context = this.createRenderContext(bounds.width * scale, bounds.height * scale);
-            this.context.clearRect(0, 0, bounds.width * scale, bounds.height * scale);
-            this._offsetX = bounds.x * scale;
-            this._offsetY = bounds.y * scale;
-            if (!this.context) {
+            var renderBuffer = this.renderBuffer;
+            if (!renderBuffer) {
                 return false;
             }
-            var drawCalls = this.drawDisplayObject(root, this.context);
-            if (drawCalls == 0) {
-                return false;
+            renderBuffer.resize(width, height);
+            var matrix = egret.Matrix.create();
+            matrix.identity();
+            //应用裁切
+            if (clipBounds) {
+                matrix.translate(-clipBounds.x, -clipBounds.y);
             }
-            this._setBitmapData(this.context.surface);
-            this._offsetX = bounds.x * scale;
-            this._offsetY = bounds.y * scale;
+            matrix.scale(scale, scale);
+            egret.sys.systemRenderer.render(displayObject, renderBuffer, matrix, null, true);
+            egret.Matrix.release(matrix);
+            //设置纹理参数
+            this.$initData(0, 0, width, height, 0, 0, width, height, width, height);
             return true;
         };
-        p.$update = function (displayObject) {
-            if (displayObject.$renderRegion) {
-                displayObject.$renderRegion.moved = true;
-                displayObject.$update();
+        p.getPixel32 = function (x, y) {
+            var data;
+            if (this.renderBuffer) {
+                var scale = egret.$TextureScaleFactor;
+                x = Math.round(x / scale);
+                y = Math.round(y / scale);
+                data = this.renderBuffer.getPixel(x, y);
             }
-            else if (displayObject instanceof egret.DisplayObjectContainer) {
-                var children = displayObject.$children;
-                var length = children.length;
-                for (var i = 0; i < length; i++) {
-                    var child = children[i];
-                    this.$update(child);
-                }
-            }
-        };
-        p.drawDisplayObject = function (displayObject, context, rootMatrix) {
-            var drawCalls = 0;
-            var node;
-            var globalAlpha;
-            if (displayObject.$renderRegion) {
-                node = displayObject;
-                globalAlpha = displayObject.$renderAlpha;
-            }
-            if (node) {
-                drawCalls++;
-                context.globalAlpha = globalAlpha;
-                var m = node.$renderMatrix;
-                if (rootMatrix) {
-                    context.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-                    node.$render(context);
-                    context.setTransform(rootMatrix.a, rootMatrix.b, rootMatrix.c, rootMatrix.d, rootMatrix.tx, rootMatrix.ty);
-                }
-                else {
-                    context.setTransform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-                    node.$render(context);
-                }
-            }
-            var children = displayObject.$children;
-            if (children) {
-                var length = children.length;
-                for (var i = 0; i < length; i++) {
-                    var child = children[i];
-                    if (!child.$visible || child.$alpha <= 0 || child.$maskedObject) {
-                        continue;
-                    }
-                    if (child.$blendMode !== 0 || child.$mask) {
-                        drawCalls += this.drawWithClip(child, context);
-                    }
-                    else if (child.$scrollRect) {
-                        drawCalls += this.drawWithScrollRect(child, context);
-                    }
-                    else {
-                        drawCalls += this.drawDisplayObject(child, context);
-                    }
-                }
-            }
-            return drawCalls;
-        };
-        p.drawWithClip = function (displayObject, context) {
-            var drawCalls = 0;
-            var hasBlendMode = (displayObject.$blendMode !== 0);
-            if (hasBlendMode) {
-                var compositeOp = blendModes[displayObject.$blendMode];
-                if (!compositeOp) {
-                    compositeOp = defaultCompositeOp;
-                }
-            }
-            var scrollRect = displayObject.$scrollRect;
-            var mask = displayObject.$mask;
-            //计算scrollRect和mask的clip区域是否需要绘制，不需要就直接返回，跳过所有子项的遍历。
-            var maskRegion;
-            var displayMatrix = displayObject.$getConcatenatedMatrix();
-            if (mask) {
-                var bounds = mask.$getOriginalBounds();
-                maskRegion = egret.sys.Region.create();
-                maskRegion.updateRegion(bounds, mask.$getConcatenatedMatrix());
-            }
-            var region;
-            if (scrollRect) {
-                region = egret.sys.Region.create();
-                region.updateRegion(scrollRect, displayMatrix);
-            }
-            if (region && maskRegion) {
-                region.intersect(maskRegion);
-                egret.sys.Region.release(maskRegion);
-            }
-            else if (!region && maskRegion) {
-                region = maskRegion;
-            }
-            if (region) {
-                if (region.isEmpty()) {
-                    egret.sys.Region.release(region);
-                    return drawCalls;
-                }
-            }
-            else {
-                region = egret.sys.Region.create();
-                bounds = displayObject.$getOriginalBounds();
-                region.updateRegion(bounds, displayObject.$getConcatenatedMatrix());
-            }
-            //绘制显示对象自身，若有scrollRect，应用clip
-            var displayContext = this.createRenderContext(region.width, region.height);
-            if (!displayContext) {
-                drawCalls += this.drawDisplayObject(displayObject, context);
-                egret.sys.Region.release(region);
-                return drawCalls;
-            }
-            if (scrollRect) {
-                var m = displayMatrix;
-                displayContext.setTransform(m.a, m.b, m.c, m.d, m.tx - region.minX, m.ty - region.minY);
-                displayContext.beginPath();
-                displayContext.rect(scrollRect.x, scrollRect.y, scrollRect.width, scrollRect.height);
-                displayContext.clip();
-            }
-            displayContext.setTransform(1, 0, 0, 1, -region.minX, -region.minY);
-            var rootM = egret.Matrix.create().setTo(1, 0, 0, 1, -region.minX, -region.minY);
-            drawCalls += this.drawDisplayObject(displayObject, displayContext, rootM);
-            egret.Matrix.release(rootM);
-            //绘制遮罩
-            if (mask) {
-                var maskContext = this.createRenderContext(region.width, region.height);
-                if (!maskContext) {
-                    drawCalls += this.drawDisplayObject(displayObject, context);
-                    egret.sys.surfaceFactory.release(displayContext.surface);
-                    egret.sys.Region.release(region);
-                    return drawCalls;
-                }
-                maskContext.setTransform(1, 0, 0, 1, -region.minX, -region.minY);
-                rootM = egret.Matrix.create().setTo(1, 0, 0, 1, -region.minX, -region.minY);
-                var calls = this.drawDisplayObject(mask, maskContext);
-                egret.Matrix.release(rootM);
-                if (calls > 0) {
-                    drawCalls += calls;
-                    displayContext.globalCompositeOperation = "destination-in";
-                    displayContext.setTransform(1, 0, 0, 1, 0, 0);
-                    displayContext.globalAlpha = 1;
-                    displayContext.drawImage(maskContext.surface, 0, 0);
-                }
-                egret.sys.surfaceFactory.release(maskContext.surface);
-            }
-            //绘制结果到屏幕
-            if (drawCalls > 0) {
-                drawCalls++;
-                if (hasBlendMode) {
-                    context.globalCompositeOperation = compositeOp;
-                }
-                context.setTransform(1, 0, 0, 1, region.minX, region.minY);
-                context.drawImage(displayContext.surface, 0, 0);
-                if (hasBlendMode) {
-                    context.globalCompositeOperation = defaultCompositeOp;
-                }
-            }
-            egret.sys.surfaceFactory.release(displayContext.surface);
-            egret.sys.Region.release(region);
-            return drawCalls;
-        };
-        p.drawWithScrollRect = function (displayObject, context) {
-            var drawCalls = 0;
-            var scrollRect = displayObject.$scrollRect;
-            var m = displayObject.$getConcatenatedMatrix();
-            var region = egret.sys.Region.create();
-            if (!scrollRect.isEmpty()) {
-                region.updateRegion(scrollRect, m);
-            }
-            if (region.isEmpty()) {
-                egret.sys.Region.release(region);
-                return drawCalls;
-            }
-            //绘制显示对象自身
-            context.save();
-            context.setTransform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-            context.beginPath();
-            context.rect(scrollRect.x, scrollRect.y, scrollRect.width, scrollRect.height);
-            context.clip();
-            drawCalls += this.drawDisplayObject(displayObject, context);
-            context.restore();
-            egret.sys.Region.release(region);
-            return drawCalls;
-        };
-        p.createRenderContext = function (width, height) {
-            var surface = egret.sys.surfaceFactory.create(true);
-            if (!surface) {
-                return null;
-            }
-            surface.width = Math.max(257, width);
-            surface.height = Math.max(257, height);
-            return surface.renderContext;
+            return data;
         };
         p.dispose = function () {
             _super.prototype.dispose.call(this);
-            if (this.rootDisplayList) {
-                egret.sys.DisplayList.release(this.rootDisplayList);
-                this.rootDisplayList = null;
-            }
+            this.renderBuffer = null;
         };
         return RenderTexture;
-    })(egret.Texture);
+    }(egret.Texture));
     egret.RenderTexture = RenderTexture;
-    egret.registerClass(RenderTexture,"egret.RenderTexture");
+    egret.registerClass(RenderTexture,'egret.RenderTexture');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -8299,10 +6066,9 @@ var egret;
         function Shape() {
             _super.call(this);
             this.$graphics = new egret.Graphics();
-            this.$graphics.$renderContext.$targetDisplay = this;
-            this.$renderRegion = new egret.sys.Region();
+            this.$graphics.$setTarget(this);
         }
-        var d = __define,c=Shape;p=c.prototype;
+        var d = __define,c=Shape,p=c.prototype;
         d(p, "graphics"
             /**
              * @language en_US
@@ -8333,16 +6099,10 @@ var egret;
             }
             return target;
         };
-        /**
-         * @private
-         */
-        p.$render = function (context) {
-            this.$graphics.$render(context);
-        };
         return Shape;
-    })(egret.DisplayObject);
+    }(egret.DisplayObject));
     egret.Shape = Shape;
-    egret.registerClass(Shape,"egret.Shape");
+    egret.registerClass(Shape,'egret.Shape');
     if (DEBUG) {
         egret.$markReadOnly(Shape, "graphics");
     }
@@ -8408,10 +6168,9 @@ var egret;
         function Sprite() {
             _super.call(this);
             this.$graphics = new egret.Graphics();
-            this.$graphics.$renderContext.$targetDisplay = this;
-            this.$renderRegion = new egret.sys.Region();
+            this.$graphics.$setTarget(this);
         }
-        var d = __define,c=Sprite;p=c.prototype;
+        var d = __define,c=Sprite,p=c.prototype;
         d(p, "graphics"
             /**
              * @language en_US
@@ -8482,16 +6241,10 @@ var egret;
         p.$measureContentBounds = function (bounds) {
             this.$graphics.$measureContentBounds(bounds);
         };
-        /**
-         * @private
-         */
-        p.$render = function (context) {
-            this.$graphics.$render(context);
-        };
         return Sprite;
-    })(egret.DisplayObjectContainer);
+    }(egret.DisplayObjectContainer));
     egret.Sprite = Sprite;
-    egret.registerClass(Sprite,"egret.Sprite",["egret.IDisplayObjectContainer"]);
+    egret.registerClass(Sprite,'egret.Sprite');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -8580,11 +6333,11 @@ var egret;
              * 纹理缓存字典
              */
             this._textureMap = {};
-            this.texture = texture;
+            this.$texture = texture;
             this._bitmapX = texture._bitmapX - texture._offsetX;
             this._bitmapY = texture._bitmapY - texture._offsetY;
         }
-        var d = __define,c=SpriteSheet;p=c.prototype;
+        var d = __define,c=SpriteSheet,p=c.prototype;
         /**
          * @language en_US
          * Obtain a cached Texture object according to the specified texture name
@@ -8639,15 +6392,15 @@ var egret;
         p.createTexture = function (name, bitmapX, bitmapY, bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight) {
             if (offsetX === void 0) { offsetX = 0; }
             if (offsetY === void 0) { offsetY = 0; }
-            if (egret.sys.isUndefined(textureWidth)) {
+            if (textureWidth === void 0) {
                 textureWidth = offsetX + bitmapWidth;
             }
-            if (egret.sys.isUndefined(textureHeight)) {
+            if (textureHeight === void 0) {
                 textureHeight = offsetY + bitmapHeight;
             }
             var texture = new egret.Texture();
-            texture._bitmapData = this.texture._bitmapData;
-            texture.$initData(this._bitmapX + bitmapX, this._bitmapY + bitmapY, bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight, this.texture._sourceWidth, this.texture._sourceHeight);
+            texture._bitmapData = this.$texture._bitmapData;
+            texture.$initData(this._bitmapX + bitmapX, this._bitmapY + bitmapY, bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight, this.$texture._sourceWidth, this.$texture._sourceHeight);
             this._textureMap[name] = texture;
             return texture;
         };
@@ -8664,14 +6417,14 @@ var egret;
          * @platform Web,Native
          */
         p.dispose = function () {
-            if (this.texture) {
-                this.texture.dispose();
+            if (this.$texture) {
+                this.$texture.dispose();
             }
         };
         return SpriteSheet;
-    })(egret.HashObject);
+    }(egret.HashObject));
     egret.SpriteSheet = SpriteSheet;
-    egret.registerClass(SpriteSheet,"egret.SpriteSheet");
+    egret.registerClass(SpriteSheet,'egret.SpriteSheet');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -8753,10 +6506,11 @@ var egret;
             this.$scaleMode = egret.StageScaleMode.SHOW_ALL;
             this.$orientation = egret.OrientationMode.AUTO;
             this.$maxTouches = 99;
+            this.$dirtyRegionPolicy = egret.DirtyRegionPolicy.ON;
             this.$stage = this;
             this.$nestLevel = 1;
         }
-        var d = __define,c=Stage;p=c.prototype;
+        var d = __define,c=Stage,p=c.prototype;
         d(p, "frameRate"
             /**
              * @language en_US
@@ -8987,10 +6741,54 @@ var egret;
                 this.$screen.updateMaxTouches();
             }
         );
+        d(p, "dirtyRegionPolicy"
+            ,function () {
+                return this.$dirtyRegionPolicy;
+            }
+            /**
+             * @language en_US
+             * Set dirty region policy
+             * One of the constants defined by egret.DirtyRegionPolicy
+             * @version Egret 2.5.5
+             * @platform Web,Native
+             */
+            /**
+             * @language zh_CN
+             * 设置脏矩形策略
+             * egret.DirtyRegionPolicy 定义的常量之一
+             * @version Egret 2.5.5
+             * @platform Web,Native
+             */
+            ,function (policy) {
+                if (this.$dirtyRegionPolicy != policy) {
+                    this.$dirtyRegionPolicy = policy;
+                    this.$displayList.setDirtyRegionPolicy(policy);
+                }
+            }
+        );
+        /**
+         * @language en_US
+         * Set resolution size
+         * @param width width
+         * @param height height
+         * @version Egret 2.5.5
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 设置分辨率尺寸
+         * @param width 宽度
+         * @param height 高度
+         * @version Egret 2.5.5
+         * @platform Web,Native
+         */
+        p.setContentSize = function (width, height) {
+            this.$screen.setContentSize(width, height);
+        };
         return Stage;
-    })(egret.DisplayObjectContainer);
+    }(egret.DisplayObjectContainer));
     egret.Stage = Stage;
-    egret.registerClass(Stage,"egret.Stage");
+    egret.registerClass(Stage,'egret.Stage');
     if (DEBUG) {
         egret.$markCannotUse(Stage, "alpha", 1);
         egret.$markCannotUse(Stage, "visible", true);
@@ -9126,7 +6924,7 @@ var egret;
             this.$cancelable = !!cancelable;
             this.data = data;
         }
-        var d = __define,c=Event;p=c.prototype;
+        var d = __define,c=Event,p=c.prototype;
         d(p, "type"
             /**
              * @language en_US
@@ -9742,9 +7540,9 @@ var egret;
          */
         Event.SOUND_COMPLETE = "soundComplete";
         return Event;
-    })(egret.HashObject);
+    }(egret.HashObject));
     egret.Event = Event;
-    egret.registerClass(Event,"egret.Event");
+    egret.registerClass(Event,'egret.Event');
     if (DEBUG) {
         egret.$markReadOnly(Event, "type");
         egret.$markReadOnly(Event, "bubbles");
@@ -9851,7 +7649,7 @@ var egret;
             if (cancelable === void 0) { cancelable = false; }
             _super.call(this, type, bubbles, cancelable);
         }
-        var d = __define,c=FocusEvent;p=c.prototype;
+        var d = __define,c=FocusEvent,p=c.prototype;
         /**
          * @language en_US
          * Gets focus
@@ -9879,9 +7677,9 @@ var egret;
          */
         FocusEvent.FOCUS_OUT = "focusOut";
         return FocusEvent;
-    })(egret.Event);
+    }(egret.Event));
     egret.FocusEvent = FocusEvent;
-    egret.registerClass(FocusEvent,"egret.FocusEvent");
+    egret.registerClass(FocusEvent,'egret.FocusEvent');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -9933,7 +7731,7 @@ var egret;
         function GeolocationEvent() {
             _super.apply(this, arguments);
         }
-        var d = __define,c=GeolocationEvent;p=c.prototype;
+        var d = __define,c=GeolocationEvent,p=c.prototype;
         /**
          * @language en_US
          * The acquisition of the location information failed because of app don't have permission.
@@ -9961,9 +7759,9 @@ var egret;
          */
         GeolocationEvent.UNAVAILABLE = "unavailable";
         return GeolocationEvent;
-    })(egret.Event);
+    }(egret.Event));
     egret.GeolocationEvent = GeolocationEvent;
-    egret.registerClass(GeolocationEvent,"egret.GeolocationEvent");
+    egret.registerClass(GeolocationEvent,'egret.GeolocationEvent');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -10038,7 +7836,7 @@ var egret;
              */
             this._status = 0;
         }
-        var d = __define,c=HTTPStatusEvent;p=c.prototype;
+        var d = __define,c=HTTPStatusEvent,p=c.prototype;
         d(p, "status"
             /**
              * @language en_US
@@ -10093,9 +7891,9 @@ var egret;
          */
         HTTPStatusEvent.HTTP_STATUS = "httpStatus";
         return HTTPStatusEvent;
-    })(egret.Event);
+    }(egret.Event));
     egret.HTTPStatusEvent = HTTPStatusEvent;
-    egret.registerClass(HTTPStatusEvent,"egret.HTTPStatusEvent");
+    egret.registerClass(HTTPStatusEvent,'egret.HTTPStatusEvent');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -10194,7 +7992,7 @@ var egret;
             if (cancelable === void 0) { cancelable = false; }
             _super.call(this, type, bubbles, cancelable);
         }
-        var d = __define,c=IOErrorEvent;p=c.prototype;
+        var d = __define,c=IOErrorEvent,p=c.prototype;
         /**
          * @language en_US
          * EventDispatcher object using the specified event object thrown Event. The objects will be thrown in the object cache pool for the next round robin.
@@ -10229,9 +8027,9 @@ var egret;
          */
         IOErrorEvent.IO_ERROR = "ioError";
         return IOErrorEvent;
-    })(egret.Event);
+    }(egret.Event));
     egret.IOErrorEvent = IOErrorEvent;
-    egret.registerClass(IOErrorEvent,"egret.IOErrorEvent");
+    egret.registerClass(IOErrorEvent,'egret.IOErrorEvent');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -10286,11 +8084,11 @@ var egret;
         function MotionEvent() {
             _super.apply(this, arguments);
         }
-        var d = __define,c=MotionEvent;p=c.prototype;
+        var d = __define,c=MotionEvent,p=c.prototype;
         return MotionEvent;
-    })(egret.Event);
+    }(egret.Event));
     egret.MotionEvent = MotionEvent;
-    egret.registerClass(MotionEvent,"egret.MotionEvent");
+    egret.registerClass(MotionEvent,'egret.MotionEvent');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -10345,11 +8143,11 @@ var egret;
         function OrientationEvent() {
             _super.apply(this, arguments);
         }
-        var d = __define,c=OrientationEvent;p=c.prototype;
+        var d = __define,c=OrientationEvent,p=c.prototype;
         return OrientationEvent;
-    })(egret.Event);
+    }(egret.Event));
     egret.OrientationEvent = OrientationEvent;
-    egret.registerClass(OrientationEvent,"egret.OrientationEvent");
+    egret.registerClass(OrientationEvent,'egret.OrientationEvent');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -10454,7 +8252,7 @@ var egret;
             this.bytesLoaded = bytesLoaded;
             this.bytesTotal = bytesTotal;
         }
-        var d = __define,c=ProgressEvent;p=c.prototype;
+        var d = __define,c=ProgressEvent,p=c.prototype;
         /**
          * @language en_US
          * EventDispatcher object using the specified event object thrown Event. The objects will be thrown in the object cache pool for the next round robin.
@@ -10512,9 +8310,9 @@ var egret;
          */
         ProgressEvent.SOCKET_DATA = "socketData";
         return ProgressEvent;
-    })(egret.Event);
+    }(egret.Event));
     egret.ProgressEvent = ProgressEvent;
-    egret.registerClass(ProgressEvent,"egret.ProgressEvent");
+    egret.registerClass(ProgressEvent,'egret.ProgressEvent');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -10585,7 +8383,7 @@ var egret;
             if (cancelable === void 0) { cancelable = false; }
             _super.call(this, type, bubbles, cancelable);
         }
-        var d = __define,c=StageOrientationEvent;p=c.prototype;
+        var d = __define,c=StageOrientationEvent,p=c.prototype;
         /**
          * @language en_US
          * 派发一个屏幕旋转的事件。
@@ -10622,9 +8420,9 @@ var egret;
          */
         StageOrientationEvent.ORIENTATION_CHANGE = "orientationChange";
         return StageOrientationEvent;
-    })(egret.Event);
+    }(egret.Event));
     egret.StageOrientationEvent = StageOrientationEvent;
-    egret.registerClass(StageOrientationEvent,"egret.StageOrientationEvent");
+    egret.registerClass(StageOrientationEvent,'egret.StageOrientationEvent');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -10699,7 +8497,7 @@ var egret;
             _super.call(this, type, bubbles, cancelable);
             this.text = text;
         }
-        var d = __define,c=TextEvent;p=c.prototype;
+        var d = __define,c=TextEvent,p=c.prototype;
         /**
          * @language en_US
          * EventDispatcher object using the specified event object thrown TextEvent. The objects will be thrown in the object cache pool for the next round robin.
@@ -10739,9 +8537,9 @@ var egret;
          */
         TextEvent.LINK = "link";
         return TextEvent;
-    })(egret.Event);
+    }(egret.Event));
     egret.TextEvent = TextEvent;
-    egret.registerClass(TextEvent,"egret.TextEvent");
+    egret.registerClass(TextEvent,'egret.TextEvent');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -10814,7 +8612,7 @@ var egret;
         function TimerEvent(type, bubbles, cancelable) {
             _super.call(this, type, bubbles, cancelable);
         }
-        var d = __define,c=TimerEvent;p=c.prototype;
+        var d = __define,c=TimerEvent,p=c.prototype;
         /**
          * @language en_US
          * Instructs Egret runtime to render after processing of this event completes, if the display list has been modified.
@@ -10920,9 +8718,9 @@ var egret;
          */
         TimerEvent.TIMER_COMPLETE = "timerComplete";
         return TimerEvent;
-    })(egret.Event);
+    }(egret.Event));
     egret.TimerEvent = TimerEvent;
-    egret.registerClass(TimerEvent,"egret.TimerEvent");
+    egret.registerClass(TimerEvent,'egret.TimerEvent');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -10996,7 +8794,7 @@ var egret;
             this.x = x;
             this.y = y;
         }
-        var d = __define,c=Point;p=c.prototype;
+        var d = __define,c=Point,p=c.prototype;
         /**
          * @language en_US
          * Releases a point instance to the object pool
@@ -11291,9 +9089,9 @@ var egret;
             return "(x=" + this.x + ", y=" + this.y + ")";
         };
         return Point;
-    })(egret.HashObject);
+    }(egret.HashObject));
     egret.Point = Point;
-    egret.registerClass(Point,"egret.Point");
+    egret.registerClass(Point,'egret.Point');
     if (DEBUG) {
         egret.$markReadOnly(Point, "length");
     }
@@ -11408,7 +9206,7 @@ var egret;
             this.touchDown = false;
             this.$initTo(stageX, stageY, touchPointID);
         }
-        var d = __define,c=TouchEvent;p=c.prototype;
+        var d = __define,c=TouchEvent,p=c.prototype;
         /**
          * @private
          */
@@ -11610,6 +9408,20 @@ var egret;
         TouchEvent.TOUCH_END = "touchEnd";
         /**
          * @language en_US
+         * Dispatched when an event of some kind occurred that canceled the touch.
+         * Such as the eui.Scroller will dispatch 'TOUCH_CANCEL' when it start move, the 'TOUCH_END' and 'TOUCH_TAP' will not be triggered.
+         * @version Egret 3.0.1
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 由于某个事件取消了触摸时触发。比如 eui.Scroller 在开始滚动后会触发 'TOUCH_CANCEL' 事件，不再触发后续的 'TOUCH_END' 和 'TOUCH_TAP' 事件
+         * @version Egret 3.0.1
+         * @platform Web,Native
+         */
+        TouchEvent.TOUCH_CANCEL = "touchcancel";
+        /**
+         * @language en_US
          * Dispatched when the user lifts the point of contact over the same DisplayObject instance on which the contact
          * was initiated on a touch-enabled device.
          * @version Egret 2.4
@@ -11650,9 +9462,9 @@ var egret;
          */
         TouchEvent.TOUCH_ROLL_OVER = "touchRollOver";
         return TouchEvent;
-    })(egret.Event);
+    }(egret.Event));
     egret.TouchEvent = TouchEvent;
-    egret.registerClass(TouchEvent,"egret.TouchEvent");
+    egret.registerClass(TouchEvent,'egret.TouchEvent');
     if (DEBUG) {
         egret.$markReadOnly(TouchEvent, "stageX");
         egret.$markReadOnly(TouchEvent, "stageY");
@@ -11690,7 +9502,6 @@ var egret;
 //////////////////////////////////////////////////////////////////////////////////////
 var egret;
 (function (egret) {
-    egret.ExternalInterface;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -11765,11 +9576,11 @@ var egret;
              */
             this.type = null;
         }
-        var d = __define,c=Filter;p=c.prototype;
+        var d = __define,c=Filter,p=c.prototype;
         return Filter;
-    })(egret.HashObject);
+    }(egret.HashObject));
     egret.Filter = Filter;
-    egret.registerClass(Filter,"egret.Filter");
+    egret.registerClass(Filter,'egret.Filter');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -11818,11 +9629,11 @@ var egret;
             this.blurY = blurY;
             this.type = "blur";
         }
-        var d = __define,c=BlurFilter;p=c.prototype;
+        var d = __define,c=BlurFilter,p=c.prototype;
         return BlurFilter;
-    })(egret.Filter);
+    }(egret.Filter));
     egret.BlurFilter = BlurFilter;
-    egret.registerClass(BlurFilter,"egret.BlurFilter");
+    egret.registerClass(BlurFilter,'egret.BlurFilter');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -11879,7 +9690,7 @@ var egret;
             this.type = "colorTransform";
             this.setMatrix(matrix);
         }
-        var d = __define,c=ColorMatrixFilter;p=c.prototype;
+        var d = __define,c=ColorMatrixFilter,p=c.prototype;
         d(p, "matrix"
             /**
              * @version Egret 2.4
@@ -11906,9 +9717,9 @@ var egret;
             }
         };
         return ColorMatrixFilter;
-    })(egret.Filter);
+    }(egret.Filter));
     egret.ColorMatrixFilter = ColorMatrixFilter;
-    egret.registerClass(ColorMatrixFilter,"egret.ColorMatrixFilter");
+    egret.registerClass(ColorMatrixFilter,'egret.ColorMatrixFilter');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -11988,11 +9799,11 @@ var egret;
             this.$green = (color & 0x00ff00) >> 8;
             this.$red = color >> 16;
         }
-        var d = __define,c=GlowFilter;p=c.prototype;
+        var d = __define,c=GlowFilter,p=c.prototype;
         return GlowFilter;
-    })(egret.Filter);
+    }(egret.Filter));
     egret.GlowFilter = GlowFilter;
-    egret.registerClass(GlowFilter,"egret.GlowFilter");
+    egret.registerClass(GlowFilter,'egret.GlowFilter');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -12067,11 +9878,851 @@ var egret;
             this.distance = distance;
             this.angle = angle;
         }
-        var d = __define,c=DropShadowFilter;p=c.prototype;
+        var d = __define,c=DropShadowFilter,p=c.prototype;
         return DropShadowFilter;
-    })(egret.GlowFilter);
+    }(egret.GlowFilter));
     egret.DropShadowFilter = DropShadowFilter;
-    egret.registerClass(DropShadowFilter,"egret.DropShadowFilter");
+    egret.registerClass(DropShadowFilter,'egret.DropShadowFilter');
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    var PI = Math.PI;
+    var HalfPI = PI / 2;
+    var PacPI = PI + HalfPI;
+    var TwoPI = PI * 2;
+    var DEG_TO_RAD = Math.PI / 180;
+    /**
+     * @private
+     */
+    function cos(angle) {
+        switch (angle) {
+            case HalfPI:
+            case -PacPI:
+                return 0;
+            case PI:
+            case -PI:
+                return -1;
+            case PacPI:
+            case -HalfPI:
+                return 0;
+            default:
+                return Math.cos(angle);
+        }
+    }
+    /**
+     * @private
+     */
+    function sin(angle) {
+        switch (angle) {
+            case HalfPI:
+            case -PacPI:
+                return 1;
+            case PI:
+            case -PI:
+                return 0;
+            case PacPI:
+            case -HalfPI:
+                return -1;
+            default:
+                return Math.sin(angle);
+        }
+    }
+    /**
+     * @private
+     */
+    egret.$cos = cos;
+    /**
+     * @private
+     */
+    egret.$sin = sin;
+    var matrixPool = [];
+    /**
+     * @language en_US
+     * The Matrix class represents a transformation matrix that determines how to map points from one coordinate space to
+     * another. You can perform various graphical transformations on a display object by setting the properties of a Matrix
+     * object, applying that Matrix object to the matrix property of a display object, These transformation functions include
+     * translation (x and y repositioning), rotation, scaling, and skewing.
+     * @version Egret 2.4
+     * @platform Web,Native
+     * @includeExample egret/geom/Matrix.ts
+     */
+    /**
+     * @language zh_CN
+     * Matrix 类表示一个转换矩阵，它确定如何将点从一个坐标空间映射到另一个坐标空间。
+     * 您可以对一个显示对象执行不同的图形转换，方法是设置 Matrix 对象的属性，将该 Matrix
+     * 对象应用于显示对象的 matrix 属性。这些转换函数包括平移（x 和 y 重新定位）、旋转、缩放和倾斜。
+     * @version Egret 2.4
+     * @platform Web,Native
+     * @includeExample egret/geom/Matrix.ts
+     */
+    var Matrix = (function (_super) {
+        __extends(Matrix, _super);
+        /**
+         * @language en_US
+         * Creates a new Matrix object with the specified parameters.
+         * @param a The value that affects the positioning of pixels along the x axis when scaling or rotating an image.
+         * @param b The value that affects the positioning of pixels along the y axis when rotating or skewing an image.
+         * @param c The value that affects the positioning of pixels along the x axis when rotating or skewing an image.
+         * @param d The value that affects the positioning of pixels along the y axis when scaling or rotating an image..
+         * @param tx The distance by which to translate each point along the x axis.
+         * @param ty The distance by which to translate each point along the y axis.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 使用指定参数创建一个 Matrix 对象
+         * @param a 缩放或旋转图像时影响像素沿 x 轴定位的值。
+         * @param b 旋转或倾斜图像时影响像素沿 y 轴定位的值。
+         * @param c 旋转或倾斜图像时影响像素沿 x 轴定位的值。
+         * @param d 缩放或旋转图像时影响像素沿 y 轴定位的值。
+         * @param tx 沿 x 轴平移每个点的距离。
+         * @param ty 沿 y 轴平移每个点的距离。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        function Matrix(a, b, c, d, tx, ty) {
+            if (a === void 0) { a = 1; }
+            if (b === void 0) { b = 0; }
+            if (c === void 0) { c = 0; }
+            if (d === void 0) { d = 1; }
+            if (tx === void 0) { tx = 0; }
+            if (ty === void 0) { ty = 0; }
+            _super.call(this);
+            this.a = a;
+            this.b = b;
+            this.c = c;
+            this.d = d;
+            this.tx = tx;
+            this.ty = ty;
+        }
+        var d = __define,c=Matrix,p=c.prototype;
+        /**
+         * @language en_US
+         * Releases a matrix instance to the object pool
+         * @param matrix matrix that Needs to be recycled
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 释放一个Matrix实例到对象池
+         * @param matrix 需要回收的 matrix
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        Matrix.release = function (matrix) {
+            if (!matrix) {
+                return;
+            }
+            matrixPool.push(matrix);
+        };
+        /**
+         * @language en_US
+         * get a matrix instance from the object pool or create a new one.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 从对象池中取出或创建一个新的Matrix对象。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        Matrix.create = function () {
+            var matrix = matrixPool.pop();
+            if (!matrix) {
+                matrix = new Matrix();
+            }
+            return matrix;
+        };
+        /**
+         * @language en_US
+         * Returns a new Matrix object that is a clone of this matrix, with an exact copy of the contained object.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 返回一个新的 Matrix 对象，它是此矩阵的克隆，带有与所含对象完全相同的副本。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.clone = function () {
+            return new Matrix(this.a, this.b, this.c, this.d, this.tx, this.ty);
+        };
+        /**
+         * @language en_US
+         * Concatenates a matrix with the current matrix, effectively combining the geometric effects of the two. In mathematical
+         * terms, concatenating two matrixes is the same as combining them using matrix multiplication.
+         * @param other The matrix to be concatenated to the source matrix.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 将某个矩阵与当前矩阵连接，从而将这两个矩阵的几何效果有效地结合在一起。在数学术语中，将两个矩阵连接起来与使用矩阵乘法将它们结合起来是相同的。
+         * @param other 要连接到源矩阵的矩阵。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.concat = function (other) {
+            var a = this.a * other.a;
+            var b = 0.0;
+            var c = 0.0;
+            var d = this.d * other.d;
+            var tx = this.tx * other.a + other.tx;
+            var ty = this.ty * other.d + other.ty;
+            if (this.b !== 0.0 || this.c !== 0.0 || other.b !== 0.0 || other.c !== 0.0) {
+                a += this.b * other.c;
+                d += this.c * other.b;
+                b += this.a * other.b + this.b * other.d;
+                c += this.c * other.a + this.d * other.c;
+                tx += this.ty * other.c;
+                ty += this.tx * other.b;
+            }
+            this.a = a;
+            this.b = b;
+            this.c = c;
+            this.d = d;
+            this.tx = tx;
+            this.ty = ty;
+        };
+        /**
+         * @language en_US
+         * Copies all of the matrix data from the source Point object into the calling Matrix object.
+         * @param other  The Matrix object from which to copy the data.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 将源 Matrix 对象中的所有矩阵数据复制到调用方 Matrix 对象中。
+         * @param other 要拷贝的目标矩阵
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.copyFrom = function (other) {
+            this.a = other.a;
+            this.b = other.b;
+            this.c = other.c;
+            this.d = other.d;
+            this.tx = other.tx;
+            this.ty = other.ty;
+            return this;
+        };
+        /**
+         * @language en_US
+         * Sets each matrix property to a value that causes a null transformation. An object transformed by applying an
+         * identity matrix will be identical to the original. After calling the identity() method, the resulting matrix
+         * has the following properties: a=1, b=0, c=0, d=1, tx=0, ty=0.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 为每个矩阵属性设置一个值，该值将导致矩阵无转换。通过应用恒等矩阵转换的对象将与原始对象完全相同。
+         * 调用 identity() 方法后，生成的矩阵具有以下属性：a=1、b=0、c=0、d=1、tx=0 和 ty=0。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.identity = function () {
+            this.a = this.d = 1;
+            this.b = this.c = this.tx = this.ty = 0;
+        };
+        /**
+         * @language en_US
+         * Performs the opposite transformation of the original matrix. You can apply an inverted matrix to an object to
+         * undo the transformation performed when applying the original matrix.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 执行原始矩阵的逆转换。
+         * 您可以将一个逆矩阵应用于对象来撤消在应用原始矩阵时执行的转换。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.invert = function () {
+            this.$invertInto(this);
+        };
+        /**
+         * @private
+         */
+        p.$invertInto = function (target) {
+            var a = this.a;
+            var b = this.b;
+            var c = this.c;
+            var d = this.d;
+            var tx = this.tx;
+            var ty = this.ty;
+            if (b == 0 && c == 0) {
+                target.b = target.c = 0;
+                if (a == 0 || d == 0) {
+                    target.a = target.d = target.tx = target.ty = 0;
+                }
+                else {
+                    a = target.a = 1 / a;
+                    d = target.d = 1 / d;
+                    target.tx = -a * tx;
+                    target.ty = -d * ty;
+                }
+                return;
+            }
+            var determinant = a * d - b * c;
+            if (determinant == 0) {
+                target.identity();
+                return;
+            }
+            determinant = 1 / determinant;
+            var k = target.a = d * determinant;
+            b = target.b = -b * determinant;
+            c = target.c = -c * determinant;
+            d = target.d = a * determinant;
+            target.tx = -(k * tx + c * ty);
+            target.ty = -(b * tx + d * ty);
+        };
+        /**
+         * @language en_US
+         * Applies a rotation transformation to the Matrix object.
+         * The rotate() method alters the a, b, c, and d properties of the Matrix object.
+         * @param angle The rotation angle in radians.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 对 Matrix 对象应用旋转转换。
+         * rotate() 方法将更改 Matrix 对象的 a、b、c 和 d 属性。
+         * @param angle 以弧度为单位的旋转角度。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.rotate = function (angle) {
+            angle = +angle;
+            if (angle !== 0) {
+                var u = cos(angle);
+                var v = sin(angle);
+                var ta = this.a;
+                var tb = this.b;
+                var tc = this.c;
+                var td = this.d;
+                var ttx = this.tx;
+                var tty = this.ty;
+                this.a = ta * u - tb * v;
+                this.b = ta * v + tb * u;
+                this.c = tc * u - td * v;
+                this.d = tc * v + td * u;
+                this.tx = ttx * u - tty * v;
+                this.ty = ttx * v + tty * u;
+            }
+        };
+        /**
+         * @language en_US
+         * Applies a scaling transformation to the matrix. The x axis is multiplied by sx, and the y axis it is multiplied by sy.
+         * The scale() method alters the a and d properties of the Matrix object.
+         * @param sx A multiplier used to scale the object along the x axis.
+         * @param sy A multiplier used to scale the object along the y axis.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 对矩阵应用缩放转换。x 轴乘以 sx，y 轴乘以 sy。
+         * scale() 方法将更改 Matrix 对象的 a 和 d 属性。
+         * @param sx 用于沿 x 轴缩放对象的乘数。
+         * @param sy 用于沿 y 轴缩放对象的乘数。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.scale = function (sx, sy) {
+            if (sx !== 1) {
+                this.a *= sx;
+                this.c *= sx;
+                this.tx *= sx;
+            }
+            if (sy !== 1) {
+                this.b *= sy;
+                this.d *= sy;
+                this.ty *= sy;
+            }
+        };
+        /**
+         * @language en_US
+         * Sets the members of Matrix to the specified values
+         * @param a The value that affects the positioning of pixels along the x axis when scaling or rotating an image.
+         * @param b The value that affects the positioning of pixels along the y axis when rotating or skewing an image.
+         * @param c The value that affects the positioning of pixels along the x axis when rotating or skewing an image.
+         * @param d The value that affects the positioning of pixels along the y axis when scaling or rotating an image..
+         * @param tx The distance by which to translate each point along the x axis.
+         * @param ty The distance by which to translate each point along the y axis.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 将 Matrix 的成员设置为指定值
+         * @param a 缩放或旋转图像时影响像素沿 x 轴定位的值。
+         * @param b 旋转或倾斜图像时影响像素沿 y 轴定位的值。
+         * @param c 旋转或倾斜图像时影响像素沿 x 轴定位的值。
+         * @param d 缩放或旋转图像时影响像素沿 y 轴定位的值。
+         * @param tx 沿 x 轴平移每个点的距离。
+         * @param ty 沿 y 轴平移每个点的距离。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.setTo = function (a, b, c, d, tx, ty) {
+            this.a = a;
+            this.b = b;
+            this.c = c;
+            this.d = d;
+            this.tx = tx;
+            this.ty = ty;
+            return this;
+        };
+        /**
+         * @language en_US
+         * Returns the result of applying the geometric transformation represented by the Matrix object to the specified point.
+         * @param pointX The x coordinate for which you want to get the result of the Matrix transformation.
+         * @param pointY The y coordinate for which you want to get the result of the Matrix transformation.
+         * @param resultPoint A reusable instance of Point for saving the results. Passing this parameter can reduce the
+         * number of reallocate objects, which allows you to get better code execution performance.
+         * @returns The point resulting from applying the Matrix transformation.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 返回将 Matrix 对象表示的几何转换应用于指定点所产生的结果。
+         * @param pointX 想要获得其矩阵转换结果的点的x坐标。
+         * @param pointY 想要获得其矩阵转换结果的点的y坐标。
+         * @param resultPoint 框架建议尽可能减少创建对象次数来优化性能，可以从外部传入一个复用的Point对象来存储结果，若不传入将创建一个新的Point对象返回。
+         * @returns 由应用矩阵转换所产生的点。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.transformPoint = function (pointX, pointY, resultPoint) {
+            var x = this.a * pointX + this.c * pointY + this.tx;
+            var y = this.b * pointX + this.d * pointY + this.ty;
+            if (resultPoint) {
+                resultPoint.setTo(x, y);
+                return resultPoint;
+            }
+            return new egret.Point(x, y);
+        };
+        /**
+         * @language en_US
+         * Translates the matrix along the x and y axes, as specified by the dx and dy parameters.
+         * @param dx The amount of movement along the x axis to the right, in pixels.
+         * @param dy The amount of movement down along the y axis, in pixels.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 沿 x 和 y 轴平移矩阵，由 dx 和 dy 参数指定。
+         * @param dx 沿 x 轴向右移动的量（以像素为单位）。
+         * @param dy 沿 y 轴向下移动的量（以像素为单位）。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.translate = function (dx, dy) {
+            this.tx += dx;
+            this.ty += dy;
+        };
+        /**
+         * @language en_US
+         * Determines whether two matrixes are equal.
+         * @param other The matrix to be compared.
+         * @returns A value of true if the object is equal to this Matrix object; false if it is not equal.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 是否与另一个矩阵数据相等
+         * @param other 要比较的另一个矩阵对象。
+         * @returns 是否相等，ture表示相等。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.equals = function (other) {
+            return this.a == other.a && this.b == other.b &&
+                this.c == other.c && this.d == other.d &&
+                this.tx == other.tx && this.ty == other.ty;
+        };
+        /**
+         * @language en_US
+         * prepend matrix
+         * @param a The value that affects the positioning of pixels along the x axis when scaling or rotating an image.
+         * @param b The value that affects the positioning of pixels along the y axis when rotating or skewing an image.
+         * @param c The value that affects the positioning of pixels along the x axis when rotating or skewing an image.
+         * @param d The value that affects the positioning of pixels along the y axis when scaling or rotating an image..
+         * @param tx The distance by which to translate each point along the x axis.
+         * @param ty The distance by which to translate each point along the y axis.
+         * @returns matrix
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 前置矩阵
+         * @param a 缩放或旋转图像时影响像素沿 x 轴定位的值
+         * @param b 缩放或旋转图像时影响像素沿 y 轴定位的值
+         * @param c 缩放或旋转图像时影响像素沿 x 轴定位的值
+         * @param d 缩放或旋转图像时影响像素沿 y 轴定位的值
+         * @param tx 沿 x 轴平移每个点的距离
+         * @param ty 沿 y 轴平移每个点的距离
+         * @returns 矩阵自身
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.prepend = function (a, b, c, d, tx, ty) {
+            var tx1 = this.tx;
+            if (a != 1 || b != 0 || c != 0 || d != 1) {
+                var a1 = this.a;
+                var c1 = this.c;
+                this.a = a1 * a + this.b * c;
+                this.b = a1 * b + this.b * d;
+                this.c = c1 * a + this.d * c;
+                this.d = c1 * b + this.d * d;
+            }
+            this.tx = tx1 * a + this.ty * c + tx;
+            this.ty = tx1 * b + this.ty * d + ty;
+            return this;
+        };
+        /**
+         * @language en_US
+         * append matrix
+         * @param a The value that affects the positioning of pixels along the x axis when scaling or rotating an image.
+         * @param b The value that affects the positioning of pixels along the y axis when rotating or skewing an image.
+         * @param c The value that affects the positioning of pixels along the x axis when rotating or skewing an image.
+         * @param d The value that affects the positioning of pixels along the y axis when scaling or rotating an image..
+         * @param tx The distance by which to translate each point along the x axis.
+         * @param ty The distance by which to translate each point along the y axis.
+         * @returns matrix
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 后置矩阵
+         * @param a 缩放或旋转图像时影响像素沿 x 轴定位的值
+         * @param b 缩放或旋转图像时影响像素沿 y 轴定位的值
+         * @param c 缩放或旋转图像时影响像素沿 x 轴定位的值
+         * @param d 缩放或旋转图像时影响像素沿 y 轴定位的值
+         * @param tx 沿 x 轴平移每个点的距离
+         * @param ty 沿 y 轴平移每个点的距离
+         * @returns 矩阵自身
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.append = function (a, b, c, d, tx, ty) {
+            var a1 = this.a;
+            var b1 = this.b;
+            var c1 = this.c;
+            var d1 = this.d;
+            if (a != 1 || b != 0 || c != 0 || d != 1) {
+                this.a = a * a1 + b * c1;
+                this.b = a * b1 + b * d1;
+                this.c = c * a1 + d * c1;
+                this.d = c * b1 + d * d1;
+            }
+            this.tx = tx * a1 + ty * c1 + this.tx;
+            this.ty = tx * b1 + ty * d1 + this.ty;
+            return this;
+        };
+        /**
+         * @language en_US
+         * Given a point in the pretransform coordinate space, returns the coordinates of that point after the transformation occurs.
+         * Unlike the standard transformation applied using the transformPoint() method, the deltaTransformPoint() method's transformation does not consider the translation parameters tx and ty.
+         * @param point The point for which you want to get the result of the matrix transformation.
+         * @returns The point resulting from applying the matrix transformation.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 如果给定预转换坐标空间中的点，则此方法返回发生转换后该点的坐标。
+         * 与使用 transformPoint() 方法应用的标准转换不同，deltaTransformPoint() 方法的转换不考虑转换参数 tx 和 ty。
+         * @param point 想要获得其矩阵转换结果的点
+         * @returns 由应用矩阵转换所产生的点
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.deltaTransformPoint = function (point) {
+            var self = this;
+            var x = self.a * point.x + self.c * point.y;
+            var y = self.b * point.x + self.d * point.y;
+            return new egret.Point(x, y);
+        };
+        /**
+         * @language en_US
+         * Returns a text value listing the properties of the Matrix object.
+         * @returns A string containing the values of the properties of the Matrix object: a, b, c, d, tx, and ty.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 返回将 Matrix 对象表示的几何转换应用于指定点所产生的结果。
+         * @returns 一个字符串，它包含 Matrix 对象的属性值：a、b、c、d、tx 和 ty。
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.toString = function () {
+            return "(a=" + this.a + ", b=" + this.b + ", c=" + this.c + ", d=" + this.d + ", tx=" + this.tx + ", ty=" + this.ty + ")";
+        };
+        /**
+         * @language en_US
+         * Includes parameters for scaling, rotation, and translation. When applied to a matrix it sets the matrix's values based on those parameters.
+         * @param scaleX The factor by which to scale horizontally.
+         * @param scaleY The factor by which scale vertically.
+         * @param rotation The amount to rotate, in radians.
+         * @param tx The number of pixels to translate (move) to the right along the x axis.
+         * @param ty The number of pixels to translate (move) down along the y axis.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 包括用于缩放、旋转和转换的参数。当应用于矩阵时，该方法会基于这些参数设置矩阵的值。
+         * @param scaleX 水平缩放所用的系数
+         * @param scaleY 垂直缩放所用的系数
+         * @param rotation 旋转量（以弧度为单位）
+         * @param tx 沿 x 轴向右平移（移动）的像素数
+         * @param ty 沿 y 轴向下平移（移动）的像素数
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.createBox = function (scaleX, scaleY, rotation, tx, ty) {
+            if (rotation === void 0) { rotation = 0; }
+            if (tx === void 0) { tx = 0; }
+            if (ty === void 0) { ty = 0; }
+            var self = this;
+            if (rotation !== 0) {
+                rotation = rotation / DEG_TO_RAD;
+                var u = egret.NumberUtils.cos(rotation);
+                var v = egret.NumberUtils.sin(rotation);
+                self.a = u * scaleX;
+                self.b = v * scaleY;
+                self.c = -v * scaleX;
+                self.d = u * scaleY;
+            }
+            else {
+                self.a = scaleX;
+                self.b = 0;
+                self.c = 0;
+                self.d = scaleY;
+            }
+            self.tx = tx;
+            self.ty = ty;
+        };
+        /**
+         * @language en_US
+         * Creates the specific style of matrix expected by the beginGradientFill() and lineGradientStyle() methods of the Graphics class.
+         * Width and height are scaled to a scaleX/scaleY pair and the tx/ty values are offset by half the width and height.
+         * @param width The width of the gradient box.
+         * @param height The height of the gradient box.
+         * @param rotation The amount to rotate, in radians.
+         * @param tx The distance, in pixels, to translate to the right along the x axis. This value is offset by half of the width parameter.
+         * @param ty The distance, in pixels, to translate down along the y axis. This value is offset by half of the height parameter.
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 创建 Graphics 类的 beginGradientFill() 和 lineGradientStyle() 方法所需的矩阵的特定样式。
+         * 宽度和高度被缩放为 scaleX/scaleY 对，而 tx/ty 值偏移了宽度和高度的一半。
+         * @param width 渐变框的宽度
+         * @param height 渐变框的高度
+         * @param rotation 旋转量（以弧度为单位）
+         * @param tx 沿 x 轴向右平移的距离（以像素为单位）。此值将偏移 width 参数的一半
+         * @param ty 沿 y 轴向下平移的距离（以像素为单位）。此值将偏移 height 参数的一半
+         * @version Egret 2.4
+         * @platform Web,Native
+         */
+        p.createGradientBox = function (width, height, rotation, tx, ty) {
+            if (rotation === void 0) { rotation = 0; }
+            if (tx === void 0) { tx = 0; }
+            if (ty === void 0) { ty = 0; }
+            this.createBox(width / 1638.4, height / 1638.4, rotation, tx + width / 2, ty + height / 2);
+        };
+        /**
+         * @private
+         */
+        p.$transformBounds = function (bounds) {
+            var a = this.a;
+            var b = this.b;
+            var c = this.c;
+            var d = this.d;
+            var tx = this.tx;
+            var ty = this.ty;
+            var x = bounds.x;
+            var y = bounds.y;
+            var xMax = x + bounds.width;
+            var yMax = y + bounds.height;
+            var x0 = a * x + c * y + tx;
+            var y0 = b * x + d * y + ty;
+            var x1 = a * xMax + c * y + tx;
+            var y1 = b * xMax + d * y + ty;
+            var x2 = a * xMax + c * yMax + tx;
+            var y2 = b * xMax + d * yMax + ty;
+            var x3 = a * x + c * yMax + tx;
+            var y3 = b * x + d * yMax + ty;
+            var tmp = 0;
+            if (x0 > x1) {
+                tmp = x0;
+                x0 = x1;
+                x1 = tmp;
+            }
+            if (x2 > x3) {
+                tmp = x2;
+                x2 = x3;
+                x3 = tmp;
+            }
+            bounds.x = Math.floor(x0 < x2 ? x0 : x2);
+            bounds.width = Math.ceil((x1 > x3 ? x1 : x3) - bounds.x);
+            if (y0 > y1) {
+                tmp = y0;
+                y0 = y1;
+                y1 = tmp;
+            }
+            if (y2 > y3) {
+                tmp = y2;
+                y2 = y3;
+                y3 = tmp;
+            }
+            bounds.y = Math.floor(y0 < y2 ? y0 : y2);
+            bounds.height = Math.ceil((y1 > y3 ? y1 : y3) - bounds.y);
+        };
+        /**
+         * @private
+         */
+        p.getDeterminant = function () {
+            return this.a * this.d - this.b * this.c;
+        };
+        /**
+         * @private
+         */
+        p.$getScaleX = function () {
+            var m = this;
+            if (m.a == 1 && m.b == 0) {
+                return 1;
+            }
+            var result = Math.sqrt(m.a * m.a + m.b * m.b);
+            return this.getDeterminant() < 0 ? -result : result;
+        };
+        /**
+         * @private
+         */
+        p.$getScaleY = function () {
+            var m = this;
+            if (m.c == 0 && m.d == 1) {
+                return 1;
+            }
+            var result = Math.sqrt(m.c * m.c + m.d * m.d);
+            return this.getDeterminant() < 0 ? -result : result;
+        };
+        /**
+         * @private
+         */
+        p.$getSkewX = function () {
+            return Math.atan2(this.d, this.c) - (PI / 2);
+        };
+        /**
+         * @private
+         */
+        p.$getSkewY = function () {
+            return Math.atan2(this.b, this.a);
+        };
+        /**
+         * @private
+         */
+        p.$updateScaleAndRotation = function (scaleX, scaleY, skewX, skewY) {
+            if ((skewX == 0 || skewX == TwoPI) && (skewY == 0 || skewY == TwoPI)) {
+                this.a = scaleX;
+                this.b = this.c = 0;
+                this.d = scaleY;
+                return;
+            }
+            var u = cos(skewX);
+            var v = sin(skewX);
+            if (skewX == skewY) {
+                this.a = u * scaleX;
+                this.b = v * scaleX;
+            }
+            else {
+                this.a = cos(skewY) * scaleX;
+                this.b = sin(skewY) * scaleX;
+            }
+            this.c = -v * scaleY;
+            this.d = u * scaleY;
+        };
+        /**
+         * @private
+         * target = other * this
+         */
+        p.$preMultiplyInto = function (other, target) {
+            var a = other.a * this.a;
+            var b = 0.0;
+            var c = 0.0;
+            var d = other.d * this.d;
+            var tx = other.tx * this.a + this.tx;
+            var ty = other.ty * this.d + this.ty;
+            if (other.b !== 0.0 || other.c !== 0.0 || this.b !== 0.0 || this.c !== 0.0) {
+                a += other.b * this.c;
+                d += other.c * this.b;
+                b += other.a * this.b + other.b * this.d;
+                c += other.c * this.a + other.d * this.c;
+                tx += other.ty * this.c;
+                ty += other.tx * this.b;
+            }
+            target.a = a;
+            target.b = b;
+            target.c = c;
+            target.d = d;
+            target.tx = tx;
+            target.ty = ty;
+        };
+        return Matrix;
+    }(egret.HashObject));
+    egret.Matrix = Matrix;
+    egret.registerClass(Matrix,'egret.Matrix');
+    /**
+     * @private
+     * 仅供框架内复用，要防止暴露引用到外部。
+     */
+    egret.$TempMatrix = new Matrix();
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -12160,7 +10811,7 @@ var egret;
             this.width = width;
             this.height = height;
         }
-        var d = __define,c=Rectangle;p=c.prototype;
+        var d = __define,c=Rectangle,p=c.prototype;
         /**
          * @language en_US
          * Releases a rectangle instance to the object pool.
@@ -12397,7 +11048,10 @@ var egret;
          * @platform Web,Native
          */
         p.contains = function (x, y) {
-            return this.x <= x && this.x + this.width >= x && this.y <= y && this.y + this.height >= y;
+            return this.x <= x &&
+                this.x + this.width >= x &&
+                this.y <= y &&
+                this.y + this.height >= y;
         };
         /**
          * @language en_US
@@ -12488,7 +11142,8 @@ var egret;
          * @platform Web,Native
          */
         p.intersects = function (toIntersect) {
-            return Math.max(this.x, toIntersect.x) <= Math.min(this.right, toIntersect.right) && Math.max(this.y, toIntersect.y) <= Math.min(this.bottom, toIntersect.bottom);
+            return Math.max(this.x, toIntersect.x) <= Math.min(this.right, toIntersect.right)
+                && Math.max(this.y, toIntersect.y) <= Math.min(this.bottom, toIntersect.bottom);
         };
         /**
          * @language en_US
@@ -12561,7 +11216,10 @@ var egret;
          * @platform Web,Native
          */
         p.containsPoint = function (point) {
-            if (this.x < point.x && this.x + this.width > point.x && this.y < point.y && this.y + this.height > point.y) {
+            if (this.x < point.x
+                && this.x + this.width > point.x
+                && this.y < point.y
+                && this.y + this.height > point.y) {
                 return true;
             }
             return false;
@@ -12613,7 +11271,8 @@ var egret;
             if (this === toCompare) {
                 return true;
             }
-            return this.x === toCompare.x && this.y === toCompare.y && this.width === toCompare.width && this.height === toCompare.height;
+            return this.x === toCompare.x && this.y === toCompare.y
+                && this.width === toCompare.width && this.height === toCompare.height;
         };
         /**
          * @language en_US
@@ -12733,9 +11392,9 @@ var egret;
             return v * this.width + u * this.height;
         };
         return Rectangle;
-    })(egret.HashObject);
+    }(egret.HashObject));
     egret.Rectangle = Rectangle;
-    egret.registerClass(Rectangle,"egret.Rectangle");
+    egret.registerClass(Rectangle,'egret.Rectangle');
     /**
      * @private
      * 仅供框架内复用，要防止暴露引用到外部。
@@ -12747,7 +11406,7 @@ var egret;
     egret.$locale_strings = egret.$locale_strings || {};
     egret.$locale_strings["en_US"] = egret.$locale_strings["en_US"] || {};
     var locale_strings = egret.$locale_strings["en_US"];
-    //core
+    //core  1000-1999
     locale_strings[1001] = "Could not find Egret entry class: {0}。";
     locale_strings[1002] = "Egret entry class '{0}' must inherit from egret.DisplayObject.";
     locale_strings[1003] = "Parameter {0} must be non-null.";
@@ -12762,6 +11421,13 @@ var egret;
     locale_strings[1012] = "The type of parameter {0} must be Class.";
     locale_strings[1013] = "Variable assignment is NaN, please see the code!";
     locale_strings[1014] = "the constant \"{1}\" of the Class \"{0}\" is read-only";
+    locale_strings[1015] = "xml not found!";
+    locale_strings[1016] = "{0}has been obsoleted";
+    locale_strings[1017] = "The format of JSON file is incorrect: {0}\ndata: {1}";
+    locale_strings[1018] = "the scale9Grid is not correct";
+    locale_strings[1019] = "Network ab:{0}";
+    locale_strings[1020] = "Cannot initialize Shader";
+    locale_strings[1021] = "Current browser does not support webgl";
     locale_strings[1022] = "{0} ArgumentError";
     locale_strings[1023] = "This method is not available in the ScrollView!";
     locale_strings[1025] = "end of the file";
@@ -12774,7 +11440,12 @@ var egret;
     locale_strings[1035] = "Native does not support this feature!";
     locale_strings[1036] = "Sound has stopped, please recall Sound.play () to play the sound!";
     locale_strings[1037] = "Non-load the correct blob!";
-    //gui
+    locale_strings[1038] = "XML format error!";
+    locale_strings[1039] = "crossOrigin images can not set pixelHitTest  property!";
+    locale_strings[1040] = "hitTestPoint can not detect crossOrigin images! Please check if the display object has crossOrigin elements.";
+    locale_strings[1041] = "egret.MainContext.runtimeType is deprecated, please use egret.Capabilities.runtimeType replace";
+    locale_strings[1042] = "The parameters passed in the region needs is an integer in drawToTexture method. Otherwise, some browsers will draw abnormal.";
+    //gui  3000-3099
     locale_strings[3000] = "Theme configuration file failed to load: {0}";
     locale_strings[3001] = "Cannot find the skin name which is configured in Theme: {0}";
     locale_strings[3002] = "Index:\"{0}\" is out of the collection element index range";
@@ -12789,11 +11460,11 @@ var egret;
     locale_strings[3011] = "Index:\"{0}\" is out of the visual element index range";
     locale_strings[3012] = "This method is not available in Scroller component!";
     locale_strings[3013] = "UIStage is GUI root container, and only one such instant is in the display list！";
-    //socket
+    //socket 3100-3199
     locale_strings[3100] = "Current browser does not support WebSocket";
     locale_strings[3101] = "Please connect Socket firstly";
     locale_strings[3102] = "Please set the type of binary type";
-    //db
+    //db 4000-4299
     locale_strings[4000] = "An Bone cannot be added as a child to itself or one of its children (or children's children, etc.)";
     locale_strings[4001] = "Abstract class can not be instantiated!";
     locale_strings[4002] = "Unnamed data!";
@@ -12872,7 +11543,9 @@ var egret;
     egret.$locale_strings = egret.$locale_strings || {};
     egret.$locale_strings["zh_CN"] = egret.$locale_strings["zh_CN"] || {};
     var locale_strings = egret.$locale_strings["zh_CN"];
-    //core
+    //eui 2000-2999
+    //RES 3200-3299
+    //core  1000-1999
     locale_strings[1001] = "找不到Egret入口类: {0}。";
     locale_strings[1002] = "Egret入口类 {0} 必须继承自egret.DisplayObject。";
     locale_strings[1003] = "参数 {0} 不能为 null。";
@@ -12887,6 +11560,13 @@ var egret;
     locale_strings[1012] = "参数 {0} 的类型必须为 Class。";
     locale_strings[1013] = "变量赋值为NaN，请查看代码！";
     locale_strings[1014] = "类 {0} 常量 {1} 是只读的";
+    locale_strings[1015] = "xml not found!";
+    locale_strings[1016] = "{0}已经废弃";
+    locale_strings[1017] = "JSON文件格式不正确: {0}\ndata: {1}";
+    locale_strings[1018] = "9宫格设置错误";
+    locale_strings[1019] = "网络异常:{0}";
+    locale_strings[1020] = "无法初始化着色器";
+    locale_strings[1021] = "当前浏览器不支持webgl";
     locale_strings[1022] = "{0} ArgumentError";
     locale_strings[1023] = "此方法在ScrollView内不可用!";
     locale_strings[1025] = "遇到文件尾";
@@ -12899,8 +11579,12 @@ var egret;
     locale_strings[1035] = "Native 下暂未实现此功能！";
     locale_strings[1036] = "声音已停止，请重新调用 Sound.play() 来播放声音！";
     locale_strings[1037] = "非正确的blob加载！";
-    //RES 2000-2999
-    //gui
+    locale_strings[1038] = "XML 格式错误!";
+    locale_strings[1039] = "跨域图片不能设置 pixelHitTest 属性!";
+    locale_strings[1040] = "hitTestPoint 不能对跨域图片进行检测! 请检查该显示对象内是否含有跨域元素";
+    locale_strings[1041] = "egret.MainContext.runtimeType 已废弃,请使用egret.Capabilities.runtimeType 代替";
+    locale_strings[1042] = "drawToTexture方法传入的区域各个参数需要为整数,否则某些浏览器绘制会出现异常";
+    //gui  3000-3099
     locale_strings[3000] = "主题配置文件加载失败: {0}";
     locale_strings[3001] = "找不到主题中所配置的皮肤类名: {0}";
     locale_strings[3002] = "索引:\"{0}\"超出集合元素索引范围";
@@ -12915,11 +11599,11 @@ var egret;
     locale_strings[3011] = "索引:\"{0}\"超出可视元素索引范围";
     locale_strings[3012] = "此方法在Scroller组件内不可用!";
     locale_strings[3013] = "UIStage是GUI根容器，只能有一个此实例在显示列表中！";
-    //socket
+    //socket 3100-3199
     locale_strings[3100] = "当前浏览器不支持WebSocket";
     locale_strings[3101] = "请先连接WebSocket";
     locale_strings[3102] = "请先设置type为二进制类型";
-    //db
+    //db 4000-4299
     locale_strings[4000] = "An Bone cannot be added as a child to itself or one of its children (or children's children, etc.)";
     locale_strings[4001] = "Abstract class can not be instantiated!";
     locale_strings[4002] = "Unnamed data!";
@@ -12962,68 +11646,6 @@ var egret;
 (function (egret) {
     var localStorage;
     (function (localStorage) {
-        /**
-         * @language en_US
-         * Read data
-         * @param key {string} Name of the key to be read
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 读取数据
-         * @param key {string} 要读取的键名称
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        localStorage.getItem;
-        /**
-         * @language en_US
-         * Save data
-         * @param key {string} Name of the key to be saved
-         * @param value {string} Value to be saved
-         * @returns {boolean} Whether data is saved successfully
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 保存数据
-         * @param key {string} 要保存的键名称
-         * @param value {string} 要保存的值
-         * @returns {boolean} 数据保存是否成功
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        localStorage.setItem;
-        /**
-         * @language en_US
-         * Delete data
-         * @param key {string} Name of the key to be deleted
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 删除数据
-         * @param key {string} 要删除的键名称
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        localStorage.removeItem;
-        /**
-         * @language en_US
-         * Clear all data
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 将所有数据清空
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        localStorage.clear;
     })(localStorage = egret.localStorage || (egret.localStorage = {}));
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
@@ -13056,117 +11678,95 @@ var egret;
 //////////////////////////////////////////////////////////////////////////////////////
 var egret;
 (function (egret) {
-    /**
-     * @copy egret.Sound
-     */
-    egret.Sound;
-})(egret || (egret = {}));
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-2015, Egret Technology Inc.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-2015, Egret Technology Inc.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
-var egret;
-(function (egret) {
-    /**
-     * @copy egret.Video
-     */
-    egret.Video;
-})(egret || (egret = {}));
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-2015, Egret Technology Inc.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
-var egret;
-(function (egret) {
-    var native;
-    (function (native) {
-        var className = "egret.BitmapData";
+    var sys;
+    (function (sys) {
+        var usingChannel = [];
         /**
          * @private
-         * 转换 Image，Canvas，Video 为 Egret 框架内使用的 BitmapData 对象。
+         * @param channel
          */
-        function toBitmapData(data) {
-            data["hashCode"] = data["$hashCode"] = egret.$hashCount++;
-            return data;
+        function $pushSoundChannel(channel) {
+            if (usingChannel.indexOf(channel) < 0) {
+                usingChannel.push(channel);
+            }
         }
-        native.toBitmapData = toBitmapData;
-    })(native = egret.native || (egret.native = {}));
+        sys.$pushSoundChannel = $pushSoundChannel;
+        /**
+         * @private
+         * @param channel
+         */
+        function $popSoundChannel(channel) {
+            var index = usingChannel.indexOf(channel);
+            if (index < 0) {
+                usingChannel.splice(index, 1);
+                return true;
+            }
+            return false;
+        }
+        sys.$popSoundChannel = $popSoundChannel;
+    })(sys = egret.sys || (egret.sys = {}));
+})(egret || (egret = {}));
+var egret;
+(function (egret) {
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -13267,8 +11867,18 @@ var egret;
              * @platform Web,Native
              */
             this.downloadingSizeThisObject = null;
+            /**
+             * @version Egret 2.4
+             * @platform Web,Native
+             */
+            this.onResponseHeaderFunc = null;
+            /**
+             * @version Egret 2.4
+             * @platform Web,Native
+             */
+            this.onResponseHeaderThisObject = null;
         }
-        var d = __define,c=PromiseObject;p=c.prototype;
+        var d = __define,c=PromiseObject,p=c.prototype;
         /**
          *
          * @version Egret 2.4
@@ -13329,6 +11939,20 @@ var egret;
         /**
          * @private
          *
+         * @param args
+         */
+        p.onResponseHeader = function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i - 0] = arguments[_i];
+            }
+            if (this.onResponseHeaderFunc) {
+                this.onResponseHeaderFunc.apply(this.onResponseHeaderThisObject, args);
+            }
+        };
+        /**
+         * @private
+         *
          */
         p.destroy = function () {
             this.onSuccessFunc = undefined;
@@ -13337,6 +11961,8 @@ var egret;
             this.onErrorThisObject = undefined;
             this.downloadingSizeFunc = undefined;
             this.downloadingSizeThisObject = undefined;
+            this.onResponseHeaderFunc = undefined;
+            this.onResponseHeaderThisObject = undefined;
             PromiseObject.promiseObjectList.push(this);
         };
         /**
@@ -13344,9 +11970,9 @@ var egret;
          */
         PromiseObject.promiseObjectList = [];
         return PromiseObject;
-    })();
+    }());
     egret.PromiseObject = PromiseObject;
-    egret.registerClass(PromiseObject,"egret.PromiseObject");
+    egret.registerClass(PromiseObject,'egret.PromiseObject');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -13397,7 +12023,7 @@ var egret;
     var HttpMethod = (function () {
         function HttpMethod() {
         }
-        var d = __define,c=HttpMethod;p=c.prototype;
+        var d = __define,c=HttpMethod,p=c.prototype;
         /**
          * @language en_US
          * Specifies that the HttpRequest object is a GET.
@@ -13425,9 +12051,9 @@ var egret;
          */
         HttpMethod.POST = "POST";
         return HttpMethod;
-    })();
+    }());
     egret.HttpMethod = HttpMethod;
-    egret.registerClass(HttpMethod,"egret.HttpMethod");
+    egret.registerClass(HttpMethod,'egret.HttpMethod');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -13459,19 +12085,6 @@ var egret;
 //////////////////////////////////////////////////////////////////////////////////////
 var egret;
 (function (egret) {
-    /**
-     * @language en_US
-     * Creates a HttpRequest object.
-     * @version Egret 2.4
-     * @platform Web,Native
-     */
-    /**
-     * @language zh_CN
-     * 创建一个 HttpRequest 实例。
-     * @version Egret 2.4
-     * @platform Web,Native
-     */
-    egret.HttpRequest;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -13520,7 +12133,7 @@ var egret;
     var HttpResponseType = (function () {
         function HttpResponseType() {
         }
-        var d = __define,c=HttpResponseType;p=c.prototype;
+        var d = __define,c=HttpResponseType,p=c.prototype;
         /**
          * @language en_US
          * Specifies that downloaded data is received as text. This is the default value of HttpRequest.responseType
@@ -13548,53 +12161,9 @@ var egret;
          */
         HttpResponseType.ARRAY_BUFFER = "arraybuffer";
         return HttpResponseType;
-    })();
+    }());
     egret.HttpResponseType = HttpResponseType;
-    egret.registerClass(HttpResponseType,"egret.HttpResponseType");
-})(egret || (egret = {}));
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-2015, Egret Technology Inc.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
-var egret;
-(function (egret) {
-    /**
-     * @language en_US
-     * Creates a ImageLoader object
-     * @version Egret 2.4
-     * @platform Web,Native
-     */
-    /**
-     * @language zh_CN
-     * 创建一个 ImageLoader 实例
-     * @version Egret 2.4
-     * @platform Web,Native
-     */
-    egret.ImageLoader;
+    egret.registerClass(HttpResponseType,'egret.HttpResponseType');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -13627,34 +12196,6 @@ var egret;
 var egret;
 (function (egret) {
 })(egret || (egret = {}));
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-2015, Egret Technology Inc.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2014-2015, Egret Technology Inc.
@@ -13687,34 +12228,192 @@ var egret;
 (function (egret) {
     var sys;
     (function (sys) {
-        /**
-         * @private
-         * @param value
-         * @returns
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        function isUndefined(value) {
-            return typeof value === "undefined";
-        }
-        sys.isUndefined = isUndefined;
-        /**
-         * @private
-         * @param value
-         * @returns
-         * @version Egret 2.4
-         * @platform Web,Native
-         */
-        function getNumber(value) {
-            if (DEBUG) {
-                if (isNaN(value)) {
-                    egret.sys.tr(1013);
-                }
+        if (DEBUG) {
+            function isF(num) {
+                return num % 1 !== 0;
             }
-            return +value || 0;
-            ;
         }
-        sys.getNumber = getNumber;
+        /**
+         * @private
+         */
+        function unionArea(r1, r2) {
+            var minX = r1.minX < r2.minX ? r1.minX : r2.minX;
+            var minY = r1.minY < r2.minY ? r1.minY : r2.minY;
+            var maxX = r1.maxX > r2.maxX ? r1.maxX : r2.maxX;
+            var maxY = r1.maxY > r2.maxY ? r1.maxY : r2.maxY;
+            return (maxX - minX) * (maxY - minY);
+        }
+        /**
+         * @private
+         * 脏矩形计算工具类
+         */
+        var DirtyRegion = (function () {
+            function DirtyRegion(root) {
+                /**
+                 * @private
+                 */
+                this.dirtyList = [];
+                /**
+                 * @private
+                 */
+                this.hasClipRect = false;
+                /**
+                 * @private
+                 */
+                this.clipWidth = 0;
+                /**
+                 * @private
+                 */
+                this.clipHeight = 0;
+                /**
+                 * @private
+                 */
+                this.clipArea = 0;
+                /**
+                 * @private
+                 */
+                this.clipRectChanged = false;
+                this.$dirtyRegionPolicy = egret.DirtyRegionPolicy.ON;
+                this.root = root;
+            }
+            var d = __define,c=DirtyRegion,p=c.prototype;
+            /**
+             * @private
+             * 设置剪裁边界，超过边界的节点将跳过绘制。
+             */
+            p.setClipRect = function (width, height) {
+                this.hasClipRect = true;
+                this.clipRectChanged = true;
+                this.clipWidth = Math.ceil(width);
+                this.clipHeight = Math.ceil(height);
+                this.clipArea = this.clipWidth * this.clipHeight;
+            };
+            /**
+             * @private
+             * 添加一个脏矩形区域，返回是否添加成功，当矩形为空或者在屏幕之外时返回false。
+             */
+            p.addRegion = function (target) {
+                var minX = target.minX, minY = target.minY, maxX = target.maxX, maxY = target.maxY;
+                if (DEBUG) {
+                    if (isF(minX) || isF(minY) || isF(maxX) || isF(maxY)) {
+                        egret.log("addRegion error:", minX, minY, maxX, maxY);
+                    }
+                }
+                if (this.hasClipRect) {
+                    if (minX < 0) {
+                        minX = 0;
+                    }
+                    if (minY < 0) {
+                        minY = 0;
+                    }
+                    if (maxX > this.clipWidth) {
+                        maxX = this.clipWidth;
+                    }
+                    if (maxY > this.clipHeight) {
+                        maxY = this.clipHeight;
+                    }
+                }
+                if (minX >= maxX || minY >= maxY) {
+                    return false;
+                }
+                if (this.clipRectChanged) {
+                    return true;
+                }
+                var dirtyList = this.dirtyList;
+                var region = sys.Region.create();
+                dirtyList.push(region.setTo(minX, minY, maxX, maxY));
+                if (this.$dirtyRegionPolicy != egret.DirtyRegionPolicy.OFF) {
+                    this.mergeDirtyList(dirtyList);
+                }
+                return true;
+            };
+            /**
+             * @private
+             */
+            p.clear = function () {
+                var dirtyList = this.dirtyList;
+                var length = dirtyList.length;
+                for (var i = 0; i < length; i++) {
+                    sys.Region.release(dirtyList[i]);
+                }
+                dirtyList.length = 0;
+            };
+            /**
+             * @private
+             * 获取最终的脏矩形列表
+             */
+            p.getDirtyRegions = function () {
+                var dirtyList = this.dirtyList;
+                if (this.$dirtyRegionPolicy == egret.DirtyRegionPolicy.OFF || (egret.Capabilities.runtimeType == egret.RuntimeType.NATIVE && !egret["native"]["$supportCanvas" + ""])) {
+                    this.clipRectChanged = true; //阻止所有的addRegion()
+                    this.clear();
+                    var region = sys.Region.create();
+                    if (this.hasClipRect) {
+                        dirtyList.push(region.setTo(0, 0, this.clipWidth, this.clipHeight));
+                    }
+                    else {
+                        var bounds = this.root.$getOriginalBounds();
+                        dirtyList.push(region.setTo(bounds.x, bounds.y, bounds.width, bounds.height));
+                    }
+                }
+                else if (this.clipRectChanged) {
+                    this.clipRectChanged = false;
+                    this.clear();
+                    var region = sys.Region.create();
+                    dirtyList.push(region.setTo(0, 0, this.clipWidth, this.clipHeight));
+                }
+                else {
+                    while (this.mergeDirtyList(dirtyList)) {
+                    }
+                }
+                return this.dirtyList;
+            };
+            /**
+             * @private
+             * 合并脏矩形列表
+             */
+            p.mergeDirtyList = function (dirtyList) {
+                var length = dirtyList.length;
+                if (length < 2) {
+                    return false;
+                }
+                var hasClipRect = this.hasClipRect;
+                var bestDelta = length > 3 ? Number.POSITIVE_INFINITY : 0;
+                var mergeA = 0;
+                var mergeB = 0;
+                var totalArea = 0;
+                for (var i = 0; i < length - 1; i++) {
+                    var regionA = dirtyList[i];
+                    hasClipRect && (totalArea += regionA.area);
+                    for (var j = i + 1; j < length; j++) {
+                        var regionB = dirtyList[j];
+                        var delta = unionArea(regionA, regionB) - regionA.area - regionB.area;
+                        if (bestDelta > delta) {
+                            mergeA = i;
+                            mergeB = j;
+                            bestDelta = delta;
+                        }
+                    }
+                }
+                if (hasClipRect && (totalArea / this.clipArea) > 0.95) {
+                    this.clipRectChanged = true;
+                }
+                if (mergeA != mergeB) {
+                    var region = dirtyList[mergeB];
+                    dirtyList[mergeA].union(region);
+                    sys.Region.release(region);
+                    dirtyList.splice(mergeB, 1);
+                    return true;
+                }
+                return false;
+            };
+            p.setDirtyRegionPolicy = function (policy) {
+                this.$dirtyRegionPolicy = policy;
+            };
+            return DirtyRegion;
+        }());
+        sys.DirtyRegion = DirtyRegion;
+        egret.registerClass(DirtyRegion,'egret.sys.DirtyRegion');
     })(sys = egret.sys || (egret.sys = {}));
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
@@ -13747,38 +12446,280 @@ var egret;
 //////////////////////////////////////////////////////////////////////////////////////
 var egret;
 (function (egret) {
-    /**
-     * @private
-     * OrientationMode 类为舞台初始旋转模式提供值。
-     */
-    var OrientationMode = (function () {
-        function OrientationMode() {
-        }
-        var d = __define,c=OrientationMode;p=c.prototype;
+    var sys;
+    (function (sys) {
+        var displayListPool = [];
+        var blendModes = ["source-over", "lighter", "destination-out"];
+        var defaultCompositeOp = "source-over";
         /**
          * @private
-         * 适配屏幕
+         * 显示列表
          */
-        OrientationMode.AUTO = "auto";
-        /**
-         * @private
-         * 默认竖屏
-         */
-        OrientationMode.PORTRAIT = "portrait";
-        /**
-         * @private
-         * 默认横屏，舞台顺时针旋转90度
-         */
-        OrientationMode.LANDSCAPE = "landscape";
-        /**
-         * @private
-         * 默认横屏，舞台逆时针旋转90度
-         */
-        OrientationMode.LANDSCAPE_FLIPPED = "landscapeFlipped";
-        return OrientationMode;
-    })();
-    egret.OrientationMode = OrientationMode;
-    egret.registerClass(OrientationMode,"egret.OrientationMode");
+        var DisplayList = (function (_super) {
+            __extends(DisplayList, _super);
+            /**
+             * @private
+             * 创建一个DisplayList对象
+             */
+            function DisplayList(root) {
+                _super.call(this);
+                this.isStage = false;
+                /**
+                 * 位图渲染节点
+                 */
+                this.$renderNode = new sys.BitmapNode();
+                /**
+                 * @private
+                 */
+                this.renderBuffer = null;
+                /**
+                 * @private
+                 */
+                this.offsetX = 0;
+                /**
+                 * @private
+                 */
+                this.offsetY = 0;
+                /**
+                 * @private
+                 */
+                this.offsetMatrix = new egret.Matrix();
+                /**
+                 * @private
+                 */
+                this.isDirty = false;
+                this.needUpdateRegions = false;
+                /**
+                 * @private
+                 * 显示对象的渲染节点发生改变时，把自身的IRenderable对象注册到此列表上。
+                 */
+                this.dirtyNodes = {};
+                /**
+                 * @private
+                 */
+                this.dirtyNodeList = [];
+                /**
+                 * @private
+                 */
+                this.dirtyList = null;
+                /**
+                 * @private
+                 */
+                this.sizeChanged = false;
+                this.root = root;
+                this.dirtyRegion = new sys.DirtyRegion(root);
+                this.isStage = (root instanceof egret.Stage);
+            }
+            var d = __define,c=DisplayList,p=c.prototype;
+            /**
+             * 创建一个DisplayList对象，若内存不足或无法创建RenderBuffer，将会返回null。
+             */
+            DisplayList.create = function (target) {
+                var displayList = new egret.sys.DisplayList(target);
+                try {
+                    var buffer = new sys.RenderBuffer();
+                }
+                catch (e) {
+                    return null;
+                }
+                displayList.renderBuffer = buffer;
+                displayList.root = target;
+                return displayList;
+            };
+            /**
+             * @private
+             * 获取渲染节点
+             */
+            p.$getRenderNode = function () {
+                return this.$renderNode;
+            };
+            /**
+             * @private
+             * 更新对象在舞台上的显示区域和透明度,返回显示区域是否发生改变。
+             */
+            p.$update = function () {
+                var target = this.root;
+                //当cache对象的显示列表已经加入dirtyList，对象又取消cache的时候，root为空
+                if (target == null) {
+                    return false;
+                }
+                target.$removeFlagsUp(768 /* Dirty */);
+                var node = this.$renderNode;
+                //这里不需要更新node.renderAlpha。因为alpha已经写入到缓存的内部
+                //必须在访问moved属性前调用以下两个方法，因为moved属性在以下两个方法内重置。
+                var concatenatedMatrix = target.$getConcatenatedMatrix();
+                var bounds = target.$getOriginalBounds();
+                var displayList = target.$parentDisplayList;
+                var region = node.renderRegion;
+                if (this.needUpdateRegions) {
+                    this.updateDirtyRegions();
+                }
+                if (!displayList) {
+                    region.setTo(0, 0, 0, 0);
+                    node.moved = false;
+                    return false;
+                }
+                if (!node.moved) {
+                    return false;
+                }
+                node.moved = false;
+                var matrix = node.renderMatrix;
+                matrix.copyFrom(concatenatedMatrix);
+                var root = displayList.root;
+                if (root !== target.$stage) {
+                    target.$getConcatenatedMatrixAt(root, matrix);
+                }
+                region.updateRegion(bounds, matrix);
+                return true;
+            };
+            /**
+             * @private
+             * 设置剪裁边界，不再绘制完整目标对象，画布尺寸由外部决定，超过边界的节点将跳过绘制。
+             */
+            p.setClipRect = function (width, height) {
+                this.dirtyRegion.setClipRect(width, height);
+                this.renderBuffer.resize(width, height);
+            };
+            /**
+             * @private
+             * 标记一个节点需要重新渲染
+             */
+            p.markDirty = function (node) {
+                var key = node.$hashCode;
+                if (this.dirtyNodes[key]) {
+                    return;
+                }
+                this.dirtyNodes[key] = true;
+                this.dirtyNodeList.push(node);
+                if (!this.needUpdateRegions) {
+                    this.needUpdateRegions = true;
+                    this.isDirty = true;
+                    var parentCache = this.root.$parentDisplayList;
+                    if (parentCache) {
+                        parentCache.markDirty(this);
+                    }
+                }
+            };
+            /**
+             * @private
+             * 更新节点属性并返回脏矩形列表。
+             */
+            p.updateDirtyRegions = function () {
+                var dirtyNodeList = this.dirtyNodeList;
+                this.dirtyNodeList = [];
+                this.dirtyNodes = {};
+                this.needUpdateRegions = false;
+                var dirtyRegion = this.dirtyRegion;
+                var length = dirtyNodeList.length;
+                for (var i = 0; i < length; i++) {
+                    var display = dirtyNodeList[i];
+                    var node = display.$getRenderNode();
+                    node.needRedraw = false; //先清空上次缓存的标记,防止上次没遍历到的节点needRedraw始终为true.
+                    if (node.renderAlpha > 0 && node.renderVisible) {
+                        if (dirtyRegion.addRegion(node.renderRegion)) {
+                            node.needRedraw = true;
+                        }
+                    }
+                    var moved = display.$update();
+                    if (node.renderAlpha > 0 && node.renderVisible && (moved || !node.needRedraw)) {
+                        if (dirtyRegion.addRegion(node.renderRegion)) {
+                            node.needRedraw = true;
+                        }
+                    }
+                }
+                this.dirtyList = dirtyRegion.getDirtyRegions();
+                return this.dirtyList;
+            };
+            /**
+             * @private
+             * 绘制根节点显示对象到目标画布，返回draw的次数。
+             */
+            p.drawToSurface = function () {
+                var drawCalls = 0;
+                var dirtyList = this.dirtyList;
+                if (dirtyList && dirtyList.length > 0) {
+                    if (!this.isStage) {
+                        this.changeSurfaceSize();
+                    }
+                    var buffer = this.renderBuffer;
+                    buffer.beginClip(this.dirtyList, this.offsetX, this.offsetY);
+                    var drawCalls = sys.systemRenderer.render(this.root, buffer, this.offsetMatrix, this.dirtyList);
+                    buffer.endClip();
+                    var surface = buffer.surface;
+                    var renderNode = this.$renderNode;
+                    renderNode.drawData.length = 0;
+                    renderNode.image = surface;
+                    renderNode.drawImage(0, 0, surface.width, surface.height, -this.offsetX, -this.offsetY, surface.width, surface.height);
+                }
+                this.dirtyList = null;
+                this.dirtyRegion.clear();
+                this.isDirty = false;
+                return drawCalls;
+            };
+            /**
+             * @private
+             * 改变画布的尺寸，由于画布尺寸修改会清空原始画布。所以这里将原始画布绘制到一个新画布上，再与原始画布交换。
+             */
+            p.changeSurfaceSize = function () {
+                var root = this.root;
+                var oldOffsetX = this.offsetX;
+                var oldOffsetY = this.offsetY;
+                var bounds = this.root.$getOriginalBounds();
+                this.offsetX = -bounds.x;
+                this.offsetY = -bounds.y;
+                this.offsetMatrix.setTo(1, 0, 0, 1, this.offsetX, this.offsetY);
+                var buffer = this.renderBuffer;
+                //在chrome里，小等于256*256的canvas会不启用GPU加速。
+                var width = Math.max(257, bounds.width);
+                var height = Math.max(257, bounds.height);
+                if (!this.sizeChanged) {
+                    this.sizeChanged = true;
+                    buffer.resize(width, height);
+                }
+                else {
+                    buffer.resizeTo(width, height, this.offsetX - oldOffsetX, this.offsetY - oldOffsetY);
+                }
+            };
+            p.setDirtyRegionPolicy = function (policy) {
+                //todo 这里还可以做更多优化
+                this.dirtyRegion.setDirtyRegionPolicy(policy);
+            };
+            return DisplayList;
+        }(egret.HashObject));
+        sys.DisplayList = DisplayList;
+        egret.registerClass(DisplayList,'egret.sys.DisplayList',["egret.sys.Renderable"]);
+    })(sys = egret.sys || (egret.sys = {}));
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -13813,7 +12754,6 @@ var egret;
 (function (egret) {
     var sys;
     (function (sys) {
-        sys.$TempStage;
         /**
          * @private
          * Egret播放器
@@ -13824,37 +12764,35 @@ var egret;
              * @private
              * 实例化一个播放器对象。
              */
-            function Player(context, stage, entryClassName) {
+            function Player(buffer, stage, entryClassName) {
                 _super.call(this);
                 /**
                  * @private
                  */
                 this.isPlaying = false;
-                if (DEBUG && !context) {
-                    egret.$error(1003, "context");
+                if (DEBUG && !buffer) {
+                    egret.$error(1003, "buffer");
                 }
                 this.entryClassName = entryClassName;
                 this.stage = stage;
-                this.screenDisplayList = this.createDisplayList(stage, context);
-                if (DEBUG) {
-                    this.showFPS = false;
-                    this.showLog = false;
-                    this._showPaintRect = false;
-                    this.stageDisplayList = null;
-                    this.paintList = [];
-                    this.displayFPS = displayFPS;
-                    this.showPaintRect = showPaintRect;
-                    this.drawPaintRect = drawPaintRect;
-                    this.drawDirtyRect = drawDirtyRect;
-                }
+                this.screenDisplayList = this.createDisplayList(stage, buffer);
+                this.showFPS = false;
+                this.showLog = false;
+                this._showPaintRect = false;
+                this.stageDisplayList = null;
+                this.paintList = [];
+                this.displayFPS = displayFPS;
+                this.showPaintRect = showPaintRect;
+                this.drawPaintRect = drawPaintRect;
+                this.drawDirtyRect = drawDirtyRect;
             }
-            var d = __define,c=Player;p=c.prototype;
+            var d = __define,c=Player,p=c.prototype;
             /**
              * @private
              */
-            p.createDisplayList = function (stage, context) {
+            p.createDisplayList = function (stage, buffer) {
                 var displayList = new sys.DisplayList(stage);
-                displayList.renderContext = context;
+                displayList.renderBuffer = buffer;
                 stage.$displayList = displayList;
                 displayList.setClipRect(stage.$stageWidth, stage.$stageHeight);
                 return displayList;
@@ -13920,8 +12858,8 @@ var egret;
              * @private
              * 渲染屏幕
              */
-            p.$render = function (triggerByFrame) {
-                if (DEBUG && (this.showFPS || this.showLog)) {
+            p.$render = function (triggerByFrame, costTicker) {
+                if (this.showFPS || this.showLog) {
                     this.stage.addChild(this.fpsDisplay);
                 }
                 this.callLaters();
@@ -13930,28 +12868,23 @@ var egret;
                 var t = egret.getTimer();
                 var dirtyList = stage.$displayList.updateDirtyRegions();
                 var t1 = egret.getTimer();
-                var drawCalls = 0;
-                if (dirtyList.length > 0) {
-                    dirtyList = dirtyList.concat();
-                    drawCalls = stage.$displayList.drawToSurface();
+                dirtyList = dirtyList.concat();
+                var drawCalls = stage.$displayList.drawToSurface();
+                if (this._showPaintRect) {
+                    this.drawPaintRect(dirtyList);
                 }
-                if (DEBUG) {
-                    if (this._showPaintRect) {
-                        this.drawPaintRect(dirtyList);
-                    }
-                    var t2 = egret.getTimer();
-                    if (triggerByFrame && this.showFPS) {
-                        var dirtyRatio = 0;
-                        if (drawCalls > 0) {
-                            var length = dirtyList.length;
-                            var dirtyArea = 0;
-                            for (var i = 0; i < length; i++) {
-                                dirtyArea += dirtyList[i].area;
-                            }
-                            dirtyRatio = Math.ceil(dirtyArea * 1000 / (stage.stageWidth * stage.stageHeight)) / 10;
+                var t2 = egret.getTimer();
+                if (triggerByFrame && this.showFPS) {
+                    var dirtyRatio = 0;
+                    if (drawCalls > 0) {
+                        var length = dirtyList.length;
+                        var dirtyArea = 0;
+                        for (var i = 0; i < length; i++) {
+                            dirtyArea += dirtyList[i].area;
                         }
-                        this.fpsDisplay.update(drawCalls, dirtyRatio, t1 - t, t2 - t1);
+                        dirtyRatio = Math.ceil(dirtyArea * 1000 / (stage.stageWidth * stage.stageHeight)) / 10;
                     }
+                    this.fpsDisplay.update(drawCalls, dirtyRatio, t1 - t, t2 - t1, costTicker);
                 }
             };
             /**
@@ -14003,16 +12936,13 @@ var egret;
              * @param stageWidth 舞台宽度（以像素为单位）
              * @param stageHeight 舞台高度（以像素为单位）
              */
-            p.updateStageSize = function (stageWidth, stageHeight, pixelRatio) {
-                if (pixelRatio === void 0) { pixelRatio = 1; }
+            p.updateStageSize = function (stageWidth, stageHeight) {
                 var stage = this.stage;
-                if (stageWidth !== stage.$stageWidth || stageHeight !== stage.$stageHeight || this.screenDisplayList.$pixelRatio !== pixelRatio) {
+                if (stageWidth !== stage.$stageWidth || stageHeight !== stage.$stageHeight) {
                     stage.$stageWidth = stageWidth;
                     stage.$stageHeight = stageHeight;
-                    this.screenDisplayList.setDevicePixelRatio(pixelRatio);
                     this.screenDisplayList.setClipRect(stageWidth, stageHeight);
-                    if (DEBUG && this.stageDisplayList) {
-                        this.stageDisplayList.setDevicePixelRatio(pixelRatio);
+                    if (this.stageDisplayList) {
                         this.stageDisplayList.setClipRect(stageWidth, stageHeight);
                     }
                     stage.dispatchEventWith(egret.Event.RESIZE);
@@ -14020,221 +12950,260 @@ var egret;
                 }
             };
             return Player;
-        })(egret.HashObject);
+        }(egret.HashObject));
         sys.Player = Player;
-        egret.registerClass(Player,"egret.sys.Player");
-        /**
-         * @private
-         */
-        sys.$logToFPS;
-        if (DEBUG) {
-            var infoLines = [];
-            var fpsDisplay;
-            var fpsStyle;
-            sys.$logToFPS = function (info) {
-                if (!fpsDisplay) {
-                    infoLines.push(info);
-                    return;
-                }
-                fpsDisplay.updateInfo(info);
-            };
-            function displayFPS(showFPS, showLog, logFilter, styles) {
-                fpsStyle = sys.isUndefined(styles) ? {} : styles;
-                showLog = !!showLog;
-                this.showFPS = !!showFPS;
-                this.showLog = showLog;
-                if (!this.fpsDisplay) {
-                    var x = sys.isUndefined(styles["x"]) ? 0 : styles["x"];
-                    var y = sys.isUndefined(styles["y"]) ? 0 : styles["y"];
-                    fpsDisplay = this.fpsDisplay = new FPS(this.stage, showFPS, showLog, logFilter, styles);
-                    fpsDisplay.x = x;
-                    fpsDisplay.y = y;
-                    var length = infoLines.length;
+        egret.registerClass(Player,'egret.sys.Player');
+        var infoLines = [];
+        var fpsDisplay;
+        var fpsStyle;
+        sys.$logToFPS = function (info) {
+            if (!fpsDisplay) {
+                infoLines.push(info);
+                return;
+            }
+            fpsDisplay.updateInfo(info);
+        };
+        function displayFPS(showFPS, showLog, logFilter, styles) {
+            if (showLog) {
+                egret.log = function () {
+                    var length = arguments.length;
+                    var info = "";
                     for (var i = 0; i < length; i++) {
-                        fpsDisplay.updateInfo(infoLines[i]);
+                        info += arguments[i] + " ";
                     }
-                    infoLines = null;
+                    sys.$logToFPS(info);
+                    console.log.apply(console, toArray(arguments));
+                };
+            }
+            fpsStyle = styles ? {} : styles;
+            showLog = !!showLog;
+            this.showFPS = !!showFPS;
+            this.showLog = showLog;
+            if (!this.fpsDisplay) {
+                var x = styles["x"] === undefined ? 0 : styles["x"];
+                var y = styles["y"] === undefined ? 0 : styles["y"];
+                fpsDisplay = this.fpsDisplay = new FPS(this.stage, showFPS, showLog, logFilter, styles);
+                fpsDisplay.x = x;
+                fpsDisplay.y = y;
+                var length = infoLines.length;
+                for (var i = 0; i < length; i++) {
+                    fpsDisplay.updateInfo(infoLines[i]);
+                }
+                infoLines = null;
+            }
+        }
+        function showPaintRect(value) {
+            value = !!value;
+            if (this._showPaintRect == value) {
+                return;
+            }
+            this._showPaintRect = value;
+            if (value) {
+                if (!this.stageDisplayList) {
+                    this.stageDisplayList = sys.DisplayList.create(this.stage);
+                }
+                this.stage.$displayList = this.stageDisplayList;
+            }
+            else {
+                this.stage.$displayList = this.screenDisplayList;
+            }
+        }
+        function drawPaintRect(dirtyList) {
+            var length = dirtyList.length;
+            var list = [];
+            for (var i = 0; i < length; i++) {
+                var region = dirtyList[i];
+                list[i] = [region.minX, region.minY, region.width, region.height];
+                region.width -= 1;
+                region.height -= 1;
+            }
+            var repaintList = this.paintList;
+            repaintList.push(list);
+            if (repaintList.length > 1) {
+                repaintList.shift();
+            }
+            var renderBuffer = this.screenDisplayList.renderBuffer;
+            var context = renderBuffer.context;
+            context.setTransform(1, 0, 0, 1, 0, 0);
+            context.clearRect(0, 0, renderBuffer.surface.width, renderBuffer.surface.height);
+            context.drawImage(this.stageDisplayList.renderBuffer.surface, 0, 0);
+            length = repaintList.length;
+            for (i = 0; i < length; i++) {
+                list = repaintList[i];
+                for (var j = list.length - 1; j >= 0; j--) {
+                    var r = list[j];
+                    this.drawDirtyRect(r[0], r[1], r[2], r[3], context);
                 }
             }
-            function showPaintRect(value) {
-                value = !!value;
-                if (this._showPaintRect == value) {
+            context.save();
+            context.beginPath();
+            var length = dirtyList.length;
+            for (var i = 0; i < length; i++) {
+                var region = dirtyList[i];
+                context.clearRect(region.minX, region.minY, region.width, region.height);
+                context.rect(region.minX, region.minY, region.width, region.height);
+            }
+            context.clip();
+            context.drawImage(this.stageDisplayList.renderBuffer.surface, 0, 0);
+            context.restore();
+        }
+        /**
+         * 绘制一个脏矩形显示区域，在显示重绘区功能开启时调用。
+         */
+        function drawDirtyRect(x, y, width, height, context) {
+            context.strokeStyle = 'rgb(255,0,0)';
+            context.lineWidth = 5;
+            context.strokeRect(x - 0.5, y - 0.5, width, height);
+        }
+        /**
+         * FPS显示对象
+         */
+        FPS = (function (_super) {
+            __extends(FPSImpl, _super);
+            function FPSImpl(stage, showFPS, showLog, logFilter, styles) {
+                _super.call(this);
+                this["isFPS"] = true;
+                this.infoLines = [];
+                this.totalTime = 0;
+                this.totalTick = 0;
+                this.lastTime = 0;
+                this.drawCalls = 0;
+                this.dirtyRatio = 0;
+                this.costDirty = 0;
+                this.costRender = 0;
+                this.costTicker = 0;
+                this._stage = stage;
+                this.showFPS = showFPS;
+                this.showLog = showLog;
+                this.logFilter = logFilter;
+                this.touchChildren = false;
+                this.touchEnabled = false;
+                this.styles = styles;
+                this.createDisplay();
+                try {
+                    var logFilterRegExp = logFilter ? new RegExp(logFilter) : null;
+                }
+                catch (e) {
+                    egret.log(e);
+                }
+                this.filter = function (message) {
+                    if (logFilterRegExp)
+                        return logFilterRegExp.test(message);
+                    return !logFilter || message.indexOf(logFilter) == 0;
+                };
+            }
+            FPSImpl.prototype.createDisplay = function () {
+                this.shape = new egret.Shape();
+                this.addChild(this.shape);
+                var textField = new egret.TextField();
+                textField.size = this.styles["size"] === undefined ? 24 : parseInt(this.styles["size"]);
+                this.addChild(textField);
+                this.textField = textField;
+                textField.textColor = this.styles["textColor"] === undefined ? 0x00c200 : parseInt(this.styles["textColor"]);
+                textField.fontFamily = "monospace";
+                textField.x = 10;
+                textField.y = 10;
+                var textField = new egret.TextField();
+                this.infoText = textField;
+                this.addChild(textField);
+                textField.textColor = this.styles["textColor"] === undefined ? 0x00c200 : parseInt(this.styles["textColor"]);
+                textField.fontFamily = "monospace";
+                textField.x = 10;
+                textField.size = this.styles["size"] === undefined ? 12 : this.styles["size"] / 2;
+                textField.y = 10;
+            };
+            FPSImpl.prototype.update = function (drawCalls, dirtyRatio, costDirty, costRender, costTicker) {
+                var current = egret.getTimer();
+                this.totalTime += current - this.lastTime;
+                this.lastTime = current;
+                this.totalTick++;
+                this.drawCalls += drawCalls;
+                this.dirtyRatio += dirtyRatio;
+                this.costDirty += costDirty;
+                this.costRender += costRender;
+                this.costTicker += costTicker;
+                if (this.totalTime >= 1000) {
+                    var lastFPS = Math.ceil(this.totalTick * 1000 / this.totalTime);
+                    var lastDrawCalls = Math.round(this.drawCalls / this.totalTick);
+                    var lastDirtyRatio = Math.round(this.dirtyRatio / this.totalTick);
+                    var lastCostDirty = Math.round(this.costDirty / this.totalTick);
+                    var lastCostRender = Math.round(this.costRender / this.totalTick);
+                    var lastCostTicker = Math.round(this.costTicker / this.totalTick);
+                    var text = "FPS: " + lastFPS + "\nDraw: " + lastDrawCalls + "," + lastDirtyRatio + "%\nCost: " + lastCostTicker + "," + lastCostDirty + "," + lastCostRender;
+                    if (this.textField.text != text) {
+                        this.textField.text = text;
+                        this.updateLayout();
+                    }
+                    this.totalTick = 0;
+                    this.totalTime = this.totalTime % 500;
+                    this.drawCalls = 0;
+                    this.dirtyRatio = 0;
+                    this.costDirty = 0;
+                    this.costRender = 0;
+                    this.costTicker = 0;
+                }
+            };
+            /**
+             * 插入一条日志信息
+             */
+            FPSImpl.prototype.updateInfo = function (info) {
+                if (!this.showLog) {
                     return;
                 }
-                this._showPaintRect = value;
-                if (value) {
-                    if (!this.stageDisplayList) {
-                        this.stageDisplayList = sys.DisplayList.create(this.stage);
+                if (!this.filter(info)) {
+                    return;
+                }
+                var lines = this.infoLines;
+                if (info) {
+                    lines.push(info);
+                }
+                this.infoText.width = NaN;
+                this.infoText.text = lines.join("\n");
+                if (this._stage.stageHeight > 0) {
+                    if (this.infoText.textWidth > this._stage.stageWidth - 20) {
+                        this.infoText.width = this._stage.stageWidth - 20;
                     }
-                    this.stage.$displayList = this.stageDisplayList;
+                    while (this.infoText.textHeight > this._stage.stageHeight - 20) {
+                        lines.shift();
+                        this.infoText.text = lines.join("\n");
+                    }
                 }
-                else {
-                    this.stage.$displayList = this.screenDisplayList;
+                this.updateLayout();
+            };
+            FPSImpl.prototype.updateLayout = function () {
+                if (this.showFPS) {
+                    this.infoText.y = this.textField.height + 20;
                 }
+                if (egret.Capabilities.runtimeType == egret.RuntimeType.NATIVE) {
+                    return;
+                }
+                var g = this.shape.$graphics;
+                g.clear();
+                g.beginFill(0x444444, this.styles["bgAlpha"] || 0.9);
+                g.drawRect(0, 0, Math.max(160, this.width + 20), this.height + 20);
+                g.endFill();
+            };
+            return FPSImpl;
+        })(egret.Sprite);
+        function toArray(argument) {
+            var args = [];
+            for (var i = 0; i < argument.length; i++) {
+                args.push(argument[i]);
             }
-            function drawPaintRect(dirtyList) {
-                var length = dirtyList.length;
-                var list = [];
-                for (var i = 0; i < length; i++) {
-                    var region = dirtyList[i];
-                    list[i] = [region.minX, region.minY, region.width, region.height];
-                    region.width -= 1;
-                    region.height -= 1;
-                }
-                var repaintList = this.paintList;
-                repaintList.push(list);
-                if (repaintList.length > 1) {
-                    repaintList.shift();
-                }
-                var context = this.screenDisplayList.renderContext;
-                context.setTransform(1, 0, 0, 1, 0, 0);
-                context.clearRect(0, 0, context.surface.width, context.surface.height);
-                context.drawImage(this.stageDisplayList.surface, 0, 0);
-                length = repaintList.length;
-                for (i = 0; i < length; i++) {
-                    list = repaintList[i];
-                    for (var j = list.length - 1; j >= 0; j--) {
-                        var r = list[j];
-                        this.drawDirtyRect(r[0], r[1], r[2], r[3], context);
-                    }
-                }
-                context.save();
-                context.beginPath();
-                var length = dirtyList.length;
-                for (var i = 0; i < length; i++) {
-                    var region = dirtyList[i];
-                    context.clearRect(region.minX, region.minY, region.width, region.height);
-                    context.rect(region.minX, region.minY, region.width, region.height);
-                }
-                context.clip();
-                context.drawImage(this.stageDisplayList.surface, 0, 0);
-                context.restore();
-            }
-            /**
-             * 绘制一个脏矩形显示区域，在显示重绘区功能开启时调用。
-             */
-            function drawDirtyRect(x, y, width, height, context) {
-                context.strokeStyle = 'rgb(255,0,0)';
-                context.lineWidth = 5;
-                context.strokeRect(x - 0.5, y - 0.5, width, height);
-            }
-            /**
-             * FPS显示对象
-             */
-            FPS = (function (_super) {
-                __extends(FPSImpl, _super);
-                function FPSImpl(stage, showFPS, showLog, logFilter, styles) {
-                    _super.call(this);
-                    this["isFPS"] = true;
-                    this.infoLines = [];
-                    this.totalTime = 0;
-                    this.totalTick = 0;
-                    this.lastTime = 0;
-                    this.drawCalls = 0;
-                    this._stage = stage;
-                    this.showFPS = showFPS;
-                    this.showLog = showLog;
-                    this.logFilter = logFilter;
-                    this.touchChildren = false;
-                    this.touchEnabled = false;
-                    this.styles = styles;
-                    this.createDisplay();
-                    try {
-                        var logFilterRegExp = logFilter ? new RegExp(logFilter) : null;
-                    }
-                    catch (e) {
-                        egret.log(e);
-                    }
-                    this.filter = function (message) {
-                        if (logFilterRegExp)
-                            return logFilterRegExp.test(message);
-                        return !logFilter || message.indexOf(logFilter) == 0;
-                    };
-                }
-                FPSImpl.prototype.createDisplay = function () {
-                    this.shape = new egret.Shape();
-                    this.addChild(this.shape);
-                    var textField = new egret.TextField();
-                    textField.size = egret.sys.isUndefined(this.styles["size"]) ? 24 : parseInt(this.styles["size"]);
-                    this.addChild(textField);
-                    this.textField = textField;
-                    textField.textColor = egret.sys.isUndefined(this.styles["textColor"]) ? 0x00c200 : parseInt(this.styles["textColor"]);
-                    textField.fontFamily = "monospace";
-                    textField.x = 10;
-                    textField.y = 10;
-                    var textField = new egret.TextField();
-                    this.infoText = textField;
-                    this.addChild(textField);
-                    textField.textColor = egret.sys.isUndefined(this.styles["textColor"]) ? 0x00c200 : parseInt(this.styles["textColor"]);
-                    textField.fontFamily = "monospace";
-                    textField.x = 10;
-                    textField.size = egret.sys.isUndefined(this.styles["size"]) ? 12 : this.styles["size"] / 2;
-                    textField.y = 10;
-                };
-                FPSImpl.prototype.update = function (drawCalls, dirtyRatio) {
-                    var args = [];
-                    for (var _i = 2; _i < arguments.length; _i++) {
-                        args[_i - 2] = arguments[_i];
-                    }
-                    var current = egret.getTimer();
-                    this.totalTime += current - this.lastTime;
-                    this.lastTime = current;
-                    this.totalTick++;
-                    this.drawCalls = Math.max(drawCalls, this.drawCalls);
-                    if (this.totalTime > 500) {
-                        var lastFPS = Math.round(this.totalTick * 1000 / this.totalTime);
-                        this.totalTick = 0;
-                        this.totalTime = 0;
-                        var text = "FPS: " + lastFPS + "\nDraw: " + this.drawCalls + "," + dirtyRatio + "%\nCost: " + args.join(",");
-                        if (this.textField.text != text) {
-                            this.textField.text = text;
-                            this.updateLayout();
-                        }
-                        this.drawCalls = 0;
-                    }
-                };
-                /**
-                 * 插入一条日志信息
-                 */
-                FPSImpl.prototype.updateInfo = function (info) {
-                    if (!this.showLog) {
-                        return;
-                    }
-                    if (!this.filter(info)) {
-                        return;
-                    }
-                    var lines = this.infoLines;
-                    if (info) {
-                        lines.push(info);
-                    }
-                    this.infoText.width = NaN;
-                    this.infoText.text = lines.join("\n");
-                    if (this._stage.stageHeight > 0) {
-                        if (this.infoText.textWidth > this._stage.stageWidth - 20) {
-                            this.infoText.width = this._stage.stageWidth - 20;
-                        }
-                        while (this.infoText.textHeight > this._stage.stageHeight - 20) {
-                            lines.shift();
-                            this.infoText.text = lines.join("\n");
-                        }
-                    }
-                    this.updateLayout();
-                };
-                FPSImpl.prototype.updateLayout = function () {
-                    if (this.showFPS) {
-                        this.infoText.y = this.textField.height + 20;
-                    }
-                    if (egret.Capabilities.runtimeType == egret.RuntimeType.NATIVE) {
-                        return;
-                    }
-                    var g = this.shape.$graphics.$renderContext;
-                    g.clear();
-                    g.fillStyle = "rgba(68,68,68," + (this.styles["bgAlpha"] || 0.9) + ")";
-                    g.fillRect(0, 0, Math.max(160, this.width + 20), this.height + 20);
-                };
-                return FPSImpl;
-            })(egret.Sprite);
+            return args;
         }
+        egret.warn = function () {
+            console.warn.apply(console, toArray(arguments));
+        };
+        egret.error = function () {
+            console.error.apply(console, toArray(arguments));
+        };
+        egret.assert = function () {
+            console.assert.apply(console, toArray(arguments));
+        };
+        egret.log = function () {
+            console.log.apply(console, toArray(arguments));
+        };
     })(sys = egret.sys || (egret.sys = {}));
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
@@ -14265,6 +13234,310 @@ var egret;
 //  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    var sys;
+    (function (sys) {
+        var regionPool = [];
+        /**
+         * @private
+         */
+        var Region = (function () {
+            function Region() {
+                /**
+                 * @private
+                 */
+                this.minX = 0;
+                /**
+                 * @private
+                 */
+                this.minY = 0;
+                /**
+                 * @private
+                 */
+                this.maxX = 0;
+                /**
+                 * @private
+                 */
+                this.maxY = 0;
+                /**
+                 * @private
+                 */
+                this.width = 0;
+                /**
+                 * @private
+                 */
+                this.height = 0;
+                /**
+                 * @private
+                 */
+                this.area = 0;
+                /**
+                 * @private
+                 * 是否发生移动
+                 */
+                this.moved = false;
+            }
+            var d = __define,c=Region,p=c.prototype;
+            /**
+             * @private
+             * 释放一个Region实例到对象池
+             */
+            Region.release = function (region) {
+                regionPool.push(region);
+            };
+            /**
+             * @private
+             * 从对象池中取出或创建一个新的Region对象。
+             * 建议对于一次性使用的对象，均使用此方法创建，而不是直接new一个。
+             * 使用完后调用对应的release()静态方法回收对象，能有效减少对象创建数量造成的性能开销。
+             */
+            Region.create = function () {
+                var region = regionPool.pop();
+                if (!region) {
+                    region = new Region();
+                }
+                return region;
+            };
+            /**
+             * @private
+             */
+            p.setTo = function (minX, minY, maxX, maxY) {
+                this.minX = minX;
+                this.minY = minY;
+                this.maxX = maxX;
+                this.maxY = maxY;
+                this.updateArea();
+                return this;
+            };
+            /**
+             * @private
+             */
+            p.updateArea = function () {
+                this.width = this.maxX - this.minX;
+                this.height = this.maxY - this.minY;
+                this.area = this.width * this.height;
+            };
+            /**
+             * @private
+             * 注意！由于性能优化，此方法不判断自身是否为空，必须在外部确认自身和目标区域都不为空再调用合并。否则结果始终从0，0点开始。
+             */
+            p.union = function (target) {
+                if (this.minX > target.minX) {
+                    this.minX = target.minX;
+                }
+                if (this.minY > target.minY) {
+                    this.minY = target.minY;
+                }
+                if (this.maxX < target.maxX) {
+                    this.maxX = target.maxX;
+                }
+                if (this.maxY < target.maxY) {
+                    this.maxY = target.maxY;
+                }
+                this.updateArea();
+            };
+            /**
+             * @private
+             * 注意！由于性能优化，此方法不判断自身是否为空，必须在外部确认自身和目标区域都不为空再调用合并。否则结果始终从0，0点开始。
+             */
+            p.intersect = function (target) {
+                if (this.minX < target.minX) {
+                    this.minX = target.minX;
+                }
+                if (this.maxX > target.maxX) {
+                    this.maxX = target.maxX;
+                }
+                if (this.minX >= this.maxX) {
+                    this.setEmpty();
+                    return;
+                }
+                if (this.minY < target.minY) {
+                    this.minY = target.minY;
+                }
+                if (this.maxY > target.maxY) {
+                    this.maxY = target.maxY;
+                }
+                if (this.minY >= this.maxY) {
+                    this.setEmpty();
+                    return;
+                }
+                this.updateArea();
+            };
+            /**
+             * @private
+             */
+            p.setEmpty = function () {
+                this.minX = 0;
+                this.minY = 0;
+                this.maxX = 0;
+                this.maxY = 0;
+                this.width = 0;
+                this.height = 0;
+                this.area = 0;
+            };
+            /**
+             * @private
+             * 确定此 Region 对象是否为空。
+             */
+            p.isEmpty = function () {
+                return this.width <= 0 || this.height <= 0;
+            };
+            /**
+             * @private
+             */
+            p.intersects = function (target) {
+                if (this.isEmpty()) {
+                    return false;
+                }
+                var max = this.minX > target.minX ? this.minX : target.minX;
+                var min = this.maxX < target.maxX ? this.maxX : target.maxX;
+                if (max > min) {
+                    return false;
+                }
+                max = this.minY > target.minY ? this.minY : target.minY;
+                min = this.maxY < target.maxY ? this.maxY : target.maxY;
+                return max <= min;
+            };
+            /**
+             * @private
+             */
+            p.updateRegion = function (bounds, matrix) {
+                if (bounds.width == 0 || bounds.height == 0) {
+                    //todo 理论上应该是空
+                    this.setEmpty();
+                    return;
+                }
+                var m = matrix;
+                var a = m.a;
+                var b = m.b;
+                var c = m.c;
+                var d = m.d;
+                var tx = m.tx;
+                var ty = m.ty;
+                var x = bounds.x;
+                var y = bounds.y;
+                var xMax = x + bounds.width;
+                var yMax = y + bounds.height;
+                var minX, minY, maxX, maxY;
+                //优化，通常情况下不缩放旋转的对象占多数，直接加上偏移量即可。
+                if (a == 1.0 && b == 0.0 && c == 0.0 && d == 1.0) {
+                    minX = Math.floor(x + tx) - 1;
+                    minY = Math.floor(y + ty) - 1;
+                    maxX = Math.ceil(xMax + tx) + 1;
+                    maxY = Math.ceil(yMax + ty) + 1;
+                }
+                else {
+                    var x0 = a * x + c * y + tx;
+                    var y0 = b * x + d * y + ty;
+                    var x1 = a * xMax + c * y + tx;
+                    var y1 = b * xMax + d * y + ty;
+                    var x2 = a * xMax + c * yMax + tx;
+                    var y2 = b * xMax + d * yMax + ty;
+                    var x3 = a * x + c * yMax + tx;
+                    var y3 = b * x + d * yMax + ty;
+                    var tmp = 0;
+                    if (x0 > x1) {
+                        tmp = x0;
+                        x0 = x1;
+                        x1 = tmp;
+                    }
+                    if (x2 > x3) {
+                        tmp = x2;
+                        x2 = x3;
+                        x3 = tmp;
+                    }
+                    minX = Math.floor(x0 < x2 ? x0 : x2) - 1;
+                    maxX = Math.ceil(x1 > x3 ? x1 : x3) + 1;
+                    if (y0 > y1) {
+                        tmp = y0;
+                        y0 = y1;
+                        y1 = tmp;
+                    }
+                    if (y2 > y3) {
+                        tmp = y2;
+                        y2 = y3;
+                        y3 = tmp;
+                    }
+                    minY = Math.floor(y0 < y2 ? y0 : y2) - 1;
+                    maxY = Math.ceil(y1 > y3 ? y1 : y3) + 1;
+                }
+                this.minX = minX;
+                this.minY = minY;
+                this.maxX = maxX;
+                this.maxY = maxY;
+                this.width = maxX - minX;
+                this.height = maxY - minY;
+                this.area = this.width * this.height;
+            };
+            return Region;
+        }());
+        sys.Region = Region;
+        egret.registerClass(Region,'egret.sys.Region');
+    })(sys = egret.sys || (egret.sys = {}));
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    var sys;
+    (function (sys) {
+    })(sys = egret.sys || (egret.sys = {}));
+})(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2014-2015, Egret Technology Inc.
@@ -14355,22 +13628,17 @@ var egret;
     (function (sys) {
         /**
          * @private
-         * 屏幕适配器实例，开发者可以通过给这个变量赋值实现了IScreenAdapter接口的实例，从而注入自定义的屏幕适配器。
-         */
-        sys.screenAdapter;
-        /**
-         * @private
          * 屏幕适配器默认实现，开发者可以实现自定义规则的屏幕适配器。并在初始化加载时将适配器的实例赋值给egret.sys.screenAdapter上，从而替换掉默认适配器。
          */
-        var ScreenAdapter = (function (_super) {
-            __extends(ScreenAdapter, _super);
+        var DefaultScreenAdapter = (function (_super) {
+            __extends(DefaultScreenAdapter, _super);
             /**
              * @private
              */
-            function ScreenAdapter() {
+            function DefaultScreenAdapter() {
                 _super.call(this);
             }
-            var d = __define,c=ScreenAdapter;p=c.prototype;
+            var d = __define,c=DefaultScreenAdapter,p=c.prototype;
             /**
              * @private
              * 计算舞台显示尺寸
@@ -14412,6 +13680,22 @@ var egret;
                             displayHeight = Math.round(stageHeight * scaleX);
                         }
                         break;
+                    case egret.StageScaleMode.FIXED_NARROW:
+                        if (scaleX > scaleY) {
+                            stageWidth = Math.round(screenWidth / scaleY);
+                        }
+                        else {
+                            stageHeight = Math.round(screenHeight / scaleX);
+                        }
+                        break;
+                    case egret.StageScaleMode.FIXED_WIDE:
+                        if (scaleX > scaleY) {
+                            stageHeight = Math.round(screenHeight / scaleX);
+                        }
+                        else {
+                            stageWidth = Math.round(screenWidth / scaleY);
+                        }
+                        break;
                     default:
                         stageWidth = screenWidth;
                         stageHeight = screenHeight;
@@ -14424,10 +13708,10 @@ var egret;
                     displayHeight: displayHeight
                 };
             };
-            return ScreenAdapter;
-        })(egret.HashObject);
-        sys.ScreenAdapter = ScreenAdapter;
-        egret.registerClass(ScreenAdapter,"egret.sys.ScreenAdapter",["egret.sys.IScreenAdapter"]);
+            return DefaultScreenAdapter;
+        }(egret.HashObject));
+        sys.DefaultScreenAdapter = DefaultScreenAdapter;
+        egret.registerClass(DefaultScreenAdapter,'egret.sys.DefaultScreenAdapter',["egret.sys.IScreenAdapter"]);
     })(sys = egret.sys || (egret.sys = {}));
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
@@ -14477,7 +13761,7 @@ var egret;
     var StageScaleMode = (function () {
         function StageScaleMode() {
         }
-        var d = __define,c=StageScaleMode;p=c.prototype;
+        var d = __define,c=StageScaleMode,p=c.prototype;
         /**
          * @language en_US
          * Do not scale application content. Even when you change the player viewport size, it remains unchanged. If the player is smaller than the viewport content, possibly with some cropping.<br/>
@@ -14544,39 +13828,33 @@ var egret;
          * 在此模式下，舞台高度(Stage.stageHeight)始终等于初始化时外部传入的应用程序内容高度。舞台宽度(Stage.stageWidth)由当前的缩放比例与播放器视口宽度决定。
          */
         StageScaleMode.FIXED_HEIGHT = "fixedHeight";
+        /**
+         * @language en_US
+         * Keep the original aspect ratio scaling application content, after scaling application content in the horizontal and vertical directions to fill the viewport player,a narrow direction may not be wide enough and fill.<br/>
+         * In this mode, the stage height (Stage.stageHeight) and the stage width (Stage.stageWidth) by the current scale with the player viewport size.
+         */
+        /**
+         * @language zh_CN
+         * 保持原始宽高比缩放应用程序内容，缩放后应用程序内容在水平和垂直方向都填满播放器视口，应用程序内容的较窄方向可能会不够宽而填充。<br/>
+         * 在此模式下，舞台高度(Stage.stageHeight)和舞台宽度(Stage.stageWidth)由当前的缩放比例与播放器视口宽高决定。
+         */
+        StageScaleMode.FIXED_NARROW = "fixedNarrow";
+        /**
+         * @language en_US
+         * Keep the original aspect ratio scaling application content, after scaling application content in the horizontal and vertical directions to fill the viewport player, a wide direction may exceed the viewport and the player is cut.<br/>
+         * In this mode, the stage height (Stage.stageHeight) and the stage width (Stage.stageWidth) by the current scale with the player viewport size.
+         */
+        /**
+         * @language zh_CN
+         * 保持原始宽高比缩放应用程序内容，缩放后应用程序内容在水平和垂直方向都填满播放器视口，应用程序内容的较宽方向的两侧可能会超出播放器视口而被裁切。<br/>
+         * 在此模式下，舞台高度(Stage.stageHeight)和舞台宽度(Stage.stageWidth)由当前的缩放比例与播放器视口宽高决定。
+         */
+        StageScaleMode.FIXED_WIDE = "fixedWide";
         return StageScaleMode;
-    })();
+    }());
     egret.StageScaleMode = StageScaleMode;
-    egret.registerClass(StageScaleMode,"egret.StageScaleMode");
+    egret.registerClass(StageScaleMode,'egret.StageScaleMode');
 })(egret || (egret = {}));
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-2015, Egret Technology Inc.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2014-2015, Egret Technology Inc.
@@ -14609,16 +13887,6 @@ var egret;
 (function (egret) {
     var sys;
     (function (sys) {
-        /**
-         * @private
-         * 全局共享的RenderContext。通常用于交换缓存，测量文本或创建填充对象。
-         */
-        sys.sharedRenderContext;
-        /**
-         * @private
-         * surfaceFactory实例
-         */
-        sys.surfaceFactory;
     })(sys = egret.sys || (egret.sys = {}));
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
@@ -14701,12 +13969,17 @@ var egret;
                  * @private
                  */
                 this.lastCount = 2000;
+                /**
+                 * @private
+                 * ticker 花销的时间
+                 */
+                this.costEnterFrame = 0;
                 if (DEBUG && sys.$ticker) {
                     egret.$error(1008, "egret.sys.SystemTicker");
                 }
                 sys.$START_TIME = Date.now();
             }
-            var d = __define,c=SystemTicker;p=c.prototype;
+            var d = __define,c=SystemTicker,p=c.prototype;
             /**
              * @private
              * 注册一个播放器实例并运行
@@ -14767,7 +14040,8 @@ var egret;
                 var callBackList = this.callBackList;
                 var thisObjectList = this.thisObjectList;
                 for (var i = callBackList.length - 1; i >= 0; i--) {
-                    if (callBackList[i] == callBack && thisObjectList[i] == thisObject) {
+                    if (callBackList[i] == callBack &&
+                        thisObjectList[i] == thisObject) {
                         return i;
                     }
                 }
@@ -14797,6 +14071,11 @@ var egret;
                 if (value > 60) {
                     value = 60;
                 }
+                //todo
+                if (egret.Capabilities.runtimeType == egret.RuntimeType.NATIVE) {
+                    egret_native.setFrameRate(value);
+                    value = 60;
+                }
                 //这里用60*1000来避免浮点数计算不准确的问题。
                 this.lastCount = this.frameInterval = Math.round(60000 / value);
                 return true;
@@ -14806,6 +14085,7 @@ var egret;
              * 执行一次刷新
              */
             p.update = function () {
+                var t1 = egret.getTimer();
                 var callBackList = this.callBackList;
                 var thisObjectList = this.thisObjectList;
                 var length = callBackList.length;
@@ -14817,21 +14097,25 @@ var egret;
                     }
                 }
                 this.lastCount -= 1000;
+                var t2 = egret.getTimer();
                 if (this.lastCount > 0) {
                     if (requestRenderingFlag) {
-                        this.render(false);
+                        this.render(false, this.costEnterFrame + t2 - t1);
                     }
                     return;
                 }
                 this.lastCount += this.frameInterval;
-                this.render(true);
+                this.render(true, this.costEnterFrame + t2 - t1);
+                var t3 = egret.getTimer();
                 this.broadcastEnterFrame();
+                var t4 = egret.getTimer();
+                this.costEnterFrame = t4 - t3;
             };
             /**
              * @private
              * 执行一次屏幕渲染
              */
-            p.render = function (triggerByFrame) {
+            p.render = function (triggerByFrame, costTicker) {
                 var playerList = this.playerList;
                 var length = playerList.length;
                 if (length == 0) {
@@ -14842,7 +14126,7 @@ var egret;
                     sys.$invalidateRenderFlag = false;
                 }
                 for (var i = 0; i < length; i++) {
-                    playerList[i].$render(triggerByFrame);
+                    playerList[i].$render(triggerByFrame, costTicker);
                 }
                 sys.$requestRenderingFlag = false;
             };
@@ -14877,9 +14161,9 @@ var egret;
                 }
             };
             return SystemTicker;
-        })();
+        }());
         sys.SystemTicker = SystemTicker;
-        egret.registerClass(SystemTicker,"egret.sys.SystemTicker");
+        egret.registerClass(SystemTicker,'egret.sys.SystemTicker');
         /**
          * @private
          * 心跳计时器单例
@@ -14949,7 +14233,7 @@ var egret;
                 this.lastTouchY = -1;
                 this.stage = stage;
             }
-            var d = __define,c=TouchHandler;p=c.prototype;
+            var d = __define,c=TouchHandler,p=c.prototype;
             /**
              * @private
              * 设置同时触摸数量
@@ -15031,10 +14315,1708 @@ var egret;
                 return target;
             };
             return TouchHandler;
-        })(egret.HashObject);
+        }(egret.HashObject));
         sys.TouchHandler = TouchHandler;
-        egret.registerClass(TouchHandler,"egret.sys.TouchHandler");
+        egret.registerClass(TouchHandler,'egret.sys.TouchHandler');
     })(sys = egret.sys || (egret.sys = {}));
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    var sys;
+    (function (sys) {
+        /**
+         * @private
+         * 渲染节点基类
+         */
+        var RenderNode = (function () {
+            function RenderNode() {
+                /**
+                 * 节点类型..
+                 */
+                this.type = 0;
+                /**
+                 * 是否需要重绘的标志。
+                 */
+                this.needRedraw = false;
+                /**
+                 * 这个对象在舞台上的整体透明度
+                 */
+                this.renderAlpha = 1;
+                /**
+                 * 这个对象在舞台上的透明度
+                 */
+                this.renderVisible = true;
+                /**
+                 * 相对于显示列表根节点或位图缓存根节点上的矩阵对象
+                 */
+                this.renderMatrix = new egret.Matrix();
+                /**
+                 * 此显示对象自身（不包括子项）在显示列表根节点或位图缓存根节点上的显示尺寸。
+                 */
+                this.renderRegion = new sys.Region();
+                /**
+                 * 是否发生移动
+                 */
+                this.moved = false;
+                /**
+                 * 绘制数据
+                 */
+                this.drawData = [];
+                /**
+                 * 绘制次数
+                 */
+                this.renderCount = 0;
+            }
+            var d = __define,c=RenderNode,p=c.prototype;
+            /**
+             * 在显示对象的$render()方法被调用前，自动清空自身的drawData数据。
+             */
+            p.cleanBeforeRender = function () {
+                this.drawData.length = 0;
+                this.renderCount = 0;
+            };
+            p.$getRenderCount = function () {
+                return this.renderCount;
+            };
+            return RenderNode;
+        }());
+        sys.RenderNode = RenderNode;
+        egret.registerClass(RenderNode,'egret.sys.RenderNode');
+    })(sys = egret.sys || (egret.sys = {}));
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    var sys;
+    (function (sys) {
+        /**
+         * @private
+         * 位图渲染节点
+         */
+        var BitmapNode = (function (_super) {
+            __extends(BitmapNode, _super);
+            function BitmapNode() {
+                _super.call(this);
+                /**
+                 * 要绘制的位图
+                 */
+                this.image = null;
+                /**
+                 * 控制在缩放时是否对位图进行平滑处理。
+                 */
+                this.smoothing = true;
+                this.type = 1 /* BitmapNode */;
+            }
+            var d = __define,c=BitmapNode,p=c.prototype;
+            /**
+             * 绘制一次位图
+             */
+            p.drawImage = function (sourceX, sourceY, sourceW, sourceH, drawX, drawY, drawW, drawH) {
+                this.drawData.push(sourceX, sourceY, sourceW, sourceH, drawX, drawY, drawW, drawH);
+                this.renderCount++;
+            };
+            /**
+             * 在显示对象的$render()方法被调用前，自动清空自身的drawData数据。
+             */
+            p.cleanBeforeRender = function () {
+                _super.prototype.cleanBeforeRender.call(this);
+                this.image = null;
+                this.matrix = null;
+            };
+            return BitmapNode;
+        }(sys.RenderNode));
+        sys.BitmapNode = BitmapNode;
+        egret.registerClass(BitmapNode,'egret.sys.BitmapNode');
+    })(sys = egret.sys || (egret.sys = {}));
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    var sys;
+    (function (sys) {
+        var CAPS_STYLES = ["none", "round", "square"];
+        var JOINT_STYLES = ["bevel", "miter", "round"];
+        /**
+         * @private
+         * 矢量渲染节点
+         */
+        var GraphicsNode = (function (_super) {
+            __extends(GraphicsNode, _super);
+            function GraphicsNode() {
+                _super.call(this);
+                /**
+                 * 脏渲染标记
+                 * 暂时调用lineStyle,beginFill,beginGradientFill标记,实际应该draw时候标记在Path2D
+                 */
+                this.dirtyRender = true;
+                this.type = 3 /* GraphicsNode */;
+            }
+            var d = __define,c=GraphicsNode,p=c.prototype;
+            /**
+             * 指定一种简单的单一颜色填充，在绘制时该填充将在随后对其他 Graphics 方法（如 lineTo() 或 drawCircle()）的调用中使用。
+             * @param color 填充的颜色
+             * @param alpha 填充的 Alpha 值
+             * @param beforePath 插入在指定的路径命令之前绘制，通常是插入到当前正在绘制的线条路径之前，以确保线条总在填充的上方。
+             */
+            p.beginFill = function (color, alpha, beforePath) {
+                if (alpha === void 0) { alpha = 1; }
+                var path = new sys.FillPath();
+                path.fillColor = color;
+                path.fillAlpha = alpha;
+                if (beforePath) {
+                    var index = this.drawData.lastIndexOf(beforePath);
+                    this.drawData.splice(index, 0, path);
+                }
+                else {
+                    this.drawData.push(path);
+                }
+                this.dirtyRender = true;
+                return path;
+            };
+            /**
+             * 指定一种简单的单一颜色填充，在绘制时该填充将在随后对其他 Graphics 方法（如 lineTo() 或 drawCircle()）的调用中使用。
+             * 调用 clear() 方法会清除填充。
+             * @param type 用于指定要使用哪种渐变类型的 GradientType 类的值：GradientType.LINEAR 或 GradientType.RADIAL。
+             * @param colors 渐变中使用的 RGB 十六进制颜色值的数组（例如，红色为 0xFF0000，蓝色为 0x0000FF，等等）。对于每种颜色，请在 alphas 和 ratios 参数中指定对应值。
+             * @param alphas colors 数组中对应颜色的 alpha 值数组。
+             * @param ratios 颜色分布比率的数组。有效值为 0 到 255。
+             * @param matrix 一个由 egret.Matrix 类定义的转换矩阵。egret.Matrix 类包括 createGradientBox() 方法，通过该方法可以方便地设置矩阵，以便与 beginGradientFill() 方法一起使用
+             * @param beforePath 插入在指定的路径命令之前绘制，通常是插入到当前正在绘制的线条路径之前，以确保线条总在填充的上方。
+             */
+            p.beginGradientFill = function (type, colors, alphas, ratios, matrix, beforePath) {
+                var m = new egret.Matrix();
+                if (matrix) {
+                    m.a = matrix.a * 819.2;
+                    m.b = matrix.b * 819.2;
+                    m.c = matrix.c * 819.2;
+                    m.d = matrix.d * 819.2;
+                    m.tx = matrix.tx;
+                    m.ty = matrix.ty;
+                }
+                else {
+                    //默认值
+                    m.a = 100;
+                    m.d = 100;
+                }
+                var path = new sys.GradientFillPath();
+                path.gradientType = type;
+                path.colors = colors;
+                path.alphas = alphas;
+                path.ratios = ratios;
+                path.matrix = m;
+                if (beforePath) {
+                    var index = this.drawData.lastIndexOf(beforePath);
+                    this.drawData.splice(index, 0, path);
+                }
+                else {
+                    this.drawData.push(path);
+                }
+                this.dirtyRender = true;
+                return path;
+            };
+            /**
+             * 指定一种线条样式以用于随后对 lineTo() 或 drawCircle() 等 Graphics 方法的调用。
+             * @param thickness 一个整数，以点为单位表示线条的粗细，有效值为 0 到 255。如果未指定数字，或者未定义该参数，则不绘制线条。如果传递的值小于 0，则默认值为 0。值 0 表示极细的粗细；最大粗细为 255。如果传递的值大于 255，则默认值为 255。
+             * @param color 线条的十六进制颜色值（例如，红色为 0xFF0000，蓝色为 0x0000FF 等）。如果未指明值，则默认值为 0x000000（黑色）。可选。
+             * @param alpha 表示线条颜色的 Alpha 值的数字；有效值为 0 到 1。如果未指明值，则默认值为 1（纯色）。如果值小于 0，则默认值为 0。如果值大于 1，则默认值为 1。
+             * @param caps 用于指定线条末端处端点类型的 CapsStyle 类的值。默认值：CapsStyle.ROUND
+             * @param joints 指定用于拐角的连接外观的类型。默认值：JointStyle.ROUND
+             * @param miterLimit 用于表示剪切斜接的极限值的数字。
+             */
+            p.lineStyle = function (thickness, color, alpha, caps, joints, miterLimit) {
+                if (alpha === void 0) { alpha = 1; }
+                if (miterLimit === void 0) { miterLimit = 3; }
+                if (CAPS_STYLES.indexOf(caps) == -1) {
+                    caps = "round";
+                }
+                if (JOINT_STYLES.indexOf(joints) == -1) {
+                    joints = "round";
+                }
+                var path = new sys.StrokePath();
+                path.lineWidth = thickness;
+                path.lineColor = color;
+                path.lineAlpha = alpha;
+                path.caps = caps || egret.CapsStyle.ROUND;
+                path.joints = joints;
+                path.miterLimit = miterLimit;
+                this.drawData.push(path);
+                this.dirtyRender = true;
+                return path;
+            };
+            /**
+             * 清空所有缓存的绘制数据
+             */
+            p.clear = function () {
+                this.drawData.length = 0;
+                this.dirtyRender = true;
+            };
+            /**
+             * 覆盖父类方法，不自动清空缓存的绘图数据，改为手动调用clear()方法清空。
+             */
+            p.cleanBeforeRender = function () {
+            };
+            return GraphicsNode;
+        }(sys.RenderNode));
+        sys.GraphicsNode = GraphicsNode;
+        egret.registerClass(GraphicsNode,'egret.sys.GraphicsNode');
+    })(sys = egret.sys || (egret.sys = {}));
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    var sys;
+    (function (sys) {
+        /**
+         * @private
+         * 组渲染节点,用于组合多个渲染节点
+         */
+        var GroupNode = (function (_super) {
+            __extends(GroupNode, _super);
+            function GroupNode() {
+                _super.call(this);
+                this.type = 4 /* GroupNode */;
+            }
+            var d = __define,c=GroupNode,p=c.prototype;
+            p.addNode = function (node) {
+                this.drawData.push(node);
+            };
+            /**
+             * 覆盖父类方法，不自动清空缓存的绘图数据，改为手动调用clear()方法清空。
+             * 这里只是想清空绘制命令，因此不调用super
+             */
+            p.cleanBeforeRender = function () {
+                var data = this.drawData;
+                for (var i = data.length - 1; i >= 0; i--) {
+                    data[i].cleanBeforeRender();
+                }
+            };
+            p.$getRenderCount = function () {
+                var result = 0;
+                var data = this.drawData;
+                for (var i = data.length - 1; i >= 0; i--) {
+                    result += data[i].$getRenderCount();
+                }
+                return result;
+            };
+            return GroupNode;
+        }(sys.RenderNode));
+        sys.GroupNode = GroupNode;
+        egret.registerClass(GroupNode,'egret.sys.GroupNode');
+    })(sys = egret.sys || (egret.sys = {}));
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    var sys;
+    (function (sys) {
+        /**
+         * @private
+         * 位图渲染节点
+         */
+        var SetAlphaNode = (function (_super) {
+            __extends(SetAlphaNode, _super);
+            function SetAlphaNode() {
+                _super.call(this);
+                this.type = 6 /* SetAlphaNode */;
+            }
+            var d = __define,c=SetAlphaNode,p=c.prototype;
+            /**
+             * 绘制一次位图
+             */
+            p.setAlpha = function (alpha) {
+                if (this.drawData.length != 0) {
+                    this.drawData.length = 0;
+                }
+                this.drawData.push(alpha);
+                this.renderCount++;
+            };
+            return SetAlphaNode;
+        }(sys.RenderNode));
+        sys.SetAlphaNode = SetAlphaNode;
+        egret.registerClass(SetAlphaNode,'egret.sys.SetAlphaNode');
+    })(sys = egret.sys || (egret.sys = {}));
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    var sys;
+    (function (sys) {
+        /**
+         * @private
+         * 位图渲染节点
+         */
+        var SetTransformNode = (function (_super) {
+            __extends(SetTransformNode, _super);
+            function SetTransformNode() {
+                _super.call(this);
+                this.type = 5 /* SetTransformNode */;
+            }
+            var d = __define,c=SetTransformNode,p=c.prototype;
+            /**
+             * 绘制一次位图
+             */
+            p.setTransform = function (a, b, c, d, tx, ty) {
+                if (this.drawData.length != 0) {
+                    this.drawData.length = 0;
+                }
+                this.drawData.push(a, b, c, d, tx, ty);
+                this.renderCount++;
+            };
+            return SetTransformNode;
+        }(sys.RenderNode));
+        sys.SetTransformNode = SetTransformNode;
+        egret.registerClass(SetTransformNode,'egret.sys.SetTransformNode');
+    })(sys = egret.sys || (egret.sys = {}));
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    var sys;
+    (function (sys) {
+        /**
+         * @private
+         * 文本渲染节点
+         */
+        var TextNode = (function (_super) {
+            __extends(TextNode, _super);
+            function TextNode() {
+                _super.call(this);
+                /**
+                 * 颜色值
+                 */
+                this.textColor = 0xFFFFFF;
+                /**
+                 * 描边颜色值
+                 */
+                this.strokeColor = 0x000000;
+                /**
+                 * 字号
+                 */
+                this.size = 30;
+                /**
+                 * 描边大小
+                 */
+                this.stroke = 0;
+                /**
+                 * 是否加粗
+                 */
+                this.bold = false;
+                /**
+                 * 是否倾斜
+                 */
+                this.italic = false;
+                /**
+                 * 字体名称
+                 */
+                this.fontFamily = "Arial";
+                /**
+                 * 脏渲染标记
+                 */
+                this.dirtyRender = true;
+                this.type = 2 /* TextNode */;
+            }
+            var d = __define,c=TextNode,p=c.prototype;
+            /**
+             * 绘制一行文本
+             */
+            p.drawText = function (x, y, text, format) {
+                this.drawData.push(x, y, text, format);
+                this.renderCount++;
+                this.dirtyRender = true;
+            };
+            /**
+             * 在显示对象的$render()方法被调用前，自动清空自身的drawData数据。
+             */
+            p.cleanBeforeRender = function () {
+                _super.prototype.cleanBeforeRender.call(this);
+            };
+            return TextNode;
+        }(sys.RenderNode));
+        sys.TextNode = TextNode;
+        egret.registerClass(TextNode,'egret.sys.TextNode');
+    })(sys = egret.sys || (egret.sys = {}));
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    var sys;
+    (function (sys) {
+        /**
+         * @private
+         * 2D路径
+         */
+        var Path2D = (function () {
+            function Path2D() {
+                /**
+                 * 路径类型
+                 */
+                this.type = 0;
+                this.$commands = [];
+                this.$data = [];
+                this.commandPosition = 0;
+                this.dataPosition = 0;
+            }
+            var d = __define,c=Path2D,p=c.prototype;
+            /**
+             * 将当前绘图位置移动到 (x, y)。如果缺少任何一个参数，则此方法将失败，并且当前绘图位置不改变。
+             * @param x 一个表示相对于父显示对象注册点的水平位置的数字（以像素为单位）。
+             * @param y 一个表示相对于父显示对象注册点的垂直位置的数字（以像素为单位）。
+             */
+            p.moveTo = function (x, y) {
+                this.$commands[this.commandPosition++] = 1 /* MoveTo */;
+                var pos = this.dataPosition;
+                this.$data[pos++] = x;
+                this.$data[pos++] = y;
+                this.dataPosition = pos;
+            };
+            /**
+             * 使用当前线条样式绘制一条从当前绘图位置开始到 (x, y) 结束的直线；当前绘图位置随后会设置为 (x, y)。
+             * @param x 一个表示相对于父显示对象注册点的水平位置的数字（以像素为单位）。
+             * @param y 一个表示相对于父显示对象注册点的垂直位置的数字（以像素为单位）。
+             */
+            p.lineTo = function (x, y) {
+                this.$commands[this.commandPosition++] = 2 /* LineTo */;
+                var pos = this.dataPosition;
+                this.$data[pos++] = x;
+                this.$data[pos++] = y;
+                this.dataPosition = pos;
+            };
+            /**
+             * 使用当前线条样式和由 (controlX, controlY) 指定的控制点绘制一条从当前绘图位置开始到 (anchorX, anchorY) 结束的二次贝塞尔曲线。当前绘图位置随后设置为 (anchorX, anchorY)。
+             * 如果在调用 moveTo() 方法之前调用了 curveTo() 方法，则当前绘图位置的默认值为 (0, 0)。如果缺少任何一个参数，则此方法将失败，并且当前绘图位置不改变。
+             * 绘制的曲线是二次贝塞尔曲线。二次贝塞尔曲线包含两个锚点和一个控制点。该曲线内插这两个锚点，并向控制点弯曲。
+             * @param controlX 一个数字，指定控制点相对于父显示对象注册点的水平位置。
+             * @param controlY 一个数字，指定控制点相对于父显示对象注册点的垂直位置。
+             * @param anchorX 一个数字，指定下一个锚点相对于父显示对象注册点的水平位置。
+             * @param anchorY 一个数字，指定下一个锚点相对于父显示对象注册点的垂直位置。
+             */
+            p.curveTo = function (controlX, controlY, anchorX, anchorY) {
+                this.$commands[this.commandPosition++] = 3 /* CurveTo */;
+                var pos = this.dataPosition;
+                this.$data[pos++] = controlX;
+                this.$data[pos++] = controlY;
+                this.$data[pos++] = anchorX;
+                this.$data[pos++] = anchorY;
+                this.dataPosition = pos;
+            };
+            /**
+             * 从当前绘图位置到指定的锚点绘制一条三次贝塞尔曲线。三次贝塞尔曲线由两个锚点和两个控制点组成。该曲线内插这两个锚点，并向两个控制点弯曲。
+             * @param controlX1 指定首个控制点相对于父显示对象的注册点的水平位置。
+             * @param controlY1 指定首个控制点相对于父显示对象的注册点的垂直位置。
+             * @param controlX2 指定第二个控制点相对于父显示对象的注册点的水平位置。
+             * @param controlY2 指定第二个控制点相对于父显示对象的注册点的垂直位置。
+             * @param anchorX 指定锚点相对于父显示对象的注册点的水平位置。
+             * @param anchorY 指定锚点相对于父显示对象的注册点的垂直位置。
+             */
+            p.cubicCurveTo = function (controlX1, controlY1, controlX2, controlY2, anchorX, anchorY) {
+                this.$commands[this.commandPosition++] = 4 /* CubicCurveTo */;
+                var pos = this.dataPosition;
+                this.$data[pos++] = controlX1;
+                this.$data[pos++] = controlY1;
+                this.$data[pos++] = controlX2;
+                this.$data[pos++] = controlY2;
+                this.$data[pos++] = anchorX;
+                this.$data[pos++] = anchorY;
+                this.dataPosition = pos;
+            };
+            /**
+             * 绘制一个矩形
+             * @param x 圆心相对于父显示对象注册点的 x 位置（以像素为单位）。
+             * @param y 相对于父显示对象注册点的圆心的 y 位置（以像素为单位）。
+             * @param width 矩形的宽度（以像素为单位）。
+             * @param height 矩形的高度（以像素为单位）。
+             */
+            p.drawRect = function (x, y, width, height) {
+                var x2 = x + width;
+                var y2 = y + height;
+                this.moveTo(x, y);
+                this.lineTo(x2, y);
+                this.lineTo(x2, y2);
+                this.lineTo(x, y2);
+                this.lineTo(x, y);
+            };
+            /**
+             * 绘制一个圆角矩形。
+             * @param x 圆心相对于父显示对象注册点的 x 位置（以像素为单位）。
+             * @param y 相对于父显示对象注册点的圆心的 y 位置（以像素为单位）。
+             * @param width 矩形的宽度（以像素为单位）。
+             * @param height 矩形的高度（以像素为单位）。
+             * @param ellipseWidth 用于绘制圆角的椭圆的宽度（以像素为单位）。
+             * @param ellipseHeight 用于绘制圆角的椭圆的高度（以像素为单位）。 （可选）如果未指定值，则默认值与为 ellipseWidth 参数提供的值相匹配。
+             */
+            p.drawRoundRect = function (x, y, width, height, ellipseWidth, ellipseHeight) {
+                var radiusX = (ellipseWidth * 0.5) | 0;
+                var radiusY = ellipseHeight ? (ellipseHeight * 0.5) | 0 : radiusX;
+                if (!radiusX || !radiusY) {
+                    this.drawRect(x, y, width, height);
+                    return;
+                }
+                var hw = width * 0.5;
+                var hh = height * 0.5;
+                if (radiusX > hw) {
+                    radiusX = hw;
+                }
+                if (radiusY > hh) {
+                    radiusY = hh;
+                }
+                if (hw === radiusX && hh === radiusY) {
+                    if (radiusX === radiusY) {
+                        this.drawCircle(x + radiusX, y + radiusY, radiusX);
+                    }
+                    else {
+                        this.drawEllipse(x, y, radiusX * 2, radiusY * 2);
+                    }
+                    return;
+                }
+                //    A-----B
+                //  H         C
+                //  G         D
+                //    F-----E
+                // 从D点开始，结束在D点
+                var right = x + width;
+                var bottom = y + height;
+                var xlw = x + radiusX;
+                var xrw = right - radiusX;
+                var ytw = y + radiusY;
+                var ybw = bottom - radiusY;
+                this.moveTo(right, ybw);
+                this.curveTo(right, bottom, xrw, bottom);
+                this.lineTo(xlw, bottom);
+                this.curveTo(x, bottom, x, ybw);
+                this.lineTo(x, ytw);
+                this.curveTo(x, y, xlw, y);
+                this.lineTo(xrw, y);
+                this.curveTo(right, y, right, ytw);
+                this.lineTo(right, ybw);
+            };
+            /**
+             * 绘制一个圆。
+             * @param x 圆心相对于父显示对象注册点的 x 位置（以像素为单位）。
+             * @param y 相对于父显示对象注册点的圆心的 y 位置（以像素为单位）。
+             * @param radius 圆的半径（以像素为单位）。
+             */
+            p.drawCircle = function (x, y, radius) {
+                this.arcToBezier(x, y, radius, radius, 0, Math.PI * 2);
+            };
+            /**
+             * 绘制一个椭圆。
+             * @param x 一个表示相对于父显示对象注册点的水平位置的数字（以像素为单位）。
+             * @param y 一个表示相对于父显示对象注册点的垂直位置的数字（以像素为单位）。
+             * @param width 矩形的宽度（以像素为单位）。
+             * @param height 矩形的高度（以像素为单位）。
+             */
+            p.drawEllipse = function (x, y, width, height) {
+                var radiusX = width * 0.5;
+                var radiusY = height * 0.5;
+                // 移动x和y到椭圆的中心.
+                x += radiusX;
+                y += radiusY;
+                this.arcToBezier(x, y, radiusX, radiusY, 0, Math.PI * 2);
+            };
+            /**
+             * 绘制一段圆弧路径。圆弧路径的圆心在 (x, y) 位置，半径为 r ，根据anticlockwise （默认为顺时针）指定的方向从 startAngle 开始绘制，到 endAngle 结束。
+             * @param x 圆弧中心（圆心）的 x 轴坐标。
+             * @param y 圆弧中心（圆心）的 y 轴坐标。
+             * @param radius 圆弧的半径。
+             * @param startAngle 圆弧的起始点， x轴方向开始计算，单位以弧度表示。
+             * 注意，必须在0~2π之间。
+             * @param endAngle 圆弧的终点， 单位以弧度表示。
+             * 注意，必须在0~2π之间。
+             * @param anticlockwise 如果为 true，逆时针绘制圆弧，反之，顺时针绘制。
+             */
+            p.drawArc = function (x, y, radius, startAngle, endAngle, anticlockwise) {
+                if (anticlockwise) {
+                    if (endAngle >= startAngle) {
+                        endAngle -= Math.PI * 2;
+                    }
+                }
+                else {
+                    if (endAngle <= startAngle) {
+                        endAngle += Math.PI * 2;
+                    }
+                }
+                this.arcToBezier(x, y, radius, radius, startAngle, endAngle, anticlockwise);
+            };
+            /**
+             * 绘制一段圆弧路径
+             * @param x 圆弧中心（圆心）的 x 轴坐标。
+             * @param y 圆弧中心（圆心）的 y 轴坐标。
+             * @param radiusX 圆弧的半径 x。
+             * @param radiusY 圆弧的半径 y。
+             * @param startAngle 圆弧的起始点， x轴方向开始计算，单位以弧度表示。
+             * 注意：必须为正数。
+             * @param endAngle 圆弧的终点， 单位以弧度表示。
+             * 注意：与startAngle差值必须在0~2π之间。
+             * @param anticlockwise 如果为 true，逆时针绘制圆弧，反之，顺时针绘制。
+             * 注意：如果为true，endAngle必须小于startAngle，反之必须大于。
+             */
+            p.arcToBezier = function (x, y, radiusX, radiusY, startAngle, endAngle, anticlockwise) {
+                var halfPI = Math.PI * 0.5;
+                var start = startAngle;
+                var end = start;
+                if (anticlockwise) {
+                    end += -halfPI - (start % halfPI);
+                    if (end < endAngle) {
+                        end = endAngle;
+                    }
+                }
+                else {
+                    end += halfPI - (start % halfPI);
+                    if (end > endAngle) {
+                        end = endAngle;
+                    }
+                }
+                var currentX = x + Math.cos(start) * radiusX;
+                var currentY = y + Math.sin(start) * radiusY;
+                this.moveTo(currentX, currentY);
+                for (var i = 0; i < 4; i++) {
+                    var addAngle = end - start;
+                    var a = 4 * Math.tan(addAngle / 4) / 3;
+                    var x1 = currentX - a * (currentY - y);
+                    var y1 = currentY + a * (currentX - x);
+                    currentX = x + Math.cos(end) * radiusX;
+                    currentY = y + Math.sin(end) * radiusY;
+                    var x2 = currentX + a * (currentY - y);
+                    var y2 = currentY - a * (currentX - x);
+                    this.cubicCurveTo(x1, y1, x2, y2, currentX, currentY);
+                    if (end === endAngle) {
+                        break;
+                    }
+                    start = end;
+                    if (anticlockwise) {
+                        end = start - halfPI;
+                        if (end < endAngle) {
+                            end = endAngle;
+                        }
+                    }
+                    else {
+                        end = start + halfPI;
+                        if (end > endAngle) {
+                            end = endAngle;
+                        }
+                    }
+                }
+            };
+            return Path2D;
+        }());
+        sys.Path2D = Path2D;
+        egret.registerClass(Path2D,'egret.sys.Path2D');
+    })(sys = egret.sys || (egret.sys = {}));
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    var sys;
+    (function (sys) {
+        /**
+         * @private
+         * 填充路径
+         */
+        var FillPath = (function (_super) {
+            __extends(FillPath, _super);
+            function FillPath() {
+                _super.call(this);
+                this.type = 1 /* Fill */;
+            }
+            var d = __define,c=FillPath,p=c.prototype;
+            return FillPath;
+        }(sys.Path2D));
+        sys.FillPath = FillPath;
+        egret.registerClass(FillPath,'egret.sys.FillPath');
+    })(sys = egret.sys || (egret.sys = {}));
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    var sys;
+    (function (sys) {
+        /**
+         * @private
+         * 渐变填充路径
+         */
+        var GradientFillPath = (function (_super) {
+            __extends(GradientFillPath, _super);
+            function GradientFillPath() {
+                _super.call(this);
+                this.type = 2 /* GradientFill */;
+            }
+            var d = __define,c=GradientFillPath,p=c.prototype;
+            return GradientFillPath;
+        }(sys.Path2D));
+        sys.GradientFillPath = GradientFillPath;
+        egret.registerClass(GradientFillPath,'egret.sys.GradientFillPath');
+    })(sys = egret.sys || (egret.sys = {}));
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    var sys;
+    (function (sys) {
+        /**
+         * @private
+         * 线条路径。
+         * 注意：当线条宽度（lineWidth）为1或3像素时，需要特殊处理，往右下角偏移0.5像素，以显示清晰锐利的线条。
+         */
+        var StrokePath = (function (_super) {
+            __extends(StrokePath, _super);
+            function StrokePath() {
+                _super.call(this);
+                this.type = 3 /* Stroke */;
+            }
+            var d = __define,c=StrokePath,p=c.prototype;
+            return StrokePath;
+        }(sys.Path2D));
+        sys.StrokePath = StrokePath;
+        egret.registerClass(StrokePath,'egret.sys.StrokePath');
+    })(sys = egret.sys || (egret.sys = {}));
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    var blendModes = ["source-over", "lighter", "destination-out"];
+    var defaultCompositeOp = "source-over";
+    var BLACK_COLOR = "#000000";
+    var CAPS_STYLES = { none: 'butt', square: 'square', round: 'round' };
+    var renderBufferPool = []; //渲染缓冲区对象池
+    /**
+     * @private
+     * Canvas渲染器
+     */
+    var CanvasRenderer = (function () {
+        function CanvasRenderer() {
+            this.nestLevel = 0; //渲染的嵌套层次，0表示在调用堆栈的最外层。
+        }
+        var d = __define,c=CanvasRenderer,p=c.prototype;
+        /**
+         * 渲染一个显示对象
+         * @param displayObject 要渲染的显示对象
+         * @param buffer 渲染缓冲
+         * @param matrix 要对显示对象整体叠加的变换矩阵
+         * @param dirtyList 脏矩形列表
+         * @param forRenderTexture 绘制目标是RenderTexture的标志
+         * @returns drawCall触发绘制的次数
+         */
+        p.render = function (displayObject, buffer, matrix, dirtyList, forRenderTexture) {
+            this.nestLevel++;
+            var context = buffer.context;
+            var root = forRenderTexture ? displayObject : null;
+            //绘制显示对象
+            var drawCall = this.drawDisplayObject(displayObject, context, dirtyList, matrix, null, null, root);
+            this.nestLevel--;
+            if (this.nestLevel === 0) {
+                //最大缓存6个渲染缓冲
+                if (renderBufferPool.length > 6) {
+                    renderBufferPool.length = 6;
+                }
+                var length = renderBufferPool.length;
+                for (var i = 0; i < length; i++) {
+                    renderBufferPool[i].resize(0, 0);
+                }
+            }
+            return drawCall;
+        };
+        /**
+         * @private
+         * 绘制一个显示对象
+         */
+        p.drawDisplayObject = function (displayObject, context, dirtyList, matrix, displayList, clipRegion, root) {
+            var drawCalls = 0;
+            var node;
+            if (displayList && !root) {
+                if (displayList.isDirty) {
+                    drawCalls += displayList.drawToSurface();
+                }
+                node = displayList.$renderNode;
+            }
+            else {
+                node = displayObject.$getRenderNode();
+            }
+            if (node) {
+                if (dirtyList) {
+                    var renderRegion = node.renderRegion;
+                    if (clipRegion && !clipRegion.intersects(renderRegion)) {
+                        node.needRedraw = false;
+                    }
+                    else if (!node.needRedraw) {
+                        var l = dirtyList.length;
+                        for (var j = 0; j < l; j++) {
+                            if (renderRegion.intersects(dirtyList[j])) {
+                                node.needRedraw = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                else {
+                    node.needRedraw = true;
+                }
+                if (node.needRedraw) {
+                    var renderAlpha;
+                    var m;
+                    if (root) {
+                        renderAlpha = displayObject.$getConcatenatedAlphaAt(root, displayObject.$getConcatenatedAlpha());
+                        m = egret.Matrix.create().copyFrom(displayObject.$getConcatenatedMatrix());
+                        displayObject.$getConcatenatedMatrixAt(root, m);
+                        matrix.$preMultiplyInto(m, m);
+                        context.setTransform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+                        egret.Matrix.release(m);
+                    }
+                    else {
+                        renderAlpha = node.renderAlpha;
+                        m = node.renderMatrix;
+                        context.setTransform(m.a, m.b, m.c, m.d, m.tx + matrix.tx, m.ty + matrix.ty);
+                    }
+                    context.globalAlpha = renderAlpha;
+                    drawCalls += this.renderNode(node, context);
+                    node.needRedraw = false;
+                }
+            }
+            if (displayList && !root) {
+                return drawCalls;
+            }
+            var children = displayObject.$children;
+            if (children) {
+                var length = children.length;
+                for (var i = 0; i < length; i++) {
+                    var child = children[i];
+                    if (!child.$visible || child.$alpha <= 0 || child.$maskedObject) {
+                        continue;
+                    }
+                    if ((child.$blendMode !== 0 ||
+                        (child.$mask && (child.$mask.$parentDisplayList || root)))) {
+                        drawCalls += this.drawWithClip(child, context, dirtyList, matrix, clipRegion, root);
+                    }
+                    else if (child.$scrollRect || child.$maskRect) {
+                        drawCalls += this.drawWithScrollRect(child, context, dirtyList, matrix, clipRegion, root);
+                    }
+                    else {
+                        if (child["isFPS"]) {
+                            this.drawDisplayObject(child, context, dirtyList, matrix, child.$displayList, clipRegion, root);
+                        }
+                        else {
+                            drawCalls += this.drawDisplayObject(child, context, dirtyList, matrix, child.$displayList, clipRegion, root);
+                        }
+                    }
+                }
+            }
+            return drawCalls;
+        };
+        /**
+         * @private
+         */
+        p.drawWithClip = function (displayObject, context, dirtyList, matrix, clipRegion, root) {
+            var drawCalls = 0;
+            var hasBlendMode = (displayObject.$blendMode !== 0);
+            if (hasBlendMode) {
+                var compositeOp = blendModes[displayObject.$blendMode];
+                if (!compositeOp) {
+                    compositeOp = defaultCompositeOp;
+                }
+            }
+            var scrollRect = displayObject.$scrollRect ? displayObject.$scrollRect : displayObject.$maskRect;
+            var mask = displayObject.$mask;
+            //if (mask && !mask.$parentDisplayList) {
+            //    mask = null; //如果遮罩不在显示列表中，放弃绘制遮罩。
+            //}
+            //计算scrollRect和mask的clip区域是否需要绘制，不需要就直接返回，跳过所有子项的遍历。
+            var maskRegion;
+            var displayMatrix = egret.Matrix.create();
+            displayMatrix.copyFrom(displayObject.$getConcatenatedMatrix());
+            if (displayObject.$parentDisplayList) {
+                var displayRoot = displayObject.$parentDisplayList.root;
+                var invertedMatrix;
+                if (displayRoot !== displayObject.$stage) {
+                    displayObject.$getConcatenatedMatrixAt(displayRoot, displayMatrix);
+                }
+            }
+            if (mask) {
+                var bounds = mask.$getOriginalBounds();
+                maskRegion = egret.sys.Region.create();
+                var m = egret.Matrix.create();
+                m.copyFrom(mask.$getConcatenatedMatrix());
+                if (invertedMatrix) {
+                    invertedMatrix.$preMultiplyInto(m, m);
+                }
+                maskRegion.updateRegion(bounds, m);
+                egret.Matrix.release(m);
+            }
+            var region;
+            if (scrollRect) {
+                region = egret.sys.Region.create();
+                region.updateRegion(scrollRect, displayMatrix);
+            }
+            if (region && maskRegion) {
+                region.intersect(maskRegion);
+                egret.sys.Region.release(maskRegion);
+            }
+            else if (!region && maskRegion) {
+                region = maskRegion;
+            }
+            if (region) {
+                if (region.isEmpty() || (clipRegion && !clipRegion.intersects(region))) {
+                    egret.sys.Region.release(region);
+                    egret.Matrix.release(displayMatrix);
+                    return drawCalls;
+                }
+            }
+            else {
+                region = egret.sys.Region.create();
+                bounds = displayObject.$getOriginalBounds();
+                region.updateRegion(bounds, displayMatrix);
+            }
+            var found = false;
+            if (!dirtyList) {
+                found = true;
+            }
+            else {
+                var l = dirtyList.length;
+                for (var j = 0; j < l; j++) {
+                    if (region.intersects(dirtyList[j])) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if (!found) {
+                egret.sys.Region.release(region);
+                egret.Matrix.release(displayMatrix);
+                return drawCalls;
+            }
+            //没有遮罩,同时显示对象没有子项
+            if (!mask && (!displayObject.$children || displayObject.$children.length == 0)) {
+                if (scrollRect) {
+                    var m = displayMatrix;
+                    displayContext.setTransform(m.a, m.b, m.c, m.d, m.tx - region.minX, m.ty - region.minY);
+                    displayContext.beginPath();
+                    displayContext.rect(scrollRect.x, scrollRect.y, scrollRect.width, scrollRect.height);
+                    displayContext.clip();
+                }
+                if (hasBlendMode) {
+                    context.globalCompositeOperation = compositeOp;
+                }
+                drawCalls += this.drawDisplayObject(displayObject, context, dirtyList, matrix, displayObject.$displayList, clipRegion, root);
+                if (hasBlendMode) {
+                    context.globalCompositeOperation = defaultCompositeOp;
+                }
+                return drawCalls;
+            }
+            //绘制显示对象自身，若有scrollRect，应用clip
+            var displayBuffer = this.createRenderBuffer(region.width, region.height);
+            var displayContext = displayBuffer.context;
+            if (!displayContext) {
+                drawCalls += this.drawDisplayObject(displayObject, context, dirtyList, matrix, displayObject.$displayList, clipRegion, root);
+                egret.sys.Region.release(region);
+                egret.Matrix.release(displayMatrix);
+                return drawCalls;
+            }
+            if (scrollRect) {
+                var m = displayMatrix;
+                displayContext.setTransform(m.a, m.b, m.c, m.d, m.tx - region.minX, m.ty - region.minY);
+                displayContext.beginPath();
+                displayContext.rect(scrollRect.x, scrollRect.y, scrollRect.width, scrollRect.height);
+                displayContext.clip();
+            }
+            displayContext.setTransform(1, 0, 0, 1, -region.minX, -region.minY);
+            var offsetM = egret.Matrix.create().setTo(1, 0, 0, 1, -region.minX, -region.minY);
+            drawCalls += this.drawDisplayObject(displayObject, displayContext, dirtyList, offsetM, displayObject.$displayList, region, root ? displayObject : null);
+            egret.Matrix.release(offsetM);
+            //绘制遮罩
+            if (mask) {
+                //如果只有一次绘制或是已经被cache直接绘制到displayContext
+                var maskRenderNode = mask.$getRenderNode();
+                if (maskRenderNode && maskRenderNode.$getRenderCount() == 1 || mask.$displayList) {
+                    displayContext.globalCompositeOperation = "destination-in";
+                    drawCalls += this.drawDisplayObject(mask, displayContext, dirtyList, offsetM, mask.$displayList, region, root ? mask : null);
+                }
+                else {
+                    var maskBuffer = this.createRenderBuffer(region.width, region.height);
+                    var maskContext = maskBuffer.context;
+                    if (!maskContext) {
+                        drawCalls += this.drawDisplayObject(displayObject, context, dirtyList, matrix, displayObject.$displayList, clipRegion, root);
+                        renderBufferPool.push(displayBuffer);
+                        egret.sys.Region.release(region);
+                        egret.Matrix.release(displayMatrix);
+                        return drawCalls;
+                    }
+                    maskContext.setTransform(1, 0, 0, 1, -region.minX, -region.minY);
+                    offsetM = egret.Matrix.create().setTo(1, 0, 0, 1, -region.minX, -region.minY);
+                    var calls = this.drawDisplayObject(mask, maskContext, dirtyList, offsetM, mask.$displayList, region, root ? mask : null);
+                    egret.Matrix.release(offsetM);
+                    if (calls > 0) {
+                        drawCalls += calls;
+                        displayContext.globalCompositeOperation = "destination-in";
+                        displayContext.setTransform(1, 0, 0, 1, 0, 0);
+                        displayContext.globalAlpha = 1;
+                        displayContext.drawImage(maskBuffer.surface, 0, 0);
+                    }
+                    renderBufferPool.push(maskBuffer);
+                }
+            }
+            //绘制结果到屏幕
+            if (drawCalls > 0) {
+                drawCalls++;
+                if (hasBlendMode) {
+                    context.globalCompositeOperation = compositeOp;
+                }
+                context.globalAlpha = 1;
+                context.setTransform(1, 0, 0, 1, region.minX + matrix.tx, region.minY + matrix.ty);
+                context.drawImage(displayBuffer.surface, 0, 0);
+                if (hasBlendMode) {
+                    context.globalCompositeOperation = defaultCompositeOp;
+                }
+            }
+            renderBufferPool.push(displayBuffer);
+            egret.sys.Region.release(region);
+            egret.Matrix.release(displayMatrix);
+            return drawCalls;
+        };
+        /**
+         * @private
+         */
+        p.drawWithScrollRect = function (displayObject, context, dirtyList, matrix, clipRegion, root) {
+            var drawCalls = 0;
+            var scrollRect = displayObject.$scrollRect ? displayObject.$scrollRect : displayObject.$maskRect;
+            if (scrollRect.width == 0 || scrollRect.height == 0) {
+                return drawCalls;
+            }
+            var m = egret.Matrix.create();
+            m.copyFrom(displayObject.$getConcatenatedMatrix());
+            if (displayObject.$parentDisplayList) {
+                var displayRoot = displayObject.$parentDisplayList.root;
+                if (displayRoot !== displayObject.$stage) {
+                    displayObject.$getConcatenatedMatrixAt(displayRoot, m);
+                }
+            }
+            var region = egret.sys.Region.create();
+            if (!scrollRect.isEmpty()) {
+                region.updateRegion(scrollRect, m);
+            }
+            if (region.isEmpty() || (clipRegion && !clipRegion.intersects(region))) {
+                egret.sys.Region.release(region);
+                egret.Matrix.release(m);
+                return drawCalls;
+            }
+            var found = false;
+            if (!dirtyList) {
+                found = true;
+            }
+            else {
+                var l = dirtyList.length;
+                for (var j = 0; j < l; j++) {
+                    if (region.intersects(dirtyList[j])) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if (!found) {
+                egret.sys.Region.release(region);
+                egret.Matrix.release(m);
+                return drawCalls;
+            }
+            //绘制显示对象自身
+            context.save();
+            context.setTransform(m.a, m.b, m.c, m.d, m.tx + matrix.tx, m.ty + matrix.ty);
+            context.beginPath();
+            context.rect(scrollRect.x, scrollRect.y, scrollRect.width, scrollRect.height);
+            context.clip();
+            drawCalls += this.drawDisplayObject(displayObject, context, dirtyList, matrix, displayObject.$displayList, region, root);
+            context.restore();
+            egret.sys.Region.release(region);
+            egret.Matrix.release(m);
+            return drawCalls;
+        };
+        /**
+         * 将一个RenderNode对象绘制到渲染缓冲
+         * @param node 要绘制的节点
+         * @param buffer 渲染缓冲
+         * @param matrix 要叠加的矩阵
+         * @param forHitTest 绘制结果是用于碰撞检测。若为true，当渲染GraphicsNode时，会忽略透明度样式设置，全都绘制为不透明的。
+         */
+        p.drawNodeToBuffer = function (node, buffer, matrix, forHitTest) {
+            var context = buffer.context;
+            context.setTransform(matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty);
+            this.renderNode(node, context, forHitTest);
+        };
+        /**
+         * @private
+         */
+        p.renderNode = function (node, context, forHitTest) {
+            var drawCalls = 0;
+            switch (node.type) {
+                case 1 /* BitmapNode */:
+                    drawCalls = this.renderBitmap(node, context);
+                    break;
+                case 2 /* TextNode */:
+                    drawCalls = 1;
+                    this.renderText(node, context);
+                    break;
+                case 3 /* GraphicsNode */:
+                    drawCalls = 1;
+                    this.renderGraphics(node, context, forHitTest);
+                    break;
+                case 4 /* GroupNode */:
+                    drawCalls = this.renderGroup(node, context);
+                    break;
+                case 5 /* SetTransformNode */:
+                    context.setTransform(node.drawData[0], node.drawData[1], node.drawData[2], node.drawData[3], node.drawData[4], node.drawData[5]);
+                    break;
+                case 6 /* SetAlphaNode */:
+                    context.globalAlpha = node.drawData[0];
+                    break;
+            }
+            return drawCalls;
+        };
+        /**
+         * @private
+         */
+        p.renderBitmap = function (node, context) {
+            var image = node.image;
+            if (context.$imageSmoothingEnabled != node.smoothing) {
+                context.imageSmoothingEnabled = node.smoothing;
+                context.$imageSmoothingEnabled = node.smoothing;
+            }
+            var data = node.drawData;
+            var length = data.length;
+            var pos = 0;
+            var m = node.matrix;
+            if (m) {
+                context.save();
+                context.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+            }
+            var drawCalls = 0;
+            while (pos < length) {
+                drawCalls++;
+                context.drawImage(image, data[pos++], data[pos++], data[pos++], data[pos++], data[pos++], data[pos++], data[pos++], data[pos++]);
+            }
+            if (m) {
+                context.restore();
+            }
+            return drawCalls;
+        };
+        /**
+         * @private
+         */
+        p.renderText = function (node, context) {
+            context.textAlign = "left";
+            context.textBaseline = "middle";
+            context.lineJoin = "round"; //确保描边样式是圆角
+            var drawData = node.drawData;
+            var length = drawData.length;
+            var pos = 0;
+            while (pos < length) {
+                var x = drawData[pos++];
+                var y = drawData[pos++];
+                var text = drawData[pos++];
+                var format = drawData[pos++];
+                context.font = getFontString(node, format);
+                var textColor = format.textColor == null ? node.textColor : format.textColor;
+                var strokeColor = format.strokeColor == null ? node.strokeColor : format.strokeColor;
+                var stroke = format.stroke == null ? node.stroke : format.stroke;
+                context.fillStyle = egret.toColorString(textColor);
+                context.strokeStyle = egret.toColorString(strokeColor);
+                if (stroke) {
+                    context.lineWidth = stroke * 2;
+                    context.strokeText(text, x, y);
+                }
+                context.fillText(text, x, y);
+            }
+        };
+        /**
+         * @private
+         */
+        p.renderGraphics = function (node, context, forHitTest) {
+            var drawData = node.drawData;
+            var length = drawData.length;
+            forHitTest = !!forHitTest;
+            for (var i = 0; i < length; i++) {
+                var path = drawData[i];
+                switch (path.type) {
+                    case 1 /* Fill */:
+                        var fillPath = path;
+                        context.fillStyle = forHitTest ? BLACK_COLOR : getRGBAString(fillPath.fillColor, fillPath.fillAlpha);
+                        this.renderPath(path, context);
+                        context.fill();
+                        break;
+                    case 2 /* GradientFill */:
+                        var g = path;
+                        context.fillStyle = forHitTest ? BLACK_COLOR : getGradient(context, g.gradientType, g.colors, g.alphas, g.ratios, g.matrix);
+                        context.save();
+                        var m = g.matrix;
+                        this.renderPath(path, context);
+                        context.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+                        context.fill();
+                        context.restore();
+                        break;
+                    case 3 /* Stroke */:
+                        var strokeFill = path;
+                        var lineWidth = strokeFill.lineWidth;
+                        context.lineWidth = lineWidth;
+                        context.strokeStyle = forHitTest ? BLACK_COLOR : getRGBAString(strokeFill.lineColor, strokeFill.lineAlpha);
+                        context.lineCap = CAPS_STYLES[strokeFill.caps];
+                        context.lineJoin = strokeFill.joints;
+                        context.miterLimit = strokeFill.miterLimit;
+                        //对1像素和3像素特殊处理，向右下角偏移0.5像素，以显示清晰锐利的线条。
+                        var isSpecialCaseWidth = lineWidth === 1 || lineWidth === 3;
+                        if (isSpecialCaseWidth) {
+                            context.translate(0.5, 0.5);
+                        }
+                        this.renderPath(path, context);
+                        context.stroke();
+                        if (isSpecialCaseWidth) {
+                            context.translate(-0.5, -0.5);
+                        }
+                        break;
+                }
+            }
+        };
+        p.renderPath = function (path, context) {
+            context.beginPath();
+            var data = path.$data;
+            var commands = path.$commands;
+            var commandCount = commands.length;
+            var pos = 0;
+            for (var commandIndex = 0; commandIndex < commandCount; commandIndex++) {
+                var command = commands[commandIndex];
+                switch (command) {
+                    case 4 /* CubicCurveTo */:
+                        context.bezierCurveTo(data[pos++], data[pos++], data[pos++], data[pos++], data[pos++], data[pos++]);
+                        break;
+                    case 3 /* CurveTo */:
+                        context.quadraticCurveTo(data[pos++], data[pos++], data[pos++], data[pos++]);
+                        break;
+                    case 2 /* LineTo */:
+                        context.lineTo(data[pos++], data[pos++]);
+                        break;
+                    case 1 /* MoveTo */:
+                        context.moveTo(data[pos++], data[pos++]);
+                        break;
+                }
+            }
+        };
+        p.renderGroup = function (groupNode, context) {
+            var drawCalls = 0;
+            var children = groupNode.drawData;
+            var length = children.length;
+            for (var i = 0; i < length; i++) {
+                var node = children[i];
+                drawCalls += this.renderNode(node, context);
+            }
+            return drawCalls;
+        };
+        /**
+         * @private
+         */
+        p.createRenderBuffer = function (width, height) {
+            var buffer = renderBufferPool.pop();
+            if (buffer) {
+                buffer.resize(width, height, true);
+            }
+            else {
+                buffer = new egret.sys.RenderBuffer(width, height);
+            }
+            return buffer;
+        };
+        return CanvasRenderer;
+    }());
+    egret.CanvasRenderer = CanvasRenderer;
+    egret.registerClass(CanvasRenderer,'egret.CanvasRenderer',["egret.sys.SystemRenderer"]);
+    /**
+     * @private
+     * 获取字体字符串
+     */
+    function getFontString(node, format) {
+        var italic = format.italic == null ? node.italic : format.italic;
+        var bold = format.bold == null ? node.bold : format.bold;
+        var size = format.size == null ? node.size : format.size;
+        var fontFamily = format.fontFamily || node.fontFamily;
+        var font = italic ? "italic " : "normal ";
+        font += bold ? "bold " : "normal ";
+        font += size + "px " + fontFamily;
+        return font;
+    }
+    /**
+     * @private
+     * 获取RGBA字符串
+     */
+    function getRGBAString(color, alpha) {
+        var red = color >> 16;
+        var green = (color >> 8) & 0xFF;
+        var blue = color & 0xFF;
+        return "rgba(" + red + "," + green + "," + blue + "," + alpha + ")";
+    }
+    /**
+     * @private
+     * 获取渐变填充样式对象
+     */
+    function getGradient(context, type, colors, alphas, ratios, matrix) {
+        var gradient;
+        if (type == egret.GradientType.LINEAR) {
+            gradient = context.createLinearGradient(-1, 0, 1, 0);
+        }
+        else {
+            gradient = context.createRadialGradient(0, 0, 0, 0, 0, 1);
+        }
+        //todo colors alphas ratios数量不一致情况处理
+        var l = colors.length;
+        for (var i = 0; i < l; i++) {
+            gradient.addColorStop(ratios[i] / 255, getRGBAString(colors[i], alphas[i]));
+        }
+        return gradient;
+    }
 })(egret || (egret = {}));
 var egret;
 (function (egret) {
@@ -15045,17 +16027,9 @@ var egret;
 })(egret || (egret = {}));
 var egret;
 (function (egret) {
-    /**
-     * @copy egret.Geolocation
-     */
-    egret.Geolocation;
 })(egret || (egret = {}));
 var egret;
 (function (egret) {
-    /**
-     * @copy egret.Motion
-     */
-    egret.Motion;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -15102,7 +16076,7 @@ var egret;
     var RuntimeType = (function () {
         function RuntimeType() {
         }
-        var d = __define,c=RuntimeType;p=c.prototype;
+        var d = __define,c=RuntimeType,p=c.prototype;
         /**
          * @language en_US
          * Running on Web
@@ -15130,9 +16104,9 @@ var egret;
          */
         RuntimeType.NATIVE = "native";
         return RuntimeType;
-    })();
+    }());
     egret.RuntimeType = RuntimeType;
-    egret.registerClass(RuntimeType,"egret.RuntimeType");
+    egret.registerClass(RuntimeType,'egret.RuntimeType');
     /**
      * @language en_US
      * The Capabilities class provides properties that describe the system and runtime that are hosting the application.
@@ -15150,7 +16124,7 @@ var egret;
     var Capabilities = (function () {
         function Capabilities() {
         }
-        var d = __define,c=Capabilities;p=c.prototype;
+        var d = __define,c=Capabilities,p=c.prototype;
         d(Capabilities, "language"
             /**
              * @language en_US
@@ -15263,6 +16237,27 @@ var egret;
             }
         );
         /**
+         * 设置系统信息
+         */
+        Capabilities.$setNativeCapabilities = function (value) {
+            var arr = value.split("-");
+            if (arr.length <= 4) {
+                //todo 未来去掉数量判断，2.5.4版本之前的参数大于4个
+                var osType = arr[0];
+                switch (osType) {
+                    case "android":
+                        osType = "Android";
+                        break;
+                    case "ios":
+                        osType = 'iOS';
+                        break;
+                }
+                Capabilities.$os = osType;
+                var version = arr[2].substring(1, arr[2].length);
+                Capabilities.supportVersion = version;
+            }
+        };
+        /**
          * @private
          */
         Capabilities.$language = "zh-CN";
@@ -15274,10 +16269,25 @@ var egret;
          * @private
          */
         Capabilities.$runtimeType = "Unknown";
+        /***
+         * @language en_US
+         * version of the native support
+         * @type {string}
+         * @version Egret 2.5
+         * @platform Web,Native
+         */
+        /***
+         * @language zh_CN
+         * native support 的版本号
+         * @type {string}
+         * @version Egret 2.5
+         * @platform Web,Native
+         */
+        Capabilities.supportVersion = "Unknown";
         return Capabilities;
-    })();
+    }());
     egret.Capabilities = Capabilities;
-    egret.registerClass(Capabilities,"egret.Capabilities");
+    egret.registerClass(Capabilities,'egret.Capabilities');
     if (DEBUG) {
         egret.$markReadOnly(Capabilities, "language", false);
         egret.$markReadOnly(Capabilities, "isMobile", false);
@@ -15409,7 +16419,7 @@ var egret;
                 this.charList = {};
             }
         }
-        var d = __define,c=BitmapFont;p=c.prototype;
+        var d = __define,c=BitmapFont,p=c.prototype;
         /**
          * @language en_US
          * Obtain corresponding texture through the name attribute
@@ -15449,13 +16459,13 @@ var egret;
                     var c = this.charList[str];
                     if (c) {
                         var sourceH = c.sourceH;
-                        if (egret.sys.isUndefined(sourceH)) {
+                        if (sourceH === undefined) {
                             var h = c.h;
                             if (h === undefined) {
                                 h = 0;
                             }
                             var offY = c.offY;
-                            if (egret.sys.isUndefined(offY)) {
+                            if (offY === undefined) {
                                 offY = 0;
                             }
                             sourceH = h + offY;
@@ -15514,38 +16524,10 @@ var egret;
             return 0;
         };
         return BitmapFont;
-    })(egret.SpriteSheet);
+    }(egret.SpriteSheet));
     egret.BitmapFont = BitmapFont;
-    egret.registerClass(BitmapFont,"egret.BitmapFont");
+    egret.registerClass(BitmapFont,'egret.BitmapFont');
 })(egret || (egret = {}));
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-2015, Egret Technology Inc.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
 var egret;
 (function (egret) {
     /**
@@ -15581,25 +16563,25 @@ var egret;
             /**
              * @private
              */
-            this.textWidth = 0;
+            this.$textOffsetX = 0;
             /**
              * @private
              */
-            this.textHeight = 0;
+            this.$textOffsetY = 0;
             /**
              * @private
              */
-            this.textOffsetX = 0;
+            this.$textStartX = 0;
             /**
              * @private
              */
-            this.textOffsetY = 0;
+            this.$textStartY = 0;
             /**
              * @private
              */
             this.$lineHeights = [];
+            this.$renderNode = new egret.sys.BitmapNode();
             //this.cacheAsBitmap = true;
-            this.$renderRegion = new egret.sys.Region();
             this.$BitmapText = {
                 0: NaN,
                 1: NaN,
@@ -15608,10 +16590,44 @@ var egret;
                 4: 0,
                 5: null,
                 6: false,
-                7: false //textLinesChanged,
+                7: false,
+                8: false,
+                9: false,
+                10: "left",
+                11: "top",
+                12: egret.Bitmap.defaultSmoothing //smoothing
             };
         }
-        var d = __define,c=BitmapText;p=c.prototype;
+        var d = __define,c=BitmapText,p=c.prototype;
+        d(p, "smoothing"
+            /**
+             * @language en_US
+             * Whether or not is smoothed when scaled.
+             * @default true。
+             * @version Egret 3.0
+             * @platform Web
+             */
+            /**
+             * @language zh_CN
+             * 控制在缩放时是否进行平滑处理。
+             * @default true。
+             * @version Egret 3.0
+             * @platform Web
+             */
+            ,function () {
+                var values = this.$BitmapText;
+                return values[12 /* smoothing */];
+            }
+            ,function (value) {
+                value = !!value;
+                var values = this.$BitmapText;
+                if (value == values[12 /* smoothing */]) {
+                    return;
+                }
+                values[12 /* smoothing */] = value;
+                this.$invalidate();
+            }
+        );
         d(p, "text"
             /**
              * @language en_US
@@ -15693,14 +16709,14 @@ var egret;
         d(p, "font"
             /**
              * @language en_US
-             * The name of the font to use, or a comma-separated list of font names.
+             * The name of the font to use, or a comma-separated list of font names, the type of value must be BitmapFont.
              * @default null
              * @version Egret 2.4
              * @platform Web,Native
              */
             /**
              * @language zh_CN
-             * 要使用的字体的名称或用逗号分隔的字体名称列表。
+             * 要使用的字体的名称或用逗号分隔的字体名称列表，类型必须是 BitmapFont。
              * @default null
              * @version Egret 2.4
              * @platform Web,Native
@@ -15724,7 +16740,7 @@ var egret;
         };
         d(p, "lineSpacing"
             /**
-            /**
+             /**
              * @language en_US
              * An integer representing the amount of vertical space between lines.
              * @default 0
@@ -15785,23 +16801,92 @@ var egret;
             this.$invalidateContentBounds();
             return true;
         };
+        d(p, "textAlign"
+            /**
+             * @language en_US
+             * Horizontal alignment of text.
+             * @default：egret.HorizontalAlign.LEFT
+             * @version Egret 2.5.6
+             * @platform Web,Native
+             */
+            /**
+             * @language zh_CN
+             * 文本的水平对齐方式。
+             * @default：egret.HorizontalAlign.LEFT
+             * @version Egret 2.5.6
+             * @platform Web,Native
+             */
+            ,function () {
+                return this.$BitmapText[10 /* textAlign */];
+            }
+            ,function (value) {
+                this.$setTextAlign(value);
+            }
+        );
+        p.$setTextAlign = function (value) {
+            var values = this.$BitmapText;
+            if (values[10 /* textAlign */] == value)
+                return false;
+            values[10 /* textAlign */] = value;
+            this.$invalidateContentBounds();
+            return true;
+        };
+        d(p, "verticalAlign"
+            /**
+             * @language en_US
+             * Vertical alignment of text.
+             * @default：egret.VerticalAlign.TOP
+             * @version Egret 2.5.6
+             * @platform Web,Native
+             */
+            /**
+             * @language zh_CN
+             * 文字的垂直对齐方式。
+             * @default：egret.VerticalAlign.TOP
+             * @version Egret 2.5.6
+             * @platform Web,Native
+             */
+            ,function () {
+                return this.$BitmapText[11 /* verticalAlign */];
+            }
+            ,function (value) {
+                this.$setVerticalAlign(value);
+            }
+        );
+        p.$setVerticalAlign = function (value) {
+            var values = this.$BitmapText;
+            if (values[11 /* verticalAlign */] == value)
+                return false;
+            values[11 /* verticalAlign */] = value;
+            this.$invalidateContentBounds();
+            return true;
+        };
         /**
          * @private
          */
-        p.$render = function (context) {
-            var self = this;
-            var textLines = self.$getTextLines();
+        p.$render = function () {
+            var values = this.$BitmapText;
+            var textLines = this.$getTextLines();
             var length = textLines.length;
             if (length == 0) {
                 return;
             }
-            var bitmapFont = self.$BitmapText[5 /* font */];
+            var textLinesWidth = this.$textLinesWidth;
+            var bitmapFont = values[5 /* font */];
+            var node = this.$renderNode;
+            if (bitmapFont.$texture) {
+                node.image = bitmapFont.$texture._bitmapData;
+            }
+            node.smoothing = values[12 /* smoothing */];
             var emptyHeight = bitmapFont._getFirstCharHeight();
             var emptyWidth = Math.ceil(emptyHeight * BitmapText.EMPTY_FACTOR);
-            var yPos = 0;
-            var hasSetHeight = !isNaN(self.$BitmapText[1 /* textFieldHeight */]);
-            var textFieldHeight = self.$BitmapText[1 /* textFieldHeight */];
-            var lineHeights = self.$lineHeights;
+            var hasSetHeight = !isNaN(values[1 /* textFieldHeight */]);
+            var textWidth = values[8 /* textWidth */];
+            var textFieldWidth = values[0 /* textFieldWidth */];
+            var textFieldHeight = values[1 /* textFieldHeight */];
+            var align = values[10 /* textAlign */];
+            var yPos = this.$textOffsetY + this.$textStartY;
+            var lineHeights = this.$lineHeights;
             for (var i = 0; i < length; i++) {
                 var lineHeight = lineHeights[i];
                 if (hasSetHeight && i > 0 && yPos + lineHeight > textFieldHeight) {
@@ -15809,7 +16894,16 @@ var egret;
                 }
                 var line = textLines[i];
                 var len = line.length;
-                var xPos = 0;
+                var xPos = this.$textOffsetX;
+                if (align != egret.HorizontalAlign.LEFT) {
+                    var countWidth = textFieldWidth > textWidth ? textFieldWidth : textWidth;
+                    if (align == egret.HorizontalAlign.RIGHT) {
+                        xPos += countWidth - textLinesWidth[i];
+                    }
+                    else if (align == egret.HorizontalAlign.CENTER) {
+                        xPos += Math.floor((countWidth - textLinesWidth[i]) / 2);
+                    }
+                }
                 for (var j = 0; j < len; j++) {
                     var character = line.charAt(j);
                     var texture = bitmapFont.getTexture(character);
@@ -15824,10 +16918,10 @@ var egret;
                     }
                     var bitmapWidth = texture._bitmapWidth;
                     var bitmapHeight = texture._bitmapHeight;
-                    context.drawImage(texture._bitmapData, texture._bitmapX, texture._bitmapY, bitmapWidth, bitmapHeight, xPos + texture._offsetX, yPos + texture._offsetY, texture.$getScaleBitmapWidth(), texture.$getScaleBitmapHeight());
-                    xPos += texture.$getTextureWidth() + self.$BitmapText[4 /* letterSpacing */];
+                    node.drawImage(texture._bitmapX, texture._bitmapY, bitmapWidth, bitmapHeight, xPos + texture._offsetX, yPos + texture._offsetY, texture.$getScaleBitmapWidth(), texture.$getScaleBitmapHeight());
+                    xPos += texture.$getTextureWidth() + values[4 /* letterSpacing */];
                 }
-                yPos += lineHeight + self.$BitmapText[3 /* lineSpacing */];
+                yPos += lineHeight + values[3 /* lineSpacing */];
             }
         };
         /**
@@ -15839,37 +16933,78 @@ var egret;
                 bounds.setEmpty();
             }
             else {
-                bounds.setTo(this.textOffsetX, this.textOffsetY, this.textWidth - this.textOffsetX, this.textHeight - this.textOffsetY + (lines.length - 1) * this.$BitmapText[3 /* lineSpacing */]);
+                bounds.setTo(this.$textOffsetX + this.$textStartX, this.$textOffsetY + this.$textStartY, this.$BitmapText[8 /* textWidth */] - this.$textOffsetX, this.$BitmapText[9 /* textHeight */] - this.$textOffsetY);
             }
         };
+        d(p, "textWidth"
+            /**
+             * @language en_US
+             * Get the BitmapText measured width
+             * @version Egret 2.4
+             * @platform Web,Native
+             */
+            /**
+             * @language zh_CN
+             * 获取位图文本测量宽度
+             * @version Egret 2.4
+             * @platform Web,Native
+             */
+            ,function () {
+                this.$getTextLines();
+                return this.$BitmapText[8 /* textWidth */];
+            }
+        );
+        d(p, "textHeight"
+            /**
+             * @language en_US
+             * Get Text BitmapText height
+             * @version Egret 2.4
+             * @platform Web,Native
+             */
+            /**
+             * @language zh_CN
+             * 获取位图文本测量高度
+             * @version Egret 2.4
+             * @platform Web,Native
+             */
+            ,function () {
+                this.$getTextLines();
+                return this.$BitmapText[9 /* textHeight */];
+            }
+        );
         /**
          * @private
          *
          * @returns
          */
         p.$getTextLines = function () {
-            var self = this;
-            if (!this.$BitmapText[7 /* textLinesChanged */]) {
-                return self.textLines;
+            var values = this.$BitmapText;
+            if (!values[7 /* textLinesChanged */]) {
+                return this.textLines;
             }
             var textLines = [];
-            self.textLines = textLines;
-            this.$BitmapText[7 /* textLinesChanged */] = false;
+            this.textLines = textLines;
+            var textLinesWidth = [];
+            this.$textLinesWidth = textLinesWidth;
+            values[7 /* textLinesChanged */] = false;
             var lineHeights = [];
-            self.$lineHeights = lineHeights;
-            if (!self.$BitmapText[2 /* text */] || !self.$BitmapText[5 /* font */]) {
+            this.$lineHeights = lineHeights;
+            if (!values[2 /* text */] || !values[5 /* font */]) {
                 return textLines;
             }
+            var lineSpacing = values[3 /* lineSpacing */];
+            var letterSpacing = values[4 /* letterSpacing */];
             var textWidth = 0;
             var textHeight = 0;
-            var textStartX = 0;
-            var textStartY = 0;
-            var hasWidthSet = !isNaN(self.$BitmapText[0 /* textFieldWidth */]);
-            var textFieldWidth = self.$BitmapText[0 /* textFieldWidth */];
-            var bitmapFont = self.$BitmapText[5 /* font */];
+            var textOffsetX = 0;
+            var textOffsetY = 0;
+            var hasWidthSet = !isNaN(values[0 /* textFieldWidth */]);
+            var textFieldWidth = values[0 /* textFieldWidth */];
+            var textFieldHeight = values[1 /* textFieldHeight */];
+            var bitmapFont = values[5 /* font */];
             var emptyHeight = bitmapFont._getFirstCharHeight();
             var emptyWidth = Math.ceil(emptyHeight * BitmapText.EMPTY_FACTOR);
-            var text = self.$BitmapText[2 /* text */];
+            var text = values[2 /* text */];
             var textArr = text.split(/(?:\r\n|\r|\n)/);
             var length = textArr.length;
             var isFirstLine = true;
@@ -15879,9 +17014,10 @@ var egret;
                 var lineHeight = 0;
                 var xPos = 0;
                 var isFirstChar = true;
+                var isLastChar = false;
                 for (var j = 0; j < len; j++) {
                     if (!isFirstChar) {
-                        xPos += self.$BitmapText[4 /* letterSpacing */];
+                        xPos += letterSpacing;
                     }
                     var character = line.charAt(j);
                     var texureWidth;
@@ -15910,16 +17046,15 @@ var egret;
                     }
                     if (isFirstChar) {
                         isFirstChar = false;
-                        textStartX = Math.min(offsetX, textStartX);
+                        textOffsetX = Math.min(offsetX, textOffsetX);
                     }
                     if (isFirstLine) {
-                        textStartY = Math.min(offsetY, textStartY);
+                        isFirstLine = false;
+                        textOffsetY = Math.min(offsetY, textOffsetY);
                     }
                     if (hasWidthSet && j > 0 && xPos + texureWidth > textFieldWidth) {
-                        textLines.push(line.substring(0, j));
-                        lineHeights.push(lineHeight);
-                        textHeight += lineHeight;
-                        textWidth = Math.max(xPos, textWidth);
+                        if (!setLineData(line.substring(0, j)))
+                            break;
                         line = line.substring(j);
                         len = line.length;
                         j = 0;
@@ -15930,18 +17065,53 @@ var egret;
                     xPos += texureWidth;
                     lineHeight = Math.max(textureHeight, lineHeight);
                 }
-                if (isFirstLine) {
-                    isFirstLine = false;
+                if (textFieldHeight && i > 0 && textHeight > textFieldHeight) {
+                    break;
                 }
-                textLines.push(line);
-                lineHeights.push(lineHeight);
-                textHeight += lineHeight;
-                textWidth = Math.max(xPos, textWidth);
+                isLastChar = true;
+                if (!setLineData(line))
+                    break;
             }
-            self.textWidth = textWidth;
-            self.textHeight = textHeight;
-            self.textOffsetX = textStartX;
-            self.textOffsetY = textStartY;
+            function setLineData(str) {
+                if (textFieldHeight && textLines.length > 0 && textHeight > textFieldHeight) {
+                    return false;
+                }
+                textHeight += lineHeight + lineSpacing;
+                if (!isFirstChar && !isLastChar) {
+                    xPos -= letterSpacing;
+                }
+                textLines.push(str);
+                lineHeights.push(lineHeight);
+                textLinesWidth.push(xPos);
+                textWidth = Math.max(xPos, textWidth);
+                return true;
+            }
+            textHeight -= lineSpacing;
+            values[8 /* textWidth */] = textWidth;
+            values[9 /* textHeight */] = textHeight;
+            this.$textOffsetX = textOffsetX;
+            this.$textOffsetY = textOffsetY;
+            this.$textStartX = 0;
+            this.$textStartY = 0;
+            var alignType;
+            if (textFieldWidth > textWidth) {
+                alignType = values[10 /* textAlign */];
+                if (alignType == egret.HorizontalAlign.RIGHT) {
+                    this.$textStartX = textFieldWidth - textWidth;
+                }
+                else if (alignType == egret.HorizontalAlign.CENTER) {
+                    this.$textStartX = Math.floor((textFieldWidth - textWidth) / 2);
+                }
+            }
+            if (textFieldHeight > textHeight) {
+                alignType = values[11 /* verticalAlign */];
+                if (alignType == egret.VerticalAlign.BOTTOM) {
+                    this.$textStartY = textFieldHeight - textHeight;
+                }
+                else if (alignType == egret.VerticalAlign.MIDDLE) {
+                    this.$textStartY = Math.floor((textFieldHeight - textHeight) / 2);
+                }
+            }
             return textLines;
         };
         /**
@@ -15960,9 +17130,9 @@ var egret;
          */
         BitmapText.EMPTY_FACTOR = 0.33;
         return BitmapText;
-    })(egret.DisplayObject);
+    }(egret.DisplayObject));
     egret.BitmapText = BitmapText;
-    egret.registerClass(BitmapText,"egret.BitmapText");
+    egret.registerClass(BitmapText,'egret.BitmapText');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -16011,7 +17181,7 @@ var egret;
     var HorizontalAlign = (function () {
         function HorizontalAlign() {
         }
-        var d = __define,c=HorizontalAlign;p=c.prototype;
+        var d = __define,c=HorizontalAlign,p=c.prototype;
         /**
          * @language en_US
          * Horizontally align content to the left of the container.
@@ -16088,9 +17258,9 @@ var egret;
          */
         HorizontalAlign.CONTENT_JUSTIFY = "contentJustify";
         return HorizontalAlign;
-    })();
+    }());
     egret.HorizontalAlign = HorizontalAlign;
-    egret.registerClass(HorizontalAlign,"egret.HorizontalAlign");
+    egret.registerClass(HorizontalAlign,'egret.HorizontalAlign');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -16151,7 +17321,7 @@ var egret;
             this.resutlArr = [];
             this.initReplaceArr();
         }
-        var d = __define,c=HtmlTextParser;p=c.prototype;
+        var d = __define,c=HtmlTextParser,p=c.prototype;
         p.initReplaceArr = function () {
             this.replaceArr = [];
             this.replaceArr.push([/&lt;/g, "<"]);
@@ -16204,7 +17374,11 @@ var egret;
                 else {
                     this.addToResultArr(htmltext.substring(firstIdx, starIdx));
                     var fontEnd = htmltext.indexOf(">", starIdx);
-                    if (htmltext.charAt(starIdx + 1) == "\/") {
+                    if (fontEnd == -1) {
+                        egret.$error(1038);
+                        fontEnd = starIdx;
+                    }
+                    else if (htmltext.charAt(starIdx + 1) == "\/") {
                         this.stackArray.pop();
                     }
                     else {
@@ -16343,9 +17517,9 @@ var egret;
             }
         };
         return HtmlTextParser;
-    })();
+    }());
     egret.HtmlTextParser = HtmlTextParser;
-    egret.registerClass(HtmlTextParser,"egret.HtmlTextParser");
+    egret.registerClass(HtmlTextParser,'egret.HtmlTextParser');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -16427,7 +17601,7 @@ var egret;
              */
             this._isFocus = false;
         }
-        var d = __define,c=InputController;p=c.prototype;
+        var d = __define,c=InputController,p=c.prototype;
         /**
          *
          * @param text
@@ -16447,10 +17621,10 @@ var egret;
             if (!this._text.$inputEnabled) {
                 this._text.$touchEnabled = true;
             }
+            this.tempStage = this._text.stage;
             this.stageText.$addToStage();
             this.stageText.addEventListener("updateText", this.updateTextHandler, this);
             this._text.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.onMouseDownHandler, this);
-            this._text.stage.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.onStageDownHandler, this);
             this.stageText.addEventListener("blur", this.blurHandler, this);
             this.stageText.addEventListener("focus", this.focusHandler, this);
         };
@@ -16465,7 +17639,7 @@ var egret;
             this.stageText.$removeFromStage();
             this.stageText.removeEventListener("updateText", this.updateTextHandler, this);
             this._text.removeEventListener(egret.TouchEvent.TOUCH_BEGIN, this.onMouseDownHandler, this);
-            this._text.stage.removeEventListener(egret.TouchEvent.TOUCH_BEGIN, this.onStageDownHandler, this);
+            this.tempStage.removeEventListener(egret.TouchEvent.TOUCH_BEGIN, this.onStageDownHandler, this);
             this.stageText.removeEventListener("blur", this.blurHandler, this);
             this.stageText.removeEventListener("focus", this.focusHandler, this);
         };
@@ -16484,6 +17658,12 @@ var egret;
          */
         p._setText = function (value) {
             this.stageText.$setText(value);
+        };
+        /**
+         * @private
+         */
+        p._setColor = function (value) {
+            this.stageText.$setColor(value);
         };
         /**
          * @private
@@ -16510,6 +17690,7 @@ var egret;
             if (this._isFocus) {
                 //不再显示竖线，并且输入框显示最开始
                 this._isFocus = false;
+                this.tempStage.removeEventListener(egret.TouchEvent.TOUCH_BEGIN, this.onStageDownHandler, this);
                 this._text.$isTyping = false;
                 this._text.$invalidateContentBounds();
                 //失去焦点后调用
@@ -16527,6 +17708,7 @@ var egret;
             if (this._isFocus) {
                 return;
             }
+            this.tempStage.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.onStageDownHandler, this);
             //强制更新输入框位置
             this.stageText.$show();
         };
@@ -16629,9 +17811,9 @@ var egret;
             this.updateInput();
         };
         return InputController;
-    })(egret.HashObject);
+    }(egret.HashObject));
     egret.InputController = InputController;
-    egret.registerClass(InputController,"egret.InputController");
+    egret.registerClass(InputController,'egret.InputController');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -16663,11 +17845,6 @@ var egret;
 //////////////////////////////////////////////////////////////////////////////////////
 var egret;
 (function (egret) {
-    /**
-     * @version Egret 2.4
-     * @platform Web,Native
-     */
-    egret.StageText;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -16700,6 +17877,18 @@ var egret;
 var egret;
 (function (egret) {
     var SplitRegex = new RegExp("(?=[\\u00BF-\\u1FFF\\u2C00-\\uD7FF]|\\b|\\s)(?![。，！、》…）)}”】\\.\\,\\!\\?\\]\\:])");
+    /**
+     * @private
+     * 根据样式测量文本宽度
+     */
+    function measureTextWidth(text, values, style) {
+        style = style || {};
+        var italic = style.italic == null ? values[16 /* italic */] : style.italic;
+        var bold = style.bold == null ? values[15 /* bold */] : style.bold;
+        var size = style.size == null ? values[0 /* fontSize */] : style.size;
+        var fontFamily = style.fontFamily || values[8 /* fontFamily */] || TextField.default_fontFamily;
+        return egret.sys.measureText(text, fontFamily, size, bold, italic);
+    }
     /**
      * @language en_US
      * TextField is the text rendering class of egret. It conducts rendering by using the browser / device API. Due to different ways of font rendering in different browsers / devices, there may be differences in the rendering
@@ -16742,7 +17931,7 @@ var egret;
             /**
              * @private
              */
-            this.bgGraphics = null;
+            this.graphicsNode = null;
             /**
              * @private
              */
@@ -16759,8 +17948,10 @@ var egret;
              * @private
              */
             this.$isTyping = false;
-            this.drawTempArray = [];
-            this.$renderRegion = new egret.sys.Region();
+            var textNode = new egret.sys.TextNode();
+            textNode.fontFamily = TextField.default_fontFamily;
+            this.textNode = textNode;
+            this.$renderNode = textNode;
             this.$TextField = {
                 0: 30,
                 1: 0,
@@ -16770,7 +17961,7 @@ var egret;
                 5: 0,
                 6: 0,
                 7: 0,
-                8: "sans-serif",
+                8: TextField.default_fontFamily,
                 9: "left",
                 10: "top",
                 11: "#ffffff",
@@ -16801,11 +17992,9 @@ var egret;
                 36: null //restrictNot
             };
         }
-        var d = __define,c=TextField;p=c.prototype;
+        var d = __define,c=TextField,p=c.prototype;
         /**
          * @private
-         *
-         * @returns
          */
         p.isInput = function () {
             return this.$TextField[24 /* type */] == egret.TextFieldType.INPUT;
@@ -16821,14 +18010,14 @@ var egret;
             /**
              * @language en_US
              * The name of the font to use, or a comma-separated list of font names.
-             * @default "sans-serif"
+             * @default "Arial"
              * @version Egret 2.4
              * @platform Web,Native
              */
             /**
              * @language zh_CN
              * 要使用的字体的名称或用逗号分隔的字体名称列表。
-             * @default "sans-serif"
+             * @default "Arial"
              * @version Egret 2.4
              * @platform Web,Native
              */
@@ -16871,7 +18060,7 @@ var egret;
             }
         );
         p.$setSize = function (value) {
-            value = egret.sys.getNumber(value);
+            value = +value || 0;
             var values = this.$TextField;
             if (values[0 /* fontSize */] == value) {
                 return false;
@@ -16881,28 +18070,6 @@ var egret;
             return true;
         };
         d(p, "bold"
-            ///**
-            // * @private
-            // * @version Egret 2.4
-            // * @platform Web,Native
-            // */
-            //public get fontSize():number {
-            //    return this.$TextField[sys.TextKeys.fontSize];
-            //}
-            //
-            ///**
-            // * @private
-            // */
-            //public set fontSize(value:number) {
-            //    value = egret.sys.getNumber(value);
-            //
-            //    var values = this.$TextField;
-            //    if (values[sys.TextKeys.fontSize] == value) {
-            //        return;
-            //    }
-            //    values[sys.TextKeys.fontSize] = value;
-            //    this.invalidateFontString();
-            //}
             /**
              * @language en_US
              * Specifies whether the text is boldface.
@@ -16973,18 +18140,6 @@ var egret;
         p.invalidateFontString = function () {
             this.$TextField[17 /* fontStringChanged */] = true;
             this.$invalidateTextField();
-        };
-        /**
-         * @private
-         * 获取字体信息的字符串形式。
-         */
-        p.getFontString = function () {
-            var values = this.$TextField;
-            if (values[17 /* fontStringChanged */]) {
-                values[17 /* fontStringChanged */] = false;
-                values[12 /* fontString */] = egret.sys.toFontString(this);
-            }
-            return values[12 /* fontString */];
         };
         d(p, "textAlign"
             /**
@@ -17071,7 +18226,7 @@ var egret;
             }
         );
         p.$setLineSpacing = function (value) {
-            value = egret.sys.getNumber(value);
+            value = +value || 0;
             var values = this.$TextField;
             if (values[1 /* lineSpacing */] == value)
                 return false;
@@ -17108,7 +18263,9 @@ var egret;
                 return false;
             }
             values[2 /* textColor */] = value;
-            values[11 /* textColorString */] = egret.toColorString(value);
+            if (this.inputUtils) {
+                this.inputUtils._setColor(this.$TextField[2 /* textColor */]);
+            }
             this.$invalidate();
             return true;
         };
@@ -17175,13 +18332,14 @@ var egret;
          * @param value
          */
         p.$setType = function (value) {
-            if (this.$TextField[24 /* type */] != value) {
-                this.$TextField[24 /* type */] = value;
+            var values = this.$TextField;
+            if (values[24 /* type */] != value) {
+                values[24 /* type */] = value;
                 if (value == egret.TextFieldType.INPUT) {
-                    if (isNaN(this.$TextField[3 /* textFieldWidth */])) {
+                    if (isNaN(values[3 /* textFieldWidth */])) {
                         this.$setWidth(100);
                     }
-                    if (isNaN(this.$TextField[4 /* textFieldHeight */])) {
+                    if (isNaN(values[4 /* textFieldHeight */])) {
                         this.$setHeight(30);
                     }
                     this.$setTouchEnabled(true);
@@ -17248,11 +18406,12 @@ var egret;
             }
             value = value.toString();
             this.isFlow = false;
-            if (this.$TextField[13 /* text */] != value) {
+            var values = this.$TextField;
+            if (values[13 /* text */] != value) {
                 this.$invalidateTextField();
-                this.$TextField[13 /* text */] = value;
+                values[13 /* text */] = value;
                 var text = "";
-                if (this.$TextField[20 /* displayAsPassword */]) {
+                if (values[20 /* displayAsPassword */]) {
                     text = this.changeToPassText(value);
                 }
                 else {
@@ -17304,16 +18463,16 @@ var egret;
          * @param value
          */
         p.$setDisplayAsPassword = function (value) {
-            var self = this;
-            if (this.$TextField[20 /* displayAsPassword */] != value) {
-                this.$TextField[20 /* displayAsPassword */] = value;
+            var values = this.$TextField;
+            if (values[20 /* displayAsPassword */] != value) {
+                values[20 /* displayAsPassword */] = value;
                 this.$invalidateTextField();
                 var text = "";
                 if (value) {
-                    text = this.changeToPassText(this.$TextField[13 /* text */]);
+                    text = this.changeToPassText(values[13 /* text */]);
                 }
                 else {
-                    text = this.$TextField[13 /* text */];
+                    text = values[13 /* text */];
                 }
                 this.setMiddleStyle([{ text: text }]);
                 return true;
@@ -17341,6 +18500,7 @@ var egret;
              * @default 0x000000
              */
             ,function (value) {
+                value = +value || 0;
                 this.$setStrokeColor(value);
             }
         );
@@ -17350,10 +18510,11 @@ var egret;
          * @param value
          */
         p.$setStrokeColor = function (value) {
-            if (this.$TextField[25 /* strokeColor */] != value) {
+            var values = this.$TextField;
+            if (values[25 /* strokeColor */] != value) {
                 this.$invalidateTextField();
-                this.$TextField[25 /* strokeColor */] = value;
-                this.$TextField[26 /* strokeColorString */] = egret.toColorString(value);
+                values[25 /* strokeColor */] = value;
+                values[26 /* strokeColorString */] = egret.toColorString(value);
                 return true;
             }
             return false;
@@ -17583,14 +18744,14 @@ var egret;
             /**
              * @language en_US
              * Indicates a user can enter into the text field character set. If you restrict property is null, you can enter any character. If you restrict property is an empty string, you can not enter any character. If you restrict property is a string of characters, you can enter only characters in the string in the text field. The string is scanned from left to right. You can use a hyphen (-) to specify a range. Only restricts user interaction; a script may put any text into the text field. <br/>
-             * If the string of characters caret (^) at the beginning, all characters are initially accepted, then the string are excluded from receiving ^ character. If the string does not begin with a caret (^) to, any characters are initially accepted and then a string of characters included in the set of accepted characters. <br/>
-             * The following example allows only uppercase characters, spaces, and numbers in the text field: <br/>
-             * My_txt.restrict = "A-Z 0-9"; <br/>
-             * The following example includes all characters except lowercase letters: <br/>
-             * My_txt.restrict = "^ a-z"; <br/>
-             * If you need to enter characters \ ^, use two backslash "\\ -" "\\ ^": <br/>
-             * Can be used anywhere in the string ^ to rule out including characters and switch between characters, but can only be used to exclude a ^. The following code includes only uppercase letters except uppercase Q: <br/>
-             * My_txt.restrict = "A-Z ^ Q"; <br/>
+                      * If the string of characters caret (^) at the beginning, all characters are initially accepted, then the string are excluded from receiving ^ character. If the string does not begin with a caret (^) to, any characters are initially accepted and then a string of characters included in the set of accepted characters. <br/>
+                      * The following example allows only uppercase characters, spaces, and numbers in the text field: <br/>
+                      * My_txt.restrict = "A-Z 0-9"; <br/>
+                      * The following example includes all characters except lowercase letters: <br/>
+                      * My_txt.restrict = "^ a-z"; <br/>
+                      * If you need to enter characters \ ^, use two backslash "\\ -" "\\ ^": <br/>
+                      * Can be used anywhere in the string ^ to rule out including characters and switch between characters, but can only be used to exclude a ^. The following code includes only uppercase letters except uppercase Q: <br/>
+                      * My_txt.restrict = "A-Z ^ Q"; <br/>
              * @version Egret 2.4
              * @platform Web,Native
              * @default null
@@ -17739,8 +18900,8 @@ var egret;
              * @default false
              */
             ,function (value) {
-                this.$TextField[31 /* border */] = value;
-                this.fillBackground();
+                this.$TextField[31 /* border */] = !!value;
+                this.$invalidate();
             }
         );
         d(p, "borderColor"
@@ -17764,8 +18925,8 @@ var egret;
              * @default 0x000000
              */
             ,function (value) {
-                this.$TextField[32 /* borderColor */] = value;
-                this.fillBackground();
+                this.$TextField[32 /* borderColor */] = +value || 0;
+                this.$invalidate();
             }
         );
         d(p, "background"
@@ -17792,7 +18953,7 @@ var egret;
              */
             ,function (value) {
                 this.$TextField[33 /* background */] = value;
-                this.fillBackground();
+                this.$invalidate();
             }
         );
         d(p, "backgroundColor"
@@ -17817,32 +18978,66 @@ var egret;
              */
             ,function (value) {
                 this.$TextField[34 /* backgroundColor */] = value;
-                this.fillBackground();
+                this.$invalidate();
             }
         );
         /**
          * @private
          *
          */
-        p.fillBackground = function () {
-            var self = this;
-            var graphics = self.bgGraphics;
+        p.fillBackground = function (lines) {
+            var graphics = this.graphicsNode;
             if (graphics) {
                 graphics.clear();
             }
-            if (this.$TextField[33 /* background */] || this.$TextField[31 /* border */]) {
-                if (graphics == null) {
-                    graphics = self.bgGraphics = new egret.Graphics();
-                    this.bgGraphics.$renderContext.$targetDisplay = this;
+            var values = this.$TextField;
+            if (values[33 /* background */] || values[31 /* border */] || lines.length > 0) {
+                if (!graphics) {
+                    graphics = this.graphicsNode = new egret.sys.GraphicsNode();
+                    var groupNode = new egret.sys.GroupNode();
+                    groupNode.addNode(graphics);
+                    groupNode.addNode(this.textNode);
+                    this.$renderNode = groupNode;
                 }
-                if (this.$TextField[33 /* background */]) {
-                    graphics.beginFill(this.$TextField[34 /* backgroundColor */], 1);
+                var fillPath;
+                var strokePath;
+                //渲染背景
+                if (values[33 /* background */]) {
+                    fillPath = graphics.beginFill(values[34 /* backgroundColor */]);
+                    fillPath.drawRect(0, 0, this.$getWidth(), this.$getHeight());
                 }
-                if (this.$TextField[31 /* border */]) {
-                    graphics.lineStyle(1, this.$TextField[32 /* borderColor */]);
+                //渲染边框
+                if (values[31 /* border */]) {
+                    strokePath = graphics.lineStyle(1, values[32 /* borderColor */]);
+                    //1像素和3像素线条宽度的情况，会向右下角偏移0.5像素绘制。少画一像素宽度，正好能不超出文本测量边界。
+                    strokePath.drawRect(0, 0, this.$getWidth() - 1, this.$getHeight() - 1);
                 }
-                graphics.drawRect(0, 0, self.$getWidth(), self.$getHeight());
-                graphics.endFill();
+                //渲染下划线
+                if (lines.length > 0) {
+                    var textColor = values[2 /* textColor */];
+                    var lastColor = -1;
+                    var length = lines.length;
+                    for (var i = 0; i < length; i += 4) {
+                        var x = lines[i];
+                        var y = lines[i + 1];
+                        var w = lines[i + 2];
+                        var color = lines[i + 3] || textColor;
+                        if (lastColor < 0 || lastColor != color) {
+                            lastColor = color;
+                            strokePath = graphics.lineStyle(2, color, 1, egret.CapsStyle.NONE);
+                        }
+                        strokePath.moveTo(x, y);
+                        strokePath.lineTo(x + w, y);
+                    }
+                }
+            }
+            if (graphics) {
+                var bounds = this.$getRenderBounds();
+                graphics.x = bounds.x;
+                graphics.y = bounds.y;
+                graphics.width = bounds.width;
+                graphics.height = bounds.height;
+                egret.Rectangle.release(bounds);
             }
         };
         /**
@@ -17885,18 +19080,38 @@ var egret;
             this.$invalidateContentBounds();
             this.$TextField[18 /* textLinesChanged */] = true;
         };
+        p.$update = function (bounds) {
+            var tmpBounds = this.$getRenderBounds();
+            var result = _super.prototype.$update.call(this, tmpBounds);
+            egret.Rectangle.release(tmpBounds);
+            return result;
+        };
+        p.$getRenderBounds = function () {
+            var bounds = this.$getContentBounds();
+            var tmpBounds = egret.Rectangle.create();
+            tmpBounds.copyFrom(bounds);
+            if (this.$TextField[31 /* border */]) {
+                tmpBounds.width += 2;
+                tmpBounds.height += 2;
+            }
+            var _strokeDouble = this.$TextField[27 /* stroke */] * 2;
+            if (_strokeDouble > 0) {
+                tmpBounds.width += _strokeDouble * 2;
+                tmpBounds.height += _strokeDouble * 2;
+            }
+            tmpBounds.x -= _strokeDouble + 2; //+2和+4 是为了解决脏区域的问题
+            tmpBounds.y -= _strokeDouble + 2;
+            tmpBounds.width = Math.ceil(tmpBounds.width) + 4;
+            tmpBounds.height = Math.ceil(tmpBounds.height) + 4;
+            return tmpBounds;
+        };
         /**
          * @private
          */
         p.$measureContentBounds = function (bounds) {
-            var self = this;
             this.$getLinesArr();
             var w = !isNaN(this.$TextField[3 /* textFieldWidth */]) ? this.$TextField[3 /* textFieldWidth */] : this.$TextField[5 /* textWidth */];
-            var h = !isNaN(this.$TextField[4 /* textFieldHeight */]) ? this.$TextField[4 /* textFieldHeight */] : egret.TextFieldUtils.$getTextHeight(self);
-            if (self.border) {
-                w += 2;
-                h += 2;
-            }
+            var h = !isNaN(this.$TextField[4 /* textFieldHeight */]) ? this.$TextField[4 /* textFieldHeight */] : egret.TextFieldUtils.$getTextHeight(this);
             bounds.setTo(0, 0, w, h);
         };
         /**
@@ -17904,11 +19119,11 @@ var egret;
          * @see egret.DisplayObject._render
          * @param renderContext
          */
-        p.$render = function (renderContext) {
-            if (this.bgGraphics)
-                this.bgGraphics.$render(renderContext);
+        p.$render = function () {
             if (this.$TextField[24 /* type */] == egret.TextFieldType.INPUT) {
-                this.inputUtils._updateProperties();
+                if (this.$hasAnyFlags(2032 /* InitFlags */) || this.$hasAnyFlags(1648 /* DownOnAddedOrRemoved */)) {
+                    this.inputUtils._updateProperties();
+                }
                 if (this.$isTyping) {
                     return;
                 }
@@ -17916,7 +19131,15 @@ var egret;
             else if (this.$TextField[3 /* textFieldWidth */] == 0) {
                 return;
             }
-            this.drawText(renderContext);
+            var underLines = this.drawText();
+            this.fillBackground(underLines);
+            var bounds = this.$getRenderBounds();
+            var node = this.textNode;
+            node.x = bounds.x;
+            node.y = bounds.y;
+            node.width = bounds.width;
+            node.height = bounds.height;
+            egret.Rectangle.release(bounds);
         };
         d(p, "textFlow"
             /**
@@ -18055,26 +19278,22 @@ var egret;
          * @returns
          */
         p.$getLinesArr = function () {
-            var self = this;
-            if (!self.$TextField[18 /* textLinesChanged */]) {
-                return self.linesArr;
+            var values = this.$TextField;
+            if (!values[18 /* textLinesChanged */]) {
+                return this.linesArr;
             }
-            self.$TextField[18 /* textLinesChanged */] = false;
-            var text2Arr = self.textArr;
-            var renderContext = egret.sys.sharedRenderContext;
-            self.linesArr.length = 0;
-            this.$TextField[6 /* textHeight */] = 0;
-            this.$TextField[5 /* textWidth */] = 0;
-            var textFieldWidth = this.$TextField[3 /* textFieldWidth */];
+            values[18 /* textLinesChanged */] = false;
+            var text2Arr = this.textArr;
+            this.linesArr.length = 0;
+            values[6 /* textHeight */] = 0;
+            values[5 /* textWidth */] = 0;
+            var textFieldWidth = values[3 /* textFieldWidth */];
             //宽度被设置为0
             if (!isNaN(textFieldWidth) && textFieldWidth == 0) {
-                this.$TextField[29 /* numLines */] = 0;
+                values[29 /* numLines */] = 0;
                 return [{ width: 0, height: 0, charNum: 0, elements: [], hasNextLine: false }];
             }
-            if (!self.isFlow) {
-                setupFont(renderContext, self);
-            }
-            var linesArr = self.linesArr;
+            var linesArr = this.linesArr;
             var lineW = 0;
             var lineCharNum = 0;
             var lineH = 0;
@@ -18093,11 +19312,11 @@ var egret;
                         lineH = 0;
                         lineCharNum = 0;
                     }
-                    if (this.$TextField[24 /* type */] == egret.TextFieldType.INPUT) {
-                        lineH = this.$TextField[0 /* fontSize */];
+                    if (values[24 /* type */] == egret.TextFieldType.INPUT) {
+                        lineH = values[0 /* fontSize */];
                     }
                     else {
-                        lineH = Math.max(lineH, element.style.size || this.$TextField[0 /* fontSize */]);
+                        lineH = Math.max(lineH, element.style.size || values[0 /* fontSize */]);
                     }
                     var isNextLine = true;
                     if (textArr[j] == "") {
@@ -18106,10 +19325,7 @@ var egret;
                         }
                     }
                     else {
-                        if (self.isFlow) {
-                            setupFont(renderContext, self, element.style);
-                        }
-                        var w = renderContext.measureText(textArr[j]).width;
+                        var w = measureTextWidth(textArr[j], values, element.style);
                         if (isNaN(textFieldWidth)) {
                             lineW += w;
                             lineCharNum += textArr[j].length;
@@ -18139,7 +19355,7 @@ var egret;
                                 var k = 0;
                                 var ww = 0;
                                 var word = textArr[j];
-                                if (this.$TextField[19 /* wordWrap */]) {
+                                if (values[19 /* wordWrap */]) {
                                     var words = word.split(SplitRegex);
                                 }
                                 else {
@@ -18148,14 +19364,29 @@ var egret;
                                 var wl = words.length;
                                 var charNum = 0;
                                 for (; k < wl; k++) {
-                                    w = renderContext.measureText(words[k]).width;
+                                    w = measureTextWidth(words[k], values, element.style);
                                     if (lineW != 0 && lineW + w > textFieldWidth && lineW + k != 0) {
                                         break;
                                     }
-                                    charNum += words[k].length;
-                                    ww += w;
-                                    lineW += w;
-                                    lineCharNum += charNum;
+                                    if (ww + w > textFieldWidth) {
+                                        var words2 = words[k].match(/./g);
+                                        for (var k2 = 0, wl2 = words2.length; k2 < wl2; k2++) {
+                                            w = measureTextWidth(words2[k2], values, element.style);
+                                            if (lineW + w > textFieldWidth) {
+                                                break;
+                                            }
+                                            charNum += words2[k2].length;
+                                            ww += w;
+                                            lineW += w;
+                                            lineCharNum += charNum;
+                                        }
+                                    }
+                                    else {
+                                        charNum += words[k].length;
+                                        ww += w;
+                                        lineW += w;
+                                        lineCharNum += charNum;
+                                    }
                                 }
                                 if (k > 0) {
                                     lineElement.elements.push({
@@ -18186,10 +19417,10 @@ var egret;
                         lineElement.width = lineW;
                         lineElement.height = lineH;
                         lineElement.charNum = lineCharNum;
-                        this.$TextField[5 /* textWidth */] = Math.max(this.$TextField[5 /* textWidth */], lineW);
-                        this.$TextField[6 /* textHeight */] += lineH;
-                        //if (self._type == TextFieldType.INPUT && !self._multiline) {
-                        //    self._numLines = linesArr.length;
+                        values[5 /* textWidth */] = Math.max(values[5 /* textWidth */], lineW);
+                        values[6 /* textHeight */] += lineH;
+                        //if (this._type == TextFieldType.INPUT && !this._multiline) {
+                        //    this._numLines = linesArr.length;
                         //    return linesArr;
                         //}
                         lineCount++;
@@ -18199,39 +19430,46 @@ var egret;
                     lineElement.width = lineW;
                     lineElement.height = lineH;
                     lineElement.charNum = lineCharNum;
-                    this.$TextField[5 /* textWidth */] = Math.max(this.$TextField[5 /* textWidth */], lineW);
-                    this.$TextField[6 /* textHeight */] += lineH;
+                    values[5 /* textWidth */] = Math.max(values[5 /* textWidth */], lineW);
+                    values[6 /* textHeight */] += lineH;
                 }
             }
-            this.$TextField[29 /* numLines */] = linesArr.length;
-            this.fillBackground();
+            values[29 /* numLines */] = linesArr.length;
             return linesArr;
         };
         /**
          * @private
-         * @param renderContext
-         * @returns {Rectangle}
+         * 返回要绘制的下划线列表
          */
-        p.drawText = function (renderContext) {
-            var self = this;
+        p.drawText = function () {
+            var node = this.textNode;
             var values = this.$TextField;
+            //更新文本样式
+            node.bold = values[15 /* bold */];
+            node.fontFamily = values[8 /* fontFamily */] || TextField.default_fontFamily;
+            node.italic = values[16 /* italic */];
+            node.size = values[0 /* fontSize */];
+            node.stroke = values[27 /* stroke */];
+            node.strokeColor = values[25 /* strokeColor */];
+            node.textColor = values[2 /* textColor */];
             //先算出需要的数值
-            var lines = self.$getLinesArr();
+            var lines = this.$getLinesArr();
             if (values[5 /* textWidth */] == 0) {
-                return;
+                return [];
             }
             var maxWidth = !isNaN(values[3 /* textFieldWidth */]) ? values[3 /* textFieldWidth */] : values[5 /* textWidth */];
-            var textHeight = egret.TextFieldUtils.$getTextHeight(self);
+            var textHeight = egret.TextFieldUtils.$getTextHeight(this);
             var drawY = 0;
-            var startLine = egret.TextFieldUtils.$getStartLine(self);
+            var startLine = egret.TextFieldUtils.$getStartLine(this);
             var textFieldHeight = values[4 /* textFieldHeight */];
             if (!isNaN(textFieldHeight) && textFieldHeight > textHeight) {
-                var valign = egret.TextFieldUtils.$getValign(self);
-                drawY += valign * (textFieldHeight - textHeight);
+                var vAlign = egret.TextFieldUtils.$getValign(this);
+                drawY += vAlign * (textFieldHeight - textHeight);
             }
             drawY = Math.round(drawY);
-            var halign = egret.TextFieldUtils.$getHalign(self);
+            var hAlign = egret.TextFieldUtils.$getHalign(this);
             var drawX = 0;
+            var underLineData = [];
             for (var i = startLine, numLinesLength = values[29 /* numLines */]; i < numLinesLength; i++) {
                 var line = lines[i];
                 var h = line.height;
@@ -18244,41 +19482,19 @@ var egret;
                         break;
                     }
                 }
-                drawX = Math.round((maxWidth - line.width) * halign);
+                drawX = Math.round((maxWidth - line.width) * hAlign);
                 for (var j = 0, elementsLength = line.elements.length; j < elementsLength; j++) {
                     var element = line.elements[j];
                     var size = element.style.size || values[0 /* fontSize */];
-                    drawText(renderContext, self, element.text, drawX, drawY + (h - size) / 2, element.width, element.style);
+                    node.drawText(drawX, drawY + (h - size) / 2, element.text, element.style);
                     if (element.style.underline) {
-                        this.drawTempArray.push({ "x": drawX, "y": drawY + (h) / 2, "w": element.width, "c": element.style.textColor });
+                        underLineData.push(drawX, drawY + (h) / 2, element.width, element.style.textColor);
                     }
                     drawX += element.width;
                 }
                 drawY += h / 2 + values[1 /* lineSpacing */];
             }
-            //渲染下划线
-            if (this.drawTempArray.length > 0) {
-                renderContext.save();
-                renderContext.lineWidth = 2; //必须是2，1的时候显示的线条颜色不对，会偏暗
-                for (var i1 = 0; i1 < this.drawTempArray.length; i1++) {
-                    var underInfo = this.drawTempArray[i1];
-                    var textColor;
-                    if (underInfo["c"] != null) {
-                        textColor = egret.toColorString(underInfo["c"]);
-                    }
-                    else {
-                        textColor = values[11 /* textColorString */];
-                    }
-                    renderContext.beginPath(); //清理之前的缓存的路径
-                    renderContext.strokeStyle = textColor;
-                    renderContext.moveTo(underInfo["x"], underInfo["y"]);
-                    renderContext.lineTo(underInfo["x"] + underInfo["w"], underInfo["y"]);
-                    renderContext.closePath();
-                    renderContext.stroke();
-                }
-                renderContext.restore();
-                this.drawTempArray.length = 0;
-            }
+            return underLineData;
         };
         //增加点击事件
         p.addEvent = function () {
@@ -18322,100 +19538,14 @@ var egret;
          */
         TextField.default_fontFamily = "Arial";
         return TextField;
-    })(egret.DisplayObject);
+    }(egret.DisplayObject));
     egret.TextField = TextField;
-    egret.registerClass(TextField,"egret.TextField");
-    /**
-     * @private
-     *
-     * @param renderContext
-     * @param textfield
-     * @param text
-     * @param x
-     * @param y
-     * @param maxWidth
-     * @param style
-     */
-    function drawText(renderContext, textfield, text, x, y, maxWidth, style) {
-        if (style === void 0) { style = null; }
-        setupFont(renderContext, textfield, style);
-        style = style || {};
-        var textColor;
-        if (style.textColor != null) {
-            textColor = egret.toColorString(style.textColor);
-        }
-        else {
-            textColor = textfield.$TextField[11 /* textColorString */];
-        }
-        var strokeColor;
-        if (style.strokeColor != null) {
-            strokeColor = egret.toColorString(style.strokeColor);
-        }
-        else {
-            strokeColor = textfield.$TextField[26 /* strokeColorString */];
-        }
-        var outline;
-        if (style.stroke != null) {
-            outline = style.stroke;
-        }
-        else {
-            outline = textfield.$TextField[27 /* stroke */];
-        }
-        renderContext.fillStyle = textColor;
-        renderContext.strokeStyle = strokeColor;
-        if (outline) {
-            renderContext.lineWidth = outline * 2;
-            renderContext.strokeText(text, x, y, maxWidth || 0xFFFF);
-        }
-        renderContext.fillText(text, x, y, maxWidth || 0xFFFF);
+    egret.registerClass(TextField,'egret.TextField');
+    if (DEBUG) {
+        egret.$markReadOnly(TextField, "numLines");
+        egret.$markReadOnly(TextField, "textWidth");
+        egret.$markReadOnly(TextField, "textHeight");
     }
-    /**
-     * @private
-     *
-     * @param renderContext
-     * @param textField
-     * @param style
-     */
-    function setupFont(renderContext, textField, style) {
-        if (style === void 0) { style = null; }
-        style = style || {};
-        var italic = style.italic == null ? textField.$TextField[16 /* italic */] : style.italic;
-        var bold = style.bold == null ? textField.$TextField[15 /* bold */] : style.bold;
-        var size = style.size == null ? textField.$TextField[0 /* fontSize */] : style.size;
-        var fontFamily = style.fontFamily == null ? textField.$TextField[8 /* fontFamily */] : style.fontFamily;
-        var font = italic ? "italic " : "normal ";
-        font += bold ? "bold " : "normal ";
-        font += size + "px " + fontFamily;
-        renderContext.font = font;
-        renderContext.textAlign = "left";
-        renderContext.textBaseline = "middle";
-    }
-})(egret || (egret = {}));
-var egret;
-(function (egret) {
-    var sys;
-    (function (sys) {
-        /**
-         * @private
-         * 返回格式化的字体样式文本
-         */
-        function toFontString(style) {
-            var font = "";
-            if (style.italic)
-                font += "italic ";
-            if (style.bold)
-                font += "bold ";
-            font += (style.fontSize || 12) + "px ";
-            font += (style.fontFamily || "sans-serif");
-            return font;
-        }
-        sys.toFontString = toFontString;
-        if (DEBUG) {
-            egret.$markReadOnly(egret.TextField, "numLines");
-            egret.$markReadOnly(egret.TextField, "textWidth");
-            egret.$markReadOnly(egret.TextField, "textHeight");
-        }
-    })(sys = egret.sys || (egret.sys = {}));
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -18462,7 +19592,7 @@ var egret;
     var TextFieldType = (function () {
         function TextFieldType() {
         }
-        var d = __define,c=TextFieldType;p=c.prototype;
+        var d = __define,c=TextFieldType,p=c.prototype;
         /**
          * @language en_US
          * Used to specify dynamic text
@@ -18490,9 +19620,9 @@ var egret;
          */
         TextFieldType.INPUT = "input";
         return TextFieldType;
-    })();
+    }());
     egret.TextFieldType = TextFieldType;
-    egret.registerClass(TextFieldType,"egret.TextFieldType");
+    egret.registerClass(TextFieldType,'egret.TextFieldType');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -18532,7 +19662,7 @@ var egret;
     var TextFieldUtils = (function () {
         function TextFieldUtils() {
         }
-        var d = __define,c=TextFieldUtils;p=c.prototype;
+        var d = __define,c=TextFieldUtils,p=c.prototype;
         /**
          * 获取第一个绘制的行数
          * @param textfield 文本
@@ -18587,7 +19717,8 @@ var egret;
          * @returns
          */
         TextFieldUtils.$getTextHeight = function (textfield) {
-            var textHeight = (egret.TextFieldType.INPUT == textfield.$TextField[24 /* type */] && !textfield.$TextField[30 /* multiline */]) ? textfield.$TextField[0 /* fontSize */] : (textfield.$TextField[6 /* textHeight */] + (textfield.$TextField[29 /* numLines */] - 1) * textfield.$TextField[1 /* lineSpacing */]);
+            var textHeight = (egret.TextFieldType.INPUT == textfield.$TextField[24 /* type */]
+                && !textfield.$TextField[30 /* multiline */]) ? textfield.$TextField[0 /* fontSize */] : (textfield.$TextField[6 /* textHeight */] + (textfield.$TextField[29 /* numLines */] - 1) * textfield.$TextField[1 /* lineSpacing */]);
             return textHeight;
         };
         /**
@@ -18710,9 +19841,43 @@ var egret;
             return scrollNum;
         };
         return TextFieldUtils;
-    })();
+    }());
     egret.TextFieldUtils = TextFieldUtils;
-    egret.registerClass(TextFieldUtils,"egret.TextFieldUtils");
+    egret.registerClass(TextFieldUtils,'egret.TextFieldUtils');
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-2015, Egret Technology Inc.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    var sys;
+    (function (sys) {
+    })(sys = egret.sys || (egret.sys = {}));
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -18761,7 +19926,7 @@ var egret;
     var VerticalAlign = (function () {
         function VerticalAlign() {
         }
-        var d = __define,c=VerticalAlign;p=c.prototype;
+        var d = __define,c=VerticalAlign,p=c.prototype;
         /**
          * @language en_US
          * Vertically align content to the top of the container.
@@ -18834,9 +19999,9 @@ var egret;
          */
         VerticalAlign.CONTENT_JUSTIFY = "contentJustify";
         return VerticalAlign;
-    })();
+    }());
     egret.VerticalAlign = VerticalAlign;
-    egret.registerClass(VerticalAlign,"egret.VerticalAlign");
+    egret.registerClass(VerticalAlign,'egret.VerticalAlign');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -18885,7 +20050,7 @@ var egret;
     var Endian = (function () {
         function Endian() {
         }
-        var d = __define,c=Endian;p=c.prototype;
+        var d = __define,c=Endian,p=c.prototype;
         /**
          * @language en_US
          * Indicates the least significant byte of the multibyte number appears first in the sequence of bytes.
@@ -18917,9 +20082,9 @@ var egret;
          */
         Endian.BIG_ENDIAN = "bigEndian";
         return Endian;
-    })();
+    }());
     egret.Endian = Endian;
-    egret.registerClass(Endian,"egret.Endian");
+    egret.registerClass(Endian,'egret.Endian');
     /**
      * @language en_US
      * The ByteArray class provides methods and attributes for optimized reading and writing as well as dealing with binary data.
@@ -18957,7 +20122,7 @@ var egret;
             this._setArrayBuffer(buffer || new ArrayBuffer(this.BUFFER_EXT_SIZE));
             this.endian = Endian.BIG_ENDIAN;
         }
-        var d = __define,c=ByteArray;p=c.prototype;
+        var d = __define,c=ByteArray,p=c.prototype;
         /**
          * @private
          * @param buffer
@@ -19040,8 +20205,8 @@ var egret;
             /**
              * @language en_US
              * The length of the ByteArray object (in bytes).
-             * If the length is set to be larger than the current length, the right-side zero padding byte array.
-             * If the length is set smaller than the current length, the byte array is truncated.
+                      * If the length is set to be larger than the current length, the right-side zero padding byte array.
+                      * If the length is set smaller than the current length, the byte array is truncated.
              * @version Egret 2.4
              * @platform Web,Native
              */
@@ -19169,11 +20334,12 @@ var egret;
                 return null;
             }
             if (bytes) {
-                bytes.validateBuffer(length);
+                bytes.validateBuffer(offset + length);
             }
             else {
-                bytes = new ByteArray(new ArrayBuffer(length));
+                bytes = new ByteArray(new ArrayBuffer(offset + length));
             }
+            //This method is expensive
             for (var i = 0; i < length; i++) {
                 bytes.data.setUint8(i + offset, this.data.getUint8(this.position++));
             }
@@ -19467,8 +20633,15 @@ var egret;
             if (writeLength > 0) {
                 this.validateBuffer(writeLength);
                 var tmp_data = new DataView(bytes.buffer);
-                for (var i = offset; i < writeLength + offset; i++) {
-                    this.data.setUint8(this.position++, tmp_data.getUint8(i));
+                var length = writeLength;
+                var BYTES_OF_UINT32 = 4;
+                for (; length > BYTES_OF_UINT32; length -= BYTES_OF_UINT32) {
+                    this.data.setUint32(this._position, tmp_data.getUint32(offset));
+                    this.position += BYTES_OF_UINT32;
+                    offset += BYTES_OF_UINT32;
+                }
+                for (; length > 0; length--) {
+                    this.data.setUint8(this.position++, tmp_data.getUint8(offset++));
                 }
             }
         };
@@ -19566,6 +20739,25 @@ var egret;
             this.validateBuffer(ByteArray.SIZE_OF_UINT32);
             this.data.setUint32(this.position, value, this.endian == Endian.LITTLE_ENDIAN);
             this.position += ByteArray.SIZE_OF_UINT32;
+        };
+        /**
+         * @language en_US
+         * Write a 16-bit unsigned integer into the byte stream
+         * @param value An unsigned integer to be written into the byte stream
+         * @version Egret 2.5
+         * @platform Web,Native
+         */
+        /**
+         * @language zh_CN
+         * 在字节流中写入一个无符号的 16 位整数
+         * @param value 要写入字节流的无符号整数
+         * @version Egret 2.5
+         * @platform Web,Native
+         */
+        p.writeUnsignedShort = function (value) {
+            this.validateBuffer(ByteArray.SIZE_OF_UINT16);
+            this.data.setUint16(this.position, value, this.endian == Endian.LITTLE_ENDIAN);
+            this.position += ByteArray.SIZE_OF_UINT16;
         };
         /**
          * @language en_US
@@ -19919,9 +21111,9 @@ var egret;
          */
         ByteArray.SIZE_OF_FLOAT64 = 8;
         return ByteArray;
-    })();
+    }());
     egret.ByteArray = ByteArray;
-    egret.registerClass(ByteArray,"egret.ByteArray");
+    egret.registerClass(ByteArray,'egret.ByteArray');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -19968,7 +21160,7 @@ var egret;
     var Logger = (function () {
         function Logger() {
         }
-        var d = __define,c=Logger;p=c.prototype;
+        var d = __define,c=Logger,p=c.prototype;
         d(Logger, "logLevel",undefined
             /**
              * @language en_US
@@ -20084,9 +21276,9 @@ var egret;
          */
         Logger.OFF = "off";
         return Logger;
-    })();
+    }());
     egret.Logger = Logger;
-    egret.registerClass(Logger,"egret.Logger");
+    egret.registerClass(Logger,'egret.Logger');
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -20125,7 +21317,7 @@ var egret;
     var NumberUtils = (function () {
         function NumberUtils() {
         }
-        var d = __define,c=NumberUtils;p=c.prototype;
+        var d = __define,c=NumberUtils,p=c.prototype;
         /**
          * @language en_US
          * Judge whether it is a numerical value
@@ -20236,9 +21428,9 @@ var egret;
             return egret_sin_map[value - 270];
         };
         return NumberUtils;
-    })();
+    }());
     egret.NumberUtils = NumberUtils;
-    egret.registerClass(NumberUtils,"egret.NumberUtils");
+    egret.registerClass(NumberUtils,'egret.NumberUtils');
 })(egret || (egret = {}));
 var egret_sin_map = {};
 var egret_cos_map = {};
@@ -20256,7 +21448,9 @@ if (!Function.prototype.bind) {
         }
         var aArgs = Array.prototype.slice.call(arguments, 1), fToBind = this, fNOP = function () {
         }, fBound = function () {
-            return fToBind.apply(this instanceof fNOP && oThis ? this : oThis, aArgs.concat(Array.prototype.slice.call(arguments)));
+            return fToBind.apply(this instanceof fNOP && oThis
+                ? this
+                : oThis, aArgs.concat(Array.prototype.slice.call(arguments)));
         };
         fNOP.prototype = this.prototype;
         fBound.prototype = new fNOP();
@@ -20362,7 +21556,7 @@ var egret;
             this.delay = delay;
             this.repeatCount = +repeatCount | 0;
         }
-        var d = __define,c=Timer;p=c.prototype;
+        var d = __define,c=Timer,p=c.prototype;
         d(p, "delay"
             /**
              * @language en_US
@@ -20459,6 +21653,7 @@ var egret;
         p.start = function () {
             if (this._running)
                 return;
+            this.lastCount = this.updateInterval;
             egret.sys.$ticker.$startTick(this.$update, this);
             this._running = true;
         };
@@ -20501,9 +21696,9 @@ var egret;
             return false;
         };
         return Timer;
-    })(egret.EventDispatcher);
+    }(egret.EventDispatcher));
     egret.Timer = Timer;
-    egret.registerClass(Timer,"egret.Timer");
+    egret.registerClass(Timer,'egret.Timer');
     if (DEBUG) {
         egret.$markReadOnly(Timer, "currentCount");
         egret.$markReadOnly(Timer, "running");
@@ -20539,19 +21734,6 @@ var egret;
 //////////////////////////////////////////////////////////////////////////////////////
 var egret;
 (function (egret) {
-    /**
-     * @language en_US
-     * The XML class contains properties for working with XML objects.
-     * @version Egret 2.4
-     * @platform Web,Native
-     */
-    /**
-     * @language zh_CN
-     * XML 类包含用于处理 XML 对象的属性。
-     * @version Egret 2.4
-     * @platform Web,Native
-     */
-    egret.XML;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -20720,10 +21902,11 @@ var egret;
             values[_i - 3] = arguments[_i];
         }
         var cla = currentClass.prototype;
-        var seters = cla["__sets__"];
-        if (seters == null) {
-            seters = cla["__sets__"] = {};
+        var seters;
+        if (!currentClass.hasOwnProperty("__sets__")) {
+            Object.defineProperty(currentClass, "__sets__", { "value": {} });
         }
+        seters = currentClass["__sets__"];
         var setF = seters[type];
         if (setF) {
             return setF.apply(thisObj, values);
@@ -20765,10 +21948,11 @@ var egret;
      */
     function superGetter(currentClass, thisObj, type) {
         var cla = currentClass.prototype;
-        var geters = cla["__gets__"];
-        if (geters == null) {
-            geters = cla["__gets__"] = {};
+        var geters;
+        if (!currentClass.hasOwnProperty("__gets__")) {
+            Object.defineProperty(currentClass, "__gets__", { "value": {} });
         }
+        geters = currentClass["__gets__"];
         var getF = geters[type];
         if (getF) {
             return getF.call(thisObj);
@@ -20897,27 +22081,6 @@ var __global = __global || this;
 //////////////////////////////////////////////////////////////////////////////////////
 var egret;
 (function (egret) {
-    /**
-     * @language en_US
-     * Get browser or Runtime parameters, returns an empty string if not set
-     * Get the url parameter corresponds to the browser, access to the corresponding parameter in the Runtime setOption
-     * @method egret.getOption
-     * @param key {string} Parameters key
-     * @private
-     * @version Egret 2.4
-     * @platform Web,Native
-     */
-    /**
-     * @language zh_CN
-     * 获取浏览器或者Runtime参数，如果没有设置返回空字符串
-     * 在浏览器中相当于获取url中参数，在Runtime获取对应setOption参数
-     * @method egret.getOption
-     * @param key {string} 参数key
-     * @private
-     * @version Egret 2.4
-     * @platform Web,Native
-     */
-    egret.getOption;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -20986,7 +22149,7 @@ var egret;
         if (prototype.hasOwnProperty("__class__")) {
             return prototype["__class__"];
         }
-        var constructorString = prototype.constructor.toString();
+        var constructorString = prototype.constructor.toString().trim();
         var index = constructorString.indexOf("(");
         var className = constructorString.substring(9, index);
         Object.defineProperty(prototype, "__class__", {
@@ -21055,7 +22218,7 @@ var egret;
      * @includeExample egret/utils/getQualifiedSuperclassName.ts
      */
     function getQualifiedSuperclassName(value) {
-        if (!value || typeof value != "object") {
+        if (!value || (typeof value != "object" && !value.prototype)) {
             return null;
         }
         var prototype = value.prototype ? value.prototype : Object.getPrototypeOf(value);
@@ -21220,9 +22383,9 @@ var egret;
      * @example
      * <pre>
      *     var instance = new egret.Sprite();
-     *     egret.log(egret.is(instance,egret.Types.Sprite))  //true
-     *     egret.log(egret.is(instance,egret.Types.DisplayObjectContainer))  //true
-     *     egret.log(egret.is(instance,egret.Types.Bitmap))  //false
+     *     egret.log(egret.is(instance,"egret.Sprite"))  //true
+     *     egret.log(egret.is(instance,"egret.DisplayObjectContainer"))  //true
+     *     egret.log(egret.is(instance,"egret.Bitmap"))  //false
      * </pre>
      * @see egret.registerClass()
      * @version Egret 2.4
@@ -21237,9 +22400,9 @@ var egret;
      * @example
      * <pre>
      *     var instance = new egret.Sprite();
-     *     egret.log(egret.is(instance,egret.Types.Sprite))  //true
-     *     egret.log(egret.is(instance,egret.Types.DisplayObjectContainer))  //true
-     *     egret.log(egret.is(instance,egret.Types.Bitmap))  //false
+     *     egret.log(egret.is(instance,"egret.Sprite"))  //true
+     *     egret.log(egret.is(instance,"egret.DisplayObjectContainer"))  //true
+     *     egret.log(egret.is(instance,"egret.Bitmap"))  //false
      * </pre>
      * @see egret.registerClass()
      * @version Egret 2.4
