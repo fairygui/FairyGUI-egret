@@ -482,6 +482,7 @@ declare module fairygui {
         setScale(sx: number, sy: number): void;
         pivotX: number;
         pivotY: number;
+        setPivotByRatio(xv: number, yv: number): void;
         setPivot(xv: number, yv?: number): void;
         private applyPivot();
         touchable: boolean;
@@ -691,6 +692,8 @@ declare module fairygui {
         private _buttonController;
         private _changeStateOnClick;
         private _linkedPopup;
+        private _downEffect;
+        private _downEffectValue;
         private _down;
         private _over;
         static UP: string;

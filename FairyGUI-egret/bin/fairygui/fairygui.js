@@ -2682,6 +2682,17 @@ var fairygui;
                 this.setPivot(this._pivotX, value);
             }
         );
+        p.setPivotByRatio = function (xv, yv) {
+            if (this.sourceWidth != 0)
+                xv = this.sourceWidth * xv;
+            else
+                xv = this.width * xv;
+            if (this.sourceHeight != 0)
+                yv = this.sourceHeight * yv;
+            else
+                yv = this.width * yv;
+            this.setPivot(xv, yv);
+        };
         p.setPivot = function (xv, yv) {
             if (yv === void 0) { yv = 0; }
             if (this._pivotX != xv || this._pivotY != yv) {
@@ -4136,6 +4147,8 @@ var fairygui;
             this._soundVolumeScale = fairygui.UIConfig.buttonSoundVolumeScale;
             this._pageOption = new fairygui.PageOption();
             this._changeStateOnClick = true;
+            this._downEffect = 0;
+            this._downEffectValue = 0.7;
         }
         var d = __define,c=GButton,p=c.prototype;
         d(p, "icon"
@@ -4341,6 +4354,33 @@ var fairygui;
         p.setState = function (val) {
             if (this._buttonController)
                 this._buttonController.selectedPage = val;
+            if (this._downEffect == 1) {
+                var cnt = this.numChildren;
+                if (val == GButton.DOWN || val == GButton.SELECTED_OVER || val == GButton.SELECTED_DISABLED) {
+                    var r = this._downEffectValue * 255;
+                    var color = (r << 16) + (r << 8) + r;
+                    for (var i = 0; i < cnt; i++) {
+                        var obj = this.getChildAt(i);
+                        if ((obj instanceof fairygui.GImage) || (obj instanceof fairygui.GLoader)
+                            || (obj instanceof fairygui.GMovieClip) || (obj instanceof fairygui.GTextField))
+                            obj.color = color;
+                    }
+                }
+                else {
+                    for (var i = 0; i < cnt; i++) {
+                        var obj = this.getChildAt(i);
+                        if ((obj instanceof fairygui.GImage) || (obj instanceof fairygui.GLoader)
+                            || (obj instanceof fairygui.GMovieClip) || (obj instanceof fairygui.GTextField))
+                            obj.color = 0xFFFFFF;
+                    }
+                }
+            }
+            else if (this._downEffect == 2) {
+                if (val == GButton.DOWN || val == GButton.SELECTED_OVER || val == GButton.SELECTED_DISABLED)
+                    this.setScale(this._downEffectValue, this._downEffectValue);
+                else
+                    this.setScale(1, 1);
+            }
         };
         p.handleControllerChanged = function (c) {
             _super.prototype.handleControllerChanged.call(this, c);
@@ -4376,6 +4416,13 @@ var fairygui;
             str = xml.attributes.volume;
             if (str)
                 this._soundVolumeScale = parseInt(str) / 100;
+            str = xml.attributes.downEffect;
+            if (str) {
+                this._downEffect = str == "dark" ? 1 : (str == "scale" ? 2 : 0);
+                str = xml.attributes.downEffectValue;
+                this._downEffectValue = parseFloat(str);
+                this.setPivotByRatio(0.5, 0.5);
+            }
             this._buttonController = this.getController("button");
             this._titleObject = this.getChild("title");
             this._iconObject = this.getChild("icon");

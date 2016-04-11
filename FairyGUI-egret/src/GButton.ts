@@ -18,6 +18,8 @@ module fairygui {
         private _buttonController: Controller;
         private _changeStateOnClick: boolean;
         private _linkedPopup: GObject;
+        private _downEffect:number;
+        private _downEffectValue:number;
 
         private _down: boolean;
         private _over: boolean;
@@ -39,6 +41,8 @@ module fairygui {
             this._soundVolumeScale = UIConfig.buttonSoundVolumeScale;
             this._pageOption = new PageOption();
             this._changeStateOnClick = true;
+            this._downEffect = 0;
+            this._downEffectValue = 0.8;
         }
 
         public get icon(): string {
@@ -247,6 +251,34 @@ module fairygui {
         protected setState(val: string): void {
             if (this._buttonController)
                 this._buttonController.selectedPage = val;
+                
+            if(this._downEffect == 1) {
+                var cnt: number = this.numChildren;
+                if(val == GButton.DOWN || val == GButton.SELECTED_OVER || val == GButton.SELECTED_DISABLED) {
+                    var r: number = this._downEffectValue * 255;
+                    var color: number = (r << 16) + (r << 8) + r;
+                    for(var i: number = 0;i < cnt;i++) {
+                        var obj: GObject = this.getChildAt(i);
+                        if((obj instanceof GImage) || (obj instanceof GLoader) 
+                            || (obj instanceof GMovieClip) || (obj instanceof GTextField))//instanceof IColorGear
+                            (<IColorGear><any>obj).color = color;
+                    }
+                }
+                else {
+                    for(var i:number = 0;i < cnt;i++) {
+                        var obj:GObject = this.getChildAt(i);
+                        if((obj instanceof GImage) || (obj instanceof GLoader)
+                            || (obj instanceof GMovieClip) || (obj instanceof GTextField))
+                            (<IColorGear><any>obj).color = 0xFFFFFF;
+                    }
+                }
+            }
+            else if(this._downEffect == 2) {
+                if(val == GButton.DOWN || val == GButton.SELECTED_OVER || val == GButton.SELECTED_DISABLED)
+                    this.setScale(this._downEffectValue,this._downEffectValue);
+                else
+                    this.setScale(1,1);
+            }
         }
 
         public handleControllerChanged(c: Controller): void {
@@ -289,6 +321,14 @@ module fairygui {
             str = xml.attributes.volume;
             if(str)
                 this._soundVolumeScale = parseInt(str) / 100;
+            str = xml.attributes.downEffect;
+            if(str)
+            {
+                this._downEffect = str=="dark"?1:(str=="scale"?2:0);
+                str = xml.attributes.downEffectValue;
+                this._downEffectValue = parseFloat(str);
+                this.setPivotByRatio(0.5, 0.5);
+            }
 
             this._buttonController = this.getController("button");
             this._titleObject = this.getChild("title");

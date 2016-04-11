@@ -260,6 +260,18 @@ module fairygui {
             this.setPivot(this._pivotX,value);
         }
 
+        public setPivotByRatio(xv: number,yv: number): void {
+            if(this.sourceWidth != 0)
+                xv = this.sourceWidth * xv;
+            else
+                xv = this.width * xv;
+            if(this.sourceHeight != 0)
+                yv = this.sourceHeight * yv;
+            else
+                yv = this.width * yv;
+            this.setPivot(xv,yv);
+        }
+        
         public setPivot(xv: number,yv: number = 0): void {
             if(this._pivotX != xv || this._pivotY != yv) {
                 this._pivotX = xv;
