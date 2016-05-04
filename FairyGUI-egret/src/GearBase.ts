@@ -2,6 +2,8 @@
 module fairygui {
 
     export class GearBase {
+        public static disableAllTweenEffect:boolean = false;
+        
         protected _pageSet: PageOptionSet;
         protected _tween: boolean;
         protected _easeType: Function;

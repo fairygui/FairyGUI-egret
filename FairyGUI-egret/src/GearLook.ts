@@ -45,7 +45,7 @@ module fairygui {
             if(this._tweener)
                 this._tweener.tick(100000000);
 
-            if(this._tween && !UIPackage._constructing
+            if(this._tween && !UIPackage._constructing && !GearBase.disableAllTweenEffect
                 && ct && this._pageSet.containsId(this._controller.previousPageId)) {
                 this._owner._gearLocked = true;
                 this._owner.grayed = gv.grayed;

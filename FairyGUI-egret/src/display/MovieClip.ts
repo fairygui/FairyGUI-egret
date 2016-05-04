@@ -51,7 +51,13 @@ module fairygui {
             if(this._endAt == -1 || this._endAt > this._frameCount - 1)
                 this._endAt = this._frameCount - 1;
                 
-            this._currentFrame = -1;            
+            if(this._currentFrame < 0 || this._currentFrame > this._frameCount - 1)
+                this._currentFrame = this._frameCount - 1;
+
+            if(this._frameCount > 0)
+                this.setFrame(this._frames[this._currentFrame]);
+            else
+                this.setFrame(null);     
         }
 
         public get frameCount(): number {

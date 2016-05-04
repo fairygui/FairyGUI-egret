@@ -97,6 +97,13 @@ module fairygui {
                 str = xml.attributes.titleColor;
                 if (str)
                     this.titleColor = ToolSet.convertFromHtmlColor(str);
+                    
+                if(this._titleObject instanceof GTextInput)
+                {
+                    str = xml.attributes.promptText;
+                    if(str)
+                        (<GTextInput><any>this._titleObject).promptText = str;
+                }
             }
         }
     }

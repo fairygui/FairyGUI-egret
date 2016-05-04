@@ -43,7 +43,7 @@ module fairygui {
             if(this._tweener)
                 this._tweener.tick(100000000);
                 
-            if(this._tween && !UIPackage._constructing
+            if(this._tween && !UIPackage._constructing && !GearBase.disableAllTweenEffect
                 && ct && this._pageSet.containsId(this._controller.previousPageId)) {
 
                 if(this._owner.x != pt.x || this._owner.y != pt.y) {

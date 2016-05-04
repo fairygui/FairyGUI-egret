@@ -430,6 +430,19 @@ module fairygui {
             }
         }
         
+        public get margin(): Margin {
+            return this._margin;
+        }
+
+        public set margin(value: Margin) {
+            this._margin.copy(value);
+            if(this._rootContainer.mask) {
+                this._container.x = this._margin.left;
+                this._container.y = this._margin.top;
+            }
+            this.handleSizeChanged();
+        }
+        
         protected updateOpaque() {
             if(!this._rootContainer.hitArea)
                 this._rootContainer.hitArea = new egret.Rectangle();
@@ -459,7 +472,7 @@ module fairygui {
             hzScrollBarRes: string): void {
             this._container = new egret.DisplayObjectContainer();
             this._rootContainer.addChild(this._container);
-            this._scrollPane = new ScrollPane(this,scroll,this._margin,scrollBarMargin,scrollBarDisplay,flags,vtScrollBarRes,hzScrollBarRes);
+            this._scrollPane = new ScrollPane(this,scroll,scrollBarMargin,scrollBarDisplay,flags,vtScrollBarRes,hzScrollBarRes);
 
             this.setBoundsChangedFlag();
         }
@@ -608,10 +621,70 @@ module fairygui {
                 this.height = value + this._margin.top + this._margin.bottom;
         }
 
-        public findObjectNear(xValue: number, yValue: number, resultPoint?:egret.Point): egret.Point {
+        public getSnappingPosition(xValue: number, yValue: number, resultPoint?:egret.Point): egret.Point {
             if(!resultPoint)
                 resultPoint = new egret.Point();
            
+            var cnt: number = this._children.length;
+            if(cnt == 0) {
+                resultPoint.x = 0;
+                resultPoint.y = 0;
+                return resultPoint;
+            }
+
+            this.ensureBoundsCorrect();
+            
+            var obj: GObject = null;
+            var prev: GObject = null;
+            var i: number = 0;
+            if(yValue != 0) {
+                for(;i < cnt;i++) {
+                    obj = this._children[i];
+                    if(yValue < obj.y) {
+                        if(i == 0) {
+                            yValue = 0;
+                            break;
+                        }
+                        else {
+                            prev = this._children[i - 1];
+                            if(yValue < prev.y + prev.actualHeight / 2) //top half part
+                                yValue = prev.y;
+                            else //bottom half part
+                                yValue = obj.y;
+                            break;
+                        }
+                    }
+                }
+
+                if(i == cnt)
+                    yValue = obj.y;
+            }
+
+            if(xValue != 0) {
+                if(i > 0)
+                    i--;
+                for(;i < cnt;i++) {
+                    obj = this._children[i];
+                    if(xValue < obj.x) {
+                        if(i == 0) {
+                            xValue = 0;
+                            break;
+                        }
+                        else {
+                            prev = this._children[i - 1];
+                            if(xValue < prev.x + prev.actualWidth / 2) //top half part
+                                xValue = prev.x;
+                            else //bottom half part
+                                xValue = obj.x;
+                            break;
+                        }
+                    }
+                }
+
+                if(i == cnt)
+                    xValue = obj.x;
+            }
+            
             resultPoint.x = xValue;
             resultPoint.y = yValue;
             return resultPoint;

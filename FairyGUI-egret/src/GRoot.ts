@@ -10,7 +10,6 @@ module fairygui {
         private _focusedObject: GObject;
         private _tooltipWin: GObject;
         private _defaultTooltipWin: GObject;
-        private _focusManagement: boolean;
         private _volumeScale: number;
 
         private static _inst: GRoot;
@@ -22,6 +21,8 @@ module fairygui {
         public static shiftKeyDown: boolean;
         public static mouseX: number;
         public static mouseY: number;
+        
+        public static FOCUS_CHANGED:string = "FocusChanged";
 
         public static get inst(): GRoot {
             if(GRoot._inst == null)
@@ -66,10 +67,6 @@ module fairygui {
             this.setSize(Math.round(w / GRoot.contentScaleFactor),Math.round(h / GRoot.contentScaleFactor));
             this.scaleX = GRoot.contentScaleFactor;
             this.scaleY = GRoot.contentScaleFactor;
-        }
-
-        public enableFocusManagement(): void {
-            this._focusManagement = true;
         }
 
         public showWindow(win: Window): void {
@@ -311,18 +308,17 @@ module fairygui {
         }
 
         public set focus(value: GObject) {
-            if (!this._focusManagement)
-                return;
-
             if (value && (!value.focusable || !value.onStage))
                 throw "invalid focus target";
 
-            if (this._focusedObject != value) {
-                var old: GObject;
-                if (this._focusedObject != null && this._focusedObject.onStage)
-                    old = this._focusedObject;
+            this.setFocus(value);
+        }
+        
+        private setFocus(value: GObject) {
+            if(this._focusedObject!=value)
+            {
                 this._focusedObject = value;
-                this.dispatchEvent(new FocusChangeEvent(FocusChangeEvent.CHANGED, old, value));
+                this.dispatchEventWith(GRoot.FOCUS_CHANGED);
             }
         }
         
@@ -400,18 +396,16 @@ module fairygui {
             GRoot.mouseY = evt.stageY;
             GRoot.touchDown = true;
 
-            if (this._focusManagement) {
-                var mc: egret.DisplayObject = <egret.DisplayObject><any> (evt.target);
-                while (mc != this.displayObject.stage && mc != null) {
-                    if (ToolSet.isUIObject(mc)) {
-                        var gg: GObject = (<UIDisplayObject><any> mc).owner;
-                        if (gg.touchable && gg.focusable) {
-                            this.focus = gg;
-                            break;
-                        }
+            var mc: egret.DisplayObject = <egret.DisplayObject><any> (evt.target);
+            while (mc != this.displayObject.stage && mc != null) {
+                if (ToolSet.isUIObject(mc)) {
+                    var gg: GObject = (<UIDisplayObject><any> mc).owner;
+                    if (gg.touchable && gg.focusable) {
+                        this.setFocus(gg);
+                        break;
                     }
-                    mc = mc.parent;
                 }
+                mc = mc.parent;
             }
 
             if (this._tooltipWin != null)

@@ -15,7 +15,6 @@ module fairygui {
         private _scrollType: number = 0;
         private _scrollSpeed: number = 0;
         private _mouseWheelSpeed: number = 0;
-        private _margin: Margin;
         private _scrollBarMargin:Margin;
         private _bouncebackEffect: boolean;
         private _touchEffect: boolean;
@@ -27,6 +26,9 @@ module fairygui {
         private _snapToItem: boolean;
         private _displayInDemand: boolean;
         private _mouseWheelEnabled: boolean;
+        private _pageMode: boolean;
+        private _pageSizeH: number;
+        private _pageSizeV: number;
 
         private _yPerc: number;
         private _xPerc: number;
@@ -64,7 +66,6 @@ module fairygui {
 
         public constructor(owner: GComponent,
             scrollType: number,
-            margin: Margin,
             scrollBarMargin: Margin,
             scrollBarDisplay: number,
             flags: number,
@@ -85,24 +86,37 @@ module fairygui {
             this._maskContentHolder.x = 0;
             this._maskContentHolder.y = 0;
             this._maskHolder.addChild(this._maskContentHolder);
-
-            this._holdAreaPoint = new egret.Point();
-            this._margin = margin;
+            
+            this._scrollType = scrollType;
             this._scrollBarMargin = scrollBarMargin;
             this._bouncebackEffect = UIConfig.defaultScrollBounceEffect;
             this._touchEffect = UIConfig.defaultScrollTouchEffect;
-            this._xPerc = 0;
-            this._yPerc = 0;
-            this._aniFlag = true;
-            this._scrollBarVisible = true;
             this._scrollSpeed = UIConfig.defaultScrollSpeed;
             this._mouseWheelSpeed = this._scrollSpeed * 2;
             this._displayOnLeft = (flags & 1) != 0;
             this._snapToItem = (flags & 2) != 0;
             this._displayInDemand = (flags & 4) != 0;
-            this._scrollType = scrollType;
+            this._pageMode = (flags & 8) != 0;
+            if(flags & 16)
+                this._touchEffect = true;
+            else if(flags & 32)
+                this._touchEffect = false;
+            else
+                this._touchEffect = UIConfig.defaultScrollTouchEffect;
+            if(flags & 64)
+                this._bouncebackEffect = true;
+            else if(flags & 128)
+                this._bouncebackEffect = false;
+            else
+                this._bouncebackEffect = UIConfig.defaultScrollBounceEffect;
+                
+            this._xPerc = 0;
+            this._yPerc = 0;
+            this._aniFlag = true;
+            this._scrollBarVisible = true;
             this._mouseWheelEnabled = false;
-
+            this._holdAreaPoint = new egret.Point();
+            
             if(scrollBarDisplay == ScrollBarDisplayType.Default)
                 scrollBarDisplay = UIConfig.defaultScrollBarDisplay;
 
@@ -113,7 +127,7 @@ module fairygui {
                         this._vtScrollBar = <GScrollBar><any> (UIPackage.createObjectFromURL(res));
                         if(!this._vtScrollBar)
                             throw "cannot create scrollbar from " + res;
-                        this._vtScrollBar.setScrollPane(this,true);
+                        this._vtScrollBar.setScrollPane(this, true);
                         this._container.addChild(this._vtScrollBar.displayObject);
                     }
                 }
@@ -123,7 +137,7 @@ module fairygui {
                         this._hzScrollBar = <GScrollBar><any> (UIPackage.createObjectFromURL(res));
                         if(!this._hzScrollBar)
                             throw "cannot create scrollbar from " + res;
-                        this._hzScrollBar.setScrollPane(this,false);
+                        this._hzScrollBar.setScrollPane(this, false);
                         this._container.addChild(this._hzScrollBar.displayObject);
                     }
                 }
@@ -138,20 +152,9 @@ module fairygui {
                 }
             }
 
-            this._margin.left = margin.left;
-            this._margin.top = margin.top;
-            this._margin.right = margin.right;
-            this._margin.bottom = margin.bottom;
-
-            if(this._displayOnLeft && this._vtScrollBar)
-                this._maskHolder.x = Math.round(this._margin.left + this._vtScrollBar.width);
-            else
-                this._maskHolder.x = this._margin.left;
-            this._maskHolder.y = this._margin.top;
-
             this._contentWidth = 0;
             this._contentHeight = 0;
-            this.setSize(owner.width,owner.height);
+            this.setSize(owner.width,owner.height,true);
 
             this._owner.addEventListener(egret.TouchEvent.TOUCH_BEGIN,this.__mouseDown,this);
         }
@@ -270,14 +273,30 @@ module fairygui {
         public get isRightMost(): boolean {
             return this._xPerc == 1 || this._contentWidth <= this._maskWidth;
         }
+        
+        public get currentPageX(): number {
+            return this._pageMode ? Math.floor(this.posX / this._pageSizeH) : 0;
+        }
+
+        public set currentPageX(value: number) {
+            if(this._pageMode && this._hScroll)
+                this.setPosX(value * this._pageSizeH,false);
+        }
+
+        public get currentPageY(): number {
+            return this._pageMode ? Math.floor(this.posY / this._pageSizeV) : 0;
+        }
+
+        public set currentPageY(value: number) {
+            if(this._pageMode && this._hScroll)
+                this.setPosY(value * this._pageSizeV,false);
+        }
 
         public get contentWidth(): number {
-            this._owner.ensureBoundsCorrect();
             return this._contentWidth;
         }
 
         public get contentHeight(): number {
-            this._owner.ensureBoundsCorrect();
             return this._contentHeight;
         }
 
@@ -286,7 +305,7 @@ module fairygui {
         }
 
         public set viewWidth(value: number) {
-            value = value + this._margin.left + this._margin.right;
+            value = value + this._owner.margin.left + this._owner.margin.right;
             if (this._vtScrollBar != null)
                 value += this._vtScrollBar.width;
             this._owner.width = value;
@@ -297,7 +316,7 @@ module fairygui {
         }
 
         public set viewHeight(value: number) {
-            value = value + this._margin.top + this._margin.bottom;
+            value = value + this._owner.margin.top + this._owner.margin.bottom;
             if (this._hzScrollBar != null)
                 value += this._hzScrollBar.height;
             this._owner.height = value;
@@ -335,7 +354,7 @@ module fairygui {
             this.setPercX(this._xPerc + this.getDeltaX(this._scrollSpeed * speed), ani);
         }
 
-        public scrollToView(target: any, ani: boolean= false): void {
+        public scrollToView(target: any, ani: boolean= false, setFirst: boolean = false): void {
             this._owner.ensureBoundsCorrect();
             if(this._needRefresh)
                 this.refresh();
@@ -360,10 +379,16 @@ module fairygui {
             if (this._vScroll) {
                 var top: number = this.posY;
                 var bottom: number = top + this._maskHeight;
-                if(rect.y < top || rect.height >= this._maskHeight)
-                    this.setPosY(rect.y, ani);
+                if(setFirst || rect.y < top || rect.height >= this._maskHeight) {
+                    if(this._pageMode)
+                        this.setPosY(Math.floor(rect.y / this._pageSizeV) * this._pageSizeV, ani);
+                    else
+                        this.setPosY(rect.y, ani);
+                }
                 else if(rect.y + rect.height > bottom) {
-                    if(rect.height <= this._maskHeight/2)
+                    if(this._pageMode)
+                        this.setPosY(Math.floor(rect.y / this._pageSizeV) * this._pageSizeV,ani);
+                    else if(rect.height <= this._maskHeight/2)
                         this.setPosY(rect.y + rect.height * 2 - this._maskHeight, ani);
                     else
                         this.setPosY(rect.y + rect.height - this._maskHeight, ani);
@@ -372,10 +397,16 @@ module fairygui {
             if (this._hScroll) {
                 var left: number =  this.posX;
                 var right: number = left + this._maskWidth;
-                if(rect.x < left || rect.width >= this._maskWidth)
-                    this.setPosX(rect.x, ani);
+                if(setFirst || rect.x < left || rect.width >= this._maskWidth) {
+                    if(this._pageMode)
+                        this.setPosX(Math.floor(rect.x / this._pageSizeH) * this._pageSizeH,ani);
+                    else
+                        this.setPosX(rect.x, ani);
+                }
                 else if(rect.x + rect.width > right) {
-                    if(rect.width <= this._maskWidth/2)
+                    if(this._pageMode)
+                        this.setPosX(Math.floor(rect.x / this._pageSizeH) * this._pageSizeH,ani);
+                    else if(rect.width <= this._maskWidth/2)
                         this.setPosX(rect.x + rect.width * 2 - this._maskWidth, ani);
                     else
                         this.setPosX(rect.x + rect.width - this._maskWidth, ani);
@@ -387,57 +418,70 @@ module fairygui {
         }
         
         public isChildInView(obj: GObject): boolean {
+            var dist:number;
             if(this._vScroll) {
-                var top: number = this.posY;
-                var bottom: number = top + this._maskHeight;
-                if(obj.y + obj.height < top || obj.y > bottom)
+                dist = obj.y + this._maskContentHolder.y;
+                if(dist < -obj.height - 20 || dist > this._maskHeight + 20)
                     return false;
             }
 
             if(this._hScroll) {
-                var left: number = this.posX;
-                var right: number = left + this._maskWidth;
-                if(obj.x + obj.width < left || obj.x > right)
+                dist = obj.x + this._maskContentHolder.x;
+                if(dist < -obj.width - 20 || dist > this._maskWidth + 20)
                     return false;
             }
 
             return true;
         }
 
-        public setSize(aWidth: number, aHeight: number): void {
-            var w: number, h: number;
-            w = aWidth;
-            h = aHeight;
+        public setSize(aWidth: number,aHeight: number,noRefresh: Boolean = false): void {
+            if(this._displayOnLeft && this._vtScrollBar)
+                this._maskHolder.x = Math.floor(this._owner.margin.left + this._vtScrollBar.width);
+            else
+                this._maskHolder.x = this._owner.margin.left;
+            this._maskHolder.y = this._owner.margin.top;
+            
             if (this._hzScrollBar) {
-                if(!this._hScrollNone)
-                    h -= this._hzScrollBar.height;
-                this._hzScrollBar.y = h;
+                this._hzScrollBar.y = aHeight - this._hzScrollBar.height;
                 if(this._vtScrollBar && !this._vScrollNone) {
-                    this._hzScrollBar.width = w - this._vtScrollBar.width - this._scrollBarMargin.left - this._scrollBarMargin.right;
+                    this._hzScrollBar.width = aWidth - this._vtScrollBar.width - this._scrollBarMargin.left - this._scrollBarMargin.right;
                     if(this._displayOnLeft)
                         this._hzScrollBar.x = this._scrollBarMargin.left + this._vtScrollBar.width;
                     else
                         this._hzScrollBar.x = this._scrollBarMargin.left;
                 }
                 else {
-                    this._hzScrollBar.width = w - this._scrollBarMargin.left - this._scrollBarMargin.right;
+                    this._hzScrollBar.width = aWidth - this._scrollBarMargin.left - this._scrollBarMargin.right;
                     this._hzScrollBar.x = this._scrollBarMargin.left;
                 }
             }
             if (this._vtScrollBar) {
-                if(!this._vScrollNone)
-                    w -= this._vtScrollBar.width;
                 if (!this._displayOnLeft)
-                    this._vtScrollBar.x = w;
-                this._vtScrollBar.height = h - this._scrollBarMargin.top - this._scrollBarMargin.bottom;
+                    this._vtScrollBar.x = aWidth - this._vtScrollBar.width;
+                if(this._hzScrollBar)
+                    this._vtScrollBar.height = aHeight - this._hzScrollBar.height - this._scrollBarMargin.top - this._scrollBarMargin.bottom;
+                else
+                    this._vtScrollBar.height = aHeight - this._scrollBarMargin.top - this._scrollBarMargin.bottom;
                 this._vtScrollBar.y = this._scrollBarMargin.top;
             }
-            w -= (this._margin.left + this._margin.right);
-            h -= (this._margin.top + this._margin.bottom);
-            this._maskWidth = Math.max(1, w);
-            this._maskHeight = Math.max(1, h);
+            
+            this._maskWidth = aWidth;
+            this._maskHeight = aHeight;
+            if(this._hzScrollBar && !this._hScrollNone)
+                this._maskHeight -= this._hzScrollBar.height;
+            if(this._vtScrollBar && !this._vScrollNone)
+                this._maskWidth -= this._vtScrollBar.width;
+            this._maskWidth -= (this._owner.margin.left + this._owner.margin.right);
+            this._maskHeight -= (this._owner.margin.top + this._owner.margin.bottom);
+
+            this._maskWidth = Math.max(1,this._maskWidth);
+            this._maskHeight = Math.max(1,this._maskHeight);
+            this._pageSizeH = this._maskWidth;
+            this._pageSizeV = this._maskHeight;
+            
             this.handleSizeChanged();
-            this.posChanged(false);
+            if(!noRefresh)
+                this.posChanged(false);
         }
 
         public setContentSize(aWidth: number, aHeight: number): void {
@@ -564,6 +608,11 @@ module fairygui {
 
             this._needRefresh = true;
             GTimers.inst.callLater(this.refresh, this);
+            
+            //如果在甩手指滚动过程中用代码重新设置滚动位置，要停止滚动
+            if(this._tweening == 2) {
+                this.killTweens();
+            }
         }
 
         private refresh(): void {
@@ -577,8 +626,39 @@ module fairygui {
             if (this._hScroll)
                 contentXLoc = this._xPerc * (this._contentWidth - this._maskWidth);
 
-            if (this._snapToItem) {
-                var pt: egret.Point = this._owner.findObjectNear(contentXLoc, contentYLoc);
+            if(this._pageMode) {
+                var page: number;
+                var delta: number;
+                if(this._vScroll && this._yPerc != 1 && this._yPerc != 0) {
+                    page = Math.floor(contentYLoc / this._pageSizeV);
+                    delta = contentYLoc - page * this._pageSizeV;
+                    if(delta > this._pageSizeV / 2)
+                        page++;
+                    contentYLoc = page * this._pageSizeV;
+                    if(contentYLoc > this._contentHeight - this._maskHeight) {
+                        contentYLoc = this._contentHeight - this._maskHeight;
+                        this._yPerc = 1;
+                    }
+                    else
+                        this._yPerc = contentYLoc / (this._contentHeight - this._maskHeight);
+                }
+
+                if(this._hScroll && this._xPerc != 1 && this._xPerc != 0) {
+                    page = Math.floor(contentXLoc / this._pageSizeH);
+                    delta = contentXLoc - page * this._pageSizeH;
+                    if(delta > this._pageSizeH / 2)
+                        page++;
+                    contentXLoc = page * this._pageSizeH;
+                    if(contentXLoc > this._contentWidth - this._maskWidth) {
+                        contentXLoc = this._contentWidth - this._maskWidth;
+                        this._xPerc = 1;
+                    }
+                    else
+                        this._xPerc = contentXLoc / (this._contentWidth - this._maskWidth);
+                }
+            }
+            else if(this._snapToItem) {
+                var pt: egret.Point = this._owner.getSnappingPosition(contentXLoc,contentYLoc,ScrollPane.sHelperPoint);
                 if(this._xPerc != 1 && pt.x != contentXLoc) {
                     this._xPerc = pt.x / (this._contentWidth - this._maskWidth);
                     if(this._xPerc > 1)
@@ -646,6 +726,8 @@ module fairygui {
             else {
                 this.killTweens();
                 
+
+                //如果在拖动的过程中Refresh，这里要进行处理，保证拖动继续正常进行
                 if(this._isMouseMoved) {
                     this._xOffset += this._maskContentHolder.x - (-contentXLoc);
                     this._yOffset += this._maskContentHolder.y - (-contentYLoc);
@@ -653,6 +735,12 @@ module fairygui {
 
                 this._maskContentHolder.y = -contentYLoc;
                 this._maskContentHolder.x = -contentXLoc;
+				
+                //如果在拖动的过程中Refresh，这里要进行处理，保证手指离开是滚动正常进行
+                if(this._isMouseMoved) {
+                    this._y1 = this._y2 = this._maskContentHolder.y;
+                    this._x1 = this._x2 = this._maskContentHolder.x;
+                }
 
                 if(this._vtScrollBar)
                     this._vtScrollBar.scrollPerc = this._yPerc;
@@ -663,15 +751,16 @@ module fairygui {
         
         private killTweens(): void {
             if(this._tweening == 1) {
+                this._tweening = 0;
                 egret.Tween.pauseTweens(this._maskContentHolder);
             }
             else if(this._tweening == 2) {
+                this._tweening = 0;
                 egret.Tween.pauseTweens(this._throwTween);
                 this._throwTween.value = 1;
                 this.__tweenUpdate2();
                 this.__tweenComplete2();
-            }
-            this._tweening = 0;
+            }           
         }
 
         private calcYPerc(): number {
@@ -732,7 +821,6 @@ module fairygui {
                 if (this._scrollBarDisplayAuto)
                     this.showScrollBar(false);
             }
-            this._tweening = 0;
         }
 
         private static sHelperPoint: egret.Point = new egret.Point();
@@ -884,10 +972,6 @@ module fairygui {
             var yVelocity: number = (this._maskContentHolder.y - this._y2) / time;
             var xVelocity: number = (this._maskContentHolder.x - this._x2) / time;
             var duration: number = 0.3;
-            var xMin: number = -this._xOverlap;
-            var yMin: number = -this._yOverlap;
-            var xMax: number = 0;
-            var yMax: number = 0;
 
             this._throwTween.start.x = this._maskContentHolder.x;
             this._throwTween.start.y = this._maskContentHolder.y;
@@ -896,11 +980,33 @@ module fairygui {
             var change2: egret.Point = this._throwTween.change2;
             var endX: number = 0;
             var endY: number = 0;
-
+            var page: number = 0;
+            var delta: number = 0;
+            
             if (this._scrollType == ScrollType.Both || this._scrollType == ScrollType.Horizontal) {
                 change1.x = ThrowTween.calculateChange(xVelocity, duration);
                 change2.x = 0;
                 endX = this._maskContentHolder.x + change1.x;
+                
+                if(this._pageMode) {
+                    page = Math.floor(-endX / this._pageSizeH);
+                    delta = -endX - page * this._pageSizeH;
+                    //页面吸附策略
+                    if(change1.x > this._pageSizeH) {
+                        //如果翻页数量超过1，则需要超过页面的一半，才能到下一页
+                        if(delta >= this._pageSizeH / 2)
+                            page++;
+                    }
+                    else if(endX < this._maskContentHolder.x) {
+                        if(delta >= this._pageSizeH / 2)
+                            page++;
+                    }
+                    endX = -page * this._pageSizeH;
+                    if(endX < this._maskWidth - this._contentWidth)
+                        endX = this._maskWidth - this._contentWidth;
+
+                    change1.x = endX - this._maskContentHolder.x;
+                }
             }
             else
                 change1.x = change2.x = 0;
@@ -909,6 +1015,26 @@ module fairygui {
                 change1.y = ThrowTween.calculateChange(yVelocity, duration);
                 change2.y = 0;
                 endY = this._maskContentHolder.y + change1.y;
+                
+                if(this._pageMode) {
+                    page = Math.floor(-endY / this._pageSizeV);
+                    delta = -endY - page * this._pageSizeV;
+                    //页面吸附策略
+                    if(change1.y > this._pageSizeV) {
+                        if(delta >= this._pageSizeV / 2)
+                            page++;
+                    }
+                    else if(endY < this._maskContentHolder.y)
+                    {
+                        if(delta >= this._pageSizeV / 2)
+                            page++;
+                    }
+                    endY = -page * this._pageSizeV;
+                    if(endY < this._maskHeight - this._contentHeight)
+                        endY = this._maskHeight - this._contentHeight;
+
+                    change1.y = endY - this._maskContentHolder.y;
+                }
             }
             else
                 change1.y = change2.y = 0;
@@ -916,7 +1042,7 @@ module fairygui {
             if (this._snapToItem) {
                 endX = -endX;
                 endY = -endY;
-                var pt: egret.Point = this._owner.findObjectNear(endX, endY);
+                var pt: egret.Point = this._owner.getSnappingPosition(endX,endY,ScrollPane.sHelperPoint);
                 endX = -pt.x;
                 endY = -pt.y;
                 change1.x = endX - this._maskContentHolder.x;
@@ -924,26 +1050,26 @@ module fairygui {
             }
             
             if(this._bouncebackEffect) {
-                if (xMax < endX)
-                    change2.x = xMax - this._maskContentHolder.x - change1.x;
-                else if (xMin > endX)
-                    change2.x = xMin - this._maskContentHolder.x - change1.x;
-    
-                if (yMax < endY)
-                    change2.y = yMax - this._maskContentHolder.y - change1.y;
-                else if (yMin > endY)
-                    change2.y = yMin - this._maskContentHolder.y - change1.y;
+                if(endX > 0)
+                    change2.x = 0 - this._maskContentHolder.x - change1.x;
+                else if(endX < -this._xOverlap)
+                    change2.x = -this._xOverlap - this._maskContentHolder.x - change1.x;
+
+                if(endY > 0)
+                    change2.y = 0 - this._maskContentHolder.y - change1.y;
+                else if(endY < -this._yOverlap)
+                    change2.y = -this._yOverlap - this._maskContentHolder.y - change1.y;
             }
             else {
-                if(xMax < endX)
-                    change1.x = xMax - this._maskContentHolder.x;
-                else if(xMin > endX)
-                    change1.x = xMin - this._maskContentHolder.x;
+                if(endX > 0)
+                    change1.x = 0 - this._maskContentHolder.x;
+                else if(endX < -this._xOverlap)
+                    change1.x = -this._xOverlap - this._maskContentHolder.x;
 
-                if(yMax < endY)
-                    change1.y = yMax - this._maskContentHolder.y;
-                else if(yMin > endY)
-                    change1.y = yMin - this._maskContentHolder.y;
+                if(endY > 0)
+                    change1.y = 0 - this._maskContentHolder.y;
+                else if(endY < -this._yOverlap)
+                    change1.y = -this._yOverlap - this._maskContentHolder.y;
             }
 
             this._throwTween.value = 0;
@@ -992,6 +1118,7 @@ module fairygui {
         }
 
         private __tweenComplete(): void {
+            this._tweening = 0;
             this._maskHolder.touchEnabled = true;
             this.onScrollEnd();
         }
@@ -1013,6 +1140,10 @@ module fairygui {
         }
 
         private __tweenComplete2(): void {
+            if(this._tweening==0)
+                return;
+                
+            this._tweening = 0;
             if (this._scrollType == ScrollType.Vertical)
                 this._yPerc = this.calcYPerc();
             else if (this._scrollType == ScrollType.Horizontal)

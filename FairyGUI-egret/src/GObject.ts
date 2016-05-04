@@ -168,10 +168,9 @@ module fairygui {
                 this._width = wv;
                 this._height = hv;
 
-                if((this._pivotX != 0 || this._pivotY != 0) && this.sourceWidth != 0 && this.sourceHeight != 0) {
+                if(this._pivotX != 0 || this._pivotY != 0) {
                     if(!ignorePivot)
-                        this.setXY(this.x - this._pivotX * dWidth / this.sourceWidth,
-                            this.y - this._pivotY * dHeight / this.sourceHeight);
+                        this.setXY(this.x - this._pivotX * dWidth, this.y - this._pivotY * dHeight);
                     this.applyPivot();
                 }
 
@@ -259,18 +258,6 @@ module fairygui {
         public set pivotY(value: number) {
             this.setPivot(this._pivotX,value);
         }
-
-        public setPivotByRatio(xv: number,yv: number): void {
-            if(this.sourceWidth != 0)
-                xv = this.sourceWidth * xv;
-            else
-                xv = this.width * xv;
-            if(this.sourceHeight != 0)
-                yv = this.sourceHeight * yv;
-            else
-                yv = this.width * yv;
-            this.setPivot(xv,yv);
-        }
         
         public setPivot(xv: number,yv: number = 0): void {
             if(this._pivotX != xv || this._pivotY != yv) {
@@ -294,10 +281,8 @@ module fairygui {
                     var b: number = this._scaleX * sin;
                     var c: number = this._scaleY * -sin;
                     var d: number = this._scaleY * cos;
-                    var sx: number = this.sourceWidth != 0 ? (this._width / this.sourceWidth) : 1;
-                    var sy: number = this.sourceHeight != 0 ? (this._height / this.sourceHeight) : 1;
-                    var px: number = this._pivotX * sx;
-                    var py: number = this._pivotY * sy;
+                    var px: number = this._pivotX * this._width;
+                    var py: number = this._pivotY * this._height;
                     this._pivotOffsetX = px - (a * px + c * py);
                     this._pivotOffsetY = py - (d * py + b * px);
                 }
@@ -832,7 +817,23 @@ module fairygui {
             str = xml.attributes.pivot;
             if (str) {
                 arr = str.split(",");
-                this.setPivot(parseFloat(arr[0]),parseFloat(arr[1]));
+                var n1: number = parseFloat(arr[0]);
+                var n2: number = parseFloat(arr[1])
+                //旧版本的兼容性处理
+                if(n1 > 2) {
+                    if(this._sourceWidth != 0)
+                        n1 = n1 / this._sourceWidth;
+                    else
+                        n1 = 0;
+                }
+
+                if(n2 > 2) {
+                    if(this._sourceHeight != 0)
+                        n2 = n2 / this._sourceHeight;
+                    else
+                        n2 = 0;
+                }
+                this.setPivot(n1, n2);
             }
 
             str = xml.attributes.alpha;

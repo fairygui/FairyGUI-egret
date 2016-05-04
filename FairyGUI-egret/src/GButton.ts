@@ -327,7 +327,7 @@ module fairygui {
                 this._downEffect = str=="dark"?1:(str=="scale"?2:0);
                 str = xml.attributes.downEffectValue;
                 this._downEffectValue = parseFloat(str);
-                this.setPivotByRatio(0.5, 0.5);
+                this.setPivot(0.5, 0.5);
             }
 
             this._buttonController = this.getController("button");

@@ -49,7 +49,7 @@ module fairygui {
             if(this._tweener)
                 this._tweener.tick(100000000);
                 
-            if(this._tween && !UIPackage._constructing
+            if(this._tween && !UIPackage._constructing && !GearBase.disableAllTweenEffect
                 && ct && this._pageSet.containsId(this._controller.previousPageId)) {
                 var a: boolean = gv.width != this._owner.width || gv.height != this._owner.height;
                 var b: boolean = gv.scaleX != this._owner.scaleX || gv.scaleY != this._owner.scaleY;

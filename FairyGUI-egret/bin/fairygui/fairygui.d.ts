@@ -166,16 +166,6 @@ declare module fairygui {
     }
 }
 declare module fairygui {
-    class FocusChangeEvent extends egret.Event {
-        static CHANGED: string;
-        private _oldFocusedObject;
-        private _newFocusedObject;
-        constructor(type: string, oldObject: GObject, newObject: GObject);
-        oldFocusedObject: GObject;
-        newFocusedObject: GObject;
-    }
-}
-declare module fairygui {
     class ItemEvent extends egret.Event {
         itemObject: GObject;
         stageX: number;
@@ -313,6 +303,7 @@ declare module fairygui {
 }
 declare module fairygui {
     class GearBase {
+        static disableAllTweenEffect: boolean;
         protected _pageSet: PageOptionSet;
         protected _tween: boolean;
         protected _easeType: Function;
@@ -482,7 +473,6 @@ declare module fairygui {
         setScale(sx: number, sy: number): void;
         pivotX: number;
         pivotY: number;
-        setPivotByRatio(xv: number, yv: number): void;
         setPivot(xv: number, yv?: number): void;
         private applyPivot();
         touchable: boolean;
@@ -653,6 +643,7 @@ declare module fairygui {
         getFirstChildInView(): number;
         scrollPane: ScrollPane;
         opaque: boolean;
+        margin: Margin;
         protected updateOpaque(): void;
         protected updateMask(): void;
         protected setupScroll(scrollBarMargin: Margin, scroll: ScrollType, scrollBarDisplay: ScrollBarDisplayType, flags: number, vtScrollBarRes: string, hzScrollBarRes: string): void;
@@ -666,7 +657,7 @@ declare module fairygui {
         setBounds(ax: number, ay: number, aw: number, ah?: number): void;
         viewWidth: number;
         viewHeight: number;
-        findObjectNear(xValue: number, yValue: number, resultPoint?: egret.Point): egret.Point;
+        getSnappingPosition(xValue: number, yValue: number, resultPoint?: egret.Point): egret.Point;
         childSortingOrderChanged(child: GObject, oldValue: number, newValue?: number): void;
         constructFromResource(pkgItem: PackageItem): void;
         protected constructFromXML(xml: any): void;
@@ -902,13 +893,15 @@ declare module fairygui {
         private _viewCount;
         private _curLineItemCount;
         private _itemSize;
-        private _virtualScrollPane;
+        private _virtualListChanged;
+        private _eventLocked;
         constructor();
         dispose(): void;
         layout: ListLayoutType;
         lineGap: number;
         lineItemCount: number;
         columnGap: number;
+        virtualItemSize: egret.Point;
         defaultItem: string;
         autoResizeItem: boolean;
         selectionMode: ListSelectionMode;
@@ -938,14 +931,15 @@ declare module fairygui {
         getMaxItemWidth(): number;
         protected handleSizeChanged(): void;
         adjustItemsSize(): void;
-        findObjectNear(xValue: number, yValue: number, resultPoint?: egret.Point): egret.Point;
-        scrollToView(index: number, ani?: boolean): void;
+        getSnappingPositionar(xValue: number, yValue: number, resultPoint?: egret.Point): egret.Point;
+        scrollToView(index: number, ani?: boolean, setFirst?: boolean): void;
         getFirstChildInView(): number;
         setVirtual(): void;
         setVirtualAndLoop(): void;
         private _setVirtual(loop);
         numItems: number;
-        private handleVirtualListSizeChanged();
+        private __parentSizeChanged(evt);
+        private setVirtualListChangedFlag(layoutChanged?);
         private refreshVirtualList();
         private renderItems(beginIndex, endIndex);
         private getItemRect(index);
@@ -1170,7 +1164,6 @@ declare module fairygui {
         private _focusedObject;
         private _tooltipWin;
         private _defaultTooltipWin;
-        private _focusManagement;
         private _volumeScale;
         private static _inst;
         static touchScreen: boolean;
@@ -1180,11 +1173,11 @@ declare module fairygui {
         static shiftKeyDown: boolean;
         static mouseX: number;
         static mouseY: number;
+        static FOCUS_CHANGED: string;
         static inst: GRoot;
         constructor();
         nativeStage: egret.Stage;
         setContentScaleFactor(designUIWidth: number, designUIHeight: number): void;
-        enableFocusManagement(): void;
         showWindow(win: Window): void;
         hideWindow(win: Window): void;
         hideWindowImmediately(win: Window): void;
@@ -1205,6 +1198,7 @@ declare module fairygui {
         hideTooltips(): void;
         getObjectUnderPoint(globalX: number, globalY: number): GObject;
         focus: GObject;
+        private setFocus(value);
         volumeScale: number;
         playOneShotSound(sound: egret.Sound, volumeScale?: number): void;
         private adjustModalLayer();
@@ -1481,7 +1475,6 @@ declare module fairygui {
         private _scrollType;
         private _scrollSpeed;
         private _mouseWheelSpeed;
-        private _margin;
         private _scrollBarMargin;
         private _bouncebackEffect;
         private _touchEffect;
@@ -1492,6 +1485,9 @@ declare module fairygui {
         private _snapToItem;
         private _displayInDemand;
         private _mouseWheelEnabled;
+        private _pageMode;
+        private _pageSizeH;
+        private _pageSizeV;
         private _yPerc;
         private _xPerc;
         private _vScroll;
@@ -1519,7 +1515,7 @@ declare module fairygui {
         private _vtScrollBar;
         static SCROLL: string;
         private static sHelperRect;
-        constructor(owner: GComponent, scrollType: number, margin: Margin, scrollBarMargin: Margin, scrollBarDisplay: number, flags: number, vtScrollBarRes: string, hzScrollBarRes: string);
+        constructor(owner: GComponent, scrollType: number, scrollBarMargin: Margin, scrollBarDisplay: number, flags: number, vtScrollBarRes: string, hzScrollBarRes: string);
         owner: GComponent;
         bouncebackEffect: boolean;
         touchEffect: boolean;
@@ -1535,6 +1531,8 @@ declare module fairygui {
         setPosY(val: number, ani?: boolean): void;
         isBottomMost: boolean;
         isRightMost: boolean;
+        currentPageX: number;
+        currentPageY: number;
         contentWidth: number;
         contentHeight: number;
         viewWidth: number;
@@ -1547,9 +1545,9 @@ declare module fairygui {
         scrollDown(speed?: number, ani?: boolean): void;
         scrollLeft(speed?: number, ani?: boolean): void;
         scrollRight(speed?: number, ani?: boolean): void;
-        scrollToView(target: any, ani?: boolean): void;
+        scrollToView(target: any, ani?: boolean, setFirst?: boolean): void;
         isChildInView(obj: GObject): boolean;
-        setSize(aWidth: number, aHeight: number): void;
+        setSize(aWidth: number, aHeight: number, noRefresh?: Boolean): void;
         setContentSize(aWidth: number, aHeight: number): void;
         private handleSizeChanged();
         private posChanged(ani);
@@ -1624,6 +1622,7 @@ declare module fairygui {
         static touchScrollSensitivity: number;
         static touchDragSensitivity: number;
         static clickDragSensitivity: number;
+        static bringWindowToFrontOnClick: boolean;
     }
 }
 declare module fairygui {
@@ -1740,6 +1739,7 @@ declare module fairygui {
         private _inited;
         private _loading;
         protected _requestingCmd: number;
+        bringToFontOnClick: boolean;
         constructor();
         addUISource(source: IUISource): void;
         contentPane: GComponent;

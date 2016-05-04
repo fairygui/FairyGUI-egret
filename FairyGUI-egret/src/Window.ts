@@ -15,11 +15,14 @@ module fairygui {
         private _loading: boolean;
         
         protected _requestingCmd: number = 0;
+        
+        public bringToFontOnClick: boolean;
 
         public constructor() {
             super();
             this.focusable = true;
             this._uiSources = new Array<IUISource>();
+            this.bringToFontOnClick = UIConfig.bringWindowToFrontOnClick;
 
             this.displayObject.addEventListener(egret.Event.ADDED_TO_STAGE,this.__onShown,this);
             this.displayObject.addEventListener(egret.Event.REMOVED_FROM_STAGE,this.__onHidden,this);
@@ -281,11 +284,8 @@ module fairygui {
         }
 
         private __mouseDown(evt: egret.Event): void {
-            if(this.isShowing) {
-                var r: GRoot = this.root;
-                if(r)
-                    r.showWindow(this);
-            }
+            if(this.isShowing && this.bringToFontOnClick)
+                this.bringToFront();
         }
 
         private __dragStart(evt: DragEvent): void {
