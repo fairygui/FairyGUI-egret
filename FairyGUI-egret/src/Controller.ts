@@ -58,7 +58,7 @@ module fairygui {
                     var len: number = this._pageTransitions.length;
                     for(var i: number = 0;i < len;i++) {
                         var pt: PageTransition = this._pageTransitions[i];
-                        if(pt.toIndex == this._selectedIndex && (pt.fromIndex==this._previousIndex)) {
+                        if(pt.toIndex == this._selectedIndex && (pt.fromIndex == -1 || pt.fromIndex==this._previousIndex)) {
                             this._playingTransition = this.parent.getTransition(pt.transitionName);
                             break;
                         }
