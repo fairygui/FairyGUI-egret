@@ -1363,7 +1363,7 @@ var fairygui;
                     this._tweenValue.scaleX = this._owner.scaleX;
                     this._tweenValue.scaleY = this._owner.scaleY;
                     this._tweener = egret.Tween.get(this._tweenValue, vars)
-                        .wait(this._tweenDelay)
+                        .wait(this._tweenDelay * 1000)
                         .to({ width: gv.width, height: gv.height, scaleX: gv.scaleX, scaleY: gv.scaleY }, this._tweenTime * 1000, this._easeType)
                         .call(function () {
                         this._owner.internalVisible--;
@@ -1481,7 +1481,7 @@ var fairygui;
                     this._tweenValue.x = this._owner.x;
                     this._tweenValue.y = this._owner.y;
                     this._tweener = egret.Tween.get(this._tweenValue, vars)
-                        .wait(this._tweenDelay)
+                        .wait(this._tweenDelay * 1000)
                         .to({ x: pt.x, y: pt.y }, this._tweenTime * 1000, this._easeType)
                         .call(function () {
                         this._owner.internalVisible--;
@@ -5054,7 +5054,7 @@ var fairygui;
                     this._tweenValue.x = this._owner.alpha;
                     this._tweenValue.y = this._owner.rotation;
                     this._tweener = egret.Tween.get(this._tweenValue, vars)
-                        .wait(this._tweenDelay)
+                        .wait(this._tweenDelay * 1000)
                         .to({ x: gv.alpha, y: gv.rotation }, this._tweenTime * 1000, this._easeType)
                         .call(function () {
                         this._owner.internalVisible--;

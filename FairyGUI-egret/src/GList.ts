@@ -820,8 +820,6 @@ module fairygui {
             this._virtualListChanged = 0;
             this._eventLocked = true;
             
-            this.ensureBoundsCorrect();
-            
             if(layoutChanged) {
                 if(this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal) {
                     if(this._layout == ListLayoutType.SingleColumn)
@@ -856,6 +854,8 @@ module fairygui {
                         this.removeChildrenToPool(this._viewCount,numChildren);
                 }
             }
+            
+            this.ensureBoundsCorrect();
         
             if(this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal) {
                 if(this.scrollPane != null) {
