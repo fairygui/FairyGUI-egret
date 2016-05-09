@@ -73,6 +73,7 @@ module fairygui {
                     this._tweenValue.scaleX = this._owner.scaleX;
                     this._tweenValue.scaleY = this._owner.scaleY;
                     this._tweener = egret.Tween.get(this._tweenValue,vars)
+                        .wait(this._tweenDelay)
                         .to({ width: gv.width, height: gv.height, scaleX: gv.scaleX, scaleY: gv.scaleY },
                             this._tweenTime * 1000, this._easeType)
                         .call(function(): void {
