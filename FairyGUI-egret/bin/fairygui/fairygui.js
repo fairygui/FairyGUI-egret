@@ -1180,6 +1180,7 @@ var fairygui;
             this._pageSet = new fairygui.PageOptionSet();
             this._easeType = egret.Ease.quadOut;
             this._tweenTime = 0.3;
+            this._tweenDelay = 0;
         }
         var d = __define,c=GearBase,p=c.prototype;
         d(p, "controller"
@@ -1205,6 +1206,14 @@ var fairygui;
             }
             ,function (val) {
                 this._tween = val;
+            }
+        );
+        d(p, "tweenDelay"
+            ,function () {
+                return this._tweenDelay;
+            }
+            ,function (val) {
+                this._tweenDelay = val;
             }
         );
         d(p, "tweenTime"
@@ -1249,6 +1258,9 @@ var fairygui;
             str = xml.attributes.duration;
             if (str)
                 this._tweenTime = parseFloat(str);
+            str = xml.attributes.delay;
+            if (str)
+                this._tweenDelay = parseFloat(str);
             str = xml.attributes.values;
             var values;
             if (str)
@@ -1351,6 +1363,7 @@ var fairygui;
                     this._tweenValue.scaleX = this._owner.scaleX;
                     this._tweenValue.scaleY = this._owner.scaleY;
                     this._tweener = egret.Tween.get(this._tweenValue, vars)
+                        .wait(this._tweenDelay)
                         .to({ width: gv.width, height: gv.height, scaleX: gv.scaleX, scaleY: gv.scaleY }, this._tweenTime * 1000, this._easeType)
                         .call(function () {
                         this._owner.internalVisible--;
@@ -1468,6 +1481,7 @@ var fairygui;
                     this._tweenValue.x = this._owner.x;
                     this._tweenValue.y = this._owner.y;
                     this._tweener = egret.Tween.get(this._tweenValue, vars)
+                        .wait(this._tweenDelay)
                         .to({ x: pt.x, y: pt.y }, this._tweenTime * 1000, this._easeType)
                         .call(function () {
                         this._owner.internalVisible--;
@@ -5040,6 +5054,7 @@ var fairygui;
                     this._tweenValue.x = this._owner.alpha;
                     this._tweenValue.y = this._owner.rotation;
                     this._tweener = egret.Tween.get(this._tweenValue, vars)
+                        .wait(this._tweenDelay)
                         .to({ x: gv.alpha, y: gv.rotation }, this._tweenTime * 1000, this._easeType)
                         .call(function () {
                         this._owner.internalVisible--;
@@ -6322,7 +6337,6 @@ var fairygui;
             var layoutChanged = this._virtualListChanged == 2;
             this._virtualListChanged = 0;
             this._eventLocked = true;
-            this.ensureBoundsCorrect();
             if (layoutChanged) {
                 if (this._layout == fairygui.ListLayoutType.SingleColumn || this._layout == fairygui.ListLayoutType.FlowHorizontal) {
                     if (this._layout == fairygui.ListLayoutType.SingleColumn)
@@ -6357,6 +6371,7 @@ var fairygui;
                         this.removeChildrenToPool(this._viewCount, numChildren);
                 }
             }
+            this.ensureBoundsCorrect();
             if (this._layout == fairygui.ListLayoutType.SingleColumn || this._layout == fairygui.ListLayoutType.FlowHorizontal) {
                 if (this.scrollPane != null) {
                     var ch;

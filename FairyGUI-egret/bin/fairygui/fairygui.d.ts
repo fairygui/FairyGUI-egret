@@ -308,12 +308,14 @@ declare module fairygui {
         protected _tween: boolean;
         protected _easeType: Function;
         protected _tweenTime: number;
+        protected _tweenDelay: number;
         protected _owner: GObject;
         protected _controller: Controller;
         constructor(owner: GObject);
         controller: Controller;
         getPageSet(): PageOptionSet;
         tween: boolean;
+        tweenDelay: number;
         tweenTime: number;
         easeType: Function;
         setup(xml: any): void;

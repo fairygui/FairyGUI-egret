@@ -8,6 +8,7 @@ module fairygui {
         protected _tween: boolean;
         protected _easeType: Function;
         protected _tweenTime: number;
+        protected _tweenDelay: number;
 
         protected _owner: GObject;
         protected _controller: Controller;
@@ -17,6 +18,7 @@ module fairygui {
             this._pageSet = new PageOptionSet();
             this._easeType = egret.Ease.quadOut;
             this._tweenTime = 0.3;
+            this._tweenDelay = 0;
         }
 
         public get controller(): Controller {
@@ -43,6 +45,14 @@ module fairygui {
 
         public set tween(val: boolean) {
             this._tween = val;
+        }
+        
+        public get tweenDelay(): number {
+            return this._tweenDelay;
+        }
+
+        public set tweenDelay(val: number) {
+            this._tweenDelay = val;
         }
 
         public get tweenTime(): number {
@@ -92,6 +102,10 @@ module fairygui {
             str = xml.attributes.duration;
             if (str)
                 this._tweenTime = parseFloat(str);
+                
+            str = xml.attributes.delay;
+            if (str)
+                this._tweenDelay = parseFloat(str);
 
             str = xml.attributes.values;
             var values: string[];
