@@ -61,6 +61,7 @@ module fairygui {
                     this._tweenValue.x = this._owner.x;
                     this._tweenValue.y = this._owner.y;
                     this._tweener = egret.Tween.get(this._tweenValue,vars)
+                        .wait(this._tweenDelay)
                         .to({ x: pt.x,y: pt.y },this._tweenTime * 1000,this._easeType)
                         .call(function(): void {
                             this._owner.internalVisible--;
