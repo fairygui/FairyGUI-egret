@@ -656,7 +656,7 @@ module fairygui {
             }
         }
 
-        public getSnappingPositionar(xValue: number, yValue: number, resultPoint?:egret.Point):egret.Point {
+        public getSnappingPosition(xValue: number, yValue: number, resultPoint?:egret.Point):egret.Point {
             if (this._virtual) {
                 if(!resultPoint)
                     resultPoint = new egret.Point();

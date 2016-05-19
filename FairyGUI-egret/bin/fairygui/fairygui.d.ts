@@ -100,49 +100,44 @@ declare module fairygui {
     }
 }
 declare module fairygui {
-    class UIContainer extends egret.DisplayObjectContainer implements UIDisplayObject {
-        private _owner;
+    class UIContainer extends egret.DisplayObjectContainer {
         private _hitArea;
-        constructor(owner: GObject);
-        owner: GObject;
+        constructor();
         hitArea: egret.Rectangle;
         $hitTest(stageX: number, stageY: number): egret.DisplayObject;
     }
 }
 declare module fairygui {
-    interface UIDisplayObject {
-        owner: GObject;
-    }
-}
-declare module fairygui {
-    class UIImage extends egret.Bitmap implements UIDisplayObject {
-        private _owner;
-        constructor(owner: GObject);
-        owner: GObject;
-    }
-}
-declare module fairygui {
-    class UIMovieClip extends MovieClip implements UIDisplayObject {
-        private _owner;
-        constructor(owner: GObject);
-        owner: GObject;
-    }
-}
-declare module fairygui {
-    class UISprite extends egret.Sprite implements UIDisplayObject {
-        private _owner;
+    class UISprite extends egret.Sprite {
         private _hitArea;
-        constructor(owner: GObject);
-        owner: GObject;
+        constructor();
         hitArea: egret.Rectangle;
         $hitTest(stageX: number, stageY: number): egret.DisplayObject;
     }
 }
 declare module fairygui {
-    class UITextField extends egret.TextField implements UIDisplayObject {
-        private _owner;
-        constructor(owner: GObject);
-        owner: GObject;
+    class BitmapFont {
+        id: string;
+        size: number;
+        ttf: boolean;
+        glyphs: any;
+        resizable: boolean;
+        constructor();
+    }
+}
+declare module fairygui {
+    class BMGlyph {
+        x: number;
+        y: number;
+        offsetX: number;
+        offsetY: number;
+        width: number;
+        height: number;
+        advance: number;
+        lineHeight: number;
+        channel: number;
+        texture: egret.Texture;
+        constructor();
     }
 }
 declare module fairygui {
@@ -178,6 +173,46 @@ declare module fairygui {
     class StateChangeEvent extends egret.Event {
         static CHANGED: string;
         constructor(type: string);
+    }
+}
+declare module fairygui {
+    class UBBParser {
+        private _text;
+        private _readPos;
+        protected _handlers: any;
+        smallFontSize: number;
+        normalFontSize: number;
+        largeFontSize: number;
+        defaultImgWidth: number;
+        defaultImgHeight: number;
+        static inst: UBBParser;
+        constructor();
+        protected onTag_URL(tagName: string, end: boolean, attr: string): string;
+        protected onTag_IMG(tagName: string, end: boolean, attr: string): string;
+        protected onTag_Simple(tagName: string, end: boolean, attr: string): string;
+        protected onTag_COLOR(tagName: string, end: boolean, attr: string): string;
+        protected onTag_FONT(tagName: string, end: boolean, attr: string): string;
+        protected onTag_SIZE(tagName: string, end: boolean, attr: string): string;
+        protected getTagText(remove?: boolean): string;
+        parse(text: string): string;
+    }
+}
+declare module fairygui {
+    class ToolSet {
+        constructor();
+        static getFileName(source: string): string;
+        static startsWith(source: string, str: string, ignoreCase?: boolean): boolean;
+        static endsWith(source: string, str: string, ignoreCase?: boolean): boolean;
+        static trim(targetString: string): string;
+        static trimLeft(targetString: string): string;
+        static trimRight(targetString: string): string;
+        static convertToHtmlColor(argb: number, hasAlpha?: boolean): string;
+        static convertFromHtmlColor(str: string, hasAlpha?: boolean): number;
+        static displayObjectToGObject(obj: egret.DisplayObject): GObject;
+        static findChildNode(xml: any, name: string): any;
+        static encodeHTML(str: string): string;
+        static defaultUBBParser: UBBParser;
+        static parseUBB(text: string): string;
     }
 }
 declare module fairygui {
@@ -387,7 +422,7 @@ declare module fairygui {
         clearHooks(): void;
         setTarget(label: string, newTarget: GObject): void;
         updateFromRelations(targetId: string, dx: number, dy: number): void;
-        private internalPlay(delay);
+        private internalPlay(delay?);
         private prepareValue(item, toProps, reversed?);
         private startTween(item);
         private __delayCall(item);
@@ -523,6 +558,7 @@ declare module fairygui {
         asComboBox: GComboBox;
         asImage: GImage;
         asMovieClip: GMovieClip;
+        static cast(obj: egret.DisplayObject): GObject;
         text: string;
         dispose(): void;
         addClickListener(listener: Function, thisObj: any): void;
@@ -547,6 +583,7 @@ declare module fairygui {
         protected switchDisplayObject(newObj: egret.DisplayObject): void;
         protected handleXYChanged(): void;
         protected handleSizeChanged(): void;
+        private static colorMatrix;
         protected handleGrayChanged(): void;
         constructFromResource(pkgItem: PackageItem): void;
         setup_beforeAdd(xml: any): void;
@@ -933,7 +970,7 @@ declare module fairygui {
         getMaxItemWidth(): number;
         protected handleSizeChanged(): void;
         adjustItemsSize(): void;
-        getSnappingPositionar(xValue: number, yValue: number, resultPoint?: egret.Point): egret.Point;
+        getSnappingPosition(xValue: number, yValue: number, resultPoint?: egret.Point): egret.Point;
         scrollToView(index: number, ani?: boolean, setFirst?: boolean): void;
         getFirstChildInView(): number;
         setVirtual(): void;
@@ -1088,8 +1125,8 @@ declare module fairygui {
         protected _heightAutoSize: boolean;
         protected _gearColor: GearColor;
         protected _updatingSize: boolean;
-        protected _sizeDirty: boolean;
         protected _yOffset: number;
+        protected _sizeDirty: boolean;
         protected _textWidth: number;
         protected _textHeight: number;
         protected _requireRender: boolean;
@@ -1179,10 +1216,10 @@ declare module fairygui {
         static inst: GRoot;
         constructor();
         nativeStage: egret.Stage;
-        setContentScaleFactor(designUIWidth: number, designUIHeight: number): void;
         showWindow(win: Window): void;
         hideWindow(win: Window): void;
         hideWindowImmediately(win: Window): void;
+        bringToFront(win: Window): void;
         showModalWait(msg?: string): void;
         closeModalWait(): void;
         closeAllExceptModals(): void;
@@ -1296,23 +1333,6 @@ declare module fairygui {
         private static sSilderHelperPoint;
         private __gripMouseMove(evt);
         private __gripMouseUp(evt);
-    }
-}
-declare module fairygui {
-    class GSwfObject extends GObject implements IAnimationGear {
-        _container: UIContainer;
-        _content: egret.DisplayObject;
-        _playing: boolean;
-        _frame: number;
-        _gearAnimation: GearAnimation;
-        constructor();
-        protected createDisplayObject(): void;
-        playing: boolean;
-        frame: number;
-        gearAnimation: GearAnimation;
-        protected handleSizeChanged(): void;
-        handleControllerChanged(c: Controller): void;
-        constructFromResource(pkgItem: PackageItem): void;
     }
 }
 declare module fairygui {
@@ -1576,31 +1596,6 @@ declare module fairygui {
     }
 }
 declare module fairygui {
-    class BitmapFont {
-        id: string;
-        size: number;
-        ttf: boolean;
-        glyphs: any;
-        resizable: boolean;
-        constructor();
-    }
-}
-declare module fairygui {
-    class BMGlyph {
-        x: number;
-        y: number;
-        offsetX: number;
-        offsetY: number;
-        width: number;
-        height: number;
-        advance: number;
-        lineHeight: number;
-        channel: number;
-        texture: egret.Texture;
-        constructor();
-    }
-}
-declare module fairygui {
     class UIConfig {
         constructor();
         static defaultFont: string;
@@ -1625,47 +1620,6 @@ declare module fairygui {
         static touchDragSensitivity: number;
         static clickDragSensitivity: number;
         static bringWindowToFrontOnClick: boolean;
-    }
-}
-declare module fairygui {
-    class UBBParser {
-        private _text;
-        private _readPos;
-        protected _handlers: any;
-        smallFontSize: number;
-        normalFontSize: number;
-        largeFontSize: number;
-        defaultImgWidth: number;
-        defaultImgHeight: number;
-        static inst: UBBParser;
-        constructor();
-        protected onTag_URL(tagName: string, end: boolean, attr: string): string;
-        protected onTag_IMG(tagName: string, end: boolean, attr: string): string;
-        protected onTag_Simple(tagName: string, end: boolean, attr: string): string;
-        protected onTag_COLOR(tagName: string, end: boolean, attr: string): string;
-        protected onTag_FONT(tagName: string, end: boolean, attr: string): string;
-        protected onTag_SIZE(tagName: string, end: boolean, attr: string): string;
-        protected getTagText(remove?: boolean): string;
-        parse(text: string): string;
-    }
-}
-declare module fairygui {
-    class ToolSet {
-        constructor();
-        static getFileName(source: string): string;
-        static startsWith(source: string, str: string, ignoreCase?: boolean): boolean;
-        static endsWith(source: string, str: string, ignoreCase?: boolean): boolean;
-        static trim(targetString: string): string;
-        static trimLeft(targetString: string): string;
-        static trimRight(targetString: string): string;
-        static convertToHtmlColor(argb: number, hasAlpha?: boolean): string;
-        static convertFromHtmlColor(str: string, hasAlpha?: boolean): number;
-        static isUIObject(obj: egret.DisplayObject): boolean;
-        static displayObjectToGObject(obj: egret.DisplayObject): GObject;
-        static findChildNode(xml: any, name: string): any;
-        static encodeHTML(str: string): string;
-        static defaultUBBParser: UBBParser;
-        static parseUBB(text: string): string;
     }
 }
 declare module fairygui {

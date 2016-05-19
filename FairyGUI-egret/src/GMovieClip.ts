@@ -21,7 +21,9 @@ module fairygui {
         }
 
         protected createDisplayObject(): void {
-            this._movieClip = new UIMovieClip(this);
+            this._movieClip = new MovieClip();
+            this._movieClip["$owner"] = this;
+            this._movieClip.touchEnabled = false;
             this.setDisplayObject(this._movieClip);
         }
 

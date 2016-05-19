@@ -135,16 +135,18 @@ module fairygui {
 
         private delayCreateDisplayObject(): void {
             if (!this.displayObject) {
-                this.setDisplayObject(new UISprite(this));
+                var sprite: UISprite= new UISprite();
+                sprite["$owner"] = this;
+                this.setDisplayObject(sprite);
                 if (this._parent)
                     this._parent.childStateChanged(this);
                 this.handleXYChanged();
-                this.displayObject.alpha = this.alpha;
-                this.displayObject.rotation = this.rotation;
-                this.displayObject.visible = this.visible;
-                (<egret.Sprite>(this.displayObject)).touchEnabled = this.touchable;
-                (<egret.Sprite>(this.displayObject)).touchChildren = this.touchable;
-                (<UISprite>(this.displayObject)).hitArea = new egret.Rectangle(0, 0, this.width, this.height);
+                sprite.alpha = this.alpha;
+                sprite.rotation = this.rotation;
+                sprite.visible = this.visible;
+                sprite.touchEnabled = this.touchable;
+                sprite.touchChildren = this.touchable;
+                sprite.hitArea = new egret.Rectangle(0, 0, this.width, this.height);
             }
             else {
                 (<egret.Sprite>(this.displayObject)).graphics.clear();
@@ -173,15 +175,15 @@ module fairygui {
             var str: string;
             var type: string = xml.attributes.type;
             if (type && type != "empty") {
-                this.setDisplayObject(new UISprite(this));
+                var sprite: UISprite = new UISprite();
+                sprite["$owner"] = this;
+                this.setDisplayObject(sprite);
             }
 
             super.setup_beforeAdd(xml);
 
             if (this.displayObject != null) {
                 this._graphics = (<egret.Sprite>(this.displayObject)).graphics;
-
-                var str: string;
 
                 str = xml.attributes.lineSize;
                 if (str)

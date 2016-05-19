@@ -24,9 +24,6 @@ module fairygui {
                 case PackageItemType.MovieClip:
                     return new GMovieClip();
 
-                case PackageItemType.Swf:
-                    return new GSwfObject();
-
                 case PackageItemType.Component:
                     {
                         var cls:any = UIObjectFactory.packageItemExtensions[pi.owner.id + pi.id];
@@ -73,9 +70,6 @@ module fairygui {
 
                 case "movieclip":
                     return new GMovieClip();
-
-                case "swf":
-                    return new GSwfObject();
 
                 case "component":
                     return new GComponent();

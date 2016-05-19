@@ -66,7 +66,9 @@ module fairygui {
         }
         
         protected createDisplayObject(): void {
-            this._content = new UIImage(this);
+            this._content = new egret.Bitmap();
+            this._content["$owner"] = this;
+            this._content.touchEnabled = false;
             this.setDisplayObject(this._content);
         }
 

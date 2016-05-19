@@ -95,15 +95,15 @@ module fairygui {
                         break;
 
                     case ProgressTitleType.ValueAndMax:
-                        this._titleObject.text = newValue + "/" + this._max;
+                        this._titleObject.text = Math.round(newValue) + "/" + Math.round(this._max);
                         break;
 
                     case ProgressTitleType.Value:
-                        this._titleObject.text = "" + newValue;
+                        this._titleObject.text = "" + Math.round(newValue);
                         break;
 
                     case ProgressTitleType.Max:
-                        this._titleObject.text = "" + this._max;
+                        this._titleObject.text = "" + Math.round(this._max);
                         break;
                 }
             }
@@ -129,8 +129,6 @@ module fairygui {
             }
             if(this._aniObject instanceof GMovieClip)
                 (<GMovieClip><any> (this._aniObject)).frame = Math.round(percent * 100);
-            else if(this._aniObject instanceof GSwfObject)
-                (<GSwfObject><any> (this._aniObject)).frame = Math.round(percent * 100);
         }
 
         protected constructFromXML(xml: any): void {

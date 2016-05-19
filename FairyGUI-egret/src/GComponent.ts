@@ -26,7 +26,8 @@ module fairygui {
         }
 
         protected createDisplayObject(): void {
-            this._rootContainer = new UIContainer(this);
+            this._rootContainer = new UIContainer();
+            this._rootContainer["$owner"] = this;
             this.setDisplayObject(this._rootContainer);
             this._container = this._rootContainer;
         }

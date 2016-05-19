@@ -109,18 +109,10 @@ module fairygui {
                 return parseInt(str, 16);
         }
 
-        public static isUIObject(obj: egret.DisplayObject): boolean {
-            return (obj instanceof UIImage)
-                || (obj instanceof UIMovieClip)
-                || (obj instanceof UISprite)
-                || (obj instanceof UIContainer)
-                || (obj instanceof UITextField);
-        }
-
         public static displayObjectToGObject(obj: egret.DisplayObject): GObject {
             while (obj != null && !(obj instanceof egret.Stage)) {
-                if (ToolSet.isUIObject(obj))
-                    return (<UIDisplayObject><any>obj).owner;
+                if(obj["$owner"])
+                    return <GObject><any>obj["$owner"];
 
                 obj = obj.parent;
             }

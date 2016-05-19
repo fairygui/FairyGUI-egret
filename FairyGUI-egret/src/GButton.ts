@@ -352,7 +352,7 @@ module fairygui {
                 str = xml.attributes.selectedTitle;
                 if (str)
                     this.selectedTitle = str;
-                str = xml.attributes.selectedIcon;;
+                str = xml.attributes.selectedIcon;
                 if (str)
                     this.selectedIcon = str;
 
@@ -361,7 +361,7 @@ module fairygui {
                     this.titleColor = ToolSet.convertFromHtmlColor(str);
                 str = xml.attributes.controller;
                 if (str)
-                    this._relatedController = this._parent.getController(xml.attributes.controller);
+                    this._relatedController = this._parent.getController(str);
                 else
                     this._relatedController = null;
                 this._pageOption.id = xml.attributes.page;

@@ -457,7 +457,9 @@ var fairygui;
                 var textureHeight = texture.$getTextureHeight();
                 var destW = Math.round(texture.$getScaleBitmapWidth());
                 var destH = Math.round(texture.$getScaleBitmapHeight());
-                egret.Bitmap.$drawImage(this.$renderNode, texture._bitmapData, texture._bitmapX, texture._bitmapY, bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight, destW, destH, null, egret.BitmapFillMode.SCALE, true);
+                var sourceWidth = texture._sourceWidth;
+                var sourceHeight = texture._sourceHeight;
+                egret.Bitmap.$drawImage(this.$renderNode, texture._bitmapData, texture._bitmapX, texture._bitmapY, bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight, destW, destH, sourceWidth, sourceHeight, null, egret.BitmapFillMode.SCALE, true);
             }
         };
         p.$measureContentBounds = function (bounds) {
@@ -560,18 +562,12 @@ var fairygui;
 (function (fairygui) {
     var UIContainer = (function (_super) {
         __extends(UIContainer, _super);
-        function UIContainer(owner) {
+        function UIContainer() {
             _super.call(this);
-            this._owner = owner;
             this.touchEnabled = true;
             this.touchChildren = true;
         }
         var d = __define,c=UIContainer,p=c.prototype;
-        d(p, "owner"
-            ,function () {
-                return this._owner;
-            }
-        );
         d(p, "hitArea"
             ,function () {
                 return this._hitArea;
@@ -603,68 +599,19 @@ var fairygui;
         return UIContainer;
     }(egret.DisplayObjectContainer));
     fairygui.UIContainer = UIContainer;
-    egret.registerClass(UIContainer,'fairygui.UIContainer',["fairygui.UIDisplayObject"]);
-})(fairygui || (fairygui = {}));
-
-
-var fairygui;
-(function (fairygui) {
-    var UIImage = (function (_super) {
-        __extends(UIImage, _super);
-        function UIImage(owner) {
-            _super.call(this);
-            this._owner = owner;
-            this.touchEnabled = false;
-        }
-        var d = __define,c=UIImage,p=c.prototype;
-        d(p, "owner"
-            ,function () {
-                return this._owner;
-            }
-        );
-        return UIImage;
-    }(egret.Bitmap));
-    fairygui.UIImage = UIImage;
-    egret.registerClass(UIImage,'fairygui.UIImage',["fairygui.UIDisplayObject"]);
-})(fairygui || (fairygui = {}));
-
-var fairygui;
-(function (fairygui) {
-    var UIMovieClip = (function (_super) {
-        __extends(UIMovieClip, _super);
-        function UIMovieClip(owner) {
-            _super.call(this);
-            this._owner = owner;
-            this.touchEnabled = false;
-        }
-        var d = __define,c=UIMovieClip,p=c.prototype;
-        d(p, "owner"
-            ,function () {
-                return this._owner;
-            }
-        );
-        return UIMovieClip;
-    }(fairygui.MovieClip));
-    fairygui.UIMovieClip = UIMovieClip;
-    egret.registerClass(UIMovieClip,'fairygui.UIMovieClip',["fairygui.UIDisplayObject"]);
+    egret.registerClass(UIContainer,'fairygui.UIContainer');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
 (function (fairygui) {
     var UISprite = (function (_super) {
         __extends(UISprite, _super);
-        function UISprite(owner) {
+        function UISprite() {
             _super.call(this);
-            this._owner = owner;
             this.touchEnabled = true;
             this.touchChildren = true;
         }
         var d = __define,c=UISprite,p=c.prototype;
-        d(p, "owner"
-            ,function () {
-                return this._owner;
-            }
-        );
         d(p, "hitArea"
             ,function () {
                 return this._hitArea;
@@ -696,28 +643,42 @@ var fairygui;
         return UISprite;
     }(egret.Sprite));
     fairygui.UISprite = UISprite;
-    egret.registerClass(UISprite,'fairygui.UISprite',["fairygui.UIDisplayObject"]);
+    egret.registerClass(UISprite,'fairygui.UISprite');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
 (function (fairygui) {
-    var UITextField = (function (_super) {
-        __extends(UITextField, _super);
-        function UITextField(owner) {
-            _super.call(this);
-            this.touchEnabled = false;
-            this._owner = owner;
+    var BitmapFont = (function () {
+        function BitmapFont() {
+            this.size = 0;
+            this.glyphs = {};
         }
-        var d = __define,c=UITextField,p=c.prototype;
-        d(p, "owner"
-            ,function () {
-                return this._owner;
-            }
-        );
-        return UITextField;
-    }(egret.TextField));
-    fairygui.UITextField = UITextField;
-    egret.registerClass(UITextField,'fairygui.UITextField',["fairygui.UIDisplayObject"]);
+        var d = __define,c=BitmapFont,p=c.prototype;
+        return BitmapFont;
+    }());
+    fairygui.BitmapFont = BitmapFont;
+    egret.registerClass(BitmapFont,'fairygui.BitmapFont');
+})(fairygui || (fairygui = {}));
+
+var fairygui;
+(function (fairygui) {
+    var BMGlyph = (function () {
+        function BMGlyph() {
+            this.x = 0;
+            this.y = 0;
+            this.offsetX = 0;
+            this.offsetY = 0;
+            this.width = 0;
+            this.height = 0;
+            this.advance = 0;
+            this.lineHeight = 0;
+            this.channel = 0;
+        }
+        var d = __define,c=BMGlyph,p=c.prototype;
+        return BMGlyph;
+    }());
+    fairygui.BMGlyph = BMGlyph;
+    egret.registerClass(BMGlyph,'fairygui.BMGlyph');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -800,6 +761,281 @@ var fairygui;
     }(egret.Event));
     fairygui.StateChangeEvent = StateChangeEvent;
     egret.registerClass(StateChangeEvent,'fairygui.StateChangeEvent');
+})(fairygui || (fairygui = {}));
+
+var fairygui;
+(function (fairygui) {
+    var UBBParser = (function () {
+        function UBBParser() {
+            this._readPos = 0;
+            this.smallFontSize = 12;
+            this.normalFontSize = 14;
+            this.largeFontSize = 16;
+            this.defaultImgWidth = 0;
+            this.defaultImgHeight = 0;
+            this._handlers = {};
+            this._handlers["url"] = this.onTag_URL;
+            this._handlers["img"] = this.onTag_IMG;
+            this._handlers["b"] = this.onTag_Simple;
+            this._handlers["i"] = this.onTag_Simple;
+            this._handlers["u"] = this.onTag_Simple;
+            this._handlers["sup"] = this.onTag_Simple;
+            this._handlers["sub"] = this.onTag_Simple;
+            this._handlers["color"] = this.onTag_COLOR;
+            this._handlers["font"] = this.onTag_FONT;
+            this._handlers["size"] = this.onTag_SIZE;
+        }
+        var d = __define,c=UBBParser,p=c.prototype;
+        p.onTag_URL = function (tagName, end, attr) {
+            if (!end) {
+                if (attr != null)
+                    return "<a href=\"" + attr + "\" target=\"_blank\">";
+                else {
+                    var href = this.getTagText();
+                    return "<a href=\"" + href + "\" target=\"_blank\">";
+                }
+            }
+            else
+                return "</a>";
+        };
+        p.onTag_IMG = function (tagName, end, attr) {
+            if (!end) {
+                var src = this.getTagText(true);
+                if (!src)
+                    return null;
+                if (this.defaultImgWidth)
+                    return "<img src=\"" + src + "\" width=\"" + this.defaultImgWidth + "\" height=\"" + this.defaultImgHeight + "\"/>";
+                else
+                    return "<img src=\"" + src + "\"/>";
+            }
+            else
+                return null;
+        };
+        p.onTag_Simple = function (tagName, end, attr) {
+            return end ? ("</" + tagName + ">") : ("<" + tagName + ">");
+        };
+        p.onTag_COLOR = function (tagName, end, attr) {
+            if (!end)
+                return "<font color=\"" + attr + "\">";
+            else
+                return "</font>";
+        };
+        p.onTag_FONT = function (tagName, end, attr) {
+            if (!end)
+                return "<font face=\"" + attr + "\">";
+            else
+                return "</font>";
+        };
+        p.onTag_SIZE = function (tagName, end, attr) {
+            if (!end) {
+                if (attr == "normal")
+                    attr = "" + this.normalFontSize;
+                else if (attr == "small")
+                    attr = "" + this.smallFontSize;
+                else if (attr == "large")
+                    attr = "" + this.largeFontSize;
+                else if (attr.length && attr.charAt(0) == "+")
+                    attr = "" + (this.smallFontSize + parseInt(attr.substr(1)));
+                else if (attr.length && attr.charAt(0) == "-")
+                    attr = "" + (this.smallFontSize - parseInt(attr.substr(1)));
+                return "<font size=\"" + attr + "\">";
+            }
+            else
+                return "</font>";
+        };
+        p.getTagText = function (remove) {
+            if (remove === void 0) { remove = false; }
+            var pos = this._text.indexOf("[", this._readPos);
+            if (pos == -1)
+                return null;
+            var ret = this._text.substring(this._readPos, pos);
+            if (remove)
+                this._readPos = pos;
+            return ret;
+        };
+        p.parse = function (text) {
+            this._text = text;
+            var pos1 = 0, pos2, pos3 = 0;
+            var end;
+            var tag, attr;
+            var repl;
+            var func;
+            while ((pos2 = this._text.indexOf("[", pos1)) != -1) {
+                pos1 = pos2;
+                pos2 = this._text.indexOf("]", pos1);
+                if (pos2 == -1)
+                    break;
+                end = this._text.charAt(pos1 + 1) == '/';
+                tag = this._text.substring(end ? pos1 + 2 : pos1 + 1, pos2);
+                pos2++;
+                this._readPos = pos2;
+                attr = null;
+                repl = null;
+                pos3 = tag.indexOf("=");
+                if (pos3 != -1) {
+                    attr = tag.substring(pos3 + 1);
+                    tag = tag.substring(0, pos3);
+                }
+                tag = tag.toLowerCase();
+                func = this._handlers[tag];
+                if (func != null) {
+                    repl = func.call(this, tag, end, attr);
+                    if (repl == null)
+                        repl = "";
+                }
+                else {
+                    pos1 = pos2;
+                    continue;
+                }
+                this._text = this._text.substring(0, pos1) + repl + this._text.substring(this._readPos);
+            }
+            return this._text;
+        };
+        UBBParser.inst = new UBBParser();
+        return UBBParser;
+    }());
+    fairygui.UBBParser = UBBParser;
+    egret.registerClass(UBBParser,'fairygui.UBBParser');
+})(fairygui || (fairygui = {}));
+
+var fairygui;
+(function (fairygui) {
+    var ToolSet = (function () {
+        function ToolSet() {
+        }
+        var d = __define,c=ToolSet,p=c.prototype;
+        ToolSet.getFileName = function (source) {
+            var i = source.lastIndexOf("/");
+            if (i != -1)
+                source = source.substr(i + 1);
+            i = source.lastIndexOf("\\");
+            if (i != -1)
+                source = source.substr(i + 1);
+            i = source.lastIndexOf(".");
+            if (i != -1)
+                return source.substring(0, i);
+            else
+                return source;
+        };
+        ToolSet.startsWith = function (source, str, ignoreCase) {
+            if (ignoreCase === void 0) { ignoreCase = false; }
+            if (!source)
+                return false;
+            else if (source.length < str.length)
+                return false;
+            else {
+                source = source.substring(0, str.length);
+                if (!ignoreCase)
+                    return source == str;
+                else
+                    return source.toLowerCase() == str.toLowerCase();
+            }
+        };
+        ToolSet.endsWith = function (source, str, ignoreCase) {
+            if (ignoreCase === void 0) { ignoreCase = false; }
+            if (!source)
+                return false;
+            else if (source.length < str.length)
+                return false;
+            else {
+                source = source.substring(source.length - str.length);
+                if (!ignoreCase)
+                    return source == str;
+                else
+                    return source.toLowerCase() == str.toLowerCase();
+            }
+        };
+        ToolSet.trim = function (targetString) {
+            return ToolSet.trimLeft(ToolSet.trimRight(targetString));
+        };
+        ToolSet.trimLeft = function (targetString) {
+            var tempChar = "";
+            for (var i = 0; i < targetString.length; i++) {
+                tempChar = targetString.charAt(i);
+                if (tempChar != " " && tempChar != "\n" && tempChar != "\r") {
+                    break;
+                }
+            }
+            return targetString.substr(i);
+        };
+        ToolSet.trimRight = function (targetString) {
+            var tempChar = "";
+            for (var i = targetString.length - 1; i >= 0; i--) {
+                tempChar = targetString.charAt(i);
+                if (tempChar != " " && tempChar != "\n" && tempChar != "\r") {
+                    break;
+                }
+            }
+            return targetString.substring(0, i + 1);
+        };
+        ToolSet.convertToHtmlColor = function (argb, hasAlpha) {
+            if (hasAlpha === void 0) { hasAlpha = false; }
+            var alpha;
+            if (hasAlpha)
+                alpha = (argb >> 24 & 0xFF).toString(16);
+            else
+                alpha = "";
+            var red = (argb >> 16 & 0xFF).toString(16);
+            var green = (argb >> 8 & 0xFF).toString(16);
+            var blue = (argb & 0xFF).toString(16);
+            if (alpha.length == 1)
+                alpha = "0" + alpha;
+            if (red.length == 1)
+                red = "0" + red;
+            if (green.length == 1)
+                green = "0" + green;
+            if (blue.length == 1)
+                blue = "0" + blue;
+            return "#" + alpha + red + green + blue;
+        };
+        ToolSet.convertFromHtmlColor = function (str, hasAlpha) {
+            if (hasAlpha === void 0) { hasAlpha = false; }
+            if (str.length < 1)
+                return 0;
+            if (str.charAt(0) == "#")
+                str = str.substr(1);
+            if (str.length == 8)
+                return (parseInt(str.substr(0, 2), 16) << 24) + parseInt(str.substr(2), 16);
+            else if (hasAlpha)
+                return 0xFF000000 + parseInt(str, 16);
+            else
+                return parseInt(str, 16);
+        };
+        ToolSet.displayObjectToGObject = function (obj) {
+            while (obj != null && !(obj instanceof egret.Stage)) {
+                if (obj["$owner"])
+                    return obj["$owner"];
+                obj = obj.parent;
+            }
+            return null;
+        };
+        ToolSet.findChildNode = function (xml, name) {
+            var col = xml.children;
+            if (col) {
+                var length1 = col.length;
+                for (var i1 = 0; i1 < length1; i1++) {
+                    var cxml = col[i1];
+                    if (cxml.name == name) {
+                        return cxml;
+                    }
+                }
+            }
+            return null;
+        };
+        ToolSet.encodeHTML = function (str) {
+            if (!str)
+                return "";
+            else
+                return str.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("'", "&apos;");
+        };
+        ToolSet.parseUBB = function (text) {
+            return ToolSet.defaultUBBParser.parse(text);
+        };
+        ToolSet.defaultUBBParser = new fairygui.UBBParser();
+        return ToolSet;
+    }());
+    fairygui.ToolSet = ToolSet;
+    egret.registerClass(ToolSet,'fairygui.ToolSet');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -1809,6 +2045,7 @@ var fairygui;
             }
         };
         p.internalPlay = function (delay) {
+            if (delay === void 0) { delay = 0; }
             this._ownerBaseX = this._owner.x;
             this._ownerBaseY = this._owner.y;
             this._totalTasks = 0;
@@ -2153,9 +2390,9 @@ var fairygui;
                             item.completed = false;
                             this._totalTasks++;
                             if (this._reversed)
-                                trans.playReverse(this.__playTransComplete, this, item.value.i);
+                                trans.playReverse(this.__playTransComplete, this, item, item.value.i);
                             else
-                                trans.play(this.__playTransComplete, this, item.value.i);
+                                trans.play(this.__playTransComplete, this, item, item.value.i);
                         }
                     }
                     break;
@@ -3037,6 +3274,9 @@ var fairygui;
                 return this;
             }
         );
+        GObject.cast = function (obj) {
+            return obj["$owner"];
+        };
         d(p, "text"
             ,function () {
                 return null;
@@ -3378,6 +3618,12 @@ var fairygui;
         GObject.XY_CHANGED = "__xyChanged";
         GObject.SIZE_CHANGED = "__sizeChanged";
         GObject.SIZE_DELAY_CHANGE = "__sizeDelayChange";
+        GObject.colorMatrix = [
+            0.3, 0.6, 0, 0, 0,
+            0.3, 0.6, 0, 0, 0,
+            0.3, 0.6, 0, 0, 0,
+            0, 0, 0, 1, 0
+        ];
         GObject.sGlobalDragStart = new egret.Point();
         GObject.sGlobalRect = new egret.Rectangle();
         GObject.sHelperPoint = new egret.Point();
@@ -3422,7 +3668,8 @@ var fairygui;
         }
         var d = __define,c=GComponent,p=c.prototype;
         p.createDisplayObject = function () {
-            this._rootContainer = new fairygui.UIContainer(this);
+            this._rootContainer = new fairygui.UIContainer();
+            this._rootContainer["$owner"] = this;
             this.setDisplayObject(this._rootContainer);
             this._container = this._rootContainer;
         };
@@ -4504,7 +4751,6 @@ var fairygui;
                 if (str)
                     this.selectedTitle = str;
                 str = xml.attributes.selectedIcon;
-                ;
                 if (str)
                     this.selectedIcon = str;
                 str = xml.attributes.titleColor;
@@ -4512,7 +4758,7 @@ var fairygui;
                     this.titleColor = fairygui.ToolSet.convertFromHtmlColor(str);
                 str = xml.attributes.controller;
                 if (str)
-                    this._relatedController = this._parent.getController(xml.attributes.controller);
+                    this._relatedController = this._parent.getController(str);
                 else
                     this._relatedController = null;
                 this._pageOption.id = xml.attributes.page;
@@ -5220,16 +5466,18 @@ var fairygui;
         };
         p.delayCreateDisplayObject = function () {
             if (!this.displayObject) {
-                this.setDisplayObject(new fairygui.UISprite(this));
+                var sprite = new fairygui.UISprite();
+                sprite["$owner"] = this;
+                this.setDisplayObject(sprite);
                 if (this._parent)
                     this._parent.childStateChanged(this);
                 this.handleXYChanged();
-                this.displayObject.alpha = this.alpha;
-                this.displayObject.rotation = this.rotation;
-                this.displayObject.visible = this.visible;
-                (this.displayObject).touchEnabled = this.touchable;
-                (this.displayObject).touchChildren = this.touchable;
-                (this.displayObject).hitArea = new egret.Rectangle(0, 0, this.width, this.height);
+                sprite.alpha = this.alpha;
+                sprite.rotation = this.rotation;
+                sprite.visible = this.visible;
+                sprite.touchEnabled = this.touchable;
+                sprite.touchChildren = this.touchable;
+                sprite.hitArea = new egret.Rectangle(0, 0, this.width, this.height);
             }
             else {
                 (this.displayObject).graphics.clear();
@@ -5255,12 +5503,13 @@ var fairygui;
             var str;
             var type = xml.attributes.type;
             if (type && type != "empty") {
-                this.setDisplayObject(new fairygui.UISprite(this));
+                var sprite = new fairygui.UISprite();
+                sprite["$owner"] = this;
+                this.setDisplayObject(sprite);
             }
             _super.prototype.setup_beforeAdd.call(this, xml);
             if (this.displayObject != null) {
                 this._graphics = (this.displayObject).graphics;
-                var str;
                 str = xml.attributes.lineSize;
                 if (str)
                     this._lineSize = parseInt(str);
@@ -5436,7 +5685,9 @@ var fairygui;
                 this._gearColor.apply();
         };
         p.createDisplayObject = function () {
-            this._content = new fairygui.UIImage(this);
+            this._content = new egret.Bitmap();
+            this._content["$owner"] = this;
+            this._content.touchEnabled = false;
             this.setDisplayObject(this._content);
         };
         p.dispose = function () {
@@ -6194,7 +6445,7 @@ var fairygui;
                 }
             }
         };
-        p.getSnappingPositionar = function (xValue, yValue, resultPoint) {
+        p.getSnappingPosition = function (xValue, yValue, resultPoint) {
             if (this._virtual) {
                 if (!resultPoint)
                     resultPoint = new egret.Point();
@@ -6843,7 +7094,8 @@ var fairygui;
         }
         var d = __define,c=GLoader,p=c.prototype;
         p.createDisplayObject = function () {
-            this._container = new fairygui.UIContainer(this);
+            this._container = new fairygui.UIContainer();
+            this._container["$owner"] = this;
             this.setDisplayObject(this._container);
         };
         p.dispose = function () {
@@ -7231,7 +7483,9 @@ var fairygui;
             }
         );
         p.createDisplayObject = function () {
-            this._movieClip = new fairygui.UIMovieClip(this);
+            this._movieClip = new fairygui.MovieClip();
+            this._movieClip["$owner"] = this;
+            this._movieClip.touchEnabled = false;
             this.setDisplayObject(this._movieClip);
         };
         d(p, "playing"
@@ -7415,13 +7669,13 @@ var fairygui;
                         this._titleObject.text = Math.round(percent * 100) + "%";
                         break;
                     case fairygui.ProgressTitleType.ValueAndMax:
-                        this._titleObject.text = newValue + "/" + this._max;
+                        this._titleObject.text = Math.round(newValue) + "/" + Math.round(this._max);
                         break;
                     case fairygui.ProgressTitleType.Value:
-                        this._titleObject.text = "" + newValue;
+                        this._titleObject.text = "" + Math.round(newValue);
                         break;
                     case fairygui.ProgressTitleType.Max:
-                        this._titleObject.text = "" + this._max;
+                        this._titleObject.text = "" + Math.round(this._max);
                         break;
                 }
             }
@@ -7444,8 +7698,6 @@ var fairygui;
                 }
             }
             if (this._aniObject instanceof fairygui.GMovieClip)
-                (this._aniObject).frame = Math.round(percent * 100);
-            else if (this._aniObject instanceof fairygui.GSwfObject)
                 (this._aniObject).frame = Math.round(percent * 100);
         };
         p.constructFromXML = function (xml) {
@@ -7527,13 +7779,17 @@ var fairygui;
         }
         var d = __define,c=GTextField,p=c.prototype;
         p.createDisplayObject = function () {
-            this._textField = new fairygui.UITextField(this);
+            this._textField = new egret.TextField();
+            this._textField["$owner"] = this;
+            this._textField.touchEnabled = false;
             this.setDisplayObject(this._textField);
         };
         p.switchBitmapMode = function (val) {
             if (val && this.displayObject == this._textField) {
-                if (this._bitmapContainer == null)
-                    this._bitmapContainer = new fairygui.UIContainer(this);
+                if (this._bitmapContainer == null) {
+                    this._bitmapContainer = new egret.Sprite();
+                    this._bitmapContainer["$owner"] = this;
+                }
                 this.switchDisplayObject(this._bitmapContainer);
             }
             else if (!val && this.displayObject == this._bitmapContainer)
@@ -7736,7 +7992,8 @@ var fairygui;
         );
         d(p, "textWidth"
             ,function () {
-                this.ensureSizeCorrect();
+                if (this._requireRender)
+                    this.renderNow();
                 return this._textWidth;
             }
         );
@@ -7776,12 +8033,14 @@ var fairygui;
                 this.render();
         };
         p.render = function () {
-            this._requireRender = true;
-            if (this._widthAutoSize || this._heightAutoSize) {
+            if (!this._requireRender) {
+                this._requireRender = true;
+                egret.callLater(this.__render, this);
+            }
+            if (!this._sizeDirty && (this._widthAutoSize || this._heightAutoSize)) {
                 this._sizeDirty = true;
                 this.dispatchEventWith(fairygui.GObject.SIZE_DELAY_CHANGE);
             }
-            egret.callLater(this.__render, this);
         };
         p.__render = function () {
             if (this._requireRender)
@@ -8256,25 +8515,6 @@ var fairygui;
                 return this._nativeStage;
             }
         );
-        p.setContentScaleFactor = function (designUIWidth, designUIHeight) {
-            var w, h = 0;
-            w = this._nativeStage.stageWidth;
-            h = this._nativeStage.stageHeight;
-            if (designUIWidth > 0 && designUIHeight > 0) {
-                var s1 = w / designUIWidth;
-                var s2 = h / designUIHeight;
-                GRoot.contentScaleFactor = Math.min(s1, s2);
-            }
-            else if (designUIWidth > 0)
-                GRoot.contentScaleFactor = w / designUIWidth;
-            else if (designUIHeight > 0)
-                GRoot.contentScaleFactor = h / designUIHeight;
-            else
-                GRoot.contentScaleFactor = 1;
-            this.setSize(Math.round(w / GRoot.contentScaleFactor), Math.round(h / GRoot.contentScaleFactor));
-            this.scaleX = GRoot.contentScaleFactor;
-            this.scaleY = GRoot.contentScaleFactor;
-        };
         p.showWindow = function (win) {
             this.addChild(win);
             win.requestFocus();
@@ -8295,6 +8535,23 @@ var fairygui;
             if (win.parent == this)
                 this.removeChild(win);
             this.adjustModalLayer();
+        };
+        p.bringToFront = function (win) {
+            var cnt = this.numChildren;
+            var i;
+            if (this._modalLayer.parent != null && !win.modal)
+                i = this.getChildIndex(this._modalLayer) - 1;
+            else
+                i = cnt - 1;
+            for (; i >= 0; i--) {
+                var g = this.getChildAt(i);
+                if (g == win)
+                    return;
+                if (g instanceof fairygui.Window)
+                    break;
+            }
+            if (i >= 0)
+                this.setChildIndex(win, i);
         };
         p.showModalWait = function (msg) {
             if (msg === void 0) { msg = null; }
@@ -8563,8 +8820,8 @@ var fairygui;
             GRoot.touchDown = true;
             var mc = (evt.target);
             while (mc != this.displayObject.stage && mc != null) {
-                if (fairygui.ToolSet.isUIObject(mc)) {
-                    var gg = mc.owner;
+                if (mc["$owner"]) {
+                    var gg = mc["$owner"];
                     if (gg.touchable && gg.focusable) {
                         this.setFocus(gg);
                         break;
@@ -8578,8 +8835,8 @@ var fairygui;
             if (this._popupStack.length > 0) {
                 mc = (evt.target);
                 while (mc != this.displayObject.stage && mc != null) {
-                    if (fairygui.ToolSet.isUIObject(mc)) {
-                        var pindex = this._popupStack.indexOf(mc.owner);
+                    if (mc["$owner"]) {
+                        var pindex = this._popupStack.indexOf(mc["$owner"]);
                         if (pindex != -1) {
                             for (var i = this._popupStack.length - 1; i > pindex; i--) {
                                 var popup = this._popupStack.pop();
@@ -8610,10 +8867,7 @@ var fairygui;
             GRoot.touchDown = false;
         };
         p.__winResize = function (evt) {
-            var w, h = 0;
-            w = this._nativeStage.stageWidth;
-            h = this._nativeStage.stageHeight;
-            this.setSize(Math.round(w / GRoot.contentScaleFactor), Math.round(h / GRoot.contentScaleFactor));
+            this.setSize(this._nativeStage.stageWidth, this._nativeStage.stageHeight);
             //console.info("screen size=" + w + "x" + h + "/" + this.width + "x" + this.height);
         };
         GRoot.contentScaleFactor = 1;
@@ -8995,8 +9249,6 @@ var fairygui;
                 this._barObjectV.height = (this.height - this._barMaxHeightDelta) * percent;
             if (this._aniObject instanceof fairygui.GMovieClip)
                 (this._aniObject).frame = Math.round(percent * 100);
-            else if (this._aniObject instanceof fairygui.GSwfObject)
-                (this._aniObject).frame = Math.round(percent * 100);
         };
         p.constructFromXML = function (xml) {
             _super.prototype.constructFromXML.call(this, xml);
@@ -9077,69 +9329,6 @@ var fairygui;
     }(fairygui.GComponent));
     fairygui.GSlider = GSlider;
     egret.registerClass(GSlider,'fairygui.GSlider');
-})(fairygui || (fairygui = {}));
-
-var fairygui;
-(function (fairygui) {
-    var GSwfObject = (function (_super) {
-        __extends(GSwfObject, _super);
-        function GSwfObject() {
-            _super.call(this);
-            this._frame = 0;
-            this._playing = true;
-            this._gearAnimation = new fairygui.GearAnimation(this);
-        }
-        var d = __define,c=GSwfObject,p=c.prototype;
-        p.createDisplayObject = function () {
-            this._container = new fairygui.UIContainer(this);
-            //this.setDisplayObject(this._container);
-        };
-        d(p, "playing"
-            ,function () {
-                return this._playing;
-            }
-            ,function (value) {
-                if (this._playing != value) {
-                    this._playing = value;
-                    if (this._gearAnimation.controller)
-                        this._gearAnimation.updateState();
-                }
-            }
-        );
-        d(p, "frame"
-            ,function () {
-                return this._frame;
-            }
-            ,function (value) {
-                if (this._frame != value) {
-                    this._frame = value;
-                    if (this._gearAnimation.controller)
-                        this._gearAnimation.updateState();
-                }
-            }
-        );
-        d(p, "gearAnimation"
-            ,function () {
-                return this._gearAnimation;
-            }
-        );
-        p.handleSizeChanged = function () {
-            if (this._content) {
-                this._container.scaleX = this.width / this._sourceWidth * this.scaleX;
-                this._container.scaleY = this.height / this._sourceHeight * this.scaleY;
-            }
-        };
-        p.handleControllerChanged = function (c) {
-            _super.prototype.handleControllerChanged.call(this, c);
-            if (this._gearAnimation.controller == c)
-                this._gearAnimation.apply();
-        };
-        p.constructFromResource = function (pkgItem) {
-        };
-        return GSwfObject;
-    }(fairygui.GObject));
-    fairygui.GSwfObject = GSwfObject;
-    egret.registerClass(GSwfObject,'fairygui.GSwfObject',["fairygui.IAnimationGear"]);
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -10993,12 +11182,13 @@ var fairygui;
             this.dispatchEventWith(ScrollPane.SCROLL, false);
         };
         p.__touchEnd = function (evt) {
+            this._owner.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.__touchMove, this);
+            this._owner.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__touchEnd, this);
+            this._owner.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_TAP, this.__touchTap, this);
             if (!this._touchEffect) {
                 this._isMouseMoved = false;
                 return;
             }
-            this._owner.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.__touchMove, this);
-            this._owner.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__touchEnd, this);
             if (!this._isMouseMoved)
                 return;
             var time = (egret.getTimer() - this._time2) / 1000;
@@ -11195,41 +11385,6 @@ var fairygui;
 
 var fairygui;
 (function (fairygui) {
-    var BitmapFont = (function () {
-        function BitmapFont() {
-            this.size = 0;
-            this.glyphs = {};
-        }
-        var d = __define,c=BitmapFont,p=c.prototype;
-        return BitmapFont;
-    }());
-    fairygui.BitmapFont = BitmapFont;
-    egret.registerClass(BitmapFont,'fairygui.BitmapFont');
-})(fairygui || (fairygui = {}));
-
-var fairygui;
-(function (fairygui) {
-    var BMGlyph = (function () {
-        function BMGlyph() {
-            this.x = 0;
-            this.y = 0;
-            this.offsetX = 0;
-            this.offsetY = 0;
-            this.width = 0;
-            this.height = 0;
-            this.advance = 0;
-            this.lineHeight = 0;
-            this.channel = 0;
-        }
-        var d = __define,c=BMGlyph,p=c.prototype;
-        return BMGlyph;
-    }());
-    fairygui.BMGlyph = BMGlyph;
-    egret.registerClass(BMGlyph,'fairygui.BMGlyph');
-})(fairygui || (fairygui = {}));
-
-var fairygui;
-(function (fairygui) {
     var UIConfig = (function () {
         function UIConfig() {
         }
@@ -11266,288 +11421,6 @@ var fairygui;
 
 var fairygui;
 (function (fairygui) {
-    var UBBParser = (function () {
-        function UBBParser() {
-            this._readPos = 0;
-            this.smallFontSize = 12;
-            this.normalFontSize = 14;
-            this.largeFontSize = 16;
-            this.defaultImgWidth = 0;
-            this.defaultImgHeight = 0;
-            this._handlers = {};
-            this._handlers["url"] = this.onTag_URL;
-            this._handlers["img"] = this.onTag_IMG;
-            this._handlers["b"] = this.onTag_Simple;
-            this._handlers["i"] = this.onTag_Simple;
-            this._handlers["u"] = this.onTag_Simple;
-            this._handlers["sup"] = this.onTag_Simple;
-            this._handlers["sub"] = this.onTag_Simple;
-            this._handlers["color"] = this.onTag_COLOR;
-            this._handlers["font"] = this.onTag_FONT;
-            this._handlers["size"] = this.onTag_SIZE;
-        }
-        var d = __define,c=UBBParser,p=c.prototype;
-        p.onTag_URL = function (tagName, end, attr) {
-            if (!end) {
-                if (attr != null)
-                    return "<a href=\"" + attr + "\" target=\"_blank\">";
-                else {
-                    var href = this.getTagText();
-                    return "<a href=\"" + href + "\" target=\"_blank\">";
-                }
-            }
-            else
-                return "</a>";
-        };
-        p.onTag_IMG = function (tagName, end, attr) {
-            if (!end) {
-                var src = this.getTagText(true);
-                if (!src)
-                    return null;
-                if (this.defaultImgWidth)
-                    return "<img src=\"" + src + "\" width=\"" + this.defaultImgWidth + "\" height=\"" + this.defaultImgHeight + "\"/>";
-                else
-                    return "<img src=\"" + src + "\"/>";
-            }
-            else
-                return null;
-        };
-        p.onTag_Simple = function (tagName, end, attr) {
-            return end ? ("</" + tagName + ">") : ("<" + tagName + ">");
-        };
-        p.onTag_COLOR = function (tagName, end, attr) {
-            if (!end)
-                return "<font color=\"" + attr + "\">";
-            else
-                return "</font>";
-        };
-        p.onTag_FONT = function (tagName, end, attr) {
-            if (!end)
-                return "<font face=\"" + attr + "\">";
-            else
-                return "</font>";
-        };
-        p.onTag_SIZE = function (tagName, end, attr) {
-            if (!end) {
-                if (attr == "normal")
-                    attr = "" + this.normalFontSize;
-                else if (attr == "small")
-                    attr = "" + this.smallFontSize;
-                else if (attr == "large")
-                    attr = "" + this.largeFontSize;
-                else if (attr.length && attr.charAt(0) == "+")
-                    attr = "" + (this.smallFontSize + parseInt(attr.substr(1)));
-                else if (attr.length && attr.charAt(0) == "-")
-                    attr = "" + (this.smallFontSize - parseInt(attr.substr(1)));
-                return "<font size=\"" + attr + "\">";
-            }
-            else
-                return "</font>";
-        };
-        p.getTagText = function (remove) {
-            if (remove === void 0) { remove = false; }
-            var pos = this._text.indexOf("[", this._readPos);
-            if (pos == -1)
-                return null;
-            var ret = this._text.substring(this._readPos, pos);
-            if (remove)
-                this._readPos = pos;
-            return ret;
-        };
-        p.parse = function (text) {
-            this._text = text;
-            var pos1 = 0, pos2, pos3 = 0;
-            var end;
-            var tag, attr;
-            var repl;
-            var func;
-            while ((pos2 = this._text.indexOf("[", pos1)) != -1) {
-                pos1 = pos2;
-                pos2 = this._text.indexOf("]", pos1);
-                if (pos2 == -1)
-                    break;
-                end = this._text.charAt(pos1 + 1) == '/';
-                tag = this._text.substring(end ? pos1 + 2 : pos1 + 1, pos2);
-                pos2++;
-                this._readPos = pos2;
-                attr = null;
-                repl = null;
-                pos3 = tag.indexOf("=");
-                if (pos3 != -1) {
-                    attr = tag.substring(pos3 + 1);
-                    tag = tag.substring(0, pos3);
-                }
-                tag = tag.toLowerCase();
-                func = this._handlers[tag];
-                if (func != null) {
-                    repl = func.call(this, tag, end, attr);
-                    if (repl == null)
-                        repl = "";
-                }
-                else {
-                    pos1 = pos2;
-                    continue;
-                }
-                this._text = this._text.substring(0, pos1) + repl + this._text.substring(this._readPos);
-            }
-            return this._text;
-        };
-        UBBParser.inst = new UBBParser();
-        return UBBParser;
-    }());
-    fairygui.UBBParser = UBBParser;
-    egret.registerClass(UBBParser,'fairygui.UBBParser');
-})(fairygui || (fairygui = {}));
-
-var fairygui;
-(function (fairygui) {
-    var ToolSet = (function () {
-        function ToolSet() {
-        }
-        var d = __define,c=ToolSet,p=c.prototype;
-        ToolSet.getFileName = function (source) {
-            var i = source.lastIndexOf("/");
-            if (i != -1)
-                source = source.substr(i + 1);
-            i = source.lastIndexOf("\\");
-            if (i != -1)
-                source = source.substr(i + 1);
-            i = source.lastIndexOf(".");
-            if (i != -1)
-                return source.substring(0, i);
-            else
-                return source;
-        };
-        ToolSet.startsWith = function (source, str, ignoreCase) {
-            if (ignoreCase === void 0) { ignoreCase = false; }
-            if (!source)
-                return false;
-            else if (source.length < str.length)
-                return false;
-            else {
-                source = source.substring(0, str.length);
-                if (!ignoreCase)
-                    return source == str;
-                else
-                    return source.toLowerCase() == str.toLowerCase();
-            }
-        };
-        ToolSet.endsWith = function (source, str, ignoreCase) {
-            if (ignoreCase === void 0) { ignoreCase = false; }
-            if (!source)
-                return false;
-            else if (source.length < str.length)
-                return false;
-            else {
-                source = source.substring(source.length - str.length);
-                if (!ignoreCase)
-                    return source == str;
-                else
-                    return source.toLowerCase() == str.toLowerCase();
-            }
-        };
-        ToolSet.trim = function (targetString) {
-            return ToolSet.trimLeft(ToolSet.trimRight(targetString));
-        };
-        ToolSet.trimLeft = function (targetString) {
-            var tempChar = "";
-            for (var i = 0; i < targetString.length; i++) {
-                tempChar = targetString.charAt(i);
-                if (tempChar != " " && tempChar != "\n" && tempChar != "\r") {
-                    break;
-                }
-            }
-            return targetString.substr(i);
-        };
-        ToolSet.trimRight = function (targetString) {
-            var tempChar = "";
-            for (var i = targetString.length - 1; i >= 0; i--) {
-                tempChar = targetString.charAt(i);
-                if (tempChar != " " && tempChar != "\n" && tempChar != "\r") {
-                    break;
-                }
-            }
-            return targetString.substring(0, i + 1);
-        };
-        ToolSet.convertToHtmlColor = function (argb, hasAlpha) {
-            if (hasAlpha === void 0) { hasAlpha = false; }
-            var alpha;
-            if (hasAlpha)
-                alpha = (argb >> 24 & 0xFF).toString(16);
-            else
-                alpha = "";
-            var red = (argb >> 16 & 0xFF).toString(16);
-            var green = (argb >> 8 & 0xFF).toString(16);
-            var blue = (argb & 0xFF).toString(16);
-            if (alpha.length == 1)
-                alpha = "0" + alpha;
-            if (red.length == 1)
-                red = "0" + red;
-            if (green.length == 1)
-                green = "0" + green;
-            if (blue.length == 1)
-                blue = "0" + blue;
-            return "#" + alpha + red + green + blue;
-        };
-        ToolSet.convertFromHtmlColor = function (str, hasAlpha) {
-            if (hasAlpha === void 0) { hasAlpha = false; }
-            if (str.length < 1)
-                return 0;
-            if (str.charAt(0) == "#")
-                str = str.substr(1);
-            if (str.length == 8)
-                return (parseInt(str.substr(0, 2), 16) << 24) + parseInt(str.substr(2), 16);
-            else if (hasAlpha)
-                return 0xFF000000 + parseInt(str, 16);
-            else
-                return parseInt(str, 16);
-        };
-        ToolSet.isUIObject = function (obj) {
-            return (obj instanceof fairygui.UIImage)
-                || (obj instanceof fairygui.UIMovieClip)
-                || (obj instanceof fairygui.UISprite)
-                || (obj instanceof fairygui.UIContainer)
-                || (obj instanceof fairygui.UITextField);
-        };
-        ToolSet.displayObjectToGObject = function (obj) {
-            while (obj != null && !(obj instanceof egret.Stage)) {
-                if (ToolSet.isUIObject(obj))
-                    return obj.owner;
-                obj = obj.parent;
-            }
-            return null;
-        };
-        ToolSet.findChildNode = function (xml, name) {
-            var col = xml.children;
-            if (col) {
-                var length1 = col.length;
-                for (var i1 = 0; i1 < length1; i1++) {
-                    var cxml = col[i1];
-                    if (cxml.name == name) {
-                        return cxml;
-                    }
-                }
-            }
-            return null;
-        };
-        ToolSet.encodeHTML = function (str) {
-            if (!str)
-                return "";
-            else
-                return str.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("'", "&apos;");
-        };
-        ToolSet.parseUBB = function (text) {
-            return ToolSet.defaultUBBParser.parse(text);
-        };
-        ToolSet.defaultUBBParser = new fairygui.UBBParser();
-        return ToolSet;
-    }());
-    fairygui.ToolSet = ToolSet;
-    egret.registerClass(ToolSet,'fairygui.ToolSet');
-})(fairygui || (fairygui = {}));
-
-var fairygui;
-(function (fairygui) {
     var UIObjectFactory = (function () {
         function UIObjectFactory() {
         }
@@ -11564,8 +11437,6 @@ var fairygui;
                     return new fairygui.GImage();
                 case fairygui.PackageItemType.MovieClip:
                     return new fairygui.GMovieClip();
-                case fairygui.PackageItemType.Swf:
-                    return new fairygui.GSwfObject();
                 case fairygui.PackageItemType.Component:
                     {
                         var cls = UIObjectFactory.packageItemExtensions[pi.owner.id + pi.id];
@@ -11603,8 +11474,6 @@ var fairygui;
                     return new fairygui.GImage();
                 case "movieclip":
                     return new fairygui.GMovieClip();
-                case "swf":
-                    return new fairygui.GSwfObject();
                 case "component":
                     return new fairygui.GComponent();
                 case "text":
@@ -12262,7 +12131,7 @@ var fairygui;
             }
         );
         p.bringToFront = function () {
-            this.root.showWindow(this);
+            this.root.bringToFront(this);
         };
         p.showModalWait = function (requestingCmd) {
             if (requestingCmd === void 0) { requestingCmd = 0; }

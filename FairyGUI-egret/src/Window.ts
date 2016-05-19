@@ -153,7 +153,7 @@ module fairygui {
         }
 
         public bringToFront(): void {
-            this.root.showWindow(this);
+            this.root.bringToFront(this);
         }
 
         public showModalWait(requestingCmd: number = 0): void {

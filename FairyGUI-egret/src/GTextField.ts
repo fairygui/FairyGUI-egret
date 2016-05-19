@@ -22,8 +22,8 @@ module fairygui {
         protected _gearColor: GearColor;
 
         protected _updatingSize: boolean;
-        protected _sizeDirty: boolean;
         protected _yOffset: number = 0;
+        protected _sizeDirty: boolean;
         protected _textWidth: number = 0;
         protected _textHeight: number = 0;
         protected _requireRender: boolean;
@@ -55,15 +55,19 @@ module fairygui {
         }
 
         protected createDisplayObject(): void {
-            this._textField = new UITextField(this);
+            this._textField = new egret.TextField();
+            this._textField["$owner"] = this;
+            this._textField.touchEnabled = false;
             this.setDisplayObject(this._textField);
         }
         
         private switchBitmapMode(val:boolean):void
 		{
             if(val && this.displayObject == this._textField) {
-                if(this._bitmapContainer == null)
-                    this._bitmapContainer = new UIContainer(this);
+                if(this._bitmapContainer == null) {
+                    this._bitmapContainer = new egret.Sprite();
+                    this._bitmapContainer["$owner"] = this;
+                }
                 this.switchDisplayObject(this._bitmapContainer);
             }
             else if(!val && this.displayObject == this._bitmapContainer)
@@ -271,7 +275,8 @@ module fairygui {
         }
         
         public get textWidth(): number {
-            this.ensureSizeCorrect();
+            if(this._requireRender)
+                this.renderNow();
             return this._textWidth;
         }
 
@@ -316,14 +321,15 @@ module fairygui {
         }
 
         protected render(): void {
-            this._requireRender = true;
-
-            if(this._widthAutoSize || this._heightAutoSize) {
-                this._sizeDirty = true;
-                this.dispatchEventWith(GObject.SIZE_DELAY_CHANGE);
+            if(!this._requireRender) {
+                this._requireRender = true;
+                egret.callLater(this.__render,this);
             }
 
-            egret.callLater(this.__render,this);
+            if(!this._sizeDirty && (this._widthAutoSize || this._heightAutoSize)) {
+                this._sizeDirty = true;
+                this.dispatchEventWith(GObject.SIZE_DELAY_CHANGE);
+            }            
         }
         
         private __render():void{

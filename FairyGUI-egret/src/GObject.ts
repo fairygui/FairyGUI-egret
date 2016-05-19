@@ -602,6 +602,10 @@ module fairygui {
         public get asMovieClip(): GMovieClip {
             return <GMovieClip><any> this;
         }
+        
+        public static cast(obj:egret.DisplayObject):GObject {
+            return <GObject><any>obj["$owner"];
+        }
 
         public get text(): string {
             return null;
@@ -771,13 +775,20 @@ module fairygui {
 
         protected handleSizeChanged(): void {
         }
-
+        private static colorMatrix = [
+            0.3,0.6,0,0,0,
+            0.3,0.6,0,0,0,
+            0.3,0.6,0,0,0,
+            0,0,0,1,0
+        ];
         protected handleGrayChanged(): void {
             if(this._displayObject) {
-                /*if(this._grayed)
-                    this._displayObject.filter = new ColorMatrixFilter(ToolSet.GRAY_FILTERS_MATRIX);
+                /*if(this._grayed) {
+                    var colorFlilter = new egret.ColorMatrixFilter(GObject.colorMatrix);
+                    this._displayObject.filters = [colorFlilter];
+                }
                 else
-                    this._displayObject.filter = null;*/
+                    this._displayObject.filters = null;*/
             }
         }
 

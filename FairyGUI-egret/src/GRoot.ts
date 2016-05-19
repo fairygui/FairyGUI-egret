@@ -46,29 +46,6 @@ module fairygui {
             return this._nativeStage;
         }
 
-        public setContentScaleFactor(designUIWidth: number,designUIHeight: number): void {
-            var w: number,h: number = 0;
-
-            w = this._nativeStage.stageWidth;
-            h = this._nativeStage.stageHeight;
-
-            if(designUIWidth > 0 && designUIHeight > 0) {
-                var s1: number = w / designUIWidth;
-                var s2: number = h / designUIHeight;
-                GRoot.contentScaleFactor = Math.min(s1,s2);
-            }
-            else if(designUIWidth > 0)
-                GRoot.contentScaleFactor = w / designUIWidth;
-            else if(designUIHeight > 0)
-                GRoot.contentScaleFactor = h / designUIHeight;
-            else
-                GRoot.contentScaleFactor = 1;
-
-            this.setSize(Math.round(w / GRoot.contentScaleFactor),Math.round(h / GRoot.contentScaleFactor));
-            this.scaleX = GRoot.contentScaleFactor;
-            this.scaleY = GRoot.contentScaleFactor;
-        }
-
         public showWindow(win: Window): void {
             this.addChild(win);
             win.requestFocus();
@@ -95,6 +72,26 @@ module fairygui {
                 this.removeChild(win);
 
             this.adjustModalLayer();
+        }
+        
+        public bringToFront(win: Window):void {
+            var cnt: number = this.numChildren;
+            var i: number;
+            if(this._modalLayer.parent != null && !win.modal)
+                i = this.getChildIndex(this._modalLayer) - 1;
+            else
+				i = cnt - 1;
+			
+            for(;i >= 0;i--) {
+                var g: GObject = this.getChildAt(i);
+                if(g == win)
+                    return;
+                if(g instanceof Window)
+                    break;
+            }
+			
+			if(i>=0)
+				this.setChildIndex(win,i);
         }
 
         public showModalWait(msg: string = null): void {
@@ -398,8 +395,8 @@ module fairygui {
 
             var mc: egret.DisplayObject = <egret.DisplayObject><any> (evt.target);
             while (mc != this.displayObject.stage && mc != null) {
-                if (ToolSet.isUIObject(mc)) {
-                    var gg: GObject = (<UIDisplayObject><any> mc).owner;
+                if (mc["$owner"]) {
+                    var gg: GObject = <GObject><any>mc["$owner"];
                     if (gg.touchable && gg.focusable) {
                         this.setFocus(gg);
                         break;
@@ -415,8 +412,8 @@ module fairygui {
             if (this._popupStack.length > 0) {
                 mc = <egret.DisplayObject><any> (evt.target);
                 while (mc != this.displayObject.stage && mc != null) {
-                    if (ToolSet.isUIObject(mc)) {
-                        var pindex: number = this._popupStack.indexOf((<UIDisplayObject><any> mc).owner);
+                    if(mc["$owner"]) {
+                        var pindex: number = this._popupStack.indexOf(<GObject><any>mc["$owner"]);
                         if (pindex != -1) {
                             for(var i: number = this._popupStack.length - 1;i > pindex;i--) {
                                 var popup: GObject = this._popupStack.pop();
@@ -451,11 +448,7 @@ module fairygui {
         }
 
         private __winResize(evt: egret.Event): void {
-            var w: number, h: number = 0;
-            w = this._nativeStage.stageWidth;
-            h = this._nativeStage.stageHeight;
-            
-            this.setSize(Math.round(w / GRoot.contentScaleFactor), Math.round( h / GRoot.contentScaleFactor));
+            this.setSize(this._nativeStage.stageWidth,this._nativeStage.stageHeight);
 
             //console.info("screen size=" + w + "x" + h + "/" + this.width + "x" + this.height);
         }

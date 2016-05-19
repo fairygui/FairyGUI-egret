@@ -90,8 +90,6 @@ module fairygui {
 
             if (this._aniObject instanceof GMovieClip)
                 (<GMovieClip><any> (this._aniObject)).frame = Math.round(percent * 100);
-            else if (this._aniObject instanceof GSwfObject)
-                (<GSwfObject><any> (this._aniObject)).frame = Math.round(percent * 100);
         }
 
         protected constructFromXML(xml: any): void {

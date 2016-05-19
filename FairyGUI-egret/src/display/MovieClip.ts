@@ -191,10 +191,18 @@ module fairygui {
                 var textureWidth: number = texture.$getTextureWidth();
                 var textureHeight: number = texture.$getTextureHeight();
                 var destW:number = Math.round(texture.$getScaleBitmapWidth());
-                var destH:number = Math.round(texture.$getScaleBitmapHeight());
+                var destH:number = Math.round(texture.$getScaleBitmapHeight());                
+                var sourceWidth: number = texture._sourceWidth;
+                var sourceHeight: number = texture._sourceHeight;
                 
-                egret.Bitmap.$drawImage(<egret.sys.BitmapNode>this.$renderNode, texture._bitmapData, texture._bitmapX, texture._bitmapY,
-                    bitmapWidth,bitmapHeight,offsetX,offsetY,textureWidth,textureHeight,destW,destH,null,egret.BitmapFillMode.SCALE, true);
+                egret.Bitmap.$drawImage(<egret.sys.BitmapNode>this.$renderNode,texture._bitmapData,
+                    texture._bitmapX,texture._bitmapY,
+                    bitmapWidth,bitmapHeight,
+                    offsetX,offsetY,
+                    textureWidth,textureHeight,
+                    destW,destH,
+                    sourceWidth,sourceHeight,
+                    null,egret.BitmapFillMode.SCALE,true);
             }
         }
         

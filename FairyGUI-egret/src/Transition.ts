@@ -288,7 +288,7 @@ module fairygui {
             }
         }
 
-        private internalPlay(delay: number) {
+        private internalPlay(delay: number=0) {
             this._ownerBaseX = this._owner.x;
             this._ownerBaseY = this._owner.y;
             this._totalTasks = 0;
@@ -661,9 +661,9 @@ module fairygui {
                             item.completed = false;
                             this._totalTasks++;
                             if(this._reversed)
-                                trans.playReverse(this.__playTransComplete,this,item.value.i);
+                                trans.playReverse(this.__playTransComplete,this,item,item.value.i);
                             else
-                                trans.play(this.__playTransComplete, this, item.value.i);
+                                trans.play(this.__playTransComplete, this, item,item.value.i);
                         }
                     }
                     break;

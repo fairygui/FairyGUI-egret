@@ -1,19 +1,13 @@
 
 module fairygui {
 
-    export class UISprite extends egret.Sprite implements UIDisplayObject {
-        private _owner: GObject;
+    export class UISprite extends egret.Sprite {
         private _hitArea: egret.Rectangle;
 
-        public constructor(owner: GObject) {
+        public constructor() {
             super();
-            this._owner = owner;
             this.touchEnabled = true;
             this.touchChildren = true;
-        }
-
-        public get owner(): GObject {
-            return this._owner;
         }
 
         public get hitArea(): egret.Rectangle {
