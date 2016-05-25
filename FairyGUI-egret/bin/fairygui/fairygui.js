@@ -2918,7 +2918,7 @@ var fairygui;
             if (this._pivotX != xv || this._pivotY != yv) {
                 this._pivotX = xv;
                 this._pivotY = yv;
-                this.updatePivotOffset();
+                this.applyPivot();
             }
         };
         p.updatePivotOffset = function () {
