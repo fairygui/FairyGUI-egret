@@ -17,7 +17,6 @@ module fairygui {
         private _selectionMode: ListSelectionMode;
         private _lastSelectedIndex: number = 0;
         private _pool: GObjectPool;
-        private _selectionHandled: boolean;
         
         //Virtual List support
         private _virtual:boolean;
@@ -166,7 +165,6 @@ module fairygui {
                 button.selected = false;
                 button.changeStateOnClick = false;
             }
-            child.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__mouseDownItem, this);
             child.addEventListener(egret.TouchEvent.TOUCH_TAP, this.__clickItem, this);
 
             return child;
@@ -185,7 +183,6 @@ module fairygui {
 
         public removeChildAt(index: number, dispose: boolean= false): GObject {
             var child: GObject = super.removeChildAt(index, dispose);
-            child.removeEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__mouseDownItem, this);
             child.removeEventListener(egret.TouchEvent.TOUCH_TAP, this.__clickItem, this);
 
             return child;
@@ -458,35 +455,12 @@ module fairygui {
             }
         }
 
-        private __mouseDownItem(evt: egret.TouchEvent): void {
-            var item: GButton = <GButton><any> (evt.currentTarget);
-            if (item == null || this._selectionMode == ListSelectionMode.None)
-                return;
-
-            this._selectionHandled = false;
-
-            if (UIConfig.defaultScrollTouchEffect 
-                && (this.scrollPane != null || this.parent != null && this.parent.scrollPane != null))
-                return;
-
-            if (this._selectionMode == ListSelectionMode.Single) {
-                this.setSelectionOnEvent(item);
-            }
-            else {
-                if (!item.selected)
-                    this.setSelectionOnEvent(item);
-                //如果item.selected，这里不处理selection，因为可能用户在拖动
-            }
-        }
-
         private __clickItem(evt: egret.TouchEvent): void {
             if (this._scrollPane != null && this._scrollPane._isMouseMoved)
                 return;
 
             var item: GObject = <GObject><any> (evt.currentTarget);
-            if (!this._selectionHandled)
-                this.setSelectionOnEvent(item);
-            this._selectionHandled = false;
+            this.setSelectionOnEvent(item);
             
             if(this.scrollPane)
                 this.scrollPane.scrollToView(item,true);
@@ -501,7 +475,6 @@ module fairygui {
             if (!(item instanceof GButton) || this._selectionMode == ListSelectionMode.None)
                 return;
 
-            this._selectionHandled = true;
             var dontChangeLastIndex: boolean = false;
             var button: GButton = <GButton><any> item;
             var index: number = this.getChildIndex(item);

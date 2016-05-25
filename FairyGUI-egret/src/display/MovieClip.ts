@@ -57,7 +57,8 @@ module fairygui {
             if(this._frameCount > 0)
                 this.setFrame(this._frames[this._currentFrame]);
             else
-                this.setFrame(null);     
+                this.setFrame(null);
+            this._playState.rewind();
         }
 
         public get frameCount(): number {

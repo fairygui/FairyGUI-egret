@@ -325,6 +325,7 @@ var fairygui;
                     this.setFrame(this._frames[this._currentFrame]);
                 else
                     this.setFrame(null);
+                this._playState.rewind();
             }
         );
         d(p, "frameCount"
@@ -2826,7 +2827,7 @@ var fairygui;
                 if (this._pivotX != 0 || this._pivotY != 0) {
                     if (!ignorePivot)
                         this.setXY(this.x - this._pivotX * dWidth, this.y - this._pivotY * dHeight);
-                    this.applyPivot();
+                    this.updatePivotOffset();
                 }
                 this.handleSizeChanged();
                 if (this._gearSize.controller)
@@ -2917,38 +2918,34 @@ var fairygui;
             if (this._pivotX != xv || this._pivotY != yv) {
                 this._pivotX = xv;
                 this._pivotY = yv;
-                this.applyPivot();
+                this.updatePivotOffset();
             }
         };
-        p.applyPivot = function () {
-            var ox = this._pivotOffsetX;
-            var oy = this._pivotOffsetY;
-            if (this._pivotX != 0 || this._pivotY != 0) {
-                var rot = this.normalizeRotation;
-                if (rot != 0 || this._scaleX != 1 || this._scaleY != 1) {
-                    var rotInRad = rot * Math.PI / 180;
-                    var cos = Math.cos(rotInRad);
-                    var sin = Math.sin(rotInRad);
-                    var a = this._scaleX * cos;
-                    var b = this._scaleX * sin;
-                    var c = this._scaleY * -sin;
-                    var d = this._scaleY * cos;
-                    var px = this._pivotX * this._width;
-                    var py = this._pivotY * this._height;
-                    this._pivotOffsetX = px - (a * px + c * py);
-                    this._pivotOffsetY = py - (d * py + b * px);
-                }
-                else {
-                    this._pivotOffsetX = 0;
-                    this._pivotOffsetY = 0;
-                }
+        p.updatePivotOffset = function () {
+            var rot = this.normalizeRotation;
+            if (rot != 0 || this._scaleX != 1 || this._scaleY != 1) {
+                var rotInRad = rot * Math.PI / 180;
+                var cos = Math.cos(rotInRad);
+                var sin = Math.sin(rotInRad);
+                var a = this._scaleX * cos;
+                var b = this._scaleX * sin;
+                var c = this._scaleY * -sin;
+                var d = this._scaleY * cos;
+                var px = this._pivotX * this._width;
+                var py = this._pivotY * this._height;
+                this._pivotOffsetX = px - (a * px + c * py);
+                this._pivotOffsetY = py - (d * py + b * px);
             }
             else {
                 this._pivotOffsetX = 0;
                 this._pivotOffsetY = 0;
             }
-            if (ox != this._pivotOffsetX || oy != this._pivotOffsetY)
+        };
+        p.applyPivot = function () {
+            if (this._pivotX != 0 || this._pivotY != 0) {
+                this.updatePivotOffset();
                 this.handleXYChanged();
+            }
         };
         d(p, "touchable"
             ,function () {
@@ -4730,7 +4727,6 @@ var fairygui;
                 this._downEffect = str == "dark" ? 1 : (str == "scale" ? 2 : 0);
                 str = xml.attributes.downEffectValue;
                 this._downEffectValue = parseFloat(str);
-                this.setPivot(0.5, 0.5);
             }
             this._buttonController = this.getController("button");
             this._titleObject = this.getChild("title");
@@ -4742,6 +4738,8 @@ var fairygui;
         };
         p.setup_afterAdd = function (xml) {
             _super.prototype.setup_afterAdd.call(this, xml);
+            if (this._downEffect == 2)
+                this.setPivot(0.5, 0.5);
             xml = fairygui.ToolSet.findChildNode(xml, "Button");
             if (xml) {
                 var str;
@@ -5997,7 +5995,6 @@ var fairygui;
                 button.selected = false;
                 button.changeStateOnClick = false;
             }
-            child.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__mouseDownItem, this);
             child.addEventListener(egret.TouchEvent.TOUCH_TAP, this.__clickItem, this);
             return child;
         };
@@ -6014,7 +6011,6 @@ var fairygui;
         p.removeChildAt = function (index, dispose) {
             if (dispose === void 0) { dispose = false; }
             var child = _super.prototype.removeChildAt.call(this, index, dispose);
-            child.removeEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__mouseDownItem, this);
             child.removeEventListener(egret.TouchEvent.TOUCH_TAP, this.__clickItem, this);
             return child;
         };
@@ -6269,29 +6265,11 @@ var fairygui;
                     break;
             }
         };
-        p.__mouseDownItem = function (evt) {
-            var item = (evt.currentTarget);
-            if (item == null || this._selectionMode == fairygui.ListSelectionMode.None)
-                return;
-            this._selectionHandled = false;
-            if (fairygui.UIConfig.defaultScrollTouchEffect
-                && (this.scrollPane != null || this.parent != null && this.parent.scrollPane != null))
-                return;
-            if (this._selectionMode == fairygui.ListSelectionMode.Single) {
-                this.setSelectionOnEvent(item);
-            }
-            else {
-                if (!item.selected)
-                    this.setSelectionOnEvent(item);
-            }
-        };
         p.__clickItem = function (evt) {
             if (this._scrollPane != null && this._scrollPane._isMouseMoved)
                 return;
             var item = (evt.currentTarget);
-            if (!this._selectionHandled)
-                this.setSelectionOnEvent(item);
-            this._selectionHandled = false;
+            this.setSelectionOnEvent(item);
             if (this.scrollPane)
                 this.scrollPane.scrollToView(item, true);
             var ie = new fairygui.ItemEvent(fairygui.ItemEvent.CLICK, item);
@@ -6302,7 +6280,6 @@ var fairygui;
         p.setSelectionOnEvent = function (item) {
             if (!(item instanceof fairygui.GButton) || this._selectionMode == fairygui.ListSelectionMode.None)
                 return;
-            this._selectionHandled = true;
             var dontChangeLastIndex = false;
             var button = item;
             var index = this.getChildIndex(item);

@@ -511,6 +511,7 @@ declare module fairygui {
         pivotX: number;
         pivotY: number;
         setPivot(xv: number, yv?: number): void;
+        private updatePivotOffset();
         private applyPivot();
         touchable: boolean;
         grayed: boolean;
@@ -924,7 +925,6 @@ declare module fairygui {
         private _selectionMode;
         private _lastSelectedIndex;
         private _pool;
-        private _selectionHandled;
         private _virtual;
         private _loop;
         private _numItems;
@@ -962,7 +962,6 @@ declare module fairygui {
         selectNone(): void;
         selectReverse(): void;
         handleArrowKey(dir?: number): void;
-        private __mouseDownItem(evt);
         private __clickItem(evt);
         private setSelectionOnEvent(item);
         private clearSelectionExcept(obj);
