@@ -1,6 +1,6 @@
 {
 	"name": "egret",
-	"version": "2.5.0",
+	"version": "3.0.8",
 	"modules": [
 		{
 			"name": "fairygui",
@@ -11,16 +11,15 @@
 				"display/MovieClip.ts",
 				"display/PlayState.ts",
 				"display/UIContainer.ts",
-				"display/UIDisplayObject.ts",
-				"display/UIImage.ts",
-				"display/UIMovieClip.ts",
 				"display/UISprite.ts",
-				"display/UITextField.ts",
+				"display/BitmapFont.ts",
+				"display/BMGlyph.ts",
 				"event/DragEvent.ts",
 				"event/DropEvent.ts",
-				"event/FocusChangeEvent.ts",
 				"event/ItemEvent.ts",
 				"event/StateChangeEvent.ts",
+				"utils/UBBParser.ts",
+				"utils/ToolSet.ts",
 				"FieldTypes.ts",
 				"GearBase.ts",
 				"GearSize.ts",
@@ -51,7 +50,6 @@
 				"utils/GTimers.ts",
 				"GScrollBar.ts",
 				"GSlider.ts",
-				"GSwfObject.ts",
 				"GTextInput.ts",
 				"IAnimationGear.ts",
 				"IColorGear.ts",
@@ -62,17 +60,13 @@
 				"RelationItem.ts",
 				"Relations.ts",
 				"ScrollPane.ts",
-				"text/BitmapFont.ts",
-				"text/BMGlyph.ts",
 				"UIConfig.ts",
-				"utils/UBBParser.ts",
-				"utils/ToolSet.ts",
 				"UIObjectFactory.ts",
 				"UIPackage.ts",
 				"Window.ts",
 				"DragDropManager.ts"
 			],
-			"root": "src"
+			"root": "../src/fairygui"
 		}
 	]
 }
