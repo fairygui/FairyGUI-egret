@@ -103,8 +103,8 @@ module fairygui {
         }
 
         protected handleSizeChanged(): void {
-            this._content.width = this.width * Math.abs(this.scaleX);
-            this._content.height = this.height * Math.abs(this.scaleY);
+            this._content.width = this.width;
+            this._content.height = this.height;
         }
         
         public setup_beforeAdd(xml: any): void {

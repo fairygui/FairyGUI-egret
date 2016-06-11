@@ -389,9 +389,6 @@ module fairygui {
         protected handleSizeChanged(): void {
             if(!this._updatingLayout)
                 this.updateLayout();
-
-            this._container.scaleX = this.scaleX;
-            this._container.scaleY = this.scaleY;
         }
 
         public setup_beforeAdd(xml: any): void {

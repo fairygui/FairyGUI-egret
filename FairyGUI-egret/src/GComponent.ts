@@ -504,9 +504,6 @@ module fairygui {
 
             if(this._opaque)
                 this.updateOpaque();
-
-            this._rootContainer.scaleX = this.scaleX;
-            this._rootContainer.scaleY = this.scaleY;
         }
 
         protected handleGrayChanged(): void {

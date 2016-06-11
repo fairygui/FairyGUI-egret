@@ -2709,6 +2709,8 @@ var fairygui;
             this._draggable = false;
             this._scaleX = 1;
             this._scaleY = 1;
+            this._skewX = 0;
+            this._skewY = 0;
             this._pivotOffsetX = 0;
             this._pivotOffsetY = 0;
             this._sortingOrder = 0;
@@ -2720,6 +2722,9 @@ var fairygui;
             this._sourceHeight = 0;
             this._initWidth = 0;
             this._initHeight = 0;
+            this._yOffset = 0;
+            //Size的实现方式，有两种，0-GObject的w/h等于DisplayObject的w/h。1-GObject的sourceWidth/sourceHeight等于DisplayObject的w/h，剩余部分由scale实现
+            this._sizeImplType = 0;
             this._id = "" + GObject._gInstanceCounter++;
             this._name = "";
             this.createDisplayObject();
@@ -2824,12 +2829,12 @@ var fairygui;
                 var dHeight = hv - this._height;
                 this._width = wv;
                 this._height = hv;
+                this.handleSizeChanged();
                 if (this._pivotX != 0 || this._pivotY != 0) {
                     if (!ignorePivot)
                         this.setXY(this.x - this._pivotX * dWidth, this.y - this._pivotY * dHeight);
                     this.updatePivotOffset();
                 }
-                this.handleSizeChanged();
                 if (this._gearSize.controller)
                     this._gearSize.updateState();
                 if (this._parent) {
@@ -2891,10 +2896,37 @@ var fairygui;
             if (this._scaleX != sx || this._scaleY != sy) {
                 this._scaleX = sx;
                 this._scaleY = sy;
+                this.handleScaleChanged();
                 this.applyPivot();
-                this.handleSizeChanged();
                 if (this._gearSize.controller)
                     this._gearSize.updateState();
+            }
+        };
+        d(p, "skewX"
+            ,function () {
+                return this._skewX;
+            }
+            ,function (value) {
+                this.setSkew(value, this._skewY);
+            }
+        );
+        d(p, "skewY"
+            ,function () {
+                return this._skewY;
+            }
+            ,function (value) {
+                this.setSkew(this._skewX, value);
+            }
+        );
+        p.setSkew = function (xv, yv) {
+            if (this._skewX != xv || this._skewY != yv) {
+                this._skewX = xv;
+                this._skewY = yv;
+                if (this._displayObject != null) {
+                    this._displayObject.skewX = xv;
+                    this._displayObject.skewY = yv;
+                }
+                this.applyPivot();
             }
         };
         d(p, "pivotX"
@@ -2918,27 +2950,31 @@ var fairygui;
             if (this._pivotX != xv || this._pivotY != yv) {
                 this._pivotX = xv;
                 this._pivotY = yv;
-                this.applyPivot();
+                this.updatePivotOffset();
+                this.handleXYChanged();
             }
         };
         p.updatePivotOffset = function () {
-            var rot = this.normalizeRotation;
-            if (rot != 0 || this._scaleX != 1 || this._scaleY != 1) {
-                var rotInRad = rot * Math.PI / 180;
-                var cos = Math.cos(rotInRad);
-                var sin = Math.sin(rotInRad);
-                var a = this._scaleX * cos;
-                var b = this._scaleX * sin;
-                var c = this._scaleY * -sin;
-                var d = this._scaleY * cos;
-                var px = this._pivotX * this._width;
-                var py = this._pivotY * this._height;
-                this._pivotOffsetX = px - (a * px + c * py);
-                this._pivotOffsetY = py - (d * py + b * px);
-            }
-            else {
-                this._pivotOffsetX = 0;
-                this._pivotOffsetY = 0;
+            if (this._displayObject != null) {
+                if (this._pivotX != 0 || this._pivotY != 0) {
+                    var px;
+                    var py;
+                    if (this._sizeImplType == 0) {
+                        px = this._pivotX * this._width;
+                        py = this._pivotY * this._height;
+                    }
+                    else {
+                        px = this._pivotX * this._sourceWidth;
+                        py = this._pivotY * this._sourceHeight;
+                    }
+                    var pt = this._displayObject.matrix.transformPoint(px, py, GObject.sHelperPoint);
+                    this._pivotOffsetX = this._pivotX * this._width - (pt.x - this._displayObject.x);
+                    this._pivotOffsetY = this._pivotY * this._height - (pt.y - this._displayObject.y);
+                }
+                else {
+                    this._pivotOffsetX = 0;
+                    this._pivotOffsetY = 0;
+                }
             }
         };
         p.applyPivot = function () {
@@ -2991,9 +3027,9 @@ var fairygui;
             ,function (value) {
                 if (this._rotation != value) {
                     this._rotation = value;
-                    this.applyPivot();
                     if (this._displayObject)
                         this._displayObject.rotation = this.normalizeRotation;
+                    this.applyPivot();
                     if (this._gearLook.controller)
                         this._gearLook.updateState();
                 }
@@ -3003,9 +3039,9 @@ var fairygui;
             ,function () {
                 var rot = this._rotation % 360;
                 if (rot > 180)
-                    rot = rot - 360;
+                    rot -= 360;
                 else if (rot < -180)
-                    rot = 360 + rot;
+                    rot += 360;
                 return rot;
             }
         );
@@ -3425,16 +3461,34 @@ var fairygui;
             this._displayObject.alpha = old.alpha;
             this._displayObject.visible = old.visible;
             this._displayObject.touchEnabled = old.touchEnabled;
+            this._displayObject.scaleX = old.scaleX;
+            this._displayObject.scaleY = old.scaleY;
             if (this._displayObject instanceof egret.DisplayObjectContainer)
                 this._displayObject.touchChildren = this._touchable;
         };
         p.handleXYChanged = function () {
             if (this._displayObject) {
-                this._displayObject.x = Math.floor(this._x + this._pivotOffsetX);
-                this._displayObject.y = Math.floor(this._y + this._pivotOffsetY);
+                this._displayObject.x = Math.floor(this._x) + this._pivotOffsetX;
+                this._displayObject.y = Math.floor(this._y + this._yOffset) + this._pivotOffsetY;
             }
         };
         p.handleSizeChanged = function () {
+            if (this._displayObject != null && this._sizeImplType == 1 && this._sourceWidth != 0 && this._sourceHeight != 0) {
+                this._displayObject.scaleX = this._width / this._sourceWidth * this._scaleX;
+                this._displayObject.scaleY = this._height / this._sourceHeight * this._scaleY;
+            }
+        };
+        p.handleScaleChanged = function () {
+            if (this._displayObject != null) {
+                if (this._sizeImplType == 0 || this._sourceWidth == 0 || this._sourceHeight == 0) {
+                    this._displayObject.scaleX = this._scaleX;
+                    this._displayObject.scaleY = this._scaleY;
+                }
+                else {
+                    this._displayObject.scaleX = this._width / this._sourceWidth * this._scaleX;
+                    this._displayObject.scaleY = this._height / this._sourceHeight * this._scaleY;
+                }
+            }
         };
         p.handleGrayChanged = function () {
             if (this._displayObject) {
@@ -3466,6 +3520,11 @@ var fairygui;
             str = xml.attributes.rotation;
             if (str)
                 this.rotation = parseInt(str);
+            str = xml.attributes.skew;
+            if (str) {
+                arr = str.split(",");
+                this.setSkew(parseFloat(arr[0]), parseFloat(arr[1]));
+            }
             str = xml.attributes.pivot;
             if (str) {
                 arr = str.split(",");
@@ -4080,8 +4139,6 @@ var fairygui;
                 this.updateMask();
             if (this._opaque)
                 this.updateOpaque();
-            this._rootContainer.scaleX = this.scaleX;
-            this._rootContainer.scaleY = this.scaleY;
         };
         p.handleGrayChanged = function () {
             var c = this.getController("grayed");
@@ -5041,7 +5098,7 @@ var fairygui;
                 this.setState(fairygui.GButton.UP);
         };
         p.__clickItem = function (evt) {
-            egret.setTimeout(this.__clickItem2, this, 100, this._list.getChildIndex(evt.itemObject));
+            fairygui.GTimers.inst.add(100, 1, this.__clickItem2, this, this._list.getChildIndex(evt.itemObject));
         };
         p.__clickItem2 = function (index) {
             if (this._dropdownObject.parent instanceof fairygui.GRoot)
@@ -5406,8 +5463,8 @@ var fairygui;
         p.drawCommon = function () {
             this.graphics;
             this._graphics.clear();
-            var w = this.width * this.scaleX;
-            var h = this.height * this.scaleY;
+            var w = this.width;
+            var h = this.height;
             if (w == 0 || h == 0)
                 return;
             if (this._lineSize == 0)
@@ -5713,8 +5770,8 @@ var fairygui;
                 this._content.y += this.height;
         };
         p.handleSizeChanged = function () {
-            this._content.width = this.width * Math.abs(this.scaleX);
-            this._content.height = this.height * Math.abs(this.scaleY);
+            this._content.width = this.width;
+            this._content.height = this.height;
         };
         p.setup_beforeAdd = function (xml) {
             _super.prototype.setup_beforeAdd.call(this, xml);
@@ -7388,8 +7445,6 @@ var fairygui;
         p.handleSizeChanged = function () {
             if (!this._updatingLayout)
                 this.updateLayout();
-            this._container.scaleX = this.scaleX;
-            this._container.scaleY = this.scaleY;
         };
         p.setup_beforeAdd = function (xml) {
             _super.prototype.setup_beforeAdd.call(this, xml);
@@ -7448,6 +7503,7 @@ var fairygui;
         __extends(GMovieClip, _super);
         function GMovieClip() {
             _super.call(this);
+            this._sizeImplType = 1;
             this._gearAnimation = new fairygui.GearAnimation(this);
             this._gearColor = new fairygui.GearColor(this);
         }
@@ -7515,10 +7571,6 @@ var fairygui;
                 this._gearAnimation.apply();
             if (this._gearColor.controller == c)
                 this._gearColor.apply();
-        };
-        p.handleSizeChanged = function () {
-            this.displayObject.scaleX = this.width / this._sourceWidth * this.scaleX;
-            this.displayObject.scaleY = this.height / this._sourceHeight * this.scaleY;
         };
         p.constructFromResource = function (pkgItem) {
             this._packageItem = pkgItem;
@@ -7739,7 +7791,6 @@ var fairygui;
             this._fontSize = 0;
             this._leading = 0;
             this._letterSpacing = 0;
-            this._yOffset = 0;
             this._textWidth = 0;
             this._textHeight = 0;
             this._fontSize = 12;
@@ -8290,10 +8341,6 @@ var fairygui;
                 } //text loop
             } //line loop
         };
-        p.handleXYChanged = function () {
-            this.displayObject.x = Math.floor(this.x);
-            this.displayObject.y = Math.floor(this.y + this._yOffset);
-        };
         p.handleSizeChanged = function () {
             if (!this._updatingSize) {
                 if (!this._widthAutoSize)
@@ -8778,7 +8825,6 @@ var fairygui;
         p.__addedToStage = function (evt) {
             this.displayObject.removeEventListener(egret.Event.ADDED_TO_STAGE, this.__addedToStage, this);
             this._nativeStage = this.displayObject.stage;
-            GRoot.touchScreen = egret.MainContext.deviceType == egret.MainContext.DEVICE_MOBILE;
             this._nativeStage.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__stageMouseDownCapture, this, true);
             this._nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__stageMouseUpCapture, this, true);
             this._nativeStage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__stageMouseMoveCapture, this, true);
@@ -8906,9 +8952,11 @@ var fairygui;
         function GTimers() {
             this._enumI = 0;
             this._enumCount = 0;
+            this._lastTime = 0;
             this._items = new Array();
             this._itemPool = new Array();
-            egret.Ticker.getInstance().register(this.__timer, this);
+            this._lastTime = egret.getTimer();
+            egret.startTick(this.__timer, this);
         }
         var d = __define,c=GTimers,p=c.prototype;
         p.getItem = function () {
@@ -8971,9 +9019,11 @@ var fairygui;
                 this._itemPool.push(item);
             }
         };
-        p.__timer = function (advancedTime) {
+        p.__timer = function (timeStamp) {
             this._enumI = 0;
             this._enumCount = this._items.length;
+            var advancedTime = timeStamp - this._lastTime;
+            this._lastTime = timeStamp;
             while (this._enumI < this._enumCount) {
                 var item = this._items[this._enumI];
                 this._enumI++;
@@ -8990,6 +9040,7 @@ var fairygui;
                         item.callback.call(item.thisObj);
                 }
             }
+            return false;
         };
         GTimers.inst = new GTimers();
         GTimers.FPS24 = 1000 / 24;
@@ -9670,7 +9721,7 @@ var fairygui;
             r.showPopup(this.contentPane, (target instanceof fairygui.GRoot) ? null : target, downward);
         };
         p.__clickItem = function (evt) {
-            egret.setTimeout(this.__clickItem2, this, 100, evt);
+            fairygui.GTimers.inst.add(100, 1, this.__clickItem2, this, evt);
         };
         p.__clickItem2 = function (evt) {
             var item = evt.itemObject.asButton;

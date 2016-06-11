@@ -457,6 +457,8 @@ declare module fairygui {
         private _draggable;
         private _scaleX;
         private _scaleY;
+        private _skewX;
+        private _skewY;
         private _pivotOffsetX;
         private _pivotOffsetY;
         private _sortingOrder;
@@ -484,6 +486,8 @@ declare module fairygui {
         _underConstruct: boolean;
         _constructingData: any;
         _gearLocked: boolean;
+        _yOffset: number;
+        _sizeImplType: number;
         static _gInstanceCounter: number;
         static XY_CHANGED: string;
         static SIZE_CHANGED: string;
@@ -508,6 +512,9 @@ declare module fairygui {
         scaleX: number;
         scaleY: number;
         setScale(sx: number, sy: number): void;
+        skewX: number;
+        skewY: number;
+        setSkew(xv: number, yv: number): void;
         pivotX: number;
         pivotY: number;
         setPivot(xv: number, yv?: number): void;
@@ -584,6 +591,7 @@ declare module fairygui {
         protected switchDisplayObject(newObj: egret.DisplayObject): void;
         protected handleXYChanged(): void;
         protected handleSizeChanged(): void;
+        protected handleScaleChanged(): void;
         private static colorMatrix;
         protected handleGrayChanged(): void;
         constructFromResource(pkgItem: PackageItem): void;
@@ -1067,7 +1075,6 @@ declare module fairygui {
         gearAnimation: GearAnimation;
         gearColor: GearColor;
         handleControllerChanged(c: Controller): void;
-        protected handleSizeChanged(): void;
         constructFromResource(pkgItem: PackageItem): void;
         setup_beforeAdd(xml: any): void;
         setup_afterAdd(xml: any): void;
@@ -1124,7 +1131,6 @@ declare module fairygui {
         protected _heightAutoSize: boolean;
         protected _gearColor: GearColor;
         protected _updatingSize: boolean;
-        protected _yOffset: number;
         protected _sizeDirty: boolean;
         protected _textWidth: number;
         protected _textHeight: number;
@@ -1165,7 +1171,6 @@ declare module fairygui {
         private __render();
         protected renderNow(updateBounds?: boolean): void;
         private renderWithBitmapFont(updateBounds);
-        protected handleXYChanged(): void;
         protected handleSizeChanged(): void;
         protected handleGrayChanged(): void;
         protected doAlign(): void;
@@ -1264,6 +1269,7 @@ declare module fairygui {
         private _itemPool;
         private _enumI;
         private _enumCount;
+        private _lastTime;
         static inst: GTimers;
         private static FPS24;
         constructor();
@@ -1275,7 +1281,7 @@ declare module fairygui {
         callBy24Fps(callback: Function, thisObj: any, callbackParam?: any): void;
         exists(callback: Function, thisObj: any): boolean;
         remove(callback: Function, thisObj: any): void;
-        private __timer(advancedTime);
+        private __timer(timeStamp);
     }
 }
 declare module fairygui {

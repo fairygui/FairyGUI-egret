@@ -156,7 +156,7 @@ module fairygui {
 		}
 		
         private __clickItem(evt: ItemEvent): void {
-            egret.setTimeout(this.__clickItem2,this,100,evt);
+            GTimers.inst.add(100, 1, this.__clickItem2,this,evt);
         }
                     
         private __clickItem2(evt: ItemEvent): void {

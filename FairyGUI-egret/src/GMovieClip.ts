@@ -9,6 +9,7 @@ module fairygui {
 
         public constructor() {
             super();
+            this._sizeImplType = 1;
             this._gearAnimation = new GearAnimation(this);
             this._gearColor = new GearColor(this);
         }
@@ -72,11 +73,6 @@ module fairygui {
                 this._gearAnimation.apply();
             if(this._gearColor.controller == c)
                 this._gearColor.apply();
-        }
-
-        protected handleSizeChanged(): void {
-            this.displayObject.scaleX = this.width / this._sourceWidth * this.scaleX;
-            this.displayObject.scaleY = this.height / this._sourceHeight * this.scaleY;
         }
 
         public constructFromResource(pkgItem: PackageItem): void {

@@ -22,7 +22,6 @@ module fairygui {
         protected _gearColor: GearColor;
 
         protected _updatingSize: boolean;
-        protected _yOffset: number = 0;
         protected _sizeDirty: boolean;
         protected _textWidth: number = 0;
         protected _textHeight: number = 0;
@@ -638,11 +637,6 @@ module fairygui {
             }//line loop
         }
 
-        protected handleXYChanged(): void {
-            this.displayObject.x = Math.floor(this.x);
-            this.displayObject.y = Math.floor(this.y + this._yOffset);
-        }
-        
         protected handleSizeChanged(): void {
             if(!this._updatingSize) {
                 if(!this._widthAutoSize)

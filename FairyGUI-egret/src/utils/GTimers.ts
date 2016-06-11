@@ -7,6 +7,7 @@ module fairygui {
 
         private _enumI: number = 0;
         private _enumCount: number = 0;
+        private _lastTime: number = 0;
 
         public static inst: GTimers = new GTimers();
 
@@ -16,7 +17,8 @@ module fairygui {
             this._items = new Array<TimerItem>();
             this._itemPool = new Array<TimerItem>();
 
-            egret.Ticker.getInstance().register(this.__timer, this);
+            this._lastTime = egret.getTimer(); 
+            egret.startTick(this.__timer, this);
         }
 
         private getItem(): TimerItem {
@@ -84,9 +86,11 @@ module fairygui {
             }
         }
 
-        private __timer(advancedTime: number): void {
+        private __timer(timeStamp: number): boolean {
             this._enumI = 0;
             this._enumCount = this._items.length;
+            var advancedTime:number = timeStamp - this._lastTime;
+            this._lastTime = timeStamp;
 
             while (this._enumI < this._enumCount) {
                 var item: TimerItem = this._items[this._enumI];
@@ -106,6 +110,8 @@ module fairygui {
                         item.callback.call(item.thisObj);
                 }
             }
+            
+            return false;
         }
     }
 

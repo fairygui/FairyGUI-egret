@@ -66,8 +66,8 @@ module fairygui {
 
             this._graphics.clear();
 
-            var w: number = this.width * this.scaleX;
-            var h: number = this.height * this.scaleY;
+            var w: number = this.width;
+            var h: number = this.height;
             if(w == 0 || h == 0)
                 return;
 

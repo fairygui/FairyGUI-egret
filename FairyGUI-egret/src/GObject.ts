@@ -18,6 +18,8 @@ module fairygui {
         private _draggable: boolean = false;
         private _scaleX: number = 1;
         private _scaleY: number = 1;
+        private _skewX: number = 0;
+        private _skewY: number = 0;
         private _pivotOffsetX: number = 0;
         private _pivotOffsetY: number = 0;
         private _sortingOrder: number = 0;
@@ -47,6 +49,9 @@ module fairygui {
         public _underConstruct: boolean;
         public _constructingData: any;
         public _gearLocked: boolean;
+        public _yOffset: number = 0;
+        //Size的实现方式，有两种，0-GObject的w/h等于DisplayObject的w/h。1-GObject的sourceWidth/sourceHeight等于DisplayObject的w/h，剩余部分由scale实现
+		public _sizeImplType:number = 0;
 
         public static _gInstanceCounter: number = 0;
 
@@ -168,13 +173,12 @@ module fairygui {
                 this._width = wv;
                 this._height = hv;
 
+                this.handleSizeChanged();
                 if(this._pivotX != 0 || this._pivotY != 0) {
                     if(!ignorePivot)
                         this.setXY(this.x - this._pivotX * dWidth, this.y - this._pivotY * dHeight);
                     this.updatePivotOffset();
                 }
-
-                this.handleSizeChanged();
 
                 if(this._gearSize.controller)
                     this._gearSize.updateState();
@@ -235,11 +239,39 @@ module fairygui {
             if(this._scaleX != sx || this._scaleY != sy) {
                 this._scaleX = sx;
                 this._scaleY = sy;
+                this.handleScaleChanged();
                 this.applyPivot();
-                this.handleSizeChanged();
 
                 if(this._gearSize.controller)
                     this._gearSize.updateState();
+            }
+        }
+        
+        public get skewX(): number {
+            return this._skewX;
+        }
+        
+        public set skewX(value: number) {
+            this.setSkew(value, this._skewY);
+        }
+        
+        public get skewY(): number {
+            return this._skewY;
+        }
+        
+        public set skewY(value: number) {
+            this.setSkew(this._skewX, value);
+        }
+        
+        public setSkew(xv:number, yv:number) {
+            if(this._skewX != xv || this._skewY != yv) {
+                this._skewX = xv;
+                this._skewY = yv;
+                if(this._displayObject!=null) {
+                    this._displayObject.skewX = xv;
+                    this._displayObject.skewY = yv;
+                }
+                this.applyPivot();
             }
         }
 
@@ -263,29 +295,32 @@ module fairygui {
             if(this._pivotX != xv || this._pivotY != yv) {
                 this._pivotX = xv;
                 this._pivotY = yv;
-
-                this.applyPivot();
+                this.updatePivotOffset();
+                this.handleXYChanged();
             }
         }
         
         private updatePivotOffset():void {
-            var rot: number = this.normalizeRotation;
-            if(rot != 0 || this._scaleX != 1 || this._scaleY != 1) {
-                var rotInRad: number = rot * Math.PI / 180;
-                var cos: number = Math.cos(rotInRad);
-                var sin: number = Math.sin(rotInRad);
-                var a: number = this._scaleX * cos;
-                var b: number = this._scaleX * sin;
-                var c: number = this._scaleY * -sin;
-                var d: number = this._scaleY * cos;
-                var px: number = this._pivotX * this._width;
-                var py: number = this._pivotY * this._height;
-                this._pivotOffsetX = px - (a * px + c * py);
-                this._pivotOffsetY = py - (d * py + b * px);
-            }
-            else {
-                this._pivotOffsetX = 0;
-                this._pivotOffsetY = 0;
+            if(this._displayObject!=null) {
+                if(this._pivotX!=0 || this._pivotY!=0) {
+                    var px: number;
+                    var py: number;
+                    if(this._sizeImplType==0) {
+                        px = this._pivotX * this._width;
+                        py = this._pivotY * this._height;
+                    }
+                    else {
+                        px = this._pivotX * this._sourceWidth;
+                        py = this._pivotY * this._sourceHeight;
+                    }
+                    var pt:egret.Point = this._displayObject.matrix.transformPoint(px, py, GObject.sHelperPoint);
+					this._pivotOffsetX = this._pivotX * this._width - (pt.x - this._displayObject.x);
+					this._pivotOffsetY = this._pivotY * this._height - (pt.y - this._displayObject.y);
+                }
+                else {
+                    this._pivotOffsetX = 0;
+                    this._pivotOffsetY = 0;
+                }
             }
         }
 
@@ -341,9 +376,10 @@ module fairygui {
         public set rotation(value: number) {
             if(this._rotation != value) {
                 this._rotation = value;
-                this.applyPivot();
                 if(this._displayObject)
                     this._displayObject.rotation = this.normalizeRotation;
+                    
+                this.applyPivot();
                     
                 if(this._gearLook.controller)
                     this._gearLook.updateState();
@@ -353,9 +389,9 @@ module fairygui {
         public get normalizeRotation(): number {
             var rot: number = this._rotation % 360;
             if(rot > 180)
-                rot = rot - 360;
+                rot -= 360;
             else if(rot < -180)
-                rot = 360 + rot;
+                rot += 360;
             return rot;
         }
 
@@ -758,6 +794,8 @@ module fairygui {
             this._displayObject.alpha = old.alpha;
             this._displayObject.visible = old.visible;
             this._displayObject.touchEnabled = old.touchEnabled;
+            this._displayObject.scaleX = old.scaleX;
+            this._displayObject.scaleY = old.scaleY;
 
             if(this._displayObject instanceof egret.DisplayObjectContainer)
                 (<egret.DisplayObjectContainer>this._displayObject).touchChildren = this._touchable;
@@ -765,13 +803,35 @@ module fairygui {
 
         protected handleXYChanged(): void {
             if(this._displayObject) {
-                this._displayObject.x = Math.floor(this._x + this._pivotOffsetX);
-                this._displayObject.y = Math.floor(this._y + this._pivotOffsetY);
+                this._displayObject.x = Math.floor(this._x) + this._pivotOffsetX;
+                this._displayObject.y = Math.floor(this._y + this._yOffset) + this._pivotOffsetY;
             }
         }
 
-        protected handleSizeChanged(): void {
-        }
+        protected handleSizeChanged():void {
+			if(this._displayObject!=null && this._sizeImplType==1 && this._sourceWidth!=0 && this._sourceHeight!=0)
+			{
+				this._displayObject.scaleX = this._width/this._sourceWidth*this._scaleX;
+				this._displayObject.scaleY = this._height/this._sourceHeight*this._scaleY;
+			}
+		}
+		
+		protected handleScaleChanged():void {
+			if(this._displayObject!=null)
+			{
+				if( this._sizeImplType==0 || this._sourceWidth==0 || this._sourceHeight==0)
+				{
+					this._displayObject.scaleX = this._scaleX;
+					this._displayObject.scaleY = this._scaleY;
+				}
+				else
+				{
+					this._displayObject.scaleX = this._width/this._sourceWidth*this._scaleX;
+					this._displayObject.scaleY = this._height/this._sourceHeight*this._scaleY;
+				}
+			}
+		}
+        
         private static colorMatrix = [
             0.3,0.6,0,0,0,
             0.3,0.6,0,0,0,
@@ -821,6 +881,12 @@ module fairygui {
             str = xml.attributes.rotation;
             if (str)
                 this.rotation = parseInt(str);
+                
+            str = xml.attributes.skew;
+            if (str) {
+                 arr = str.split(",");
+                this.setSkew(parseFloat(arr[0]), parseFloat(arr[1]));
+            }
 
             str = xml.attributes.pivot;
             if (str) {

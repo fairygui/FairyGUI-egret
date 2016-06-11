@@ -369,9 +369,7 @@ module fairygui {
             this.displayObject.removeEventListener(egret.Event.ADDED_TO_STAGE, this.__addedToStage, this);
 
             this._nativeStage = this.displayObject.stage;
-
-            GRoot.touchScreen = egret.MainContext.deviceType == egret.MainContext.DEVICE_MOBILE;
-
+            
             this._nativeStage.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__stageMouseDownCapture, this, true);
             this._nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__stageMouseUpCapture, this, true);
             this._nativeStage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__stageMouseMoveCapture, this, true);
