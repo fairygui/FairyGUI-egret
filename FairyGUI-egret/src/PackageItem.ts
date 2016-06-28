@@ -19,7 +19,6 @@ module fairygui {
         public texture: egret.Texture;
 
         //movieclip
-        public pivot: egret.Point;
         public interval: number;
         public repeatDelay: number;
         public swing: boolean;

@@ -1,6 +1,6 @@
 {
 	"name": "egret",
-	"version": "3.0.8",
+	"version": "3.1.1",
 	"modules": [
 		{
 			"name": "fairygui",
@@ -66,7 +66,7 @@
 				"Window.ts",
 				"DragDropManager.ts"
 			],
-			"root": "../src/fairygui"
+			"root": "../FairyGUI-egret/src/fairygui"
 		}
 	]
 }

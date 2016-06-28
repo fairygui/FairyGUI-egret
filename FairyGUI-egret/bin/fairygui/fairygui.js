@@ -505,22 +505,36 @@ var fairygui;
             var elapsed = t - this._lastTime;
             this._lastTime = t;
             this.reachEnding = false;
-            this.frameStarting = false;
             this._curFrameDelay += elapsed;
-            var realFrame = this.reversed ? mc.frameCount - this._curFrame - 1 : this._curFrame;
-            var interval = mc.interval + mc.frames[realFrame].addDelay + ((realFrame == 0 && this.repeatedCount > 0) ? mc.repeatDelay : 0);
+            var interval = mc.interval + mc.frames[this._curFrame].addDelay + ((this._curFrame == 0 && this.repeatedCount > 0) ? mc.repeatDelay : 0);
             if (this._curFrameDelay < interval)
                 return;
             this._curFrameDelay = 0;
-            this._curFrame++;
-            this.frameStarting = true;
-            if (this._curFrame > mc.frameCount - 1) {
-                this._curFrame = 0;
-                this.repeatedCount++;
-                this.reachEnding = true;
-                if (mc.swing) {
-                    this.reversed = !this.reversed;
+            if (mc.swing) {
+                if (this.reversed) {
+                    this._curFrame--;
+                    if (this._curFrame < 0) {
+                        this._curFrame = Math.min(1, mc.frameCount - 1);
+                        this.repeatedCount++;
+                        this.reversed = !this.reversed;
+                    }
+                }
+                else {
                     this._curFrame++;
+                    if (this._curFrame > mc.frameCount - 1) {
+                        this._curFrame = Math.max(0, mc.frameCount - 2);
+                        this.repeatedCount++;
+                        this.reachEnding = true;
+                        this.reversed = !this.reversed;
+                    }
+                }
+            }
+            else {
+                this._curFrame++;
+                if (this._curFrame > mc.frameCount - 1) {
+                    this._curFrame = 0;
+                    this.repeatedCount++;
+                    this.reachEnding = true;
                 }
             }
         };
@@ -2699,8 +2713,6 @@ var fairygui;
             this._y = 0;
             this._width = 0;
             this._height = 0;
-            this._pivotX = 0;
-            this._pivotY = 0;
             this._alpha = 1;
             this._rotation = 0;
             this._visible = true;
@@ -2711,6 +2723,9 @@ var fairygui;
             this._scaleY = 1;
             this._skewX = 0;
             this._skewY = 0;
+            this._pivotX = 0;
+            this._pivotY = 0;
+            this._pivotAsAnchor = false;
             this._pivotOffsetX = 0;
             this._pivotOffsetY = 0;
             this._sortingOrder = 0;
@@ -2831,9 +2846,14 @@ var fairygui;
                 this._height = hv;
                 this.handleSizeChanged();
                 if (this._pivotX != 0 || this._pivotY != 0) {
-                    if (!ignorePivot)
-                        this.setXY(this.x - this._pivotX * dWidth, this.y - this._pivotY * dHeight);
-                    this.updatePivotOffset();
+                    if (this._pivotAsAnchor) {
+                        if (!ignorePivot)
+                            this.setXY(this.x - this._pivotX * dWidth, this.y - this._pivotY * dHeight);
+                        this.updatePivotOffset();
+                    }
+                    else {
+                        this.applyPivot();
+                    }
                 }
                 if (this._gearSize.controller)
                     this._gearSize.updateState();
@@ -2945,14 +2965,24 @@ var fairygui;
                 this.setPivot(this._pivotX, value);
             }
         );
-        p.setPivot = function (xv, yv) {
+        p.setPivot = function (xv, yv, asAnchor) {
             if (yv === void 0) { yv = 0; }
-            if (this._pivotX != xv || this._pivotY != yv) {
+            if (asAnchor === void 0) { asAnchor = false; }
+            if (this._pivotX != xv || this._pivotY != yv || this._pivotAsAnchor != asAnchor) {
                 this._pivotX = xv;
                 this._pivotY = yv;
+                this._pivotAsAnchor = asAnchor;
                 this.updatePivotOffset();
                 this.handleXYChanged();
             }
+        };
+        p.internalSetPivot = function (xv, yv, asAnchor) {
+            if (yv === void 0) { yv = 0; }
+            this._pivotX = xv;
+            this._pivotY = yv;
+            this._pivotAsAnchor = asAnchor;
+            if (asAnchor)
+                this.handleXYChanged();
         };
         p.updatePivotOffset = function () {
             if (this._displayObject != null) {
@@ -3468,8 +3498,14 @@ var fairygui;
         };
         p.handleXYChanged = function () {
             if (this._displayObject) {
-                this._displayObject.x = Math.floor(this._x) + this._pivotOffsetX;
-                this._displayObject.y = Math.floor(this._y + this._yOffset) + this._pivotOffsetY;
+                if (this._pivotAsAnchor) {
+                    this._displayObject.x = Math.floor(this._x - this._pivotX * this._width) + this._pivotOffsetX;
+                    this._displayObject.y = Math.floor(this._y - this._pivotY * this._height + this._yOffset) + this._pivotOffsetY;
+                }
+                else {
+                    this._displayObject.x = Math.floor(this._x) + this._pivotOffsetX;
+                    this._displayObject.y = Math.floor(this._y + this._yOffset) + this._pivotOffsetY;
+                }
             }
         };
         p.handleSizeChanged = function () {
@@ -3510,7 +3546,7 @@ var fairygui;
                 arr = str.split(",");
                 this._initWidth = parseInt(arr[0]);
                 this._initHeight = parseInt(arr[1]);
-                this.setSize(this._initWidth, this._initHeight);
+                this.setSize(this._initWidth, this._initHeight, true);
             }
             str = xml.attributes.scale;
             if (str) {
@@ -3543,8 +3579,11 @@ var fairygui;
                     else
                         n2 = 0;
                 }
-                this.setPivot(n1, n2);
+                str = xml.attributes.anchor;
+                this.setPivot(n1, n2, str == "true");
             }
+            else
+                this.setPivot(0, 0, false);
             str = xml.attributes.alpha;
             if (str)
                 this.alpha = parseFloat(str);
@@ -4333,6 +4372,12 @@ var fairygui;
             this._initWidth = this._sourceWidth;
             this._initHeight = this._sourceHeight;
             this.setSize(this._sourceWidth, this._sourceHeight);
+            str = xml.attributes.pivot;
+            if (str) {
+                arr = str.split(",");
+                str = xml.attributes.anchor;
+                this.internalSetPivot(parseFloat(arr[0]), parseFloat(arr[1]), str == "true");
+            }
             str = xml.attributes.opaque;
             this.opaque = str != "false";
             var overflow;
@@ -4725,7 +4770,7 @@ var fairygui;
                     for (var i = 0; i < cnt; i++) {
                         var obj = this.getChildAt(i);
                         if ((obj instanceof fairygui.GImage) || (obj instanceof fairygui.GLoader)
-                            || (obj instanceof fairygui.GMovieClip) || (obj instanceof fairygui.GTextField))
+                            || (obj instanceof fairygui.GMovieClip))
                             obj.color = color;
                     }
                 }
@@ -4733,7 +4778,7 @@ var fairygui;
                     for (var i = 0; i < cnt; i++) {
                         var obj = this.getChildAt(i);
                         if ((obj instanceof fairygui.GImage) || (obj instanceof fairygui.GLoader)
-                            || (obj instanceof fairygui.GMovieClip) || (obj instanceof fairygui.GTextField))
+                            || (obj instanceof fairygui.GMovieClip))
                             obj.color = 0xFFFFFF;
                     }
                 }
@@ -5013,23 +5058,23 @@ var fairygui;
             this._titleObject = (this.getChild("title"));
             str = xml.attributes.dropdown;
             if (str) {
-                this._dropdownObject = (fairygui.UIPackage.createObjectFromURL(str));
-                if (!this._dropdownObject) {
+                this.dropdown = (fairygui.UIPackage.createObjectFromURL(str));
+                if (!this.dropdown) {
                     console.error("下拉框必须为元件");
                     return;
                 }
-                this._dropdownObject.name = "this._dropdownObject";
-                this._list = this._dropdownObject.getChild("list").asList;
+                this.dropdown.name = "this.dropdown";
+                this._list = this.dropdown.getChild("list").asList;
                 if (this._list == null) {
                     console.error(this.resourceURL + ": 下拉框的弹出元件里必须包含名为list的列表");
                     return;
                 }
                 this._list.addEventListener(fairygui.ItemEvent.CLICK, this.__clickItem, this);
-                this._list.addRelation(this._dropdownObject, fairygui.RelationType.Width);
-                this._list.removeRelation(this._dropdownObject, fairygui.RelationType.Height);
-                this._dropdownObject.addRelation(this._list, fairygui.RelationType.Height);
-                this._dropdownObject.removeRelation(this._list, fairygui.RelationType.Width);
-                this._dropdownObject.displayObject.addEventListener(egret.Event.REMOVED_FROM_STAGE, this.__popupWinClosed, this);
+                this._list.addRelation(this.dropdown, fairygui.RelationType.Width);
+                this._list.removeRelation(this.dropdown, fairygui.RelationType.Height);
+                this.dropdown.addRelation(this._list, fairygui.RelationType.Height);
+                this.dropdown.removeRelation(this._list, fairygui.RelationType.Width);
+                this.dropdown.displayObject.addEventListener(egret.Event.REMOVED_FROM_STAGE, this.__popupWinClosed, this);
             }
             /*not support
             if (!GRoot.touchScreen) {
@@ -5037,6 +5082,13 @@ var fairygui;
                 this.displayObject.addEventListener(egret.TouchEvent.TOUCH_ROLL_OUT, this.__rollout, this);
             }*/
             this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__mousedown, this);
+        };
+        p.dispose = function () {
+            if (this.dropdown) {
+                this.dropdown.dispose();
+                this.dropdown = null;
+            }
+            _super.prototype.dispose.call(this);
         };
         p.setup_afterAdd = function (xml) {
             _super.prototype.setup_afterAdd.call(this, xml);
@@ -5076,7 +5128,7 @@ var fairygui;
         p.showDropdown = function () {
             if (this._itemsUpdated) {
                 this._itemsUpdated = false;
-                this._list.removeChildren();
+                this._list.removeChildrenToPool();
                 var cnt = this._items.length;
                 for (var i = 0; i < cnt; i++) {
                     var item = this._list.addItemFromPool();
@@ -5086,9 +5138,9 @@ var fairygui;
                 this._list.resizeToFit(this._visibleItemCount);
             }
             this._list.selectedIndex = -1;
-            this._dropdownObject.width = this.width;
-            this.root.togglePopup(this._dropdownObject, this, true);
-            if (this._dropdownObject.parent)
+            this.dropdown.width = this.width;
+            this.root.togglePopup(this.dropdown, this, true);
+            if (this.dropdown.parent)
                 this.setState(fairygui.GButton.DOWN);
         };
         p.__popupWinClosed = function (evt) {
@@ -5101,8 +5153,8 @@ var fairygui;
             fairygui.GTimers.inst.add(100, 1, this.__clickItem2, this, this._list.getChildIndex(evt.itemObject));
         };
         p.__clickItem2 = function (index) {
-            if (this._dropdownObject.parent instanceof fairygui.GRoot)
-                (this._dropdownObject.parent).hidePopup();
+            if (this.dropdown.parent instanceof fairygui.GRoot)
+                (this.dropdown.parent).hidePopup();
             this._selectedIndex = index;
             if (this._selectedIndex >= 0)
                 this.text = this._items[this._selectedIndex];
@@ -5112,27 +5164,27 @@ var fairygui;
         };
         p.__rollover = function (evt) {
             this._over = true;
-            if (this._down || this._dropdownObject && this._dropdownObject.parent)
+            if (this._down || this.dropdown && this.dropdown.parent)
                 return;
             this.setState(fairygui.GButton.OVER);
         };
         p.__rollout = function (evt) {
             this._over = false;
-            if (this._down || this._dropdownObject && this._dropdownObject.parent)
+            if (this._down || this.dropdown && this.dropdown.parent)
                 return;
             this.setState(fairygui.GButton.UP);
         };
         p.__mousedown = function (evt) {
             this._down = true;
             fairygui.GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
-            if (this._dropdownObject)
+            if (this.dropdown)
                 this.showDropdown();
         };
         p.__mouseup = function (evt) {
             if (this._down) {
                 this._down = false;
                 fairygui.GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
-                if (this._dropdownObject && !this._dropdownObject.parent) {
+                if (this.dropdown && !this.dropdown.parent) {
                     if (this._over)
                         this.setState(fairygui.GButton.OVER);
                     else
@@ -7297,6 +7349,8 @@ var fairygui;
                     this._contentSourceWidth = this._contentItem.width;
                     this._contentSourceHeight = this._contentItem.height;
                     this._content.interval = this._contentItem.interval;
+                    this._content.swing = this._contentItem.swing;
+                    this._content.repeatDelay = this._contentItem.repeatDelay;
                     this._content.frames = this._contentItem.frames;
                     this._content.boundsRect = new egret.Rectangle(0, 0, this._contentSourceWidth, this._contentSourceHeight);
                     this.updateLayout();
@@ -7581,6 +7635,8 @@ var fairygui;
             this.setSize(this._sourceWidth, this._sourceHeight);
             pkgItem.load();
             this._movieClip.interval = this._packageItem.interval;
+            this._movieClip.swing = this._packageItem.swing;
+            this._movieClip.repeatDelay = this._packageItem.repeatDelay;
             this._movieClip.frames = this._packageItem.frames;
             this._movieClip.boundsRect = new egret.Rectangle(0, 0, this.sourceWidth, this.sourceHeight);
         };
@@ -9613,6 +9669,9 @@ var fairygui;
             this._list.addEventListener(fairygui.ItemEvent.CLICK, this.__clickItem, this);
         }
         var d = __define,c=PopupMenu,p=c.prototype;
+        p.dispose = function () {
+            this._contentPane.dispose();
+        };
         p.addItem = function (caption, callback) {
             if (callback === void 0) { callback = null; }
             var item = this._list.addItemFromPool().asButton;
@@ -11861,13 +11920,8 @@ var fairygui;
         };
         p.loadMovieClip = function (item) {
             var xml = egret.XML.parse(this.getDesc(item.id + ".xml"));
-            item.pivot = new egret.Point();
-            var str = xml.attributes.pivot;
-            if (str) {
-                var arr = str.split(UIPackage.sep0);
-                item.pivot.x = parseInt(arr[0]);
-                item.pivot.y = parseInt(arr[1]);
-            }
+            var str;
+            var arr;
             str = xml.attributes.interval;
             if (str != null)
                 item.interval = parseInt(str);

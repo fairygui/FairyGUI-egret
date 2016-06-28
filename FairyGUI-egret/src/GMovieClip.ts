@@ -88,6 +88,8 @@ module fairygui {
             pkgItem.load();
 
             this._movieClip.interval = this._packageItem.interval;
+            this._movieClip.swing = this._packageItem.swing;
+            this._movieClip.repeatDelay = this._packageItem.repeatDelay;
             this._movieClip.frames = this._packageItem.frames;
             this._movieClip.boundsRect = new egret.Rectangle(0, 0, this.sourceWidth, this.sourceHeight);
         }

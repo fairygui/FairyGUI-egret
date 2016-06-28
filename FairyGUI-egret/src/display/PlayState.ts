@@ -3,7 +3,6 @@ module fairygui {
 
     export class PlayState {
         public reachEnding: boolean;
-        public frameStarting: boolean;
         public reversed: boolean;
         public repeatedCount: number = 0;
 
@@ -20,26 +19,46 @@ module fairygui {
             this._lastTime = t;
 
             this.reachEnding = false;
-            this.frameStarting = false;
             this._curFrameDelay += elapsed;
-            var realFrame: number = this.reversed ? mc.frameCount - this._curFrame - 1 : this._curFrame;
-            var interval: number = mc.interval + mc.frames[realFrame].addDelay + ((realFrame == 0 && this.repeatedCount > 0) ? mc.repeatDelay : 0);
+            var interval: number = mc.interval + mc.frames[this._curFrame].addDelay + ((this._curFrame == 0 && this.repeatedCount > 0) ? mc.repeatDelay : 0);
             if (this._curFrameDelay < interval)
                 return;
 
-            this._curFrameDelay = 0;
-            this._curFrame++;
-            this.frameStarting = true;
-
-            if (this._curFrame > mc.frameCount - 1) {
-                this._curFrame = 0;
-                this.repeatedCount++;
-                this.reachEnding = true;
-                if (mc.swing) {
-                    this.reversed = !this.reversed;
-                    this._curFrame++;
-                }
-            }
+            this._curFrameDelay = 0;			
+			if (mc.swing)
+			{
+				if(this.reversed)
+				{
+					this._curFrame--;
+					if(this._curFrame<0)
+					{
+						this._curFrame = Math.min(1, mc.frameCount-1);
+						this.repeatedCount++;
+						this.reversed = !this.reversed;
+					}
+				}
+				else
+				{
+					this._curFrame++;
+					if (this._curFrame > mc.frameCount - 1)
+					{
+						this._curFrame = Math.max(0, mc.frameCount-2);
+						this.repeatedCount++;
+						this.reachEnding = true;
+						this.reversed = !this.reversed;
+					}
+				}				
+			}
+			else
+			{
+				this._curFrame++;
+				if (this._curFrame > mc.frameCount - 1)
+				{
+					this._curFrame = 0;
+					this.repeatedCount++;
+					this.reachEnding = true;
+				}
+			}
         }
 
         public get currentFrame(): number {

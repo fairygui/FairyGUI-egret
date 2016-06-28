@@ -398,13 +398,8 @@ module fairygui {
 
         private loadMovieClip(item: PackageItem): void {
             var xml: any = egret.XML.parse(this.getDesc(item.id + ".xml"));
-            item.pivot = new egret.Point();
-            var str: string = xml.attributes.pivot;
-            if (str) {
-                var arr: string[] = str.split(UIPackage.sep0);
-                item.pivot.x = parseInt(arr[0]);
-                item.pivot.y = parseInt(arr[1]);
-            }
+            var str: string;
+            var arr: string[];
 
             str = xml.attributes.interval;
             if (str != null)

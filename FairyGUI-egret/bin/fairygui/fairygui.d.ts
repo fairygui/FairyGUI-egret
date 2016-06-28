@@ -85,7 +85,6 @@ declare module fairygui {
 declare module fairygui {
     class PlayState {
         reachEnding: boolean;
-        frameStarting: boolean;
         reversed: boolean;
         repeatedCount: number;
         private _curFrame;
@@ -447,8 +446,6 @@ declare module fairygui {
         private _y;
         private _width;
         private _height;
-        private _pivotX;
-        private _pivotY;
         private _alpha;
         private _rotation;
         private _visible;
@@ -459,6 +456,9 @@ declare module fairygui {
         private _scaleY;
         private _skewX;
         private _skewY;
+        private _pivotX;
+        private _pivotY;
+        private _pivotAsAnchor;
         private _pivotOffsetX;
         private _pivotOffsetY;
         private _sortingOrder;
@@ -517,7 +517,8 @@ declare module fairygui {
         setSkew(xv: number, yv: number): void;
         pivotX: number;
         pivotY: number;
-        setPivot(xv: number, yv?: number): void;
+        setPivot(xv: number, yv?: number, asAnchor?: boolean): void;
+        protected internalSetPivot(xv: number, yv: number, asAnchor: boolean): void;
         private updatePivotOffset();
         private applyPivot();
         touchable: boolean;
@@ -628,7 +629,6 @@ declare module fairygui {
         scaleByTile: boolean;
         smoothing: boolean;
         texture: egret.Texture;
-        pivot: egret.Point;
         interval: number;
         repeatDelay: number;
         swing: boolean;
@@ -773,8 +773,8 @@ declare module fairygui {
 }
 declare module fairygui {
     class GComboBox extends GComponent {
+        dropdown: GComponent;
         protected _titleObject: GTextField;
-        protected _dropdownObject: GComponent;
         protected _list: GList;
         private _visibleItemCount;
         private _items;
@@ -794,6 +794,7 @@ declare module fairygui {
         value: string;
         protected setState(val: string): void;
         protected constructFromXML(xml: any): void;
+        dispose(): void;
         setup_afterAdd(xml: any): void;
         protected showDropdown(): void;
         private __popupWinClosed(evt);
@@ -1412,6 +1413,7 @@ declare module fairygui {
         protected _contentPane: GComponent;
         protected _list: GList;
         constructor(resourceURL?: string);
+        dispose(): void;
         addItem(caption: string, callback?: Function): GButton;
         addItemAt(caption: string, index: number, callback?: Function): GButton;
         addSeperator(): void;

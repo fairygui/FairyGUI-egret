@@ -222,6 +222,8 @@ module fairygui {
                     this._contentSourceWidth = this._contentItem.width;
                     this._contentSourceHeight = this._contentItem.height;
                     (<MovieClip>this._content).interval = this._contentItem.interval;
+                    (<MovieClip>this._content).swing = this._contentItem.swing;
+                    (<MovieClip>this._content).repeatDelay = this._contentItem.repeatDelay;
                     (<MovieClip>this._content).frames = this._contentItem.frames;
                     (<MovieClip>this._content).boundsRect = new egret.Rectangle(0,0,this._contentSourceWidth,this._contentSourceHeight);
                     this.updateLayout();

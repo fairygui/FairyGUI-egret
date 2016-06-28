@@ -2,8 +2,9 @@
 module fairygui {
 
     export class GComboBox extends GComponent {
+        public dropdown: GComponent;
+                
         protected _titleObject: GTextField;
-        protected _dropdownObject: GComponent;
         protected _list: GList;
 
         private _visibleItemCount: number = 0;
@@ -129,26 +130,26 @@ module fairygui {
             this._titleObject = <GTextField><any> (this.getChild("title"));
             str = xml.attributes.dropdown;
             if (str) {
-                this._dropdownObject = <GComponent><any> (UIPackage.createObjectFromURL(str));
-                if (!this._dropdownObject) {
+                this.dropdown = <GComponent><any> (UIPackage.createObjectFromURL(str));
+                if (!this.dropdown) {
                     console.error("下拉框必须为元件");
                     return;
                 }
-                this._dropdownObject.name = "this._dropdownObject";
-                this._list = this._dropdownObject.getChild("list").asList;
+                this.dropdown.name = "this.dropdown";
+                this._list = this.dropdown.getChild("list").asList;
                 if (this._list == null) {
                     console.error(this.resourceURL + ": 下拉框的弹出元件里必须包含名为list的列表");
                     return;
                 }
                 this._list.addEventListener(ItemEvent.CLICK, this.__clickItem, this);
 
-                this._list.addRelation(this._dropdownObject, RelationType.Width);
-                this._list.removeRelation(this._dropdownObject, RelationType.Height);
+                this._list.addRelation(this.dropdown, RelationType.Width);
+                this._list.removeRelation(this.dropdown, RelationType.Height);
 
-                this._dropdownObject.addRelation(this._list, RelationType.Height);
-                this._dropdownObject.removeRelation(this._list, RelationType.Width);
+                this.dropdown.addRelation(this._list, RelationType.Height);
+                this.dropdown.removeRelation(this._list, RelationType.Width);
 
-                this._dropdownObject.displayObject.addEventListener(egret.Event.REMOVED_FROM_STAGE, this.__popupWinClosed, this);
+                this.dropdown.displayObject.addEventListener(egret.Event.REMOVED_FROM_STAGE, this.__popupWinClosed, this);
             }
 
             /*not support
@@ -159,6 +160,15 @@ module fairygui {
 
             this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__mousedown, this);
         }
+        
+         public dispose(): void {
+             if(this.dropdown) {
+                 this.dropdown.dispose();
+                 this.dropdown = null;
+             }
+             
+             super.dispose();
+         }
 
         public setup_afterAdd(xml: any): void {
             super.setup_afterAdd(xml);
@@ -205,7 +215,7 @@ module fairygui {
             if (this._itemsUpdated) {
                 this._itemsUpdated = false;
  
-                this._list.removeChildren();
+                this._list.removeChildrenToPool();
                 var cnt: number = this._items.length;
                 for (var i: number = 0; i < cnt; i++) {
                     var item: GObject = this._list.addItemFromPool();
@@ -215,10 +225,10 @@ module fairygui {
                 this._list.resizeToFit(this._visibleItemCount);
             }
             this._list.selectedIndex = -1;
-            this._dropdownObject.width = this.width;
+            this.dropdown.width = this.width;
 
-            this.root.togglePopup(this._dropdownObject, this, true);
-            if (this._dropdownObject.parent)
+            this.root.togglePopup(this.dropdown, this, true);
+            if (this.dropdown.parent)
                 this.setState(GButton.DOWN);
         }
 
@@ -234,8 +244,8 @@ module fairygui {
         }
         
         private __clickItem2(index:number):void {
-            if (this._dropdownObject.parent instanceof GRoot)
-                (<GRoot><any> (this._dropdownObject.parent)).hidePopup();
+            if (this.dropdown.parent instanceof GRoot)
+                (<GRoot><any> (this.dropdown.parent)).hidePopup();
 
             this._selectedIndex = index;
             if (this._selectedIndex >= 0)
@@ -247,7 +257,7 @@ module fairygui {
 
         private __rollover(evt: egret.TouchEvent): void {
             this._over = true;
-            if (this._down || this._dropdownObject && this._dropdownObject.parent)
+            if (this._down || this.dropdown && this.dropdown.parent)
                 return;
 
             this.setState(GButton.OVER);
@@ -255,7 +265,7 @@ module fairygui {
 
         private __rollout(evt: egret.TouchEvent): void {
             this._over = false;
-            if (this._down || this._dropdownObject && this._dropdownObject.parent)
+            if (this._down || this.dropdown && this.dropdown.parent)
                 return;
 
             this.setState(GButton.UP);
@@ -265,7 +275,7 @@ module fairygui {
             this._down = true;
             GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
 
-            if (this._dropdownObject)
+            if (this.dropdown)
                 this.showDropdown();
         }
 
@@ -274,7 +284,7 @@ module fairygui {
                 this._down = false;
                 GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
 
-                if(this._dropdownObject && !this._dropdownObject.parent) {
+                if(this.dropdown && !this.dropdown.parent) {
                     if(this._over)
                         this.setState(GButton.OVER);
                     else

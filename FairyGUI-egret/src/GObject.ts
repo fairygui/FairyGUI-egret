@@ -8,8 +8,6 @@ module fairygui {
         private _y: number = 0;
         private _width: number = 0;
         private _height: number = 0;
-        private _pivotX: number = 0;
-        private _pivotY: number = 0;
         private _alpha: number = 1;
         private _rotation: number = 0;
         private _visible: boolean = true;
@@ -20,6 +18,9 @@ module fairygui {
         private _scaleY: number = 1;
         private _skewX: number = 0;
         private _skewY: number = 0;
+        private _pivotX: number = 0;
+        private _pivotY: number = 0;
+        private _pivotAsAnchor: boolean = false;
         private _pivotOffsetX: number = 0;
         private _pivotOffsetY: number = 0;
         private _sortingOrder: number = 0;
@@ -175,9 +176,14 @@ module fairygui {
 
                 this.handleSizeChanged();
                 if(this._pivotX != 0 || this._pivotY != 0) {
-                    if(!ignorePivot)
-                        this.setXY(this.x - this._pivotX * dWidth, this.y - this._pivotY * dHeight);
-                    this.updatePivotOffset();
+                    if(this._pivotAsAnchor) {
+                        if(!ignorePivot)
+                            this.setXY(this.x - this._pivotX * dWidth, this.y - this._pivotY * dHeight);
+                        this.updatePivotOffset();
+                    }
+                    else {
+                        this.applyPivot();
+                    }
                 }
 
                 if(this._gearSize.controller)
@@ -291,13 +297,22 @@ module fairygui {
             this.setPivot(this._pivotX,value);
         }
         
-        public setPivot(xv: number,yv: number = 0): void {
-            if(this._pivotX != xv || this._pivotY != yv) {
+        public setPivot(xv: number,yv: number = 0, asAnchor: boolean = false): void {
+            if(this._pivotX != xv || this._pivotY != yv || this._pivotAsAnchor!=asAnchor) {
                 this._pivotX = xv;
                 this._pivotY = yv;
+                this._pivotAsAnchor = asAnchor;
                 this.updatePivotOffset();
                 this.handleXYChanged();
             }
+        }
+        
+        protected internalSetPivot(xv: number,yv: number = 0, asAnchor: boolean):void {
+              this._pivotX = xv;
+              this._pivotY = yv;
+              this._pivotAsAnchor = asAnchor;
+              if(asAnchor)
+                this.handleXYChanged();
         }
         
         private updatePivotOffset():void {
@@ -803,8 +818,14 @@ module fairygui {
 
         protected handleXYChanged(): void {
             if(this._displayObject) {
-                this._displayObject.x = Math.floor(this._x) + this._pivotOffsetX;
-                this._displayObject.y = Math.floor(this._y + this._yOffset) + this._pivotOffsetY;
+                if(this._pivotAsAnchor) {
+                    this._displayObject.x = Math.floor(this._x-this._pivotX*this._width) + this._pivotOffsetX;
+                    this._displayObject.y = Math.floor(this._y-this._pivotY*this._height + this._yOffset) + this._pivotOffsetY;
+                }
+                else {
+                    this._displayObject.x = Math.floor(this._x) + this._pivotOffsetX;
+                    this._displayObject.y = Math.floor(this._y + this._yOffset) + this._pivotOffsetY;
+                }
             }
         }
 
@@ -869,7 +890,7 @@ module fairygui {
                 arr = str.split(",");
                 this._initWidth = parseInt(arr[0]);
                 this._initHeight = parseInt(arr[1]);
-                this.setSize(this._initWidth, this._initHeight);
+                this.setSize(this._initWidth, this._initHeight, true);
             }
             
             str = xml.attributes.scale;
@@ -907,8 +928,11 @@ module fairygui {
                     else
                         n2 = 0;
                 }
-                this.setPivot(n1, n2);
+                str = xml.attributes.anchor;
+                this.setPivot(n1, n2, str=="true");
             }
+            else
+                this.setPivot(0,0,false);
 
             str = xml.attributes.alpha;
             if (str)

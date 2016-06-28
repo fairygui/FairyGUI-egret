@@ -725,6 +725,13 @@ module fairygui {
             this._initHeight = this._sourceHeight;
             
             this.setSize(this._sourceWidth,this._sourceHeight);
+            
+            str = xml.attributes.pivot;
+            if (str) {
+                arr = str.split(",");
+                str = xml.attributes.anchor;
+                this.internalSetPivot(parseFloat(arr[0]), parseFloat(arr[1]), str=="true");
+            }
 
             str = xml.attributes.opaque;
             this.opaque = str != "false";

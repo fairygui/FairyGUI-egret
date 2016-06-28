@@ -260,7 +260,7 @@ module fairygui {
                     for(var i: number = 0;i < cnt;i++) {
                         var obj: GObject = this.getChildAt(i);
                         if((obj instanceof GImage) || (obj instanceof GLoader) 
-                            || (obj instanceof GMovieClip) || (obj instanceof GTextField))//instanceof IColorGear
+                            || (obj instanceof GMovieClip))//instanceof IColorGear
                             (<IColorGear><any>obj).color = color;
                     }
                 }
@@ -268,7 +268,7 @@ module fairygui {
                     for(var i:number = 0;i < cnt;i++) {
                         var obj:GObject = this.getChildAt(i);
                         if((obj instanceof GImage) || (obj instanceof GLoader)
-                            || (obj instanceof GMovieClip) || (obj instanceof GTextField))
+                            || (obj instanceof GMovieClip))
                             (<IColorGear><any>obj).color = 0xFFFFFF;
                     }
                 }
