@@ -3,8 +3,7 @@ module fairygui {
 
     export class GearBase {
         public static disableAllTweenEffect:boolean = false;
-        
-        protected _pageSet: PageOptionSet;
+
         protected _tween: boolean;
         protected _easeType: Function;
         protected _tweenTime: number;
@@ -15,7 +14,6 @@ module fairygui {
 
         public constructor(owner: GObject) {
             this._owner = owner;
-            this._pageSet = new PageOptionSet();
             this._easeType = egret.Ease.quadOut;
             this._tweenTime = 0.3;
             this._tweenDelay = 0;
@@ -28,15 +26,9 @@ module fairygui {
         public set controller(val: Controller) {
             if (val != this._controller) {
                 this._controller = val;
-                this._pageSet.controller = val;
-                this._pageSet.clear();
                 if(this._controller)
                     this.init();
             }
-        }
-
-        public getPageSet(): PageOptionSet {
-            return this._pageSet;
         }
 
         public get tween(): boolean {
@@ -79,17 +71,6 @@ module fairygui {
             this.init();
             
             var str: string;
-            str = xml.attributes.pages;
-            var pages: string[];
-            if (str)
-                pages = str.split(",");
-            else
-                pages = [];
-            var length1: number = pages.length;
-            for (var i1: number = 0; i1 < length1; i1++) {
-                str = pages[i1];
-                this._pageSet.addById(str);
-            }
 
             str = xml.attributes.tween;
             if (str)
@@ -106,31 +87,47 @@ module fairygui {
             str = xml.attributes.delay;
             if (str)
                 this._tweenDelay = parseFloat(str);
-
-            str = xml.attributes.values;
-            var values: string[];
-            if (str)
-                values = xml.attributes.values.split("|");
-            else
-                values = [];
-
-            for (var i: number = 0; i < values.length; i++) {
-                str = values[i];
-                if (str != "-")
-                    this.addStatus(pages[i], str);
-            }
-            str = xml.attributes.default;
-            if (str)
-                this.addStatus(null, str);
+                
+            if(this instanceof GearDisplay)
+			{
+				str = xml.attributes.pages;
+				if(str)
+				{
+					var arr:string[] = str.split(",");
+                    var len:number = arr.length;
+					for(var i:number=0;i<len;i++)
+						(<GearDisplay><any>this).pages.push(arr[i]);
+				}
+			}
+			else
+			{
+				var pages:string[];
+				var values:string[];
+				
+				str = xml.attributes.pages;				
+				if(str)
+					pages = str.split(",");
+				
+				str = xml.attributes.values;				
+				if(str)
+					values = str.split("|");
+				
+				if(pages && values)
+				{
+					for(var i:number=0;i<values.length;i++)
+					{
+						str = values[i];
+						if(str!="-")
+							this.addStatus(pages[i], str);
+					}
+				}
+				
+				str = xml.attributes.default;
+				if(str)
+					this.addStatus(null, str);
+			}    
         }
 
-        protected get connected(): boolean {
-            if (this._controller && !this._pageSet.empty)
-                return this._pageSet.containsId(this._controller.selectedPageId);
-            else
-                return false;
-        }
-        
         protected addStatus(pageId: string, value: string): void {
             
         }

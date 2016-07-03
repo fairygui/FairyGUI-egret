@@ -30,21 +30,14 @@ module fairygui {
         }
 
         public apply(): void {
-            var pt: egret.Point;
-            var ct: boolean = this.connected;
-            if (ct) {
-                pt = this._storage[this._controller.selectedPageId];
-                if (!pt)
-                    pt = this._default;
-            }
-            else
+            var pt: egret.Point = this._storage[this._controller.selectedPageId];
+            if (!pt)
                 pt = this._default;
                 
             if(this._tweener)
                 this._tweener.tick(100000000);
                 
-            if(this._tween && !UIPackage._constructing && !GearBase.disableAllTweenEffect
-                && ct && this._pageSet.containsId(this._controller.previousPageId)) {
+            if(this._tween && !UIPackage._constructing && !GearBase.disableAllTweenEffect) {
 
                 if(this._owner.x != pt.x || this._owner.y != pt.y) {
                     this._owner.internalVisible++;
@@ -80,15 +73,10 @@ module fairygui {
             if (this._owner._gearLocked)
                 return;
 
-            if (this.connected) {
-                var pt: egret.Point = this._storage[this._controller.selectedPageId];
-                if(!pt) {
-                    pt = new egret.Point();
-                    this._storage[this._controller.selectedPageId] = pt;
-                }
-            }
-            else {
-                pt = this._default;
+            var pt: egret.Point = this._storage[this._controller.selectedPageId];
+            if(!pt) {
+                pt = new egret.Point();
+                this._storage[this._controller.selectedPageId] = pt;
             }
 
             pt.x = this._owner.x;

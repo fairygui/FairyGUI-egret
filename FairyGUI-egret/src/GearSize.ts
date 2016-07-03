@@ -36,21 +36,14 @@ module fairygui {
         }
 
         public apply(): void {
-            var gv: GearSizeValue;
-            var ct: boolean = this.connected;
-            if (ct) {
-                gv = this._storage[this._controller.selectedPageId];
-                if (!gv)
-                    gv = this._default;
-            }
-            else
+            var gv: GearSizeValue = this._storage[this._controller.selectedPageId];
+            if (!gv)
                 gv = this._default;
                 
             if(this._tweener)
                 this._tweener.tick(100000000);
                 
-            if(this._tween && !UIPackage._constructing && !GearBase.disableAllTweenEffect
-                && ct && this._pageSet.containsId(this._controller.previousPageId)) {
+            if(this._tween && !UIPackage._constructing && !GearBase.disableAllTweenEffect) {
                 var a: boolean = gv.width != this._owner.width || gv.height != this._owner.height;
                 var b: boolean = gv.scaleX != this._owner.scaleX || gv.scaleY != this._owner.scaleY;
                 if(a || b) {
@@ -94,16 +87,10 @@ module fairygui {
             if (this._owner._gearLocked)
                 return;
 
-            var gv: GearSizeValue;
-            if (this.connected) {
-                gv = this._storage[this._controller.selectedPageId];
-                if(!gv) {
-                    gv = new GearSizeValue();
-                    this._storage[this._controller.selectedPageId] = gv;
-                }
-            }
-            else {
-                gv = this._default;
+            var gv: GearSizeValue = this._storage[this._controller.selectedPageId];
+            if(!gv) {
+                gv = new GearSizeValue();
+                this._storage[this._controller.selectedPageId] = gv;
             }
 
             gv.width = this._owner.width;

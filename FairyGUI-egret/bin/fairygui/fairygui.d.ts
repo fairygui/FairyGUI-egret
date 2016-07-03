@@ -338,7 +338,6 @@ declare module fairygui {
 declare module fairygui {
     class GearBase {
         static disableAllTweenEffect: boolean;
-        protected _pageSet: PageOptionSet;
         protected _tween: boolean;
         protected _easeType: Function;
         protected _tweenTime: number;
@@ -347,13 +346,11 @@ declare module fairygui {
         protected _controller: Controller;
         constructor(owner: GObject);
         controller: Controller;
-        getPageSet(): PageOptionSet;
         tween: boolean;
         tweenDelay: number;
         tweenTime: number;
         easeType: Function;
         setup(xml: any): void;
-        protected connected: boolean;
         protected addStatus(pageId: string, value: string): void;
         protected init(): void;
         apply(): void;
@@ -830,8 +827,9 @@ declare module fairygui {
 }
 declare module fairygui {
     class GearDisplay extends GearBase {
+        pages: Array<string>;
         constructor(owner: GObject);
-        protected connected: boolean;
+        protected init(): void;
         apply(): void;
     }
 }
@@ -1390,22 +1388,6 @@ declare module fairygui {
         name: string;
         clear(): void;
         id: string;
-    }
-}
-declare module fairygui {
-    class PageOptionSet {
-        private _controller;
-        private _items;
-        constructor();
-        controller: Controller;
-        add(pageIndex?: number): void;
-        remove(pageIndex?: number): void;
-        addByName(pageName: string): void;
-        removeByName(pageName: string): void;
-        clear(): void;
-        empty: boolean;
-        addById(id: string): void;
-        containsId(id: string): boolean;
     }
 }
 declare module fairygui {

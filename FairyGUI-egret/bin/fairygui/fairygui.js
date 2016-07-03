@@ -1428,7 +1428,6 @@ var fairygui;
     var GearBase = (function () {
         function GearBase(owner) {
             this._owner = owner;
-            this._pageSet = new fairygui.PageOptionSet();
             this._easeType = egret.Ease.quadOut;
             this._tweenTime = 0.3;
             this._tweenDelay = 0;
@@ -1441,16 +1440,11 @@ var fairygui;
             ,function (val) {
                 if (val != this._controller) {
                     this._controller = val;
-                    this._pageSet.controller = val;
-                    this._pageSet.clear();
                     if (this._controller)
                         this.init();
                 }
             }
         );
-        p.getPageSet = function () {
-            return this._pageSet;
-        };
         d(p, "tween"
             ,function () {
                 return this._tween;
@@ -1489,17 +1483,6 @@ var fairygui;
                 return;
             this.init();
             var str;
-            str = xml.attributes.pages;
-            var pages;
-            if (str)
-                pages = str.split(",");
-            else
-                pages = [];
-            var length1 = pages.length;
-            for (var i1 = 0; i1 < length1; i1++) {
-                str = pages[i1];
-                this._pageSet.addById(str);
-            }
             str = xml.attributes.tween;
             if (str)
                 this._tween = true;
@@ -1512,29 +1495,36 @@ var fairygui;
             str = xml.attributes.delay;
             if (str)
                 this._tweenDelay = parseFloat(str);
-            str = xml.attributes.values;
-            var values;
-            if (str)
-                values = xml.attributes.values.split("|");
-            else
-                values = [];
-            for (var i = 0; i < values.length; i++) {
-                str = values[i];
-                if (str != "-")
-                    this.addStatus(pages[i], str);
+            if (this instanceof fairygui.GearDisplay) {
+                str = xml.attributes.pages;
+                if (str) {
+                    var arr = str.split(",");
+                    var len = arr.length;
+                    for (var i = 0; i < len; i++)
+                        this.pages.push(arr[i]);
+                }
             }
-            str = xml.attributes.default;
-            if (str)
-                this.addStatus(null, str);
+            else {
+                var pages;
+                var values;
+                str = xml.attributes.pages;
+                if (str)
+                    pages = str.split(",");
+                str = xml.attributes.values;
+                if (str)
+                    values = str.split("|");
+                if (pages && values) {
+                    for (var i = 0; i < values.length; i++) {
+                        str = values[i];
+                        if (str != "-")
+                            this.addStatus(pages[i], str);
+                    }
+                }
+                str = xml.attributes.default;
+                if (str)
+                    this.addStatus(null, str);
+            }
         };
-        d(p, "connected"
-            ,function () {
-                if (this._controller && !this._pageSet.empty)
-                    return this._pageSet.containsId(this._controller.selectedPageId);
-                else
-                    return false;
-            }
-        );
         p.addStatus = function (pageId, value) {
         };
         p.init = function () {
@@ -1579,19 +1569,12 @@ var fairygui;
             }
         };
         p.apply = function () {
-            var gv;
-            var ct = this.connected;
-            if (ct) {
-                gv = this._storage[this._controller.selectedPageId];
-                if (!gv)
-                    gv = this._default;
-            }
-            else
+            var gv = this._storage[this._controller.selectedPageId];
+            if (!gv)
                 gv = this._default;
             if (this._tweener)
                 this._tweener.tick(100000000);
-            if (this._tween && !fairygui.UIPackage._constructing && !fairygui.GearBase.disableAllTweenEffect
-                && ct && this._pageSet.containsId(this._controller.previousPageId)) {
+            if (this._tween && !fairygui.UIPackage._constructing && !fairygui.GearBase.disableAllTweenEffect) {
                 var a = gv.width != this._owner.width || gv.height != this._owner.height;
                 var b = gv.scaleX != this._owner.scaleX || gv.scaleY != this._owner.scaleY;
                 if (a || b) {
@@ -1632,16 +1615,10 @@ var fairygui;
         p.updateState = function () {
             if (this._owner._gearLocked)
                 return;
-            var gv;
-            if (this.connected) {
-                gv = this._storage[this._controller.selectedPageId];
-                if (!gv) {
-                    gv = new GearSizeValue();
-                    this._storage[this._controller.selectedPageId] = gv;
-                }
-            }
-            else {
-                gv = this._default;
+            var gv = this._storage[this._controller.selectedPageId];
+            if (!gv) {
+                gv = new GearSizeValue();
+                this._storage[this._controller.selectedPageId] = gv;
             }
             gv.width = this._owner.width;
             gv.height = this._owner.height;
@@ -1704,19 +1681,12 @@ var fairygui;
             pt.y = parseInt(arr[1]);
         };
         p.apply = function () {
-            var pt;
-            var ct = this.connected;
-            if (ct) {
-                pt = this._storage[this._controller.selectedPageId];
-                if (!pt)
-                    pt = this._default;
-            }
-            else
+            var pt = this._storage[this._controller.selectedPageId];
+            if (!pt)
                 pt = this._default;
             if (this._tweener)
                 this._tweener.tick(100000000);
-            if (this._tween && !fairygui.UIPackage._constructing && !fairygui.GearBase.disableAllTweenEffect
-                && ct && this._pageSet.containsId(this._controller.previousPageId)) {
+            if (this._tween && !fairygui.UIPackage._constructing && !fairygui.GearBase.disableAllTweenEffect) {
                 if (this._owner.x != pt.x || this._owner.y != pt.y) {
                     this._owner.internalVisible++;
                     var vars = {
@@ -1749,15 +1719,10 @@ var fairygui;
         p.updateState = function () {
             if (this._owner._gearLocked)
                 return;
-            if (this.connected) {
-                var pt = this._storage[this._controller.selectedPageId];
-                if (!pt) {
-                    pt = new egret.Point();
-                    this._storage[this._controller.selectedPageId] = pt;
-                }
-            }
-            else {
-                pt = this._default;
+            var pt = this._storage[this._controller.selectedPageId];
+            if (!pt) {
+                pt = new egret.Point();
+                this._storage[this._controller.selectedPageId] = pt;
             }
             pt.x = this._owner.x;
             pt.y = this._owner.y;
@@ -5224,13 +5189,8 @@ var fairygui;
         };
         p.apply = function () {
             this._owner._gearLocked = true;
-            var gv;
-            if (this.connected) {
-                gv = this._storage[this._controller.selectedPageId];
-                if (!gv)
-                    gv = this._default;
-            }
-            else
+            var gv = this._storage[this._controller.selectedPageId];
+            if (!gv)
                 gv = this._default;
             this._owner.frame = gv.frame;
             this._owner.playing = gv.playing;
@@ -5240,16 +5200,11 @@ var fairygui;
             if (this._owner._gearLocked)
                 return;
             var mc = this._owner;
-            var gv;
-            if (this.connected) {
-                gv = this._storage[this._controller.selectedPageId];
-                if (!gv) {
-                    gv = new GearAnimationValue();
-                    this._storage[this._controller.selectedPageId] = gv;
-                }
+            var gv = this._storage[this._controller.selectedPageId];
+            if (!gv) {
+                gv = new GearAnimationValue();
+                this._storage[this._controller.selectedPageId] = gv;
             }
-            else
-                gv = this._default;
             gv.frame = mc.frame;
             gv.playing = mc.playing;
         };
@@ -5292,24 +5247,17 @@ var fairygui;
         };
         p.apply = function () {
             this._owner._gearLocked = true;
-            if (this.connected) {
-                var data = this._storage[this._controller.selectedPageId];
-                if (data != undefined)
-                    (this._owner).color = Math.floor(data);
-                else
-                    (this._owner).color = Math.floor(this._default);
-            }
+            var data = this._storage[this._controller.selectedPageId];
+            if (data != undefined)
+                (this._owner).color = Math.floor(data);
             else
-                (this._owner).color = this._default;
+                (this._owner).color = Math.floor(this._default);
             this._owner._gearLocked = false;
         };
         p.updateState = function () {
             if (this._owner._gearLocked)
                 return;
-            if (this.connected)
-                this._storage[this._controller.selectedPageId] = (this._owner).color;
-            else
-                this._default = (this._owner).color;
+            this._storage[this._controller.selectedPageId] = (this._owner).color;
         };
         return GearColor;
     }(fairygui.GearBase));
@@ -5325,16 +5273,15 @@ var fairygui;
             _super.call(this, owner);
         }
         var d = __define,c=GearDisplay,p=c.prototype;
-        d(p, "connected"
-            ,function () {
-                if (this._controller && !this._pageSet.empty)
-                    return this._pageSet.containsId(this._controller.selectedPageId);
-                else
-                    return true;
-            }
-        );
+        p.init = function () {
+            if (this.pages == null)
+                this.pages = new Array();
+            else
+                this.pages.length = 0;
+        };
         p.apply = function () {
-            if (this.connected)
+            if (this._controller && this.pages != null && this.pages.length > 0
+                && this.pages.indexOf(this._controller.selectedPageId) != -1)
                 this._owner.internalVisible++;
             else
                 this._owner.internalVisible = 0;
@@ -5371,19 +5318,12 @@ var fairygui;
             gv.grayed = arr[2] == "1" ? true : false;
         };
         p.apply = function () {
-            var gv;
-            var ct = this.connected;
-            if (ct) {
-                gv = this._storage[this._controller.selectedPageId];
-                if (!gv)
-                    gv = this._default;
-            }
-            else
+            var gv = this._storage[this._controller.selectedPageId];
+            if (!gv)
                 gv = this._default;
             if (this._tweener)
                 this._tweener.tick(100000000);
-            if (this._tween && !fairygui.UIPackage._constructing && !fairygui.GearBase.disableAllTweenEffect
-                && ct && this._pageSet.containsId(this._controller.previousPageId)) {
+            if (this._tween && !fairygui.UIPackage._constructing && !fairygui.GearBase.disableAllTweenEffect) {
                 this._owner._gearLocked = true;
                 this._owner.grayed = gv.grayed;
                 this._owner._gearLocked = false;
@@ -5426,16 +5366,10 @@ var fairygui;
         p.updateState = function () {
             if (this._owner._gearLocked)
                 return;
-            var gv;
-            if (this.connected) {
-                gv = this._storage[this._controller.selectedPageId];
-                if (!gv) {
-                    gv = new GearLookValue();
-                    this._storage[this._controller.selectedPageId] = gv;
-                }
-            }
-            else {
-                gv = this._default;
+            var gv = this._storage[this._controller.selectedPageId];
+            if (!gv) {
+                gv = new GearLookValue();
+                this._storage[this._controller.selectedPageId] = gv;
             }
             gv.alpha = this._owner.alpha;
             gv.rotation = this._owner.rotation;
@@ -9589,64 +9523,6 @@ var fairygui;
     }());
     fairygui.PageOption = PageOption;
     egret.registerClass(PageOption,'fairygui.PageOption');
-})(fairygui || (fairygui = {}));
-
-var fairygui;
-(function (fairygui) {
-    var PageOptionSet = (function () {
-        function PageOptionSet() {
-            this._items = [];
-        }
-        var d = __define,c=PageOptionSet,p=c.prototype;
-        d(p, "controller",undefined
-            ,function (val) {
-                this._controller = val;
-            }
-        );
-        p.add = function (pageIndex) {
-            if (pageIndex === void 0) { pageIndex = 0; }
-            var id = this._controller.getPageId(pageIndex);
-            var i = this._items.indexOf(id);
-            if (i == -1)
-                this._items.push(id);
-        };
-        p.remove = function (pageIndex) {
-            if (pageIndex === void 0) { pageIndex = 0; }
-            var id = this._controller.getPageId(pageIndex);
-            var i = this._items.indexOf(id);
-            if (i != -1)
-                this._items.splice(i, 1);
-        };
-        p.addByName = function (pageName) {
-            var id = this._controller.getPageIdByName(pageName);
-            var i = this._items.indexOf(id);
-            if (i != -1)
-                this._items.push(id);
-        };
-        p.removeByName = function (pageName) {
-            var id = this._controller.getPageIdByName(pageName);
-            var i = this._items.indexOf(id);
-            if (i != -1)
-                this._items.splice(i, 1);
-        };
-        p.clear = function () {
-            this._items.length = 0;
-        };
-        d(p, "empty"
-            ,function () {
-                return this._items.length == 0;
-            }
-        );
-        p.addById = function (id) {
-            this._items.push(id);
-        };
-        p.containsId = function (id) {
-            return this._items.indexOf(id) != -1;
-        };
-        return PageOptionSet;
-    }());
-    fairygui.PageOptionSet = PageOptionSet;
-    egret.registerClass(PageOptionSet,'fairygui.PageOptionSet');
 })(fairygui || (fairygui = {}));
 
 var fairygui;

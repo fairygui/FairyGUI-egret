@@ -55,7 +55,6 @@
 				"IColorGear.ts",
 				"IUISource.ts",
 				"PageOption.ts",
-				"PageOptionSet.ts",
 				"PopupMenu.ts",
 				"RelationItem.ts",
 				"Relations.ts",

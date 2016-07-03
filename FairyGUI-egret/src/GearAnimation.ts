@@ -31,13 +31,8 @@ module fairygui {
         public apply(): void {
             this._owner._gearLocked = true;
 
-            var gv: GearAnimationValue;
-            if (this.connected) {
-                gv = this._storage[this._controller.selectedPageId];
-                if (!gv)
-                    gv = this._default;
-            }
-            else
+            var gv: GearAnimationValue = this._storage[this._controller.selectedPageId];
+            if (!gv)
                 gv = this._default;
 
             (<IAnimationGear><any>this._owner).frame = gv.frame;
@@ -51,16 +46,11 @@ module fairygui {
                 return;
 
             var mc: IAnimationGear = (<IAnimationGear><any>this._owner);
-            var gv: GearAnimationValue;
-            if(this.connected) {
-                gv = this._storage[this._controller.selectedPageId];
-                if(!gv) {
-                    gv = new GearAnimationValue();
-                    this._storage[this._controller.selectedPageId] = gv;
-                }
+            var gv: GearAnimationValue = this._storage[this._controller.selectedPageId];
+            if(!gv) {
+                gv = new GearAnimationValue();
+                this._storage[this._controller.selectedPageId] = gv;
             }
-            else
-                gv = this._default;
 
             gv.frame = mc.frame;
             gv.playing = mc.playing;
