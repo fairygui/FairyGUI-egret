@@ -6493,6 +6493,11 @@ var fairygui;
             if (ani === void 0) { ani = false; }
             if (setFirst === void 0) { setFirst = false; }
             if (this._virtual) {
+                if (this._virtualListChanged != 0) {
+                    this.refreshVirtualList();
+                    fairygui.GTimers.inst.remove(this.refreshVirtualList, this);
+                    console.log("haha");
+                }
                 if (this.scrollPane != null)
                     this.scrollPane.scrollToView(this.getItemRect(index), ani, setFirst);
                 else if (this.parent != null && this.parent.scrollPane != null)

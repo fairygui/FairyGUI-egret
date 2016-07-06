@@ -7,7 +7,8 @@ module fairygui {
          */
         public itemRenderer:Function;
         public callbackThisObj:any;
-        
+        public scrollItemToViewOnClick: boolean = true;
+                
         private _layout: ListLayoutType;
         private _lineItemCount:number = 0;
         private _lineGap: number = 0;
@@ -462,7 +463,7 @@ module fairygui {
             var item: GObject = <GObject><any> (evt.currentTarget);
             this.setSelectionOnEvent(item);
             
-            if(this.scrollPane)
+            if(this.scrollPane && this.scrollItemToViewOnClick)
                 this.scrollPane.scrollToView(item,true);
 
             var ie: ItemEvent = new ItemEvent(ItemEvent.CLICK, item);
@@ -661,6 +662,11 @@ module fairygui {
         
         public scrollToView(index: number,ani: boolean = false,setFirst: boolean = false):void  {				
             if(this._virtual) {
+                if(this._virtualListChanged!=0) { 
+                    this.refreshVirtualList();
+                    GTimers.inst.remove(this.refreshVirtualList,this);
+                }
+                
                 if(this.scrollPane != null)
                     this.scrollPane.scrollToView(this.getItemRect(index),ani,setFirst);
                 else if(this.parent != null && this.parent.scrollPane != null)
