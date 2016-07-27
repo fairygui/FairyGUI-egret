@@ -2,10 +2,12 @@
 module fairygui {
 
     export class GearSize extends GearBase {
+        public tweener: egret.Tween;
+        
         private _storage: any;
         private _default: GearSizeValue;
         private _tweenValue: GearSizeValue;
-        private _tweener: egret.Tween;
+        private _tweenTarget: GearSizeValue;
 
         public constructor(owner: GObject) {
             super(owner);
@@ -38,16 +40,25 @@ module fairygui {
         public apply(): void {
             var gv: GearSizeValue = this._storage[this._controller.selectedPageId];
             if (!gv)
-                gv = this._default;
-                
-            if(this._tweener)
-                this._tweener.tick(100000000);
+                gv = this._default; 
                 
             if(this._tween && !UIPackage._constructing && !GearBase.disableAllTweenEffect) {
+                if(this.tweener!=null)	{
+					if (this._tweenTarget.width != gv.width || this._tweenTarget.height != gv.height
+						|| this._tweenTarget.scaleX != gv.scaleX || this._tweenTarget.scaleY != gv.scaleY)	{
+						this.tweener.tick(100000000);
+						this.tweener = null;
+					}
+					else
+						return;
+				}
+                
                 var a: boolean = gv.width != this._owner.width || gv.height != this._owner.height;
                 var b: boolean = gv.scaleX != this._owner.scaleX || gv.scaleY != this._owner.scaleY;
                 if(a || b) {
                     this._owner.internalVisible++;
+                    this._tweenTarget = gv;
+                    
                     var vars: any = {
                         onChange: function(): void {
                             this._owner._gearLocked = true;
@@ -65,7 +76,7 @@ module fairygui {
                     this._tweenValue.height = this._owner.height;
                     this._tweenValue.scaleX = this._owner.scaleX;
                     this._tweenValue.scaleY = this._owner.scaleY;
-                    this._tweener = egret.Tween.get(this._tweenValue,vars)
+                    this.tweener = egret.Tween.get(this._tweenValue,vars)
                         .wait(this._tweenDelay * 1000)
                         .to({ width: gv.width, height: gv.height, scaleX: gv.scaleX, scaleY: gv.scaleY },
                             this._tweenTime * 1000, this._easeType)

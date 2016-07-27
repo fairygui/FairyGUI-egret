@@ -349,8 +349,12 @@ module fairygui {
             xml = ToolSet.findChildNode(xml, "Button");
             if (xml) {
                 var str: string;
-                this.title = xml.attributes.title;
-                this.icon = xml.attributes.icon;
+                str = xml.attributes.title;
+                if (str)
+                    this.title = str;
+                str = xml.attributes.icon;
+                if (str)
+                    this.icon = str;
                 str = xml.attributes.selectedTitle;
                 if (str)
                     this.selectedTitle = str;

@@ -245,7 +245,9 @@ module fairygui {
         public addSelection(index: number, scrollItToView: boolean= false): void {
             if (this._selectionMode == ListSelectionMode.None)
                 return;
-
+                
+            this.checkVirtualList();
+            
             if (this._selectionMode == ListSelectionMode.Single)
                 this.clearSelection();
                 
@@ -300,6 +302,8 @@ module fairygui {
         }
 
         public selectAll(): void {
+            this.checkVirtualList();
+            
             var cnt: number = this._children.length;
             for (var i: number = 0; i < cnt; i++) {
                 var obj: GButton = this._children[i].asButton;
@@ -318,6 +322,8 @@ module fairygui {
         }
 
         public selectReverse(): void {
+            this.checkVirtualList();
+            
             var cnt: number = this._children.length;
             for (var i: number = 0; i < cnt; i++) {
                 var obj: GButton = this._children[i].asButton;
@@ -662,10 +668,7 @@ module fairygui {
         
         public scrollToView(index: number,ani: boolean = false,setFirst: boolean = false):void  {				
             if(this._virtual) {
-                if(this._virtualListChanged!=0) { 
-                    this.refreshVirtualList();
-                    GTimers.inst.remove(this.refreshVirtualList,this);
-                }
+                this.checkVirtualList();
                 
                 if(this.scrollPane != null)
                     this.scrollPane.scrollToView(this.getItemRect(index),ani,setFirst);
@@ -778,9 +781,18 @@ module fairygui {
             }
         }
         
-        private __parentSizeChanged(evt:egret.Event):void {
-            this.setVirtualListChangedFlag();
-        }
+        public refreshVirtualList():void
+		{
+			this.setVirtualListChangedFlag(false);
+		}
+		
+		private checkVirtualList():void
+		{
+			if(this._virtualListChanged!=0) { 
+				this._refreshVirtualList();
+				GTimers.inst.remove(this._refreshVirtualList, this);
+			}
+		}
         
         private setVirtualListChangedFlag(layoutChanged:boolean = false):void {
             if(layoutChanged)
@@ -788,10 +800,10 @@ module fairygui {
             else if(this._virtualListChanged == 0)
                 this._virtualListChanged = 1;
     
-            GTimers.inst.callLater(this.refreshVirtualList,this);
+            GTimers.inst.callLater(this._refreshVirtualList,this);
         }
         
-        private refreshVirtualList(): void {
+        private _refreshVirtualList(): void {
             if(this._virtualListChanged == 0)
                 return;
 
@@ -1277,6 +1289,9 @@ module fairygui {
                             (<GLabel><any> obj).title = <string><any> (cxml.attributes.title);
                             (<GLabel><any> obj).icon = <string><any> (cxml.attributes.icon);
                         }
+                        str = cxml.attributes.name;
+                        if(str)
+                            obj.name = str;
                     }
                 }
             }

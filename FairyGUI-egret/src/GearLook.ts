@@ -2,10 +2,12 @@
 module fairygui {
 
     export class GearLook extends GearBase {
+        public tweener: egret.Tween;
+        
         private _storage: any;
         private _default: GearLookValue;
         private _tweenValue: egret.Point;
-        private _tweener: egret.Tween;
+        private _tweenTarget: GearLookValue;
 
         public constructor(owner: GObject) {
             super(owner);
@@ -30,24 +32,31 @@ module fairygui {
             gv.grayed = arr[2] == "1" ? true : false;
         }
 
-        public apply(): void {           
-
+        public apply(): void {
             var gv: GearLookValue = this._storage[this._controller.selectedPageId];
             if(!gv)
                 gv = this._default;
-                
-            if(this._tweener)
-                this._tweener.tick(100000000);
 
             if(this._tween && !UIPackage._constructing && !GearBase.disableAllTweenEffect) {
                 this._owner._gearLocked = true;
                 this._owner.grayed = gv.grayed;
                 this._owner._gearLocked = false;
                 
+                if (this.tweener != null) {
+					if (this._tweenTarget.alpha != gv.alpha || this._tweenTarget.rotation != gv.rotation) {
+						this.tweener.tick(100000000);
+						this.tweener = null;
+					}
+					else
+						return;
+				}
+                
                 var a: boolean = gv.alpha != this._owner.alpha;
                 var b: boolean = gv.rotation != this._owner.rotation;
                 if(a || b) {
                     this._owner.internalVisible++;
+                    this._tweenTarget = gv;
+                    
                     var vars: any = {
                         onChange: function(): void {
                             this._owner._gearLocked = true;
@@ -64,7 +73,7 @@ module fairygui {
                         this._tweenValue = new egret.Point();
                     this._tweenValue.x = this._owner.alpha;
                     this._tweenValue.y = this._owner.rotation;
-                    this._tweener = egret.Tween.get(this._tweenValue,vars)
+                    this.tweener = egret.Tween.get(this._tweenValue,vars)
                         .wait(this._tweenDelay * 1000)
                         .to({ x: gv.alpha,y: gv.rotation },this._tweenTime * 1000,this._easeType)
                         .call(function(): void {

@@ -411,10 +411,11 @@ module fairygui {
             var lineBuffer: string = "";
             var lineY: number = GTextField.GUTTER_Y;
             var line: LineInfo;
-            var textWidth: number = 0, textHeight: number = 0;
             var wordWrap: boolean = !this._widthAutoSize && this._textField.multiline;
             var fontScale: number = this._bitmapFont.resizable?this._fontSize/this._bitmapFont.size:1;
-
+			this._textWidth = 0;
+			this._textHeight = 0;
+            
             var textLength: number = this._text.length;
             for (var offset: number = 0; offset < textLength; ++offset) {
                 var ch: string = this._text.charAt(offset);
@@ -437,8 +438,8 @@ module fairygui {
                     line.text = lineBuffer;
                     line.y = lineY;
                     lineY += (line.height + lineSpacing);
-                    if (line.width > textWidth)
-                        textWidth = line.width;
+                    if (line.width > this._textWidth)
+                        this._textWidth = line.width;
                     this._lines.push(line);
 
                     lineBuffer = "";
@@ -520,8 +521,8 @@ module fairygui {
                     }
                     line.y = lineY;
                     lineY += (line.height + lineSpacing);
-                    if (line.width > textWidth)
-                        textWidth = line.width;
+                    if (line.width > this._textWidth)
+                        this._textWidth = line.width;
 
                     wordChars = 0;
                     wordStart = 0;
@@ -542,38 +543,38 @@ module fairygui {
                 line.textHeight = lineTextHeight;
                 line.text = lineBuffer;
                 line.y = lineY;
-                if (line.width > textWidth)
-                    textWidth = line.width;
+                if (line.width > this._textWidth)
+                    this._textWidth = line.width;
                 this._lines.push(line);
             }
 
-            if (textWidth > 0)
-                textWidth += GTextField.GUTTER_X * 2;
+            if (this._textWidth > 0)
+                this._textWidth += GTextField.GUTTER_X * 2;
 
             var count: number = this._lines.length;
             if (count == 0) {
-                textHeight = 0;
+                this._textHeight = 0;
             }
             else {
                 line = this._lines[this._lines.length - 1];
-                textHeight = line.y + line.height + GTextField.GUTTER_Y;
+                this._textHeight = line.y + line.height + GTextField.GUTTER_Y;
             }
 
             var w: number, h: number = 0;
             if (this._widthAutoSize) {
-                if (textWidth == 0)
+                if (this._textWidth == 0)
                     w = 0;
                 else
-                    w = textWidth;
+                    w = this._textWidth;
             }
             else
                 w = this.width;
 
             if (this._heightAutoSize) {
-                if (textHeight == 0)
+                if (this._textHeight == 0)
                     h = 0;
                 else
-                    h = textHeight;
+                    h = this._textHeight;
             }
             else
                 h = this.height;

@@ -2,10 +2,12 @@
 module fairygui {
 
     export class GearXY extends GearBase {
+        public tweener: egret.Tween;
+        
         private _storage: any;
         private _default: egret.Point;
         private _tweenValue: egret.Point;
-        private _tweener: egret.Tween;
+        private _tweenTarget: egret.Point;
 
         public constructor(owner: GObject) {
             super(owner);
@@ -33,14 +35,20 @@ module fairygui {
             var pt: egret.Point = this._storage[this._controller.selectedPageId];
             if (!pt)
                 pt = this._default;
-                
-            if(this._tweener)
-                this._tweener.tick(100000000);
-                
-            if(this._tween && !UIPackage._constructing && !GearBase.disableAllTweenEffect) {
 
+            if(this._tween && !UIPackage._constructing && !GearBase.disableAllTweenEffect) {
+                if(this.tweener) {
+					if(this._tweenTarget.x!=pt.x || this._tweenTarget.y!=pt.y) {
+						this.tweener.tick(100000000);
+						this.tweener = null;
+					}
+					else
+						return;
+				}
                 if(this._owner.x != pt.x || this._owner.y != pt.y) {
                     this._owner.internalVisible++;
+                    this._tweenTarget = pt;
+                    
                     var vars: any = {
                         onChange: function(): void {
                             this._owner._gearLocked = true;
@@ -53,7 +61,7 @@ module fairygui {
                         this._tweenValue = new egret.Point();
                     this._tweenValue.x = this._owner.x;
                     this._tweenValue.y = this._owner.y;
-                    this._tweener = egret.Tween.get(this._tweenValue,vars)
+                    this.tweener = egret.Tween.get(this._tweenValue,vars)
                         .wait(this._tweenDelay * 1000)
                         .to({ x: pt.x,y: pt.y },this._tweenTime * 1000,this._easeType)
                         .call(function(): void {

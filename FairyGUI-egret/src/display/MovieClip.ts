@@ -154,8 +154,6 @@ module fairygui {
                     this.setFrame(this._frames[this._currentFrame]);
                 }
             }
-            else
-                this.setFrame(null);
         }
         
         private __playEnd():void {

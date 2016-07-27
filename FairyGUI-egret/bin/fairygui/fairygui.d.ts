@@ -359,10 +359,11 @@ declare module fairygui {
 }
 declare module fairygui {
     class GearSize extends GearBase {
+        tweener: egret.Tween;
         private _storage;
         private _default;
         private _tweenValue;
-        private _tweener;
+        private _tweenTarget;
         constructor(owner: GObject);
         protected init(): void;
         protected addStatus(pageId: string, value: string): void;
@@ -373,10 +374,11 @@ declare module fairygui {
 }
 declare module fairygui {
     class GearXY extends GearBase {
+        tweener: egret.Tween;
         private _storage;
         private _default;
         private _tweenValue;
-        private _tweener;
+        private _tweenTarget;
         constructor(owner: GObject);
         protected init(): void;
         protected addStatus(pageId: string, value: string): void;
@@ -462,6 +464,7 @@ declare module fairygui {
         private _internalVisible;
         private _focusable;
         private _tooltips;
+        private _pixelSnapping;
         private _relations;
         private _group;
         private _gearDisplay;
@@ -495,6 +498,7 @@ declare module fairygui {
         x: number;
         y: number;
         setXY(xv: number, yv: number): void;
+        pixelSnapping: boolean;
         center(restraint?: boolean): void;
         width: number;
         height: number;
@@ -779,12 +783,14 @@ declare module fairygui {
         private _itemsUpdated;
         private _selectedIndex;
         private _buttonController;
+        private _popupDownward;
         private _over;
         private _down;
         constructor();
         text: string;
         titleColor: number;
         visibleItemCount: number;
+        popupDownward: any;
         items: Array<string>;
         values: Array<string>;
         selectedIndex: number;
@@ -835,10 +841,11 @@ declare module fairygui {
 }
 declare module fairygui {
     class GearLook extends GearBase {
+        tweener: egret.Tween;
         private _storage;
         private _default;
         private _tweenValue;
-        private _tweener;
+        private _tweenTarget;
         constructor(owner: GObject);
         protected init(): void;
         protected addStatus(pageId: string, value: string): void;
@@ -923,6 +930,7 @@ declare module fairygui {
          */
         itemRenderer: Function;
         callbackThisObj: any;
+        scrollItemToViewOnClick: boolean;
         private _layout;
         private _lineItemCount;
         private _lineGap;
@@ -983,9 +991,10 @@ declare module fairygui {
         setVirtualAndLoop(): void;
         private _setVirtual(loop);
         numItems: number;
-        private __parentSizeChanged(evt);
+        refreshVirtualList(): void;
+        private checkVirtualList();
         private setVirtualListChangedFlag(layoutChanged?);
-        private refreshVirtualList();
+        private _refreshVirtualList();
         private renderItems(beginIndex, endIndex);
         private getItemRect(index);
         private __scrolled(evt);
@@ -1102,7 +1111,7 @@ declare module fairygui {
         titleType: ProgressTitleType;
         max: number;
         value: number;
-        tweenValue(value: number, duration: number): void;
+        tweenValue(value: number, duration: number): egret.Tween;
         private onUpdateTween();
         update(newValue: number): void;
         protected constructFromXML(xml: any): void;
@@ -1499,6 +1508,7 @@ declare module fairygui {
         private _pageMode;
         private _pageSizeH;
         private _pageSizeV;
+        private _inertiaDisabled;
         private _yPerc;
         private _xPerc;
         private _vScroll;
@@ -1638,6 +1648,7 @@ declare module fairygui {
         private static _packageInstById;
         private static _packageInstByName;
         private static _bitmapFonts;
+        private static _stringsSource;
         private static sep0;
         private static sep1;
         private static sep2;
@@ -1652,6 +1663,7 @@ declare module fairygui {
         static getItemURL(pkgName: string, resName: string): string;
         static getItemByURL(url: string): PackageItem;
         static getBitmapFontByURL(url: string): BitmapFont;
+        static setStringsSource(source: string): void;
         private create(resKey);
         private loadPackage();
         private decompressPackage(buf);
@@ -1665,6 +1677,7 @@ declare module fairygui {
         getItemAssetByName(resName: string): any;
         getItemAsset(item: PackageItem): any;
         private getDesc(fn);
+        private translateComponent(xml, strings);
         private createSpriteTexture(sprite);
         private createSubTexture(atlasTexture, uvRect);
         private loadMovieClip(item);

@@ -69,7 +69,7 @@ module fairygui {
             }
         }
         
-        public tweenValue(value:number, duration:number):void
+        public tweenValue(value:number, duration:number):egret.Tween
 		{
             if(this._value != value) {
                 if(this._tweener)
@@ -79,7 +79,10 @@ module fairygui {
                 this._value = value;
                 this._tweener = egret.Tween.get(this,{ onChange: this.onUpdateTween,onChangeObj: this })
                     .to({ _tweenValue: value },duration * 1000, GProgressBar.easeLinear);
+                return this._tweener;
             }
+            else
+                return null;
         }
     
         private onUpdateTween(): void {

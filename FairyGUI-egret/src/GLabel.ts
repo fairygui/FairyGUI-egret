@@ -91,9 +91,14 @@ module fairygui {
 
             xml = ToolSet.findChildNode(xml, "Label");
             if (xml) {
-                this.text = xml.attributes.title;
-                this.icon = xml.attributes.icon;
                 var str: string;
+                str = xml.attributes.title;
+                if(str)
+                    this.text = str;
+                str = xml.attributes.icon;
+                if(str)
+                    this.icon = str;
+               
                 str = xml.attributes.titleColor;
                 if (str)
                     this.titleColor = ToolSet.convertFromHtmlColor(str);
