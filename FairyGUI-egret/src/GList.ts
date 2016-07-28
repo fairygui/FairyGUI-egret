@@ -27,7 +27,7 @@ module fairygui {
         private _viewCount: number = 0; //item count in view
         private _curLineItemCount: number = 0; //item count in one line
         private _itemSize:egret.Point;
-        private _virtualListChanged: number; //1-content changed, 2-size changed
+        private _virtualListChanged: number = 0; //1-content changed, 2-size changed
         private _eventLocked: boolean;
         
         public constructor() {

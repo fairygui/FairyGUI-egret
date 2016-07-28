@@ -5970,6 +5970,7 @@ var fairygui;
             this._firstIndex = 0; //the top left index
             this._viewCount = 0; //item count in view
             this._curLineItemCount = 0; //item count in one line
+            this._virtualListChanged = 0; //1-content changed, 2-size changed
             this._trackBounds = true;
             this._pool = new fairygui.GObjectPool();
             this._layout = fairygui.ListLayoutType.SingleColumn;
