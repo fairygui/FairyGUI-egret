@@ -101,7 +101,12 @@ module fairygui {
             super.setup_beforeAdd(xml);
 
             this._promptText = xml.attributes.prompt;
-            
+            var str:string = xml.attributes.maxLength;
+            if(str != null)
+                this._textField.maxChars = parseInt(str);
+            str = xml.attributes.restrict;
+            if(str != null)
+                this._textField.restrict = str;
             this.updateVertAlign();
         }
         
