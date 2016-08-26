@@ -458,7 +458,7 @@ var fairygui;
                 var destH = Math.round(texture.$getScaleBitmapHeight());
                 var sourceWidth = texture._sourceWidth;
                 var sourceHeight = texture._sourceHeight;
-                egret.Bitmap.$drawImage(this.$renderNode, texture._bitmapData, texture._bitmapX, texture._bitmapY, bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight, destW, destH, sourceWidth, sourceHeight, null, egret.BitmapFillMode.SCALE, true);
+                egret.sys.BitmapNode.$updateTextureData(this.$renderNode, texture._bitmapData, texture._bitmapX, texture._bitmapY, bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight, destW, destH, sourceWidth, sourceHeight, null, egret.BitmapFillMode.SCALE, true);
             }
         };
         p.$measureContentBounds = function (bounds) {
@@ -3160,6 +3160,14 @@ var fairygui;
                 this._tooltips = value;
             }
         );
+        d(p, "blendMode"
+            ,function () {
+                return this._displayObject.blendMode;
+            }
+            ,function (value) {
+                this._displayObject.blendMode = value;
+            }
+        );
         d(p, "inContainer"
             ,function () {
                 return this._displayObject != null && this._displayObject.parent != null;
@@ -3522,6 +3530,12 @@ var fairygui;
         };
         p.handleGrayChanged = function () {
             if (this._displayObject) {
+                if (this._grayed) {
+                    var colorFlilter = new egret.ColorMatrixFilter(GObject.colorMatrix);
+                    this._displayObject.filters = [colorFlilter];
+                }
+                else
+                    this._displayObject.filters = null;
             }
         };
         p.constructFromResource = function (pkgItem) {
@@ -3585,6 +3599,9 @@ var fairygui;
             this.visible = xml.attributes.visible != "false";
             this.grayed = xml.attributes.grayed == "true";
             this.tooltips = xml.attributes.tooltips;
+            str = xml.attributes.blend;
+            if (str)
+                this.blendMode = str;
         };
         p.setup_afterAdd = function (xml) {
             var cxml;

@@ -194,7 +194,9 @@ module fairygui {
                 var sourceWidth: number = texture._sourceWidth;
                 var sourceHeight: number = texture._sourceHeight;
                 
-                egret.Bitmap.$drawImage(<egret.sys.BitmapNode>this.$renderNode,texture._bitmapData,
+                egret.sys.BitmapNode.$updateTextureData
+                //before 3.1.7 egret.Bitmap.$drawImage
+                (<egret.sys.BitmapNode>this.$renderNode,texture._bitmapData,
                     texture._bitmapX,texture._bitmapY,
                     bitmapWidth,bitmapHeight,
                     offsetX,offsetY,

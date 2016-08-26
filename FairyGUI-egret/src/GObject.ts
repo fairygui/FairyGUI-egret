@@ -518,6 +518,14 @@ module fairygui {
             this._tooltips = value;
         }
 
+        public get blendMode():string {
+			return this._displayObject.blendMode;
+		}
+		
+		public set blendMode(value:string)	{
+			this._displayObject.blendMode = value;
+		}
+
         public get inContainer(): boolean {
             return this._displayObject != null && this._displayObject.parent != null;
         }
@@ -877,12 +885,12 @@ module fairygui {
         ];
         protected handleGrayChanged(): void {
             if(this._displayObject) {
-                /*if(this._grayed) {
+                if(this._grayed) {
                     var colorFlilter = new egret.ColorMatrixFilter(GObject.colorMatrix);
                     this._displayObject.filters = [colorFlilter];
                 }
                 else
-                    this._displayObject.filters = null;*/
+                    this._displayObject.filters = null;
             }
         }
 
@@ -958,6 +966,10 @@ module fairygui {
             this.visible = xml.attributes.visible != "false";
             this.grayed = xml.attributes.grayed == "true";
             this.tooltips = xml.attributes.tooltips;
+
+            str = xml.attributes.blend;
+			if (str)
+				this.blendMode = str;
         }
 
         public setup_afterAdd(xml: any): void {

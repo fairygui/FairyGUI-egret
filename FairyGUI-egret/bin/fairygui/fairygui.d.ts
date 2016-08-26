@@ -537,6 +537,7 @@ declare module fairygui {
         focused: boolean;
         requestFocus(): void;
         tooltips: string;
+        blendMode: string;
         inContainer: boolean;
         onStage: boolean;
         resourceURL: string;
