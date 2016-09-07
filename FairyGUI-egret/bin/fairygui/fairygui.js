@@ -4151,11 +4151,9 @@ var fairygui;
             var rect = this._rootContainer.scrollRect;
             if (rect == null)
                 rect = new egret.Rectangle();
-            var left = this._margin.left;
-            var top = this._margin.top;
-            var w = this.width - (this._margin.left + this._margin.right);
-            var h = this.height - (this._margin.top + this._margin.bottom);
-            rect.setTo(left, top, w, h);
+            var w = this.width - this._margin.right;
+            var h = this.height - this._margin.bottom;
+            rect.setTo(0, 0, w, h);
             this._rootContainer.scrollRect = rect;
         };
         p.setupScroll = function (scrollBarMargin, scroll, scrollBarDisplay, flags, vtScrollBarRes, hzScrollBarRes) {

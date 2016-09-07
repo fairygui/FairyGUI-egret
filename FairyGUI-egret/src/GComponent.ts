@@ -455,11 +455,9 @@ module fairygui {
             if(rect == null)
                 rect = new egret.Rectangle();
 
-            var left: number = this._margin.left;
-            var top: number = this._margin.top;
-            var w: number = this.width - (this._margin.left + this._margin.right);
-            var h: number = this.height - (this._margin.top + this._margin.bottom);
-            rect.setTo(left,top,w,h);
+            var w: number = this.width - this._margin.right;
+            var h: number = this.height - this._margin.bottom;
+            rect.setTo(0,0,w,h);
             this._rootContainer.scrollRect = rect;
         }
 
