@@ -392,7 +392,7 @@ module fairygui {
         }
 
         public isChildInView(child: GObject): boolean {
-            if(this._rootContainer.mask != null) {
+            if(this._rootContainer.scrollRect != null) {
                 return child.x + child.width >= 0 && child.x <= this.width
                     && child.y + child.height >= 0 && child.y <= this.height;
             }
@@ -437,7 +437,7 @@ module fairygui {
 
         public set margin(value: Margin) {
             this._margin.copy(value);
-            if(this._rootContainer.mask) {
+            if(this._rootContainer.scrollRect != null) {
                 this._container.x = this._margin.left;
                 this._container.y = this._margin.top;
             }
@@ -450,19 +450,17 @@ module fairygui {
             this._rootContainer.hitArea.setTo(0, 0, this.width, this.height);
         }
         
-        protected updateMask() {
-            var mask: egret.Rectangle;
-            if(this._rootContainer.mask)
-                mask = <egret.Rectangle>this._rootContainer.mask;
-            else
-                mask = new egret.Rectangle();
+        protected updateScrollRect() {
+            var rect: egret.Rectangle = this._rootContainer.scrollRect;
+            if(rect == null)
+                rect = new egret.Rectangle();
 
             var left: number = this._margin.left;
             var top: number = this._margin.top;
             var w: number = this.width - (this._margin.left + this._margin.right);
             var h: number = this.height - (this._margin.top + this._margin.bottom);
-            mask.setTo(left,top,w,h);
-            this._rootContainer.mask = mask;
+            rect.setTo(left,top,w,h);
+            this._rootContainer.scrollRect = rect;
         }
 
         protected setupScroll(scrollBarMargin: Margin,
@@ -482,7 +480,7 @@ module fairygui {
             if(overflow == OverflowType.Hidden) {
                 this._container = new egret.DisplayObjectContainer();
                 this._rootContainer.addChild(this._container);
-                this.updateMask();
+                this.updateScrollRect();
                 this._container.x = this._margin.left;
                 this._container.y = this._margin.top;
             }
@@ -499,8 +497,8 @@ module fairygui {
         protected handleSizeChanged(): void {
             if(this._scrollPane)
                 this._scrollPane.setSize(this.width,this.height);
-            else if(this._rootContainer.mask != null)
-                this.updateMask();
+            else if(this._rootContainer.scrollRect != null)
+                this.updateScrollRect();
 
             if(this._opaque)
                 this.updateOpaque();

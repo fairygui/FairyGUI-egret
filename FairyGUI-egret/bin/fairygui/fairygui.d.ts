@@ -695,7 +695,7 @@ declare module fairygui {
         opaque: boolean;
         margin: Margin;
         protected updateOpaque(): void;
-        protected updateMask(): void;
+        protected updateScrollRect(): void;
         protected setupScroll(scrollBarMargin: Margin, scroll: ScrollType, scrollBarDisplay: ScrollBarDisplayType, flags: number, vtScrollBarRes: string, hzScrollBarRes: string): void;
         protected setupOverflow(overflow: OverflowType): void;
         protected handleSizeChanged(): void;

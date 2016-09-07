@@ -81,6 +81,7 @@ module fairygui {
             this._container = this._owner._rootContainer;
 
             this._maskHolder = new egret.DisplayObjectContainer();
+            this._maskHolder.scrollRect = new egret.Rectangle();
             this._container.addChild(this._maskHolder);
 
             this._maskContentHolder = this._owner._container;
@@ -552,7 +553,9 @@ module fairygui {
                 }
             }
 
-            this._maskHolder.mask = new egret.Rectangle(0,0,this._maskWidth,this._maskHeight);
+            var rect:egret.Rectangle = this._maskHolder.scrollRect;
+            rect.setTo(0,0,this._maskWidth,this._maskHeight);
+            this._maskHolder.scrollRect = rect;
                 
             this._xOverlap = Math.max(0, this._contentWidth - this._maskWidth);
             this._yOverlap = Math.max(0, this._contentHeight - this._maskHeight);

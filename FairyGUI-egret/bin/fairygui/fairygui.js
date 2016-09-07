@@ -4091,7 +4091,7 @@ var fairygui;
             return null;
         };
         p.isChildInView = function (child) {
-            if (this._rootContainer.mask != null) {
+            if (this._rootContainer.scrollRect != null) {
                 return child.x + child.width >= 0 && child.x <= this.width
                     && child.y + child.height >= 0 && child.y <= this.height;
             }
@@ -4135,7 +4135,7 @@ var fairygui;
             }
             ,function (value) {
                 this._margin.copy(value);
-                if (this._rootContainer.mask) {
+                if (this._rootContainer.scrollRect != null) {
                     this._container.x = this._margin.left;
                     this._container.y = this._margin.top;
                 }
@@ -4147,18 +4147,16 @@ var fairygui;
                 this._rootContainer.hitArea = new egret.Rectangle();
             this._rootContainer.hitArea.setTo(0, 0, this.width, this.height);
         };
-        p.updateMask = function () {
-            var mask;
-            if (this._rootContainer.mask)
-                mask = this._rootContainer.mask;
-            else
-                mask = new egret.Rectangle();
+        p.updateScrollRect = function () {
+            var rect = this._rootContainer.scrollRect;
+            if (rect == null)
+                rect = new egret.Rectangle();
             var left = this._margin.left;
             var top = this._margin.top;
             var w = this.width - (this._margin.left + this._margin.right);
             var h = this.height - (this._margin.top + this._margin.bottom);
-            mask.setTo(left, top, w, h);
-            this._rootContainer.mask = mask;
+            rect.setTo(left, top, w, h);
+            this._rootContainer.scrollRect = rect;
         };
         p.setupScroll = function (scrollBarMargin, scroll, scrollBarDisplay, flags, vtScrollBarRes, hzScrollBarRes) {
             this._container = new egret.DisplayObjectContainer();
@@ -4170,7 +4168,7 @@ var fairygui;
             if (overflow == fairygui.OverflowType.Hidden) {
                 this._container = new egret.DisplayObjectContainer();
                 this._rootContainer.addChild(this._container);
-                this.updateMask();
+                this.updateScrollRect();
                 this._container.x = this._margin.left;
                 this._container.y = this._margin.top;
             }
@@ -4185,8 +4183,8 @@ var fairygui;
         p.handleSizeChanged = function () {
             if (this._scrollPane)
                 this._scrollPane.setSize(this.width, this.height);
-            else if (this._rootContainer.mask != null)
-                this.updateMask();
+            else if (this._rootContainer.scrollRect != null)
+                this.updateScrollRect();
             if (this._opaque)
                 this.updateOpaque();
         };
@@ -10452,6 +10450,7 @@ var fairygui;
             this._owner = owner;
             this._container = this._owner._rootContainer;
             this._maskHolder = new egret.DisplayObjectContainer();
+            this._maskHolder.scrollRect = new egret.Rectangle();
             this._container.addChild(this._maskHolder);
             this._maskContentHolder = this._owner._container;
             this._maskContentHolder.x = 0;
@@ -10906,7 +10905,9 @@ var fairygui;
                         this._hzScrollBar.displayPerc = Math.min(1, this._maskWidth / this._contentWidth);
                 }
             }
-            this._maskHolder.mask = new egret.Rectangle(0, 0, this._maskWidth, this._maskHeight);
+            var rect = this._maskHolder.scrollRect;
+            rect.setTo(0, 0, this._maskWidth, this._maskHeight);
+            this._maskHolder.scrollRect = rect;
             this._xOverlap = Math.max(0, this._contentWidth - this._maskWidth);
             this._yOverlap = Math.max(0, this._contentHeight - this._maskHeight);
             switch (this._scrollType) {
