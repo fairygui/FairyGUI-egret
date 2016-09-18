@@ -855,6 +855,9 @@ module fairygui {
         }
 
         private __touchMove(evt: egret.TouchEvent): void {
+            if(this._owner.displayObject.stage==null)
+                return;
+
             var sensitivity: number = UIConfig.touchScrollSensitivity;
                 
             var diff: number;
@@ -960,9 +963,12 @@ module fairygui {
         }
 
         private __touchEnd(evt: egret.TouchEvent): void {
-            this._owner.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_MOVE,this.__touchMove,this);
-            this._owner.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_END,this.__touchEnd,this);
-            this._owner.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_TAP,this.__touchTap,this);
+            evt.currentTarget.removeEventListener(egret.TouchEvent.TOUCH_MOVE,this.__touchMove,this);
+            evt.currentTarget.removeEventListener(egret.TouchEvent.TOUCH_END,this.__touchEnd,this);
+            evt.currentTarget.removeEventListener(egret.TouchEvent.TOUCH_TAP,this.__touchTap,this);
+
+            if(this._owner.displayObject.stage==null)
+                return;
             
             if (!this._touchEffect) {
                 this._isMouseMoved = false;
