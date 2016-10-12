@@ -13,13 +13,10 @@ module fairygui {
         protected _letterSpacing: number = 0;                
         protected _text: string;
         protected _ubbEnabled: boolean;
-        protected _displayAsPassword: boolean;
         
         protected _autoSize: AutoSizeType;
         protected _widthAutoSize: boolean;
         protected _heightAutoSize: boolean;
-        
-        protected _gearColor: GearColor;
 
         protected _updatingSize: boolean;
         protected _sizeDirty: boolean;
@@ -47,8 +44,6 @@ module fairygui {
             this._autoSize = AutoSizeType.Both;
             this._widthAutoSize = true;
             this._heightAutoSize = true;
-
-            this._gearColor = new GearColor(this);
 
             this._bitmapPool = new Array<egret.Bitmap>();
         }
@@ -83,7 +78,8 @@ module fairygui {
             this._text = value;
             if(this._text == null)
                 this._text = "";
-            
+            this.updateGear(6);
+
             if(this.parent && this.parent._underConstruct)
                 this.renderNow();
             else
@@ -133,8 +129,7 @@ module fairygui {
         public set color(value: number) {
             if (this._color != value) {
                 this._color = value;
-                if (this._gearColor.controller)
-                    this._gearColor.updateState();
+               this.updateGear(4);
                 this.updateTextFormat();
             }
         }
@@ -260,18 +255,6 @@ module fairygui {
         public get autoSize(): AutoSizeType {
             return this._autoSize;
         }
-
-        public get displayAsPassword(): boolean {
-            return this._displayAsPassword;
-        }
-
-        public set displayAsPassword(val: boolean) {
-            if(this._displayAsPassword != val) {
-                this._displayAsPassword = val;
-                this._textField.displayAsPassword = this._displayAsPassword;
-                this.render();
-            }
-        }
         
         public get textWidth(): number {
             if(this._requireRender)
@@ -282,17 +265,6 @@ module fairygui {
         public ensureSizeCorrect(): void {
             if (this._sizeDirty && this._requireRender)
                 this.renderNow();
-        }
-
-        public get gearColor(): GearColor {
-            return this._gearColor;
-        }
-
-        public handleControllerChanged(c: Controller): void {
-            super.handleControllerChanged(c);
-
-            if(this._gearColor.controller == c)
-                this._gearColor.apply();
         }
 
         protected updateTextFormat(): void {
@@ -672,9 +644,6 @@ module fairygui {
 
             var str: string;
             
-            this._displayAsPassword = xml.attributes.password == "true";
-            this._textField.displayAsPassword = this._displayAsPassword;
-            
             str = xml.attributes.font;
             if (str)
                 this._font = str;
@@ -738,18 +707,6 @@ module fairygui {
             if(str != null && str.length > 0)
                 this.text = str;
             this._sizeDirty = false;
-            
-            var col: any = xml.children;
-            if (col) {
-                var length1: number = col.length;
-                for (var i1: number = 0; i1 < length1; i1++) {
-                    var cxml: any = col[i1];
-                    if (cxml.name == "gearColor") {
-                        this._gearColor.setup(cxml);
-                        break;
-                    }
-                }
-            }
         }
     }
 

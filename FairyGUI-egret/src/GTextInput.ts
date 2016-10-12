@@ -4,6 +4,7 @@ module fairygui {
 	export class GTextInput extends GTextField{
         private _changed: boolean;
         private _promptText: string;
+        private _password: boolean;
 
 		public constructor(){
 			super();
@@ -49,6 +50,26 @@ module fairygui {
         public get promptText(): string {
             return this._promptText;
         }
+
+        public set restrict(value:string) {
+			this._textField.restrict = value;
+		}
+		
+		public get restrict():string {
+			return this._textField.restrict;
+		}
+
+        public get password(): boolean {
+            return this._password;
+        }
+
+        public set password(val: boolean) {
+            if(this._password != val) {
+                this._password = val;
+                this._textField.displayAsPassword = this._password;
+                this.render();
+            }
+        }
 		
         public set verticalAlign(value: VertAlignType) {
             if(this._verticalAlign != value) {
@@ -78,7 +99,7 @@ module fairygui {
                 this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(this._promptText));
             }
             else {
-                this._textField.displayAsPassword = this._displayAsPassword;
+                this._textField.displayAsPassword = this._password;
                 if(this._ubbEnabled)
                     this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(ToolSet.encodeHTML(this._text)));
                 else
@@ -107,6 +128,9 @@ module fairygui {
             str = xml.attributes.restrict;
             if(str != null)
                 this._textField.restrict = str;
+            str = xml.attributes.password;
+            if(str=="true")
+                this.password = true;
             this.updateVertAlign();
         }
         
@@ -125,7 +149,7 @@ module fairygui {
 		
         private __focusIn(evt: egret.Event): void {
             if(!this._text && this._promptText) {
-                this._textField.displayAsPassword = this._displayAsPassword;
+                this._textField.displayAsPassword = this._password;
                 this._textField.text = "";
             }
         }

@@ -1280,15 +1280,13 @@ module fairygui {
 
                     var obj: GObject = this.getFromPool(url);
                     if(obj != null) {
-                        this.addChild(obj);                    
-                        if (obj instanceof GButton) {
-                            (<GButton><any> obj).title = <string><any> (cxml.attributes.title);
-                            (<GButton><any> obj).icon = <string><any> (cxml.attributes.icon);
-                        }
-                        else if (obj instanceof GLabel) {
-                            (<GLabel><any> obj).title = <string><any> (cxml.attributes.title);
-                            (<GLabel><any> obj).icon = <string><any> (cxml.attributes.icon);
-                        }
+                        this.addChild(obj);
+                        str = cxml.attributes.title;
+                        if(str)
+                            obj.text = str;
+                       str = cxml.attributes.icon;
+                        if(str)
+                            obj.icon = str;
                         str = cxml.attributes.name;
                         if(str)
                             obj.name = str;

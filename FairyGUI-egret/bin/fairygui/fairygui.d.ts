@@ -351,6 +351,7 @@ declare module fairygui {
         tweenTime: number;
         easeType: Function;
         setup(xml: any): void;
+        updateFromRelations(dx: number, dy: number): void;
         protected addStatus(pageId: string, value: string): void;
         protected init(): void;
         apply(): void;
@@ -467,10 +468,7 @@ declare module fairygui {
         private _pixelSnapping;
         private _relations;
         private _group;
-        private _gearDisplay;
-        private _gearXY;
-        private _gearSize;
-        private _gearLook;
+        private _gears;
         private _displayObject;
         private _dragBounds;
         _parent: GComponent;
@@ -542,7 +540,9 @@ declare module fairygui {
         onStage: boolean;
         resourceURL: string;
         group: GGroup;
-        gearDisplay: GearDisplay;
+        getGear(index: number): GearBase;
+        protected updateGear(index: number): void;
+        updateGearFromRelations(index: number, dx: number, dy: number): void;
         gearXY: GearXY;
         gearSize: GearSize;
         gearLook: GearLook;
@@ -571,6 +571,7 @@ declare module fairygui {
         asMovieClip: GMovieClip;
         static cast(obj: egret.DisplayObject): GObject;
         text: string;
+        icon: string;
         dispose(): void;
         addClickListener(listener: Function, thisObj: any): void;
         removeClickListener(listener: Function, thisObj: any): void;
@@ -599,6 +600,7 @@ declare module fairygui {
         protected handleGrayChanged(): void;
         constructFromResource(pkgItem: PackageItem): void;
         setup_beforeAdd(xml: any): void;
+        private static GearXMLKeys;
         setup_afterAdd(xml: any): void;
         private static sDragging;
         private static sGlobalDragStart;
@@ -855,6 +857,28 @@ declare module fairygui {
     }
 }
 declare module fairygui {
+    class GearText extends GearBase {
+        private _storage;
+        private _default;
+        constructor(owner: GObject);
+        protected init(): void;
+        protected addStatus(pageId: string, value: string): void;
+        apply(): void;
+        updateState(): void;
+    }
+}
+declare module fairygui {
+    class GearIcon extends GearBase {
+        private _storage;
+        private _default;
+        constructor(owner: GObject);
+        protected init(): void;
+        protected addStatus(pageId: string, value: string): void;
+        apply(): void;
+        updateState(): void;
+    }
+}
+declare module fairygui {
     class GGraph extends GObject {
         private _graphics;
         private _type;
@@ -894,20 +918,16 @@ declare module fairygui {
         private _content;
         private _color;
         private _flip;
-        private _gearColor;
         constructor();
         color: number;
         private applyColor();
         flip: FlipType;
-        gearColor: GearColor;
-        handleControllerChanged(c: Controller): void;
         protected createDisplayObject(): void;
         dispose(): void;
         constructFromResource(pkgItem: PackageItem): void;
         protected handleXYChanged(): void;
         protected handleSizeChanged(): void;
         setup_beforeAdd(xml: any): void;
-        setup_afterAdd(xml: any): void;
     }
 }
 declare module fairygui {
@@ -1041,6 +1061,7 @@ declare module fairygui {
         protected createDisplayObject(): void;
         dispose(): void;
         url: string;
+        icon: string;
         align: AlignType;
         verticalAlign: VertAlignType;
         fill: FillType;
@@ -1062,18 +1083,12 @@ declare module fairygui {
         private clearErrorState();
         private updateLayout();
         private clearContent();
-        gearAnimation: GearAnimation;
-        gearColor: GearColor;
-        handleControllerChanged(c: Controller): void;
         protected handleSizeChanged(): void;
         setup_beforeAdd(xml: any): void;
-        setup_afterAdd(xml: any): void;
     }
 }
 declare module fairygui {
     class GMovieClip extends GObject implements IAnimationGear, IColorGear {
-        private _gearAnimation;
-        private _gearColor;
         private _movieClip;
         constructor();
         color: number;
@@ -1081,12 +1096,8 @@ declare module fairygui {
         playing: boolean;
         frame: number;
         setPlaySettings(start?: number, end?: number, times?: number, endAt?: number, endCallback?: Function, callbackObj?: any): void;
-        gearAnimation: GearAnimation;
-        gearColor: GearColor;
-        handleControllerChanged(c: Controller): void;
         constructFromResource(pkgItem: PackageItem): void;
         setup_beforeAdd(xml: any): void;
-        setup_afterAdd(xml: any): void;
     }
 }
 declare module fairygui {
@@ -1134,11 +1145,9 @@ declare module fairygui {
         protected _letterSpacing: number;
         protected _text: string;
         protected _ubbEnabled: boolean;
-        protected _displayAsPassword: boolean;
         protected _autoSize: AutoSizeType;
         protected _widthAutoSize: boolean;
         protected _heightAutoSize: boolean;
-        protected _gearColor: GearColor;
         protected _updatingSize: boolean;
         protected _sizeDirty: boolean;
         protected _textWidth: number;
@@ -1170,11 +1179,8 @@ declare module fairygui {
         strokeColor: number;
         ubbEnabled: boolean;
         autoSize: AutoSizeType;
-        displayAsPassword: boolean;
         textWidth: number;
         ensureSizeCorrect(): void;
-        gearColor: GearColor;
-        handleControllerChanged(c: Controller): void;
         protected updateTextFormat(): void;
         protected render(): void;
         private __render();
@@ -1353,11 +1359,14 @@ declare module fairygui {
     class GTextInput extends GTextField {
         private _changed;
         private _promptText;
+        private _password;
         constructor();
         dispose(): void;
         editable: boolean;
         maxLength: number;
         promptText: string;
+        restrict: string;
+        password: boolean;
         verticalAlign: VertAlignType;
         private updateVertAlign();
         protected updateTextFieldText(): void;
@@ -1440,6 +1449,7 @@ declare module fairygui {
         owner: GObject;
         target: GObject;
         add(relationType: number, usePercent: boolean): void;
+        internalAdd(relationType: number, usePercent: boolean): void;
         remove(relationType?: number): void;
         copyFrom(source: RelationItem): void;
         dispose(): void;
@@ -1454,7 +1464,6 @@ declare module fairygui {
         private __targetSizeWillChange(evt);
     }
     class RelationDef {
-        affectBySelfSizeChanged: boolean;
         percent: boolean;
         type: number;
         constructor();
@@ -1536,6 +1545,8 @@ declare module fairygui {
         private _hzScrollBar;
         private _vtScrollBar;
         static SCROLL: string;
+        static PULL_DOWN_RELEASE: string;
+        static PULL_UP_RELEASE: string;
         private static sHelperRect;
         constructor(owner: GComponent, scrollType: number, scrollBarMargin: Margin, scrollBarDisplay: number, flags: number, vtScrollBarRes: string, hzScrollBarRes: string);
         owner: GComponent;

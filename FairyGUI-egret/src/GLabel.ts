@@ -10,21 +10,14 @@ module fairygui {
         }
 
         public get icon(): string {
-            if(this._iconObject instanceof GLoader)
-                return (<GLoader>this._iconObject).url;
-            else if(this._iconObject instanceof GLabel)
-                return (<GLabel>this._iconObject).icon;
-            else if(this._iconObject instanceof GButton)
-                return (<GButton>this._iconObject).icon;
+            if(this._iconObject!=null)
+                return this._iconObject.icon;
         }
 
         public set icon(value: string) {
-            if(this._iconObject instanceof GLoader)
-                (<GLoader>this._iconObject).url = value;
-            else if(this._iconObject instanceof GLabel)
-                (<GLabel>this._iconObject).icon = value;
-            else if(this._iconObject instanceof GButton)
-                (<GButton>this._iconObject).icon = value;
+            if(this._iconObject!=null)
+                this._iconObject.icon = value;
+            this.updateGear(7);
         }
 
         public get title(): string {
@@ -37,6 +30,7 @@ module fairygui {
         public set title(value: string) {
             if (this._titleObject)
                 this._titleObject.text = value;
+            this.updateGear(6);
         }
 
         public get text(): string {
@@ -105,9 +99,18 @@ module fairygui {
                     
                 if(this._titleObject instanceof GTextInput)
                 {
-                    str = xml.attributes.promptText;
+                    str = xml.attributes.prompt;
                     if(str)
                         (<GTextInput><any>this._titleObject).promptText = str;
+                    str = xml.attributes.maxLength;
+					if(str)
+						(<GTextInput><any>this._titleObject).maxLength = parseInt(str);
+					str = xml.attributes.restrict;
+					if(str)
+						(<GTextInput><any>this._titleObject).restrict = str;
+					str = xml.attributes.password;
+					if(str)
+						(<GTextInput><any>this._titleObject).password = str=="true";
                 }
             }
         }

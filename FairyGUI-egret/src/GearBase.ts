@@ -115,17 +115,16 @@ module fairygui {
 				if(pages && values)
 				{
 					for(var i:number=0;i<values.length;i++)
-					{
-						str = values[i];
-						if(str!="-")
-							this.addStatus(pages[i], str);
-					}
+						this.addStatus(pages[i], values[i]);
 				}
 				
 				str = xml.attributes.default;
 				if(str)
 					this.addStatus(null, str);
 			}    
+        }
+
+        public updateFromRelations(dx: number, dy: number): void {
         }
 
         protected addStatus(pageId: string, value: string): void {

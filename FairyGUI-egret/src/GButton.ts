@@ -52,12 +52,9 @@ module fairygui {
         public set icon(value: string) {
             this._icon = value;
             value = (this._selected && this._selectedIcon) ? this._selectedIcon : this._icon;
-            if(this._iconObject instanceof GLoader)
-                (<GLoader>this._iconObject).url = value;
-            else if(this._iconObject instanceof GLabel)
-                (<GLabel>this._iconObject).icon = value;
-            else if(this._iconObject instanceof GButton)
-                (<GButton>this._iconObject).icon = value;       
+            if(this._iconObject!=null)
+                this._iconObject.icon = value;
+            this.updateGear(7);
         }
 
         public get selectedIcon(): string {
@@ -67,12 +64,8 @@ module fairygui {
         public set selectedIcon(value: string) {
             this._selectedIcon = value;
             value = (this._selected && this._selectedIcon) ? this._selectedIcon : this._icon;
-            if(this._iconObject instanceof GLoader)
-                (<GLoader>this._iconObject).url = value;
-            else if(this._iconObject instanceof GLabel)
-                (<GLabel>this._iconObject).icon = value;
-            else if(this._iconObject instanceof GButton)
-                (<GButton>this._iconObject).icon = value;
+           if(this._iconObject!=null)
+                this._iconObject.icon = value;
         }
 
         public get title(): string {
@@ -83,6 +76,7 @@ module fairygui {
             this._title = value;
             if (this._titleObject)
                 this._titleObject.text = (this._selected && this._selectedTitle) ? this._selectedTitle : this._title;
+            this.updateGear(6);
         }
 
         public get text(): string {
@@ -161,12 +155,8 @@ module fairygui {
                     this._titleObject.text = this._selected ? this._selectedTitle : this._title;
                 if(this._selectedIcon) {
                     var str: string = this._selected ? this._selectedIcon : this._icon;
-                    if(this._iconObject instanceof GLoader)
-                        (<GLoader>this._iconObject).url = str;
-                    else if(this._iconObject instanceof GLabel)
-                        (<GLabel>this._iconObject).icon = str;
-                    else if(this._iconObject instanceof GButton)
-                        (<GButton>this._iconObject).icon = str;
+                    if(this._iconObject!=null)
+                        this._iconObject.icon = str;
                 }
                 if(this._relatedController
                     && this._parent

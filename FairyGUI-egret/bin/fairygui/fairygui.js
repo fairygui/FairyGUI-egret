@@ -1512,16 +1512,15 @@ var fairygui;
                 if (str)
                     values = str.split("|");
                 if (pages && values) {
-                    for (var i = 0; i < values.length; i++) {
-                        str = values[i];
-                        if (str != "-")
-                            this.addStatus(pages[i], str);
-                    }
+                    for (var i = 0; i < values.length; i++)
+                        this.addStatus(pages[i], values[i]);
                 }
                 str = xml.attributes.default;
                 if (str)
                     this.addStatus(null, str);
             }
+        };
+        p.updateFromRelations = function (dx, dy) {
         };
         p.addStatus = function (pageId, value) {
         };
@@ -1551,6 +1550,8 @@ var fairygui;
             this._storage = {};
         };
         p.addStatus = function (pageId, value) {
+            if (value == "-")
+                return;
             var arr = value.split(",");
             var gv;
             if (pageId == null)
@@ -1619,7 +1620,7 @@ var fairygui;
             }
         };
         p.updateState = function () {
-            if (this._owner._gearLocked)
+            if (this._controller == null || this._owner._gearLocked || this._owner._underConstruct)
                 return;
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv) {
@@ -1632,6 +1633,8 @@ var fairygui;
             gv.scaleY = this._owner.scaleY;
         };
         p.updateFromRelations = function (dx, dy) {
+            if (this._controller == null || this._storage == null)
+                return;
             for (var key in this._storage) {
                 var gv = this._storage[key];
                 gv.width += dx;
@@ -1675,6 +1678,8 @@ var fairygui;
             this._storage = {};
         };
         p.addStatus = function (pageId, value) {
+            if (value == "-")
+                return;
             var arr = value.split(",");
             var pt;
             if (pageId == null)
@@ -1730,7 +1735,7 @@ var fairygui;
             }
         };
         p.updateState = function () {
-            if (this._owner._gearLocked)
+            if (this._controller == null || this._owner._gearLocked || this._owner._underConstruct)
                 return;
             var pt = this._storage[this._controller.selectedPageId];
             if (!pt) {
@@ -1741,6 +1746,8 @@ var fairygui;
             pt.y = this._owner.y;
         };
         p.updateFromRelations = function (dx, dy) {
+            if (this._controller == null || this._storage == null)
+                return;
             for (var key in this._storage) {
                 var pt = this._storage[key];
                 pt.x += dx;
@@ -2723,10 +2730,7 @@ var fairygui;
             this._name = "";
             this.createDisplayObject();
             this._relations = new fairygui.Relations(this);
-            this._gearDisplay = new fairygui.GearDisplay(this);
-            this._gearXY = new fairygui.GearXY(this);
-            this._gearSize = new fairygui.GearSize(this);
-            this._gearLook = new fairygui.GearLook(this);
+            this._gears = [];
         }
         var d = __define,c=GObject,p=c.prototype;
         d(p, "id"
@@ -2767,8 +2771,7 @@ var fairygui;
                 this.handleXYChanged();
                 if (this instanceof fairygui.GGroup)
                     this.moveChildren(dx, dy);
-                if (this._gearXY.controller)
-                    this._gearXY.updateState();
+                this.updateGear(1);
                 if (this._parent && !(this._parent instanceof fairygui.GList)) {
                     this._parent.setBoundsChangedFlag();
                     this.dispatchEventWith(GObject.XY_CHANGED);
@@ -2845,8 +2848,7 @@ var fairygui;
                         this.applyPivot();
                     }
                 }
-                if (this._gearSize.controller)
-                    this._gearSize.updateState();
+                this.updateGear(2);
                 if (this._parent) {
                     this._relations.onOwnerSizeChanged(dWidth, dHeight);
                     this._parent.setBoundsChangedFlag();
@@ -2908,8 +2910,7 @@ var fairygui;
                 this._scaleY = sy;
                 this.handleScaleChanged();
                 this.applyPivot();
-                if (this._gearSize.controller)
-                    this._gearSize.updateState();
+                this.updateGear(2);
             }
         };
         d(p, "skewX"
@@ -3028,6 +3029,7 @@ var fairygui;
                 if (this._grayed != value) {
                     this._grayed = value;
                     this.handleGrayChanged();
+                    this.updateGear(3);
                 }
             }
         );
@@ -3050,8 +3052,7 @@ var fairygui;
                     if (this._displayObject)
                         this._displayObject.rotation = this.normalizeRotation;
                     this.applyPivot();
-                    if (this._gearLook.controller)
-                        this._gearLook.updateState();
+                    this.updateGear(3);
                 }
             }
         );
@@ -3079,8 +3080,7 @@ var fairygui;
         p.updateAlpha = function () {
             if (this._displayObject)
                 this._displayObject.alpha = this._alpha;
-            if (this._gearLook.controller)
-                this._gearLook.updateState();
+            this.updateGear(3);
         };
         d(p, "visible"
             ,function () {
@@ -3194,24 +3194,62 @@ var fairygui;
                 this._group = value;
             }
         );
-        d(p, "gearDisplay"
-            ,function () {
-                return this._gearDisplay;
+        p.getGear = function (index) {
+            var gear = this._gears[index];
+            if (gear == null) {
+                switch (index) {
+                    case 0:
+                        gear = new fairygui.GearDisplay(this);
+                        break;
+                    case 1:
+                        gear = new fairygui.GearXY(this);
+                        break;
+                    case 2:
+                        gear = new fairygui.GearSize(this);
+                        break;
+                    case 3:
+                        gear = new fairygui.GearLook(this);
+                        break;
+                    case 4:
+                        gear = new fairygui.GearColor(this);
+                        break;
+                    case 5:
+                        gear = new fairygui.GearAnimation(this);
+                        break;
+                    case 6:
+                        gear = new fairygui.GearText(this);
+                        break;
+                    case 7:
+                        gear = new fairygui.GearIcon(this);
+                        break;
+                    default:
+                        throw new Error("FairyGUI: invalid gear index!");
+                }
+                this._gears[index] = gear;
             }
-        );
+            return gear;
+        };
+        p.updateGear = function (index) {
+            if (this._gears[index] != null)
+                this._gears[index].updateState();
+        };
+        p.updateGearFromRelations = function (index, dx, dy) {
+            if (this._gears[index] != null)
+                this._gears[index].updateFromRelations(dx, dy);
+        };
         d(p, "gearXY"
             ,function () {
-                return this._gearXY;
+                return this.getGear(1);
             }
         );
         d(p, "gearSize"
             ,function () {
-                return this._gearSize;
+                return this.getGear(2);
             }
         );
         d(p, "gearLook"
             ,function () {
-                return this._gearLook;
+                return this.getGear(3);
             }
         );
         d(p, "relations"
@@ -3345,6 +3383,13 @@ var fairygui;
             ,function (value) {
             }
         );
+        d(p, "icon"
+            ,function () {
+                return null;
+            }
+            ,function (value) {
+            }
+        );
         p.dispose = function () {
             this.removeFromParent();
             this._relations.dispose();
@@ -3462,14 +3507,11 @@ var fairygui;
             return resultRect;
         };
         p.handleControllerChanged = function (c) {
-            if (this._gearDisplay.controller == c)
-                this._gearDisplay.apply();
-            if (this._gearXY.controller == c)
-                this._gearXY.apply();
-            if (this._gearSize.controller == c)
-                this._gearSize.apply();
-            if (this._gearLook.controller == c)
-                this._gearLook.apply();
+            for (var i = 0; i < 8; i++) {
+                var gear = this._gears[i];
+                if (gear != null && gear.controller == c)
+                    gear.apply();
+            }
         };
         p.createDisplayObject = function () {
         };
@@ -3613,18 +3655,9 @@ var fairygui;
                 var length1 = col.length;
                 for (var i1 = 0; i1 < length1; i1++) {
                     var cxml = col[i1];
-                    if (cxml.name == "gearDisplay") {
-                        this._gearDisplay.setup(cxml);
-                    }
-                    else if (cxml.name == "gearXY") {
-                        this._gearXY.setup(cxml);
-                    }
-                    else if (cxml.name == "gearSize") {
-                        this._gearSize.setup(cxml);
-                    }
-                    else if (cxml.name == "gearLook") {
-                        this._gearLook.setup(cxml);
-                    }
+                    var index = GObject.GearXMLKeys[cxml.name];
+                    if (index != undefined)
+                        this.getGear(index).setup(cxml);
                 }
             }
         };
@@ -3730,6 +3763,16 @@ var fairygui;
             0.3, 0.6, 0, 0, 0,
             0, 0, 0, 1, 0
         ];
+        GObject.GearXMLKeys = {
+            "gearDisplay": 0,
+            "gearXY": 1,
+            "gearSize": 2,
+            "gearLook": 3,
+            "gearColor": 4,
+            "gearAni": 5,
+            "gearText": 6,
+            "gearIcon": 7
+        };
         GObject.sGlobalDragStart = new egret.Point();
         GObject.sGlobalRect = new egret.Rectangle();
         GObject.sHelperPoint = new egret.Point();
@@ -4573,12 +4616,9 @@ var fairygui;
             ,function (value) {
                 this._icon = value;
                 value = (this._selected && this._selectedIcon) ? this._selectedIcon : this._icon;
-                if (this._iconObject instanceof fairygui.GLoader)
-                    this._iconObject.url = value;
-                else if (this._iconObject instanceof fairygui.GLabel)
+                if (this._iconObject != null)
                     this._iconObject.icon = value;
-                else if (this._iconObject instanceof GButton)
-                    this._iconObject.icon = value;
+                this.updateGear(7);
             }
         );
         d(p, "selectedIcon"
@@ -4588,11 +4628,7 @@ var fairygui;
             ,function (value) {
                 this._selectedIcon = value;
                 value = (this._selected && this._selectedIcon) ? this._selectedIcon : this._icon;
-                if (this._iconObject instanceof fairygui.GLoader)
-                    this._iconObject.url = value;
-                else if (this._iconObject instanceof fairygui.GLabel)
-                    this._iconObject.icon = value;
-                else if (this._iconObject instanceof GButton)
+                if (this._iconObject != null)
                     this._iconObject.icon = value;
             }
         );
@@ -4604,6 +4640,7 @@ var fairygui;
                 this._title = value;
                 if (this._titleObject)
                     this._titleObject.text = (this._selected && this._selectedTitle) ? this._selectedTitle : this._title;
+                this.updateGear(6);
             }
         );
         d(p, "text"
@@ -4685,11 +4722,7 @@ var fairygui;
                         this._titleObject.text = this._selected ? this._selectedTitle : this._title;
                     if (this._selectedIcon) {
                         var str = this._selected ? this._selectedIcon : this._icon;
-                        if (this._iconObject instanceof fairygui.GLoader)
-                            this._iconObject.url = str;
-                        else if (this._iconObject instanceof fairygui.GLabel)
-                            this._iconObject.icon = str;
-                        else if (this._iconObject instanceof GButton)
+                        if (this._iconObject != null)
                             this._iconObject.icon = str;
                     }
                     if (this._relatedController
@@ -4982,6 +5015,7 @@ var fairygui;
             ,function (value) {
                 if (this._titleObject)
                     this._titleObject.text = value;
+                this.updateGear(6);
             }
         );
         d(p, "titleColor"
@@ -5238,6 +5272,8 @@ var fairygui;
             this._storage = {};
         };
         p.addStatus = function (pageId, value) {
+            if (value == "-")
+                return;
             var gv;
             if (pageId == null)
                 gv = this._default;
@@ -5259,7 +5295,7 @@ var fairygui;
             this._owner._gearLocked = false;
         };
         p.updateState = function () {
-            if (this._owner._gearLocked)
+            if (this._controller == null || this._owner._gearLocked || this._owner._underConstruct)
                 return;
             var mc = this._owner;
             var gv = this._storage[this._controller.selectedPageId];
@@ -5301,6 +5337,8 @@ var fairygui;
             this._storage = {};
         };
         p.addStatus = function (pageId, value) {
+            if (value == "-")
+                return;
             var col = fairygui.ToolSet.convertFromHtmlColor(value);
             if (pageId == null)
                 this._default = col;
@@ -5317,7 +5355,7 @@ var fairygui;
             this._owner._gearLocked = false;
         };
         p.updateState = function () {
-            if (this._owner._gearLocked)
+            if (this._controller == null || this._owner._gearLocked || this._owner._underConstruct)
                 return;
             this._storage[this._controller.selectedPageId] = (this._owner).color;
         };
@@ -5367,6 +5405,8 @@ var fairygui;
             this._storage = {};
         };
         p.addStatus = function (pageId, value) {
+            if (value == "-")
+                return;
             var arr = value.split(",");
             var gv;
             if (pageId == null)
@@ -5433,7 +5473,7 @@ var fairygui;
             }
         };
         p.updateState = function () {
-            if (this._owner._gearLocked)
+            if (this._controller == null || this._owner._gearLocked || this._owner._underConstruct)
                 return;
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv) {
@@ -5461,6 +5501,82 @@ var fairygui;
         return GearLookValue;
     }());
     egret.registerClass(GearLookValue,'GearLookValue');
+})(fairygui || (fairygui = {}));
+
+var fairygui;
+(function (fairygui) {
+    var GearText = (function (_super) {
+        __extends(GearText, _super);
+        function GearText(owner) {
+            _super.call(this, owner);
+        }
+        var d = __define,c=GearText,p=c.prototype;
+        p.init = function () {
+            this._default = this._owner.text;
+            this._storage = {};
+        };
+        p.addStatus = function (pageId, value) {
+            if (pageId == null)
+                this._default = value;
+            else
+                this._storage[pageId] = value;
+        };
+        p.apply = function () {
+            this._owner._gearLocked = true;
+            var data = this._storage[this._controller.selectedPageId];
+            if (data != undefined)
+                this._owner.text = data;
+            else
+                this._owner.text = this._default;
+            this._owner._gearLocked = false;
+        };
+        p.updateState = function () {
+            if (this._controller == null || this._owner._gearLocked || this._owner._underConstruct)
+                return;
+            this._storage[this._controller.selectedPageId] = this._owner.text;
+        };
+        return GearText;
+    }(fairygui.GearBase));
+    fairygui.GearText = GearText;
+    egret.registerClass(GearText,'fairygui.GearText');
+})(fairygui || (fairygui = {}));
+
+var fairygui;
+(function (fairygui) {
+    var GearIcon = (function (_super) {
+        __extends(GearIcon, _super);
+        function GearIcon(owner) {
+            _super.call(this, owner);
+        }
+        var d = __define,c=GearIcon,p=c.prototype;
+        p.init = function () {
+            this._default = this._owner.icon;
+            this._storage = {};
+        };
+        p.addStatus = function (pageId, value) {
+            if (pageId == null)
+                this._default = value;
+            else
+                this._storage[pageId] = value;
+        };
+        p.apply = function () {
+            this._owner._gearLocked = true;
+            var data = this._storage[this._controller.selectedPageId];
+            if (data != undefined)
+                this._owner.icon = data;
+            else
+                this._owner.icon = this._default;
+            this._owner._gearLocked = false;
+        };
+        p.updateState = function () {
+            if (this._controller == null || this._owner._gearLocked || this._owner._underConstruct)
+                return;
+            this._storage[this._controller.selectedPageId] = this._owner.icon;
+        };
+        return GearIcon;
+    }(fairygui.GearBase));
+    fairygui.GearIcon = GearIcon;
+    egret.registerClass(GearIcon,'fairygui.GearIcon');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -5743,7 +5859,6 @@ var fairygui;
         function GImage() {
             _super.call(this);
             this._color = 0xFFFFFF;
-            this._gearColor = new fairygui.GearColor(this);
         }
         var d = __define,c=GImage,p=c.prototype;
         d(p, "color"
@@ -5753,8 +5868,7 @@ var fairygui;
             ,function (value) {
                 if (this._color != value) {
                     this._color = value;
-                    if (this._gearColor.controller != null)
-                        this._gearColor.updateState();
+                    this.updateGear(4);
                     this.applyColor();
                 }
             }
@@ -5784,16 +5898,6 @@ var fairygui;
                 }
             }
         );
-        d(p, "gearColor"
-            ,function () {
-                return this._gearColor;
-            }
-        );
-        p.handleControllerChanged = function (c) {
-            _super.prototype.handleControllerChanged.call(this, c);
-            if (this._gearColor.controller == c)
-                this._gearColor.apply();
-        };
         p.createDisplayObject = function () {
             this._content = new egret.Bitmap();
             this._content["$owner"] = this;
@@ -5838,20 +5942,6 @@ var fairygui;
             if (str)
                 this.flip = fairygui.parseFlipType(str);
         };
-        p.setup_afterAdd = function (xml) {
-            _super.prototype.setup_afterAdd.call(this, xml);
-            var col = xml.children;
-            if (col) {
-                var length1 = col.length;
-                for (var i1 = 0; i1 < length1; i1++) {
-                    var cxml = col[i1];
-                    if (cxml.name == "gearColor") {
-                        this._gearColor.setup(cxml);
-                        break;
-                    }
-                }
-            }
-        };
         return GImage;
     }(fairygui.GObject));
     fairygui.GImage = GImage;
@@ -5868,20 +5958,13 @@ var fairygui;
         var d = __define,c=GLabel,p=c.prototype;
         d(p, "icon"
             ,function () {
-                if (this._iconObject instanceof fairygui.GLoader)
-                    return this._iconObject.url;
-                else if (this._iconObject instanceof GLabel)
-                    return this._iconObject.icon;
-                else if (this._iconObject instanceof fairygui.GButton)
+                if (this._iconObject != null)
                     return this._iconObject.icon;
             }
             ,function (value) {
-                if (this._iconObject instanceof fairygui.GLoader)
-                    this._iconObject.url = value;
-                else if (this._iconObject instanceof GLabel)
+                if (this._iconObject != null)
                     this._iconObject.icon = value;
-                else if (this._iconObject instanceof fairygui.GButton)
-                    this._iconObject.icon = value;
+                this.updateGear(7);
             }
         );
         d(p, "title"
@@ -5894,6 +5977,7 @@ var fairygui;
             ,function (value) {
                 if (this._titleObject)
                     this._titleObject.text = value;
+                this.updateGear(6);
             }
         );
         d(p, "text"
@@ -5956,9 +6040,18 @@ var fairygui;
                 if (str)
                     this.titleColor = fairygui.ToolSet.convertFromHtmlColor(str);
                 if (this._titleObject instanceof fairygui.GTextInput) {
-                    str = xml.attributes.promptText;
+                    str = xml.attributes.prompt;
                     if (str)
                         this._titleObject.promptText = str;
+                    str = xml.attributes.maxLength;
+                    if (str)
+                        this._titleObject.maxLength = parseInt(str);
+                    str = xml.attributes.restrict;
+                    if (str)
+                        this._titleObject.restrict = str;
+                    str = xml.attributes.password;
+                    if (str)
+                        this._titleObject.password = str == "true";
                 }
             }
         };
@@ -7105,14 +7198,12 @@ var fairygui;
                     var obj = this.getFromPool(url);
                     if (obj != null) {
                         this.addChild(obj);
-                        if (obj instanceof fairygui.GButton) {
-                            obj.title = (cxml.attributes.title);
-                            obj.icon = (cxml.attributes.icon);
-                        }
-                        else if (obj instanceof fairygui.GLabel) {
-                            obj.title = (cxml.attributes.title);
-                            obj.icon = (cxml.attributes.icon);
-                        }
+                        str = cxml.attributes.title;
+                        if (str)
+                            obj.text = str;
+                        str = cxml.attributes.icon;
+                        if (str)
+                            obj.icon = str;
                         str = cxml.attributes.name;
                         if (str)
                             obj.name = str;
@@ -7223,6 +7314,15 @@ var fairygui;
                     return;
                 this._url = value;
                 this.loadContent();
+                this.updateGear(7);
+            }
+        );
+        d(p, "icon"
+            ,function () {
+                return this._url;
+            }
+            ,function (value) {
+                this.url = value;
             }
         );
         d(p, "align"
@@ -7278,8 +7378,7 @@ var fairygui;
                     this._playing = value;
                     if (this._content instanceof fairygui.MovieClip)
                         this._content.playing = value;
-                    if (this._gearAnimation.controller != null)
-                        this._gearAnimation.updateState();
+                    this.updateGear(5);
                 }
             }
         );
@@ -7292,8 +7391,7 @@ var fairygui;
                     this._frame = value;
                     if (this._content instanceof fairygui.MovieClip)
                         this._content.currentFrame = value;
-                    if (this._gearAnimation.controller != null)
-                        this._gearAnimation.updateState();
+                    this.updateGear(5);
                 }
             }
         );
@@ -7304,8 +7402,7 @@ var fairygui;
             ,function (value) {
                 if (this._color != value) {
                     this._color = value;
-                    if (this._gearColor.controller != null)
-                        this._gearColor.updateState();
+                    this.updateGear(4);
                     this.applyColor();
                 }
             }
@@ -7501,23 +7598,6 @@ var fairygui;
             }
             this._contentItem = null;
         };
-        d(p, "gearAnimation"
-            ,function () {
-                return this._gearAnimation;
-            }
-        );
-        d(p, "gearColor"
-            ,function () {
-                return this._gearColor;
-            }
-        );
-        p.handleControllerChanged = function (c) {
-            _super.prototype.handleControllerChanged.call(this, c);
-            if (this._gearAnimation.controller == c)
-                this._gearAnimation.apply();
-            if (this._gearColor.controller == c)
-                this._gearColor.apply();
-        };
         p.handleSizeChanged = function () {
             if (!this._updatingLayout)
                 this.updateLayout();
@@ -7548,24 +7628,6 @@ var fairygui;
             if (this._url)
                 this.loadContent();
         };
-        p.setup_afterAdd = function (xml) {
-            _super.prototype.setup_afterAdd.call(this, xml);
-            var col = xml.children;
-            if (col) {
-                var length1 = col.length;
-                for (var i1 = 0; i1 < length1; i1++) {
-                    var cxml = col[i1];
-                    if (cxml.name == "gearAni") {
-                        this._gearAnimation.setup(cxml);
-                        break;
-                    }
-                    else if (cxml.name == "gearColor") {
-                        this._gearColor.setup(cxml);
-                        break;
-                    }
-                }
-            }
-        };
         GLoader._errorSignPool = new fairygui.GObjectPool();
         return GLoader;
     }(fairygui.GObject));
@@ -7580,8 +7642,6 @@ var fairygui;
         function GMovieClip() {
             _super.call(this);
             this._sizeImplType = 1;
-            this._gearAnimation = new fairygui.GearAnimation(this);
-            this._gearColor = new fairygui.GearColor(this);
         }
         var d = __define,c=GMovieClip,p=c.prototype;
         d(p, "color"
@@ -7604,8 +7664,7 @@ var fairygui;
             ,function (value) {
                 if (this._movieClip.playing != value) {
                     this._movieClip.playing = value;
-                    if (this._gearAnimation.controller)
-                        this._gearAnimation.updateState();
+                    this.updateGear(5);
                 }
             }
         );
@@ -7616,8 +7675,7 @@ var fairygui;
             ,function (value) {
                 if (this._movieClip.currentFrame != value) {
                     this._movieClip.currentFrame = value;
-                    if (this._gearAnimation.controller)
-                        this._gearAnimation.updateState();
+                    this.updateGear(5);
                 }
             }
         );
@@ -7630,23 +7688,6 @@ var fairygui;
             if (endCallback === void 0) { endCallback = null; }
             if (callbackObj === void 0) { callbackObj = null; }
             this._movieClip.setPlaySettings(start, end, times, endAt, endCallback, callbackObj);
-        };
-        d(p, "gearAnimation"
-            ,function () {
-                return this._gearAnimation;
-            }
-        );
-        d(p, "gearColor"
-            ,function () {
-                return this._gearColor;
-            }
-        );
-        p.handleControllerChanged = function (c) {
-            _super.prototype.handleControllerChanged.call(this, c);
-            if (this._gearAnimation.controller == c)
-                this._gearAnimation.apply();
-            if (this._gearColor.controller == c)
-                this._gearColor.apply();
         };
         p.constructFromResource = function (pkgItem) {
             this._packageItem = pkgItem;
@@ -7673,24 +7714,6 @@ var fairygui;
             str = xml.attributes.color;
             if (str)
                 this.color = fairygui.ToolSet.convertFromHtmlColor(str);
-        };
-        p.setup_afterAdd = function (xml) {
-            _super.prototype.setup_afterAdd.call(this, xml);
-            var col = xml.children;
-            if (col) {
-                var length1 = col.length;
-                for (var i1 = 0; i1 < length1; i1++) {
-                    var cxml = col[i1];
-                    if (cxml.name == "gearAni") {
-                        this._gearAnimation.setup(cxml);
-                        break;
-                    }
-                    else if (cxml.name == "gearColor") {
-                        this._gearColor.setup(cxml);
-                        break;
-                    }
-                }
-            }
         };
         return GMovieClip;
     }(fairygui.GObject));
@@ -7883,7 +7906,6 @@ var fairygui;
             this._autoSize = fairygui.AutoSizeType.Both;
             this._widthAutoSize = true;
             this._heightAutoSize = true;
-            this._gearColor = new fairygui.GearColor(this);
             this._bitmapPool = new Array();
         }
         var d = __define,c=GTextField,p=c.prototype;
@@ -7916,6 +7938,7 @@ var fairygui;
                 this._text = value;
                 if (this._text == null)
                     this._text = "";
+                this.updateGear(6);
                 if (this.parent && this.parent._underConstruct)
                     this.renderNow();
                 else
@@ -7959,8 +7982,7 @@ var fairygui;
             ,function (value) {
                 if (this._color != value) {
                     this._color = value;
-                    if (this._gearColor.controller)
-                        this._gearColor.updateState();
+                    this.updateGear(4);
                     this.updateTextFormat();
                 }
             }
@@ -8087,18 +8109,6 @@ var fairygui;
                 }
             }
         );
-        d(p, "displayAsPassword"
-            ,function () {
-                return this._displayAsPassword;
-            }
-            ,function (val) {
-                if (this._displayAsPassword != val) {
-                    this._displayAsPassword = val;
-                    this._textField.displayAsPassword = this._displayAsPassword;
-                    this.render();
-                }
-            }
-        );
         d(p, "textWidth"
             ,function () {
                 if (this._requireRender)
@@ -8109,16 +8119,6 @@ var fairygui;
         p.ensureSizeCorrect = function () {
             if (this._sizeDirty && this._requireRender)
                 this.renderNow();
-        };
-        d(p, "gearColor"
-            ,function () {
-                return this._gearColor;
-            }
-        );
-        p.handleControllerChanged = function (c) {
-            _super.prototype.handleControllerChanged.call(this, c);
-            if (this._gearColor.controller == c)
-                this._gearColor.apply();
         };
         p.updateTextFormat = function () {
             this._textField.size = this._fontSize;
@@ -8452,8 +8452,6 @@ var fairygui;
         p.setup_beforeAdd = function (xml) {
             _super.prototype.setup_beforeAdd.call(this, xml);
             var str;
-            this._displayAsPassword = xml.attributes.password == "true";
-            this._textField.displayAsPassword = this._displayAsPassword;
             str = xml.attributes.font;
             if (str)
                 this._font = str;
@@ -8505,17 +8503,6 @@ var fairygui;
             if (str != null && str.length > 0)
                 this.text = str;
             this._sizeDirty = false;
-            var col = xml.children;
-            if (col) {
-                var length1 = col.length;
-                for (var i1 = 0; i1 < length1; i1++) {
-                    var cxml = col[i1];
-                    if (cxml.name == "gearColor") {
-                        this._gearColor.setup(cxml);
-                        break;
-                    }
-                }
-            }
         };
         GTextField.GUTTER_X = 2;
         GTextField.GUTTER_Y = 2;
@@ -8582,6 +8569,7 @@ var fairygui;
                     this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(this._text));
                 else
                     this._textField.textFlow = (new egret.HtmlTextParser).parser(this._text);
+                this.updateGear(6);
                 this.render();
             }
         );
@@ -9487,6 +9475,26 @@ var fairygui;
                 this.updateTextFieldText();
             }
         );
+        d(p, "restrict"
+            ,function () {
+                return this._textField.restrict;
+            }
+            ,function (value) {
+                this._textField.restrict = value;
+            }
+        );
+        d(p, "password"
+            ,function () {
+                return this._password;
+            }
+            ,function (val) {
+                if (this._password != val) {
+                    this._password = val;
+                    this._textField.displayAsPassword = this._password;
+                    this.render();
+                }
+            }
+        );
         d(p, "verticalAlign",undefined
             ,function (value) {
                 if (this._verticalAlign != value) {
@@ -9514,7 +9522,7 @@ var fairygui;
                 this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(this._promptText));
             }
             else {
-                this._textField.displayAsPassword = this._displayAsPassword;
+                this._textField.displayAsPassword = this._password;
                 if (this._ubbEnabled)
                     this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(fairygui.ToolSet.encodeHTML(this._text)));
                 else
@@ -9539,6 +9547,9 @@ var fairygui;
             str = xml.attributes.restrict;
             if (str != null)
                 this._textField.restrict = str;
+            str = xml.attributes.password;
+            if (str == "true")
+                this.password = true;
             this.updateVertAlign();
         };
         p.setup_afterAdd = function (xml) {
@@ -9553,7 +9564,7 @@ var fairygui;
         };
         p.__focusIn = function (evt) {
             if (!this._text && this._promptText) {
-                this._textField.displayAsPassword = this._displayAsPassword;
+                this._textField.displayAsPassword = this._password;
                 this._textField.text = "";
             }
         };
@@ -9829,12 +9840,23 @@ var fairygui;
                 if (def.type == relationType)
                     return;
             }
+            this.internalAdd(relationType, usePercent);
+        };
+        p.internalAdd = function (relationType, usePercent) {
+            if (relationType == fairygui.RelationType.Size) {
+                this.internalAdd(fairygui.RelationType.Width, usePercent);
+                this.internalAdd(fairygui.RelationType.Height, usePercent);
+                return;
+            }
             var info = new RelationDef();
-            info.affectBySelfSizeChanged = relationType >= fairygui.RelationType.Center_Center && relationType <= fairygui.RelationType.Right_Right
-                || relationType >= fairygui.RelationType.Middle_Middle && relationType <= fairygui.RelationType.Bottom_Bottom;
             info.percent = usePercent;
             info.type = relationType;
             this._defs.push(info);
+            //当使用中线关联时，因为需要除以2，很容易因为奇数宽度/高度造成小数点坐标；当使用百分比时，也会造成小数坐标；
+            //所以设置了这类关联的对象，自动启用pixelSnapping
+            if (usePercent || relationType == fairygui.RelationType.Left_Center || relationType == fairygui.RelationType.Center_Center || relationType == fairygui.RelationType.Right_Center
+                || relationType == fairygui.RelationType.Top_Middle || relationType == fairygui.RelationType.Middle_Middle || relationType == fairygui.RelationType.Bottom_Middle)
+                this._owner.pixelSnapping = true;
         };
         p.remove = function (relationType) {
             if (relationType === void 0) { relationType = 0; }
@@ -9879,32 +9901,29 @@ var fairygui;
             var length = this._defs.length;
             for (var i = 0; i < length; i++) {
                 var info = this._defs[i];
-                if (info.affectBySelfSizeChanged) {
-                    switch (info.type) {
-                        case fairygui.RelationType.Center_Center:
-                        case fairygui.RelationType.Right_Center:
-                            this._owner.x -= dWidth / 2;
-                            break;
-                        case fairygui.RelationType.Right_Left:
-                        case fairygui.RelationType.Right_Right:
-                            this._owner.x -= dWidth;
-                            break;
-                        case fairygui.RelationType.Middle_Middle:
-                        case fairygui.RelationType.Bottom_Middle:
-                            this._owner.y -= dHeight / 2;
-                            break;
-                        case fairygui.RelationType.Bottom_Top:
-                        case fairygui.RelationType.Bottom_Bottom:
-                            this._owner.y -= dHeight;
-                            break;
-                    }
+                switch (info.type) {
+                    case fairygui.RelationType.Center_Center:
+                    case fairygui.RelationType.Right_Center:
+                        this._owner.x -= dWidth / 2;
+                        break;
+                    case fairygui.RelationType.Right_Left:
+                    case fairygui.RelationType.Right_Right:
+                        this._owner.x -= dWidth;
+                        break;
+                    case fairygui.RelationType.Middle_Middle:
+                    case fairygui.RelationType.Bottom_Middle:
+                        this._owner.y -= dHeight / 2;
+                        break;
+                    case fairygui.RelationType.Bottom_Top:
+                    case fairygui.RelationType.Bottom_Bottom:
+                        this._owner.y -= dHeight;
+                        break;
                 }
             }
             if (ox != this._owner.x || oy != this._owner.y) {
                 ox = this._owner.x - ox;
                 oy = this._owner.y - oy;
-                if (this._owner.gearXY.controller != null)
-                    this._owner.gearXY.updateFromRelations(ox, oy);
+                this._owner.updateGearFromRelations(1, ox, oy);
                 if (this._owner.parent != null) {
                     var len = this._owner.parent._transitions.length;
                     if (len > 0) {
@@ -10163,8 +10182,7 @@ var fairygui;
             if (ox != this._owner.x || oy != this._owner.y) {
                 ox = this._owner.x - ox;
                 oy = this._owner.y - oy;
-                if (this._owner.gearXY.controller != null)
-                    this._owner.gearXY.updateFromRelations(ox, oy);
+                this._owner.updateGearFromRelations(1, ox, oy);
                 if (this._owner.parent != null) {
                     var len = this._owner.parent._transitions.length;
                     if (len > 0) {
@@ -10194,8 +10212,7 @@ var fairygui;
             if (ox != this._owner.x || oy != this._owner.y) {
                 ox = this._owner.x - ox;
                 oy = this._owner.y - oy;
-                if (this._owner.gearXY.controller != null)
-                    this._owner.gearXY.updateFromRelations(ox, oy);
+                this._owner.updateGearFromRelations(1, ox, oy);
                 if (this._owner.parent != null) {
                     var len = this._owner.parent._transitions.length;
                     if (len > 0) {
@@ -10208,8 +10225,7 @@ var fairygui;
             if (ow != this._owner._rawWidth || oh != this._owner._rawHeight) {
                 ow = this._owner._rawWidth - ow;
                 oh = this._owner._rawHeight - oh;
-                if (this._owner.gearSize.controller != null)
-                    this._owner.gearSize.updateFromRelations(ow, oh);
+                this._owner.updateGearFromRelations(2, ow, oh);
             }
             this._owner.relations.handling = null;
         };
@@ -10225,7 +10241,6 @@ var fairygui;
         }
         var d = __define,c=RelationDef,p=c.prototype;
         p.copyFrom = function (source) {
-            this.affectBySelfSizeChanged = source.affectBySelfSizeChanged;
             this.percent = source.percent;
             this.type = source.type;
         };
@@ -11276,7 +11291,12 @@ var fairygui;
             var endY = 0;
             var page = 0;
             var delta = 0;
+            var fireRelease = 0;
             if (this._scrollType == fairygui.ScrollType.Both || this._scrollType == fairygui.ScrollType.Horizontal) {
+                if (this._maskContentHolder.x > fairygui.UIConfig.touchDragSensitivity)
+                    fireRelease = 1;
+                else if (this._maskContentHolder.x < Math.min(this._maskWidth - this._contentWidth) - fairygui.UIConfig.touchDragSensitivity)
+                    fireRelease = 2;
                 change1.x = ThrowTween.calculateChange(xVelocity, duration);
                 change2.x = 0;
                 endX = this._maskContentHolder.x + change1.x;
@@ -11302,6 +11322,10 @@ var fairygui;
             else
                 change1.x = change2.x = 0;
             if (this._scrollType == fairygui.ScrollType.Both || this._scrollType == fairygui.ScrollType.Vertical) {
+                if (this._maskContentHolder.y > fairygui.UIConfig.touchDragSensitivity)
+                    fireRelease = 1;
+                else if (this._maskContentHolder.y < Math.min(this._maskHeight - this._contentHeight, 0) - fairygui.UIConfig.touchDragSensitivity)
+                    fireRelease = 2;
                 change1.y = ThrowTween.calculateChange(yVelocity, duration);
                 change2.y = 0;
                 endY = this._maskContentHolder.y + change1.y;
@@ -11362,6 +11386,10 @@ var fairygui;
             egret.Tween.get(this._throwTween, { onChange: this.__tweenUpdate2, onChangeObj: this })
                 .to({ value: 1 }, duration * 1000, ScrollPane._easeTypeFunc)
                 .call(this.__tweenComplete2, this);
+            if (fireRelease == 1)
+                this.dispatchEventWith(ScrollPane.PULL_DOWN_RELEASE);
+            else if (fireRelease == 2)
+                this.dispatchEventWith(ScrollPane.PULL_UP_RELEASE);
         };
         p.__touchTap = function (evt) {
             this._isMouseMoved = false;
@@ -11425,6 +11453,8 @@ var fairygui;
             this.dispatchEventWith(ScrollPane.SCROLL, false);
         };
         ScrollPane.SCROLL = "__scroll";
+        ScrollPane.PULL_DOWN_RELEASE = "pullDownRelease";
+        ScrollPane.PULL_UP_RELEASE = "pullUpRelease";
         ScrollPane.sHelperRect = new egret.Rectangle();
         ScrollPane.sHelperPoint = new egret.Point();
         return ScrollPane;

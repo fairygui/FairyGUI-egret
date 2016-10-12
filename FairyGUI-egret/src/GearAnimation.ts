@@ -16,6 +16,9 @@ module fairygui {
         }
 
         protected addStatus(pageId: string, value: string): void {
+            if(value=="-")
+                return;
+
             var gv: GearAnimationValue;
             if (pageId == null)
                 gv = this._default;
@@ -42,7 +45,7 @@ module fairygui {
         }
 
         public updateState(): void {
-            if (this._owner._gearLocked)
+            if (this._controller==null || this._owner._gearLocked || this._owner._underConstruct)
                 return;
 
             var mc: IAnimationGear = (<IAnimationGear><any>this._owner);

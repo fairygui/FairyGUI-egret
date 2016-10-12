@@ -68,6 +68,15 @@ module fairygui {
 
             this._url = value;
             this.loadContent();
+            this.updateGear(7);
+        }
+
+        public get icon(): string {
+            return this._url;
+        }
+
+        public set icon(value: string) {
+            this.url = value;
         }
 
         public get align(): AlignType {
@@ -123,9 +132,7 @@ module fairygui {
                 this._playing = value;
                 if (this._content instanceof MovieClip)
                     (<MovieClip>this._content).playing = value;
-
-                if (this._gearAnimation.controller != null)
-                    this._gearAnimation.updateState();
+                this.updateGear(5);
             }
         }
 
@@ -138,9 +145,7 @@ module fairygui {
                 this._frame = value;
                 if (this._content instanceof MovieClip)
                     (<MovieClip>this._content).currentFrame = value;
-
-                if (this._gearAnimation.controller != null)
-                    this._gearAnimation.updateState();
+                this.updateGear(5);
             }
         }
         
@@ -151,9 +156,7 @@ module fairygui {
         public set color(value: number) {
             if(this._color != value) {
                 this._color = value;
-                if(this._gearColor.controller != null)
-                    this._gearColor.updateState();
-
+               this.updateGear(4);
                 this.applyColor();
             }
         }
@@ -371,22 +374,6 @@ module fairygui {
 
             this._contentItem = null;
         }
-        
-        public get gearAnimation(): GearAnimation {
-            return this._gearAnimation;
-        }
-                            
-        public get gearColor(): GearColor {
-            return this._gearColor;
-        }
-        
-        public handleControllerChanged(c: Controller): void {
-            super.handleControllerChanged(c);
-            if(this._gearAnimation.controller == c)
-                this._gearAnimation.apply();
-            if(this._gearColor.controller == c)
-                this._gearColor.apply();
-        }
 
         protected handleSizeChanged(): void {
             if(!this._updatingLayout)
@@ -427,26 +414,6 @@ module fairygui {
                         
             if (this._url)
                 this.loadContent();
-        }
-        
-        public setup_afterAdd(xml: any): void {
-            super.setup_afterAdd(xml);
-
-            var col: any = xml.children;
-            if(col) {
-                var length1: number = col.length;
-                for(var i1: number = 0;i1 < length1;i1++) {
-                    var cxml: any = col[i1];
-                    if(cxml.name == "gearAni") {
-                        this._gearAnimation.setup(cxml);
-                        break;
-                    }
-                    else if(cxml.name == "gearColor") {
-                        this._gearColor.setup(cxml);
-                        break;
-                    }
-                }
-            }
         }
     }
 }

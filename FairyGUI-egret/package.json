@@ -34,6 +34,8 @@
 				"GearColor.ts",
 				"GearDisplay.ts",
 				"GearLook.ts",
+				"GearText.ts",
+				"GearIcon.ts",
 				"GGraph.ts",
 				"GGroup.ts",
 				"GImage.ts",

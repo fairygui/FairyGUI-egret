@@ -37,6 +37,7 @@ module fairygui {
         public set text(value: string) {
             if (this._titleObject)
                 this._titleObject.text = value;
+            this.updateGear(6);
         }
 
         public get titleColor(): number {

@@ -6,12 +6,9 @@ module fairygui {
         private _color: number;
         private _flip: FlipType;
         
-        private _gearColor: GearColor;
-
         public constructor() {
             super();
             this._color = 0xFFFFFF;
-            this._gearColor = new GearColor(this);
         }
         
         public get color(): number {
@@ -21,9 +18,7 @@ module fairygui {
         public set color(value: number) {
             if(this._color != value) {
                 this._color = value;
-                if(this._gearColor.controller != null)
-                    this._gearColor.updateState();
-
+                this.updateGear(4);
                 this.applyColor();
             }
         }
@@ -52,17 +47,6 @@ module fairygui {
                     this._content.scaleY = -1;
                 this.handleXYChanged();
             }
-        }
-        
-        public get gearColor(): GearColor {
-            return this._gearColor;
-        }
-
-        public handleControllerChanged(c: Controller): void {
-            super.handleControllerChanged(c);
-
-            if(this._gearColor.controller == c)
-                this._gearColor.apply();
         }
         
         protected createDisplayObject(): void {
@@ -118,22 +102,6 @@ module fairygui {
             str = xml.attributes.flip;
             if(str)
                 this.flip = parseFlipType(str);	
-        }
-        
-        public setup_afterAdd(xml: any): void {
-            super.setup_afterAdd(xml);
-
-            var col: any = xml.children;
-            if(col) {
-                var length1: number = col.length;
-                for(var i1: number = 0;i1 < length1;i1++) {
-                    var cxml: any = col[i1];
-                    if(cxml.name == "gearColor") {
-                        this._gearColor.setup(cxml);
-                        break;
-                    }
-                }
-            }
         }
     }
 }

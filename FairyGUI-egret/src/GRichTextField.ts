@@ -19,7 +19,7 @@ module fairygui {
                 this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(this._text));
             else
                 this._textField.textFlow = (new egret.HtmlTextParser).parser(this._text);
-
+            this.updateGear(6);
             this.render();
         }
         

@@ -19,6 +19,9 @@ module fairygui {
         }
 
         protected addStatus(pageId: string,value: string): void {
+            if(value=="-")
+                return;
+
             var arr: string[] = value.split(",");
             var gv: GearLookValue;
             if(pageId == null)
@@ -92,7 +95,7 @@ module fairygui {
         }
 
         public updateState(): void {
-            if(this._owner._gearLocked)
+            if (this._controller==null || this._owner._gearLocked || this._owner._underConstruct)
                 return;
 
             var gv: GearLookValue = this._storage[this._controller.selectedPageId];

@@ -20,6 +20,9 @@ module fairygui {
         }
 
         protected addStatus(pageId: string, value: string): void {
+             if(value=="-")
+                return;
+
             var arr: string[] = value.split(",");
             var gv: GearSizeValue;
             if (pageId == null)
@@ -95,7 +98,7 @@ module fairygui {
         }
 
         public updateState(): void {
-            if (this._owner._gearLocked)
+            if (this._controller==null || this._owner._gearLocked || this._owner._underConstruct)
                 return;
 
             var gv: GearSizeValue = this._storage[this._controller.selectedPageId];
@@ -111,6 +114,9 @@ module fairygui {
         }
         
         public updateFromRelations(dx: number,dy: number): void {
+            if(this._controller==null || this._storage==null)
+                return;
+
             for(var key in this._storage) {
                 var gv: GearSizeValue = this._storage[key];
                 gv.width += dx;

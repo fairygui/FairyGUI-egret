@@ -62,7 +62,9 @@ module fairygui {
         private _vtScrollBar: GScrollBar;
         
         public static SCROLL: string = "__scroll";
-        
+    	public static PULL_DOWN_RELEASE:string = "pullDownRelease";
+		public static PULL_UP_RELEASE:string = "pullUpRelease";
+
         private static sHelperRect:egret.Rectangle = new egret.Rectangle();
 
         public constructor(owner: GComponent,
@@ -997,8 +999,14 @@ module fairygui {
             var endY: number = 0;
             var page: number = 0;
             var delta: number = 0;
+            var fireRelease: number = 0;
             
             if (this._scrollType == ScrollType.Both || this._scrollType == ScrollType.Horizontal) {
+                if (this._maskContentHolder.x > fairygui.UIConfig.touchDragSensitivity)
+					fireRelease = 1;
+				else if (this._maskContentHolder.x < Math.min(this._maskWidth - this._contentWidth) - fairygui.UIConfig.touchDragSensitivity)
+					fireRelease = 2;
+
                 change1.x = ThrowTween.calculateChange(xVelocity, duration);
                 change2.x = 0;
                 endX = this._maskContentHolder.x + change1.x;
@@ -1027,6 +1035,11 @@ module fairygui {
                 change1.x = change2.x = 0;
 
             if (this._scrollType == ScrollType.Both || this._scrollType == ScrollType.Vertical) {
+                if (this._maskContentHolder.y > fairygui.UIConfig.touchDragSensitivity)
+					fireRelease = 1;
+				else if (this._maskContentHolder.y < Math.min(this._maskHeight - this._contentHeight, 0) - fairygui.UIConfig.touchDragSensitivity)
+					fireRelease = 2;
+
                 change1.y = ThrowTween.calculateChange(yVelocity, duration);
                 change2.y = 0;
                 endY = this._maskContentHolder.y + change1.y;
@@ -1097,6 +1110,11 @@ module fairygui {
             egret.Tween.get(this._throwTween,{ onChange: this.__tweenUpdate2,onChangeObj: this })
                 .to({ value: 1 },duration * 1000,ScrollPane._easeTypeFunc)
                 .call(this.__tweenComplete2,this);
+
+            if (fireRelease == 1)
+				this.dispatchEventWith(ScrollPane.PULL_DOWN_RELEASE);
+			else if (fireRelease == 2)
+				this.dispatchEventWith(ScrollPane.PULL_UP_RELEASE);
         }
         
         private __touchTap(evt: egret.TouchEvent): void {
