@@ -7299,6 +7299,7 @@ var fairygui;
         p.createDisplayObject = function () {
             this._container = new fairygui.UIContainer();
             this._container["$owner"] = this;
+            this._container.hitArea = new egret.Rectangle();
             this.setDisplayObject(this._container);
         };
         p.dispose = function () {
@@ -7605,6 +7606,7 @@ var fairygui;
         p.handleSizeChanged = function () {
             if (!this._updatingLayout)
                 this.updateLayout();
+            this._container.hitArea.setTo(0, 0, this.width, this.height);
         };
         p.setup_beforeAdd = function (xml) {
             _super.prototype.setup_beforeAdd.call(this, xml);

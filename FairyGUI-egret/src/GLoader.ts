@@ -45,6 +45,7 @@ module fairygui {
         protected createDisplayObject(): void {
             this._container = new UIContainer();
             this._container["$owner"] = this;
+            this._container.hitArea = new egret.Rectangle();
             this.setDisplayObject(this._container);
         }
 
@@ -378,6 +379,8 @@ module fairygui {
         protected handleSizeChanged(): void {
             if(!this._updatingLayout)
                 this.updateLayout();
+
+            this._container.hitArea.setTo(0,0,this.width,this.height);
         }
 
         public setup_beforeAdd(xml: any): void {
