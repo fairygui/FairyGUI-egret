@@ -598,9 +598,11 @@ var fairygui;
         );
         p.$hitTest = function (stageX, stageY) {
             var ret = _super.prototype.$hitTest.call(this, stageX, stageY);
-            if (ret == this && !this.touchEnabled)
-                return null;
-            if (ret == null && this.touchEnabled && this._hitArea != null) {
+            if (ret == this) {
+                if (!this.touchEnabled || this._hitArea == null)
+                    return null;
+            }
+            else if (ret == null && this.touchEnabled && this._hitArea != null) {
                 var m = this.$getInvertedConcatenatedMatrix();
                 var localX = m.a * stageX + m.c * stageY + m.tx;
                 var localY = m.b * stageX + m.d * stageY + m.ty;
@@ -642,9 +644,11 @@ var fairygui;
         );
         p.$hitTest = function (stageX, stageY) {
             var ret = _super.prototype.$hitTest.call(this, stageX, stageY);
-            if (ret == this && !this.touchEnabled)
-                return null;
-            if (ret == null && this.touchEnabled && this._hitArea != null) {
+            if (ret == this) {
+                if (!this.touchEnabled || this._hitArea == null)
+                    return null;
+            }
+            else if (ret == null && this.touchEnabled && this._hitArea != null) {
                 var m = this.$getInvertedConcatenatedMatrix();
                 var localX = m.a * stageX + m.c * stageY + m.tx;
                 var localY = m.b * stageX + m.d * stageY + m.ty;
@@ -8559,7 +8563,10 @@ var fairygui;
             this._textField.addEventListener(egret.TextEvent.LINK, this.__clickLink, this);
         }
         var d = __define,c=GRichTextField,p=c.prototype;
-        d(p, "text",undefined
+        d(p, "text"
+            ,function () {
+                return this._text;
+            }
             ,function (value) {
                 this._text = value;
                 if (this._text == null)
@@ -9495,7 +9502,10 @@ var fairygui;
                 }
             }
         );
-        d(p, "verticalAlign",undefined
+        d(p, "verticalAlign"
+            ,function () {
+                return this._verticalAlign;
+            }
             ,function (value) {
                 if (this._verticalAlign != value) {
                     this._verticalAlign = value;

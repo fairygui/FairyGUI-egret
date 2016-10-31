@@ -70,6 +70,10 @@ module fairygui {
                 this.render();
             }
         }
+
+        public get verticalAlign(): VertAlignType {
+            return this._verticalAlign;
+        }
 		
         public set verticalAlign(value: VertAlignType) {
             if(this._verticalAlign != value) {

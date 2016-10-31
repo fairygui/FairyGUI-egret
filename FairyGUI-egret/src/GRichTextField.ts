@@ -9,6 +9,10 @@ module fairygui {
             this._textField.touchEnabled = true;
             this._textField.addEventListener(egret.TextEvent.LINK,this.__clickLink,this);
         }
+
+        public get text(): string {
+            return this._text;
+        }
         
         public set text(value: string) {
             this._text = value;
