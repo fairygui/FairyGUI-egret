@@ -2,7 +2,7 @@
 module fairygui {
 
     export class GearDisplay extends GearBase {
-        public pages:Array<string>;
+        public pages:string[];
                 
         public constructor(owner: GObject) {
             super(owner);
@@ -10,10 +10,7 @@ module fairygui {
         
         protected init():void
 		{
-			if(this.pages==null)
-				this.pages = new Array<string>();
-			else
-				this.pages.length = 0;
+			this.pages = null;
 		}
 
         public apply(): void {

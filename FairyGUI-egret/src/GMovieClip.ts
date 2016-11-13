@@ -52,22 +52,20 @@ module fairygui {
             this._movieClip.setPlaySettings(start, end, times, endAt, endCallback, callbackObj);
         }
 
-        public constructFromResource(pkgItem: PackageItem): void {
-            this._packageItem = pkgItem;
-
-            this._sourceWidth = this._packageItem.width;
-            this._sourceHeight = this._packageItem.height;
+        public constructFromResource(): void {
+            this._sourceWidth = this.packageItem.width;
+            this._sourceHeight = this.packageItem.height;
             this._initWidth = this._sourceWidth;
             this._initHeight = this._sourceHeight;
 
             this.setSize(this._sourceWidth, this._sourceHeight);
 
-            pkgItem.load();
+            this.packageItem.load();
 
-            this._movieClip.interval = this._packageItem.interval;
-            this._movieClip.swing = this._packageItem.swing;
-            this._movieClip.repeatDelay = this._packageItem.repeatDelay;
-            this._movieClip.frames = this._packageItem.frames;
+            this._movieClip.interval = this.packageItem.interval;
+            this._movieClip.swing = this.packageItem.swing;
+            this._movieClip.repeatDelay = this.packageItem.repeatDelay;
+            this._movieClip.frames = this.packageItem.frames;
             this._movieClip.boundsRect = new egret.Rectangle(0, 0, this.sourceWidth, this.sourceHeight);
         }
 

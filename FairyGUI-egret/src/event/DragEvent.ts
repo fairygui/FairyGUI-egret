@@ -10,6 +10,7 @@ module fairygui {
 
         public static DRAG_START: string = "__dragStart";
         public static DRAG_END: string = "__dragEnd";
+        public static DRAG_MOVING: string = "__dragMoving";
 
         public constructor(type: string, stageX: number= 0, stageY: number= 0, touchPointID: number= -1) {
             super(type, false);

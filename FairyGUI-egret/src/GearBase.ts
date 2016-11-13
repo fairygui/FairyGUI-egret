@@ -92,12 +92,7 @@ module fairygui {
 			{
 				str = xml.attributes.pages;
 				if(str)
-				{
-					var arr:string[] = str.split(",");
-                    var len:number = arr.length;
-					for(var i:number=0;i<len;i++)
-						(<GearDisplay><any>this).pages.push(arr[i]);
-				}
+				    (<GearDisplay><any>this).pages = str.split(",");
 			}
 			else
 			{

@@ -68,7 +68,7 @@ module fairygui {
         public static createObjectFromURL(url: string,userClass: any = null): GObject {
             var pi: PackageItem = UIPackage.getItemByURL(url);
             if(pi)
-                return pi.owner.createObject2(pi,userClass);
+                return pi.owner.internalCreateObject(pi,userClass);
             else
                 return null;
         }
@@ -91,7 +91,7 @@ module fairygui {
                 var srcId: string = url.substr(13);
                 var pkg: UIPackage = UIPackage.getById(pkgId);
                 if(pkg)
-                    return pkg.getItem(srcId);
+                    return pkg.getItemById(srcId);
             }
             return null;
         }
@@ -108,8 +108,8 @@ module fairygui {
 			for (var i1: number = 0; i1 < length1; i1++) {
 				var cxml: any = nodes[i1];
 				if (cxml.name == "string") {
-					var key:String = cxml.attributes.name;                    
-					var text:String = cxml.children.length>0?cxml.children[0].text:"";
+					var key:string = cxml.attributes.name;                    
+					var text:string = cxml.children.length>0?cxml.children[0].text:"";
 					var i:number = key.indexOf("-");
 					if(i==-1)
 						continue;
@@ -135,6 +135,10 @@ module fairygui {
         private loadPackage(): void {
             var str: string;
             var arr: string[];
+
+            var buf: any = RES.getRes(this._resKey);
+            if(buf==null)
+                throw "Resource '" + this._resKey + "' not found, please check default.res.json!";
 
             this.decompressPackage(RES.getRes(this._resKey));
 
@@ -209,6 +213,10 @@ module fairygui {
                                 pi.scale9Grid.y = parseInt(arr[1]);
                                 pi.scale9Grid.width = parseInt(arr[2]);
                                 pi.scale9Grid.height = parseInt(arr[3]);
+
+                                str = cxml.attributes.gridTile;
+                                if(str)
+                                    pi.tileGridIndice = parseInt(str);
                             }
                         }
                         else if(str == "tile") {
@@ -237,7 +245,7 @@ module fairygui {
             }
         }
 
-        private decompressPackage(buf: ArrayBuffer): void {
+        private decompressPackage(buf: any): void {
             this._resData = {};
         
             var inflater: Zlib.RawInflate = new Zlib.RawInflate(buf);
@@ -306,33 +314,38 @@ module fairygui {
         public createObject(resName: string, userClass: any= null): GObject {
             var pi: PackageItem = this._itemsByName[resName];
             if (pi)
-                return this.createObject2(pi, userClass);
+                return this.internalCreateObject(pi, userClass);
             else
                 return null;
         }
 
-        public createObject2(pi: fairygui.PackageItem, userClass: any= null): GObject {
+        public internalCreateObject(item: fairygui.PackageItem, userClass: any= null): GObject {
             var g: GObject;
-            if (pi.type == PackageItemType.Component) {
+            if (item.type == PackageItemType.Component) {
                 if (userClass != null)
                     g = new userClass();
                 else
-                    g = UIObjectFactory.newObject(pi);
+                    g = UIObjectFactory.newObject(item);
             }
             else
-                g = UIObjectFactory.newObject(pi);
+                g = UIObjectFactory.newObject(item);
 
             if (g == null)
                 return null;
 
             UIPackage._constructing++;
-            g.constructFromResource(pi);
+            g.packageItem = item;
+            g.constructFromResource();
             UIPackage._constructing--;
             return g;
         }
 
-        public getItem(itemId: string): PackageItem {
+        public getItemById(itemId: string): PackageItem {
             return this._itemsById[itemId];
+        }
+
+        public getItemByName(resName: string): PackageItem {
+            return this._itemsByName[resName];
         }
 
         public getItemAssetByName(resName: string): any {
@@ -395,6 +408,8 @@ module fairygui {
 								this.translateComponent(xml, col);
 						}
                         item.componentData = xml;
+
+                        this.loadComponentChildren(item);
                     }
                     return item.componentData;
 
@@ -402,6 +417,50 @@ module fairygui {
                     return RES.getRes(this._resKey + "@" + item.id);
             }
         }
+
+        private loadComponentChildren(item:PackageItem):void {
+			var listNode:any = ToolSet.findChildNode(item.componentData, "displayList");
+			if (listNode != null) {
+				var col:any = listNode.children;
+				var dcnt:number = col.length;
+				item.displayList = new Array<DisplayListItem>(dcnt);
+				var di:DisplayListItem;
+				for (var i:number = 0; i < dcnt; i++)
+				{
+					var cxml:any = col[i];
+					var tagName:string = cxml.name;
+					
+					var src:string = cxml.attributes.src;
+					if (src)
+					{
+						var pkgId:string = cxml.attributes.pkg;
+						var pkg:UIPackage;
+						if (pkgId && pkgId != item.owner.id)
+							pkg = UIPackage.getById(pkgId);
+						else
+							pkg = item.owner;
+						
+						var pi:PackageItem = pkg != null ? pkg.getItemById(src) : null;
+						if (pi != null)
+							di = new DisplayListItem(pi, null);
+						else
+							di = new DisplayListItem(null, tagName);
+					}
+					else
+					{
+						if (tagName == "text" && cxml.attributes.input=="true")
+							di = new DisplayListItem(null, "inputtext");
+						else
+							di = new DisplayListItem(null, tagName);
+					}
+					
+					di.desc = cxml;
+					item.displayList[i] = di;
+				}
+			}
+			else
+				item.displayList =new DisplayListItem[0];
+		}
         
         private getDesc(fn:string):string {
             return this._resData[fn];
@@ -409,6 +468,9 @@ module fairygui {
 
         private translateComponent(xml:any, strings:any):void {
 			var displayList:any = ToolSet.findChildNode(xml, "displayList");
+            if(displayList==null)
+                return;
+                
 			var nodes: any = displayList.children;
 			var length1: number = nodes.length;
 			var length2: number;
@@ -548,7 +610,16 @@ module fairygui {
                     frame.addDelay = parseInt(str);
                 item.frames[i] = frame;
 
-                var sprite: AtlasSprite = this._sprites[item.id + "_" + i];
+                if(frame.rect.width==0)
+                    continue;
+
+                str = frameNode.attributes.sprite;
+				if (str)
+					str = item.id + "_" + str;
+				else				
+					str = item.id + "_" + i;
+
+                var sprite: AtlasSprite = this._sprites[str];
                 if(sprite != null) {
                     frame.texture = this.createSpriteTexture(sprite);
                 }
@@ -571,6 +642,7 @@ module fairygui {
             var atlasOffsetX: number = 0, atlasOffsetY: number = 0;
             var charImg: PackageItem;
             var mainTexture: egret.Texture;
+            var lineHeight: number = 0;
 
             for (i = 0; i < lineCount; i++) {
                 str = lines[i];
@@ -622,7 +694,7 @@ module fairygui {
                     }
 
                     if (ttf)
-                        bg.lineHeight = size;
+                        bg.lineHeight = lineHeight;
                     else {
                         if(bg.advance == 0) {
                             if(xadvance == 0)
@@ -632,7 +704,7 @@ module fairygui {
                         }
 
                         bg.lineHeight = bg.offsetY < 0 ? bg.height : (bg.offsetY + bg.height);
-                        if (bg.lineHeight < size)
+                        if (size>0 && bg.lineHeight < size)
                             bg.lineHeight = size;
                     }
                     font.glyphs[String.fromCharCode(kv.id)] = bg;
@@ -654,8 +726,12 @@ module fairygui {
                     }
                 }
                 else if (str == "common") {
-                    if(size==0 && !isNaN(kv.lineHeight))
-                        size = parseInt(kv.lineHeight);
+                    if(!isNaN(kv.lineHeight))
+                        lineHeight = parseInt(kv.lineHeight);
+                    if(size==0)
+                        size = lineHeight;
+                    else if(lineHeight==0)
+                        lineHeight = size;
                     if(!isNaN(kv.xadvance))
                         xadvance = parseInt(kv.xadvance);
                 }

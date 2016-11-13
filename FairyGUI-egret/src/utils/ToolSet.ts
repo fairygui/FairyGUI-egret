@@ -145,5 +145,21 @@ module fairygui {
         public static parseUBB(text: string): string {
             return ToolSet.defaultUBBParser.parse(text);
         }
+
+        public static clamp(value:number, min:number, max:number):number {
+			if(value<min)
+				value = min;
+			else if(value>max)
+				value = max;
+			return value;
+		}
+		
+		public static clamp01(value:number):number	{
+			if(value>1)
+				value = 1;
+			else if(value<0)
+				value = 0;
+			return value;
+		}
     }
 }

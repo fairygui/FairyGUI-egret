@@ -3,12 +3,18 @@ module fairygui {
 
     export class GList extends GComponent {
         /**
-         * itemRenderer(int index, GObject item);
+         * itemRenderer(number number, GObject item);
          */
         public itemRenderer:Function;
+        /**
+		 * itemProvider(index:number):string;
+		 */
+		public itemProvider:Function;
         public callbackThisObj:any;
+
         public scrollItemToViewOnClick: boolean = true;
-                
+        public foldInvisibleItems: boolean = false;
+
         private _layout: ListLayoutType;
         private _lineItemCount:number = 0;
         private _lineGap: number = 0;
@@ -16,6 +22,9 @@ module fairygui {
         private _defaultItem: string;
         private _autoResizeItem: boolean;
         private _selectionMode: ListSelectionMode;
+        private _align: AlignType;
+        private _verticalAlign: VertAlignType;
+
         private _lastSelectedIndex: number = 0;
         private _pool: GObjectPool;
         
@@ -23,11 +32,13 @@ module fairygui {
         private _virtual:boolean;
         private _loop: boolean;
         private _numItems: number = 0;
+        private _realNumItems: number = 0;
         private _firstIndex: number = 0; //the top left index
-        private _viewCount: number = 0; //item count in view
         private _curLineItemCount: number = 0; //item count in one line
+        private _curLineItemCount2: number = 0; //只用在页面模式，表示垂直方向的项目数
         private _itemSize:egret.Point;
         private _virtualListChanged: number = 0; //1-content changed, 2-size changed
+        private _virtualItems:Array<ItemInfo>;
         private _eventLocked: boolean;
         
         public constructor() {
@@ -40,6 +51,11 @@ module fairygui {
             this._lastSelectedIndex = -1;
             this._selectionMode = ListSelectionMode.Single;
             this.opaque = true;
+            this._align = AlignType.Left;
+			this._verticalAlign = VertAlignType.Top;
+			
+			this._container = new egret.DisplayObjectContainer();
+			this._rootContainer.addChild(this._container);
         }
 
         public dispose(): void {
@@ -98,6 +114,38 @@ module fairygui {
                     this.setVirtualListChangedFlag(true);
             }
         }
+
+        public get align():AlignType
+		{
+			return this._align;
+		}
+		
+		public set align(value:AlignType)
+		{
+			if(this._align!=value)
+			{
+				this._align = value;
+				this.setBoundsChangedFlag();
+				if (this._virtual)
+					this.setVirtualListChangedFlag(true);
+			}
+		}
+		
+		public get verticalAlign():VertAlignType
+		{
+			return this._verticalAlign;
+		}
+		
+		public set verticalAlign(value:VertAlignType)
+		{
+			if(this._verticalAlign!=value)
+			{
+				this._verticalAlign = value;
+				this.setBoundsChangedFlag();
+				if (this._virtual)
+					this.setVirtualListChangedFlag(true);
+			}
+		}
         
         public get virtualItemSize(): egret.Point  {
             return this._itemSize;
@@ -134,6 +182,10 @@ module fairygui {
 
         public set selectionMode(value: ListSelectionMode) {
             this._selectionMode = value;
+        }
+
+        public get itemPool():GObjectPool {
+            return this._pool;
         }
 
         public getFromPool(url: string= null): GObject {
@@ -211,12 +263,8 @@ module fairygui {
             var cnt: number = this._children.length;
             for (var i: number = 0; i < cnt; i++) {
                 var obj: GButton = this._children[i].asButton;
-                if (obj != null && obj.selected) {
-                    var j: number = this._firstIndex + i;
-                    if(this._loop && this._numItems > 0)
-                        j = j % this._numItems;
-                    return j;
-                }
+                if (obj != null && obj.selected)
+                    return this.childIndexToItemIndex(i);
             }
             return -1;
         }
@@ -232,12 +280,8 @@ module fairygui {
             var cnt: number = this._children.length;
             for (var i: number = 0; i < cnt; i++) {
                 var obj: GButton = this._children[i].asButton;
-                if (obj != null && obj.selected) {
-                    var j: number = this._firstIndex + i;
-                    if(this._loop && this._numItems > 0)
-                        j = j % this._numItems;
-                    ret.push(j);
-                }
+                if (obj != null && obj.selected)
+                    ret.push(this.childIndexToItemIndex(i));
             }
             return ret;
         }
@@ -254,15 +298,7 @@ module fairygui {
             if(scrollItToView)
                 this.scrollToView(index);
 
-            if(this._loop && this._numItems>0) {
-                var j: number = this._firstIndex % this._numItems;
-                if(index >= j)
-                    index = this._firstIndex + (index - j);
-                else
-                    index = this._firstIndex + this._numItems + (j - index);
-            }
-            else
-                index -= this._firstIndex;
+            index = this.itemIndexToChildIndex(index);
             if(index<0 || index >= this._children.length)
                 return;
 
@@ -275,15 +311,7 @@ module fairygui {
             if (this._selectionMode == ListSelectionMode.None)
                 return;
 
-            if(this._loop && this._numItems > 0) {
-                var j: number = this._firstIndex % this._numItems;
-                if(index >= j)
-                    index = this._firstIndex + (index - j);
-                else
-                    index = this._firstIndex + this._numItems + (j - index);
-            }
-            else
-                index -= this._firstIndex;
+           index = this.itemIndexToChildIndex(index);
             if(index >= this._children.length)
                 return;
 
@@ -346,7 +374,7 @@ module fairygui {
                             this.addSelection(index, true);
                         }
                     }
-                    else if (this._layout == ListLayoutType.FlowHorizontal) {
+                   	else if (this._layout == ListLayoutType.FlowHorizontal || this._layout == ListLayoutType.Pagination) {
                         var current: GObject = this._children[index];
                         var k: number = 0;
                         for (var i: number = index - 1; i >= 0; i--) {
@@ -369,7 +397,7 @@ module fairygui {
                     break;
 
                 case 3://right
-                    if (this._layout == ListLayoutType.SingleRow || this._layout == ListLayoutType.FlowHorizontal) {
+                    if (this._layout == ListLayoutType.SingleRow || this._layout == ListLayoutType.FlowHorizontal || this._layout == ListLayoutType.Pagination) {
                         index++;
                         if (index < this._children.length) {
                             this.clearSelection();
@@ -407,7 +435,7 @@ module fairygui {
                             this.addSelection(index, true);
                         }
                     }
-                    else if (this._layout == ListLayoutType.FlowHorizontal) {
+                    else if (this._layout == ListLayoutType.FlowHorizontal || this._layout == ListLayoutType.Pagination) {
                         current = this._children[index];
                         k = 0;
                         cnt = this._children.length;
@@ -431,7 +459,7 @@ module fairygui {
                     break;
 
                 case 7://left
-                    if (this._layout == ListLayoutType.SingleRow || this._layout == ListLayoutType.FlowHorizontal) {
+                    if (this._layout == ListLayoutType.SingleRow || this._layout == ListLayoutType.FlowHorizontal || this._layout == ListLayoutType.Pagination) {
                         index--;
                         if (index >= 0) {
                             this.clearSelection();
@@ -463,14 +491,14 @@ module fairygui {
         }
 
         private __clickItem(evt: egret.TouchEvent): void {
-            if (this._scrollPane != null && this._scrollPane._isMouseMoved)
+            if (this._scrollPane != null && this._scrollPane.isDragged)
                 return;
 
             var item: GObject = <GObject><any> (evt.currentTarget);
             this.setSelectionOnEvent(item);
             
-            if(this.scrollPane && this.scrollItemToViewOnClick)
-                this.scrollPane.scrollToView(item,true);
+            if(this._scrollPane && this.scrollItemToViewOnClick)
+                this._scrollPane.scrollToView(item,true);
 
             var ie: ItemEvent = new ItemEvent(ItemEvent.CLICK, item);
             ie.stageX = evt.stageX;
@@ -565,7 +593,7 @@ module fairygui {
                 var obj: GObject = null;
                 while (i >= 0) {
                     obj = this.getChildAt(i);
-                    if (obj.visible)
+                    if (!this.foldInvisibleItems || obj.visible)
                         break;
                     i--;
                 }
@@ -638,27 +666,41 @@ module fairygui {
 
         public getSnappingPosition(xValue: number, yValue: number, resultPoint?:egret.Point):egret.Point {
             if (this._virtual) {
-                if(!resultPoint)
-                    resultPoint = new egret.Point();
-                    
-				if (this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal) {
-					var i:number = Math.floor(yValue / (this._itemSize.y + this._lineGap));
-					if (yValue > i * (this._itemSize.y + this._lineGap) + this._itemSize.y / 2)
-						i++;
-					
-					resultPoint.x = xValue;
-                    resultPoint.y = i * (this._itemSize.y + this._lineGap);
+				if(!resultPoint)
+					resultPoint = new egret.Point();
+				
+				var saved:number;
+				var index:number;
+				if (this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal)
+				{
+					saved = yValue;
+					GList.pos_param = yValue;
+					index = this.getIndexOnPos1(false);
+					yValue = GList.pos_param;
+					if (index < this._virtualItems.length && saved - yValue > this._virtualItems[index].height / 2 && index < this._realNumItems)
+						yValue += this._virtualItems[index].height + this._lineGap;
+				}
+				else if (this._layout == ListLayoutType.SingleRow || this._layout == ListLayoutType.FlowVertical)
+				{
+					saved = xValue;
+					GList.pos_param = xValue;
+					index = this.getIndexOnPos2(false);
+					xValue = GList.pos_param;
+					if (index < this._virtualItems.length && saved - xValue > this._virtualItems[index].width / 2 && index < this._realNumItems)
+						xValue += this._virtualItems[index].width + this._columnGap;
 				}
 				else
 				{
-                    i = Math.floor(xValue / (this._itemSize.x + this._columnGap));
-                    if(xValue > i * (this._itemSize.x + this._columnGap) + this._itemSize.x / 2)
-						i++;
-					
-                    resultPoint.x = i * (this._itemSize.x + this._columnGap);
-                    resultPoint.y = yValue;
+					saved = xValue;
+					GList.pos_param = xValue;
+					index = this.getIndexOnPos3(false);
+					xValue = GList.pos_param;
+					if (index < this._virtualItems.length && saved - xValue > this._virtualItems[index].width / 2 && index < this._realNumItems)
+						xValue += this._virtualItems[index].width + this._columnGap;
 				}
 				
+				resultPoint.x = xValue;
+				resultPoint.y = yValue;
 				return resultPoint;
 			}
 			else {
@@ -667,19 +709,46 @@ module fairygui {
         }
         
         public scrollToView(index: number,ani: boolean = false,setFirst: boolean = false):void  {				
-            if(this._virtual) {
-                this.checkVirtualList();
-                
-                if(this.scrollPane != null)
-                    this.scrollPane.scrollToView(this.getItemRect(index),ani,setFirst);
-                else if(this.parent != null && this.parent.scrollPane != null)
-                    this.parent.scrollPane.scrollToView(this.getItemRect(index),ani,setFirst);
-            }
+            if (this._virtual)
+			{
+				this.checkVirtualList();
+				
+				if (index >= this._virtualItems.length)
+					throw "Invalid child index: " + index + ">" + this._virtualItems.length;
+				
+				var rect:egret.Rectangle;
+				var ii:ItemInfo = this._virtualItems[index];
+				var pos:number = 0;
+				var i:number;
+				if (this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal)
+				{
+					for (i = 0; i < index; i += this._curLineItemCount)
+						pos += this._virtualItems[i].height + this._lineGap;
+					rect = new egret.Rectangle(0, pos, this._itemSize.x, ii.height);
+				}
+				else if (this._layout == ListLayoutType.SingleRow || this._layout == ListLayoutType.FlowVertical)
+				{
+					for (i = 0; i < index; i += this._curLineItemCount)
+						pos += this._virtualItems[i].width + this._columnGap;
+					rect = new egret.Rectangle(pos, 0, ii.width, this._itemSize.y);
+				}
+				else
+				{
+					var page:number = index / (this._curLineItemCount * this._curLineItemCount2);
+					rect = new egret.Rectangle(page * this.viewWidth + (index % this._curLineItemCount) * (ii.width + this._columnGap),
+						(index / this._curLineItemCount) % this._curLineItemCount2 * (ii.height + this._lineGap),
+						ii.width, ii.height);
+				}
+				
+				setFirst = true;//因为在可变item大小的情况下，只有设置在最顶端，位置才不会因为高度变化而改变，所以只能支持setFirst=true
+				if (this._scrollPane != null)
+					this._scrollPane.scrollToView(rect, ani, setFirst);
+			}
             else {
                 var obj: GButton = this.getChildAt(index).asButton;
                 if(obj != null) {
-                    if(this.scrollPane != null)
-                        this.scrollPane.scrollToView(obj,ani,setFirst);
+                    if(this._scrollPane != null)
+                        this._scrollPane.scrollToView(obj,ani,setFirst);
                     else if(this.parent != null && this.parent.scrollPane != null)
                         this.parent.scrollPane.scrollToView(obj,ani,setFirst);
                 }
@@ -687,17 +756,64 @@ module fairygui {
         }
 
         public getFirstChildInView(): number {
-            var ret: number = super.getFirstChildInView();
-            if(ret != -1) {
-                ret += this._firstIndex;
-                if(this._loop && this._numItems>0)
-                    ret = ret % this._numItems;
-                return ret;
-            }
-            else
-                return -1;
+            return this.childIndexToItemIndex(super.getFirstChildInView());
         }
     
+        public childIndexToItemIndex(index:number):number
+		{
+			if (!this._virtual)
+				return index;
+			
+			if (this._layout == ListLayoutType.Pagination)
+			{
+				for (var i:number = this._firstIndex; i < this._realNumItems; i++)
+				{
+					if (this._virtualItems[i].obj != null)
+					{
+						index--;
+						if (index < 0)
+							return i;
+					}
+				}
+				
+				return index;
+			}
+			else
+			{
+				index += this._firstIndex;
+				if (this._loop && this._numItems > 0)
+					index = index % this._numItems;
+				
+				return index;
+			}
+		}
+		
+		public itemIndexToChildIndex(index:number):number
+		{
+			if (!this._virtual)
+				return index;
+			
+			if (this._layout == ListLayoutType.Pagination)
+			{
+				return this.getChildIndex(this._virtualItems[index].obj);
+			}
+			else
+			{
+				if (this._loop && this._numItems > 0)
+				{
+					var j:number = this._firstIndex % this._numItems;
+					if (index >= j)
+						index = this._firstIndex + (index - j);
+					else
+						index = this._firstIndex + this._numItems + (j - index);
+				}
+				else
+					index -= this._firstIndex;
+				
+				return index;
+			}
+		}
+
         public setVirtual(): void {
             this._setVirtual(false);
         }
@@ -714,34 +830,42 @@ module fairygui {
         /// </summary>
         private _setVirtual(loop: boolean): void {
             if(!this._virtual) {
-                if(this.scrollPane == null)
-                    throw new Error("Virtual list must be scrollable!");
+                if(this._scrollPane == null)
+                    throw "Virtual list must be scrollable!";
                     
                 if(loop) {        
                     if(this._layout == ListLayoutType.FlowHorizontal || this._layout == ListLayoutType.FlowVertical)
-                        throw new Error("Only single row or single column layout type is supported for loop list!");
+                        throw "Loop list is not supported for FlowHorizontal or FlowVertical layout!";
         
-                    this.scrollPane.bouncebackEffect = false;
+                    this._scrollPane.bouncebackEffect = false;
                 }
         
                 this._virtual = true;
                 this._loop = loop;
+                this._virtualItems = new Array<ItemInfo>();
                 this.removeChildrenToPool();
         
                 if(this._itemSize==null) {
                     this._itemSize = new egret.Point();
                     var obj: GObject = this.getFromPool(null);
-                    this._itemSize.x = obj.width;
-                    this._itemSize.y = obj.height;
+                   	if (obj == null)
+					{
+						throw "Virtual List must have a default list item resource.";
+					}
+					else
+					{
+                    	this._itemSize.x = obj.width;
+                    	this._itemSize.y = obj.height;
+					}
                     this.returnToPool(obj);
                 }
         
                 if(this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal)
-                    this.scrollPane.scrollSpeed = this._itemSize.y;
+                    this._scrollPane.scrollSpeed = this._itemSize.y;
                 else
-                    this.scrollPane.scrollSpeed = this._itemSize.x;
+                    this._scrollPane.scrollSpeed = this._itemSize.x;
         
-                this.scrollPane.addEventListener(ScrollPane.SCROLL, this.__scrolled, this);
+                this._scrollPane.addEventListener(ScrollPane.SCROLL, this.__scrolled, this);
                 this.setVirtualListChangedFlag(true);
             }
         }
@@ -762,14 +886,44 @@ module fairygui {
         public set numItems(value:number)
         {
             if(this._virtual) {
-                this._numItems = value;
-                this.setVirtualListChangedFlag();
+                if (this.itemRenderer == null)
+					throw "Set itemRenderer first!";
+				
+				this._numItems = value;
+				if (this._loop)
+					this._realNumItems = this._numItems * 5;//设置5倍数量，用于循环滚动
+				else
+					this._realNumItems = this._numItems;
+				
+				//_virtualItems的设计是只增不减的
+				var oldCount:number = this._virtualItems.length;
+				if (this._realNumItems > oldCount)
+				{
+					for (i = oldCount; i < this._realNumItems; i++)
+					{
+						var ii:ItemInfo = new ItemInfo();
+						ii.width = this._itemSize.x;
+						ii.height = this._itemSize.y;
+						
+						this._virtualItems.push(ii);
+					}
+				}
+				
+				if (this._virtualListChanged != 0)
+					GTimers.inst.remove(this._refreshVirtualList, this);
+				
+				//立即刷新
+				this._refreshVirtualList();
             }
 			else {
                 var cnt: number = this._children.length;
                 if(value > cnt) {
-                    for(var i: number = cnt;i < value;i++)
-                        this.addItemFromPool();
+                    for(var i: number = cnt;i < value;i++) {
+                        if (this.itemProvider == null)
+							this.addItemFromPool();
+						else
+							this.addItemFromPool(this.itemProvider.call(this.callbackThisObj, i));
+                    }
                 }
     			else {
                      this.removeChildrenToPool(value,cnt);
@@ -804,269 +958,798 @@ module fairygui {
         }
         
         private _refreshVirtualList(): void {
-            if(this._virtualListChanged == 0)
-                return;
-
-            var layoutChanged: Boolean = this._virtualListChanged == 2;
-            this._virtualListChanged = 0;
-            this._eventLocked = true;
-            
-            if(layoutChanged) {
-                if(this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal) {
-                    if(this._layout == ListLayoutType.SingleColumn)
-                        this._curLineItemCount = 1;
-                    else if(this._lineItemCount != 0)
-                        this._curLineItemCount = this._lineItemCount;
-                    else
-                        this._curLineItemCount = Math.floor((this.scrollPane.viewWidth + this._columnGap) / (this._itemSize.x + this._columnGap));
-                    this._viewCount = (Math.ceil((this.scrollPane.viewHeight + this._lineGap) / (this._itemSize.y + this._lineGap)) + 1) * this._curLineItemCount;
-                    var numChildren: number = this._children.length;
-                    if(numChildren < this._viewCount) {
-                        for(var i: number = numChildren;i < this._viewCount;i++)
-                            this.addItemFromPool();
-                    }
-                    else if(numChildren > this._viewCount)
-                        this.removeChildrenToPool(this._viewCount,numChildren);
-                }
-                else {
-                    if(this._layout == ListLayoutType.SingleRow)
-                        this._curLineItemCount = 1;
-                    else if(this._lineItemCount != 0)
-                        this._curLineItemCount = this._lineItemCount;
-                    else
-                        this._curLineItemCount = Math.floor((this.scrollPane.viewHeight + this._lineGap) / (this._itemSize.y + this._lineGap));
-                    this._viewCount = (Math.ceil((this.scrollPane.viewWidth + this._columnGap) / (this._itemSize.x + this._columnGap)) + 1) * this._curLineItemCount;
-                    numChildren = this._children.length;
-                    if(numChildren < this._viewCount) {
-                        for(i = numChildren;i < this._viewCount;i++)
-                            this.addItemFromPool();
-                    }
-                    else if(numChildren > this._viewCount)
-                        this.removeChildrenToPool(this._viewCount,numChildren);
-                }
-            }
-            
-            this.ensureBoundsCorrect();
-        
-            if(this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal) {
-                if(this.scrollPane != null) {
-                    var ch: number;
-                    if(this._layout == ListLayoutType.SingleColumn) {
-                        ch = this._numItems * this._itemSize.y + Math.max(0,this._numItems - 1) * this._lineGap;
-                        if(this._loop && ch > 0)
-                            ch = ch * 5 + this._lineGap * 4;
-                    }
-                    else {
-                        var lineCount: number = Math.ceil(this._numItems / this._curLineItemCount);
-                        ch = lineCount * this._itemSize.y + Math.max(0,lineCount - 1) * this._lineGap;
-                    }
-        
-                    this.scrollPane.setContentSize(this.scrollPane.contentWidth,ch);
-                }
-            }
-            else {
-                if(this.scrollPane != null) {
-                    var cw: number;
-                    if(this._layout == ListLayoutType.SingleRow) {
-                        cw = this._numItems * this._itemSize.x + Math.max(0,this._numItems - 1) * this._columnGap;
-                        if(this._loop && cw > 0)
-                            cw = cw * 5 + this._columnGap * 4;
-                    }
-                    else {
-                        lineCount = Math.ceil(this._numItems / this._curLineItemCount);
-                        cw = lineCount * this._itemSize.x + Math.max(0,lineCount - 1) * this._columnGap;
-                    }
-        
-                    this.scrollPane.setContentSize(cw,this.scrollPane.contentHeight);
-                }
-            }
-            
-            this._eventLocked = false;
-            this.__scrolled(null);
+			var layoutChanged:boolean = this._virtualListChanged == 2;
+			this._virtualListChanged = 0;
+			this._eventLocked = true;
+			
+			if (layoutChanged)
+			{
+				if (this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.SingleRow)
+					this._curLineItemCount = 1;
+				else if (this._lineItemCount != 0)
+					this._curLineItemCount = this._lineItemCount;
+				else if (this._layout == ListLayoutType.FlowHorizontal)
+				{
+					this._curLineItemCount = Math.floor((this._scrollPane.viewWidth + this._columnGap) / (this._itemSize.x + this._columnGap));
+					if (this._curLineItemCount <= 0)
+						this._curLineItemCount = 1;
+				}
+				else if (this._layout == ListLayoutType.FlowVertical)
+				{
+					this._curLineItemCount = Math.floor((this._scrollPane.viewHeight + this._lineGap) / (this._itemSize.y + this._lineGap));
+					if (this._curLineItemCount <= 0)
+						this._curLineItemCount = 1;
+				}
+				else //pagination
+				{
+					this._curLineItemCount = Math.floor((this._scrollPane.viewWidth + this._columnGap) / (this._itemSize.x + this._columnGap));
+					if (this._curLineItemCount <= 0)
+						this._curLineItemCount = 1;
+				}
+				
+				if (this._layout == ListLayoutType.Pagination)
+				{
+					this._curLineItemCount2 = Math.floor((this._scrollPane.viewHeight + this._lineGap) / (this._itemSize.y + this._lineGap));
+					if (this._curLineItemCount2 <= 0)
+						this._curLineItemCount2 = 1;
+				}
+			}
+			
+			var ch:number = 0, cw:number = 0;
+			if (this._realNumItems > 0)
+			{
+				var i:number;
+				var len:number = Math.ceil(this._realNumItems / this._curLineItemCount) * this._curLineItemCount;
+				if (this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal)
+				{
+					for (i = 0; i < len; i += this._curLineItemCount)
+						ch += this._virtualItems[i].height + this._lineGap;
+					if (ch > 0)
+						ch -= this._lineGap;
+					cw = this._scrollPane.contentWidth;
+				}
+				else if (this._layout == ListLayoutType.SingleRow || this._layout == ListLayoutType.FlowVertical)
+				{
+					for (i = 0; i < len; i += this._curLineItemCount)
+						cw += this._virtualItems[i].width + this._columnGap;
+					if (cw > 0)
+						cw -= this._columnGap;
+					ch = this._scrollPane.contentHeight;
+				}
+				else
+				{
+					var pageCount:number = Math.ceil(len / (this._curLineItemCount * this._curLineItemCount2));
+					cw = pageCount * this.viewWidth;
+					ch = this.viewHeight;
+				}
+			}
+			
+			this.handleAlign(cw, ch);
+			this._scrollPane.setContentSize(cw, ch);
+			
+			this._eventLocked = false;
+			
+			this.handleScroll(true);
         }
         
-        private renderItems(beginIndex: number,endIndex: number): void {
-            for(var i: number = 0;i < this._viewCount;i++) {
-                var obj: GObject = this.getChildAt(i);
-                var j: number = this._firstIndex + i;
-                if(this._loop && this._numItems>0)
-                    j = j % this._numItems;
-        
-                if(j < this._numItems) {
-                    obj.visible = true;
-                    if(i >= beginIndex && i < endIndex)
-                        this.itemRenderer.call(this.callbackThisObj, j,obj);
-                }
-                else
-                    obj.visible = false;
-            }
-        }
-        
-        private getItemRect(index: number): egret.Rectangle {
-            var rect: egret.Rectangle;
-            var index1: number = Math.floor(index / this._curLineItemCount);
-            var index2: number = index % this._curLineItemCount;
-            switch(this._layout) {
-                case ListLayoutType.SingleColumn:
-                    rect = new egret.Rectangle(0,index1 * this._itemSize.y + Math.max(0,index1 - 1) * this._lineGap,
-                        this.viewWidth,this._itemSize.y);
-                    break;
-        
-                case ListLayoutType.FlowHorizontal:
-                    rect = new egret.Rectangle(index2 * this._itemSize.x + Math.max(0,index2 - 1) * this._columnGap,
-                        index1 * this._itemSize.y + Math.max(0,index1 - 1) * this._lineGap,
-                        this._itemSize.x,this._itemSize.y);
-                    break;
-        
-                case ListLayoutType.SingleRow:
-                    rect = new egret.Rectangle(index1 * this._itemSize.x + Math.max(0,index1 - 1) * this._columnGap,0,
-                        this._itemSize.x,this.viewHeight);
-                    break;
-        
-                case ListLayoutType.FlowVertical:
-                    rect = new egret.Rectangle(index1 * this._itemSize.x + Math.max(0,index1 - 1) * this._columnGap,
-                        index2 * this._itemSize.y + Math.max(0,index2 - 1) * this._lineGap,
-                        this._itemSize.x,this._itemSize.y);
-                    break;
-            }
-            return rect;
-        }
-        
-        private __scrolled(evt: egret.Event): void {
-            if(this._eventLocked)
-                return;
-                
-            if(this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal) {
-                if(this._loop) {
-                    if(this.scrollPane.percY == 0)
-                        this.scrollPane.posY = this._numItems * (this._itemSize.y + this._lineGap);
-                    else if(this.scrollPane.percY == 1)
-                        this.scrollPane.posY = this.scrollPane.contentHeight - this._numItems * (this._itemSize.y + this._lineGap) - this.viewHeight;
-                }
-        
-                var firstLine: number = Math.floor((this.scrollPane.posY + this._lineGap) / (this._itemSize.y + this._lineGap));
-                var newFirstIndex: number = firstLine * this._curLineItemCount;
-                for(var i: number = 0;i < this._viewCount;i++) {
-                    var obj: GObject = this.getChildAt(i);
-                    obj.y = (firstLine + Math.floor(i / this._curLineItemCount)) * (this._itemSize.y + this._lineGap);
-                }
-                if(newFirstIndex >= this._numItems)
-                    newFirstIndex -= this._numItems;
-        
-                if(newFirstIndex != this._firstIndex || evt == null) {
-                    var oldFirstIndex: number = this._firstIndex;
-                    this._firstIndex = newFirstIndex;
-        
-                    if(evt == null || oldFirstIndex + this._viewCount < newFirstIndex || oldFirstIndex > newFirstIndex + this._viewCount) {
-                        //no intersection, render all
-                        for(i = 0;i < this._viewCount;i++) {
-                            obj = this.getChildAt(i);
-                            if(obj instanceof GButton)
-                                (<GButton><any>obj).selected = false;
-                        }
-                        this.renderItems(0,this._viewCount);
-                    }
-                    else if(oldFirstIndex > newFirstIndex) {
-                        var j1: number = oldFirstIndex - newFirstIndex;
-                        var j2: number = this._viewCount - j1;
-                        for(i = j2 - 1;i >= 0;i--) {
-                            var obj1: GObject = this.getChildAt(i);
-                            var obj2: GObject = this.getChildAt(i + j1);
-                            if(obj2 instanceof GButton)
-                                (<GButton><any>obj2).selected = false;
-                            var tmp: number = obj1.y;
-                            obj1.y = obj2.y;
-                            obj2.y = tmp;
-                            this.swapChildrenAt(i + j1,i);
-                        }
-                        this.renderItems(0,j1);
-                    }
-                    else {
-                        j1 = newFirstIndex - oldFirstIndex;
-                        j2 = this._viewCount - j1;
-                        for(i = 0;i < j2;i++) {
-                            obj1 = this.getChildAt(i);
-                            obj2 = this.getChildAt(i + j1);
-                            if(obj1 instanceof GButton)
-                               (<GButton><any>obj1).selected = false;
-                            tmp = obj1.y;
-                            obj1.y = obj2.y;
-                            obj2.y = tmp;
-                            this.swapChildrenAt(i + j1,i);
-                        }
-                        this.renderItems(j2,this._viewCount);
-                    }
-                }
-            }
-            else {
-                if(this._loop) {
-                    if(this.scrollPane.percX == 0)
-                        this.scrollPane.posX = this._numItems * (this._itemSize.x + this._columnGap);
-                    else if(this.scrollPane.percX == 1)
-                        this.scrollPane.posX = this.scrollPane.contentWidth - this._numItems * (this._itemSize.x + this._columnGap) - this.viewWidth;
-                }
-        
-                firstLine = Math.floor((this.scrollPane.posX + this._columnGap) / (this._itemSize.x + this._columnGap));
-                newFirstIndex = firstLine * this._curLineItemCount;
-        
-                for(i = 0;i < this._viewCount;i++) {
-                    obj = this.getChildAt(i);
-                    obj.x = (firstLine + Math.floor(i / this._curLineItemCount)) * (this._itemSize.x + this._columnGap);
-                }
-        
-                if(newFirstIndex >= this._numItems)
-                    newFirstIndex -= this._numItems;
-        
-                if(newFirstIndex != this._firstIndex || evt == null) {
-                    oldFirstIndex = this._firstIndex;
-                    this._firstIndex = newFirstIndex;
-                    if(evt == null || oldFirstIndex + this._viewCount < newFirstIndex || oldFirstIndex > newFirstIndex + this._viewCount) {
-                        //no intersection, render all
-                        for(i = 0;i < this._viewCount;i++) {
-                            obj = this.getChildAt(i);
-                            if(obj1 instanceof GButton)
-                                (<GButton><any>obj1).selected = false;
-                        }
-        
-                        this.renderItems(0,this._viewCount);
-                    }
-                    else if(oldFirstIndex > newFirstIndex) {
-                        j1 = oldFirstIndex - newFirstIndex;
-                        j2 = this._viewCount - j1;
-                        for(i = j2 - 1;i >= 0;i--) {
-                            obj1 = this.getChildAt(i);
-                            obj2 = this.getChildAt(i + j1);
-                            if(obj2 instanceof GButton)
-                                (<GButton><any>obj2).selected = false;
-                            tmp = obj1.x;
-                            obj1.x = obj2.x;
-                            obj2.x = tmp;
-                            this.swapChildrenAt(i + j1,i);
-                        }
-        
-                        this.renderItems(0,j1);
-                    }
-                    else {
-                        j1 = newFirstIndex - oldFirstIndex;
-                        j2 = this._viewCount - j1;
-                        for(i = 0;i < j2;i++) {
-                            obj1 = this.getChildAt(i);
-                            obj2 = this.getChildAt(i + j1);
-                            if(obj1 instanceof GButton)
-                                (<GButton><any>obj1).selected = false;
-                            tmp = obj1.x;
-                            obj1.x = obj2.x;
-                            obj2.x = tmp;
-                            this.swapChildrenAt(i + j1,i);
-                        }
-        
-                        this.renderItems(j2,this._viewCount);
-                    }
-                }
-            }
-        
-            this._boundsChanged = false;
-        }
+		private  __scrolled(evt:Event):void
+		{
+			this.handleScroll(false);
+		}
+		
+		private getIndexOnPos1(forceUpdate:boolean):number
+		{
+			if (this._realNumItems < this._curLineItemCount)
+			{
+				GList.pos_param = 0;
+				return 0;
+			}
+			
+			var i:number;
+			var pos2:number;
+			var pos3:number;
+			
+			if (this.numChildren > 0 && !forceUpdate)
+			{
+				pos2 = this.getChildAt(0).y;
+				if (pos2 > GList.pos_param)
+				{
+					for (i = this._firstIndex - this._curLineItemCount; i >= 0; i -= this._curLineItemCount)
+					{
+						pos2 -= (this._virtualItems[i].height + this._lineGap);
+						if (pos2 <= GList.pos_param)
+						{
+							GList.pos_param = pos2;
+							return i;
+						}
+					}
+					
+					GList.pos_param = 0;
+					return 0;
+				}
+				else
+				{
+					for (i = this._firstIndex; i < this._realNumItems; i += this._curLineItemCount)
+					{
+						pos3 = pos2 + this._virtualItems[i].height + this._lineGap;
+						if (pos3 > GList.pos_param)
+						{
+							GList.pos_param = pos2;
+							return i;
+						}
+						pos2 = pos3;
+					}
+					
+					GList.pos_param = pos2;
+					return this._realNumItems - this._curLineItemCount;
+				}
+			}
+			else
+			{
+				pos2 = 0;
+				for (i = 0; i < this._realNumItems; i += this._curLineItemCount)
+				{
+					pos3 = pos2 + this._virtualItems[i].height + this._lineGap;
+					if (pos3 > GList.pos_param)
+					{
+						GList.pos_param = pos2;
+						return i;
+					}
+					pos2 = pos3;
+				}
+				
+				GList.pos_param = pos2;
+				return this._realNumItems - this._curLineItemCount;
+			}
+		}
+		
+		private getIndexOnPos2(forceUpdate:boolean):number
+		{
+			if (this._realNumItems < this._curLineItemCount)
+			{
+				GList.pos_param = 0;
+				return 0;
+			}
+			
+			var i:number;
+			var pos2:number;
+			var pos3:number;
+			
+			if (this.numChildren > 0 && !forceUpdate)
+			{
+				pos2 = this.getChildAt(0).x;
+				if (pos2 > GList.pos_param)
+				{
+					for (i = this._firstIndex - this._curLineItemCount; i >= 0; i -= this._curLineItemCount)
+					{
+						pos2 -= (this._virtualItems[i].width + this._columnGap);
+						if (pos2 <= GList.pos_param)
+						{
+							GList.pos_param = pos2;
+							return i;
+						}
+					}
+					
+					GList.pos_param = 0;
+					return 0;
+				}
+				else
+				{
+					for (i = this._firstIndex; i < this._realNumItems; i += this._curLineItemCount)
+					{
+						pos3 = pos2 + this._virtualItems[i].width + this._columnGap;
+						if (pos3 > GList.pos_param)
+						{
+							GList.pos_param = pos2;
+							return i;
+						}
+						pos2 = pos3;
+					}
+					
+					GList.pos_param = pos2;
+					return this._realNumItems - this._curLineItemCount;
+				}
+			}
+			else
+			{
+				pos2 = 0;
+				for (i = 0; i < this._realNumItems; i += this._curLineItemCount)
+				{
+					pos3 = pos2 + this._virtualItems[i].width + this._columnGap;
+					if (pos3 > GList.pos_param)
+					{
+						GList.pos_param = pos2;
+						return i;
+					}
+					pos2 = pos3;
+				}
+				
+				GList.pos_param = pos2;
+				return this._realNumItems - this._curLineItemCount;
+			}
+		}
+		
+		private getIndexOnPos3(forceUpdate:boolean):number
+		{
+			if (this._realNumItems < this._curLineItemCount)
+			{
+				GList.pos_param = 0;
+				return 0;
+			}
+			
+			var viewWidth:number = this.viewWidth;
+			var page:number = Math.floor(GList.pos_param / viewWidth);
+			var startIndex:number = page * (this._curLineItemCount * this._curLineItemCount2);
+			var pos2:number = page * viewWidth;
+			var i:number;
+			var pos3:number;
+			for (i = 0; i < this._curLineItemCount; i++)
+			{
+				pos3 = pos2 + this._virtualItems[startIndex + i].width + this._columnGap;
+				if (pos3 > GList.pos_param)
+				{
+					GList.pos_param = pos2;
+					return startIndex + i;
+				}
+				pos2 = pos3;
+			}
+			
+			GList.pos_param = pos2;
+			return startIndex + this._curLineItemCount - 1;
+		}
+		
+		private handleScroll(forceUpdate:boolean):void
+		{
+			if (this._eventLocked)
+				return;
+			
+			var pos:number;
+			var roundSize:number;
+			
+			if (this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal)
+			{
+				if (this._loop)
+				{
+					pos = this._scrollPane.scrollingPosY;
+					//循环列表的核心实现，滚动到头尾时重新定位
+					roundSize = this._numItems * (this._itemSize.y + this._lineGap);
+					if (pos == 0)
+						this._scrollPane.posY = roundSize;
+					else if (pos == this._scrollPane.contentHeight - this._scrollPane.viewHeight)
+						this._scrollPane.posY = this._scrollPane.contentHeight - roundSize - this.viewHeight;
+				}
+				
+				this.handleScroll1(forceUpdate);
+			}
+			else if (this._layout == ListLayoutType.SingleRow || this._layout == ListLayoutType.FlowVertical)
+			{
+				if (this._loop)
+				{
+					pos = this._scrollPane.scrollingPosX;
+					//循环列表的核心实现，滚动到头尾时重新定位
+					roundSize = this._numItems * (this._itemSize.x + this._columnGap);
+					if (pos == 0)
+						this._scrollPane.posX = roundSize;
+					else if (pos == this._scrollPane.contentWidth - this._scrollPane.viewWidth)
+						this._scrollPane.posX = this._scrollPane.contentWidth - roundSize - this.viewWidth;
+				}
+				
+				this.handleScroll2(forceUpdate);
+			}
+			else
+			{
+				if (this._loop)
+				{
+					pos = this._scrollPane.scrollingPosX;
+					//循环列表的核心实现，滚动到头尾时重新定位
+					roundSize = Math.floor(this._numItems / (this._curLineItemCount * this._curLineItemCount2)) * this.viewWidth;
+					if (pos == 0)
+						this._scrollPane.posX = roundSize;
+					else if (pos == this._scrollPane.contentWidth - this._scrollPane.viewWidth)
+						this._scrollPane.posX = this._scrollPane.contentWidth - roundSize - this.viewWidth;
+				}
+				
+				this.handleScroll3(forceUpdate);
+			}
+			
+			this._boundsChanged = false;
+		}
+		
+		private static itemInfoVer:number = 0; //用来标志item是否在本次处理中已经被重用了
+		private static enterCounter:number = 0; //因为HandleScroll是会重入的，这个用来避免极端情况下的死锁
+		private static pos_param:number;
+		
+		private  handleScroll1(forceUpdate:boolean):void
+		{
+			GList.enterCounter++;
+			if (GList.enterCounter > 3)
+				return;
+			
+			var pos:number = this._scrollPane.scrollingPosY;
+			var max:number = pos + this._scrollPane.viewHeight;
+			var end:boolean = max == this._scrollPane.contentHeight;//这个标志表示当前需要滚动到最末，无论内容变化大小
+			
+			//寻找当前位置的第一条项目
+			GList.pos_param = pos;
+			var newFirstIndex:number = this.getIndexOnPos1(forceUpdate);
+			pos = GList.pos_param;
+			if (newFirstIndex == this._firstIndex && !forceUpdate)
+			{
+				GList.enterCounter--;
+				return;
+			}
+			
+			var oldFirstIndex:number = this._firstIndex;
+			this._firstIndex = newFirstIndex;
+			var curIndex:number = newFirstIndex;
+			var forward:boolean = oldFirstIndex > newFirstIndex;
+			var oldCount:number = this.numChildren;
+			var lastIndex:number = oldFirstIndex + oldCount - 1;
+			var reuseIndex:number = forward ? lastIndex : oldFirstIndex;
+			var curX:number = 0, curY:number = pos;
+			var needRender:boolean;
+			var deltaSize:number = 0;
+			var firstItemDeltaSize:number = 0;
+			var url:string = this.defaultItem;
+			var ii:ItemInfo, ii2:ItemInfo;
+			var i:number,j:number;
+			
+			GList.itemInfoVer++;
+			
+			while (curIndex < this._realNumItems && (end || curY < max))
+			{
+				ii = this._virtualItems[curIndex];
+				
+				if (ii.obj == null || forceUpdate)
+				{
+					if (this.itemProvider != null)
+					{
+						url = this.itemProvider.call(this.callbackThisObj, curIndex % this._numItems);
+						if (url == null)
+							url = this.defaultItem;
+					}
+					
+					if (ii.obj != null && ii.obj.resourceURL != url)
+					{
+						this.removeChild(ii.obj);
+						ii.obj = null;
+					}
+				}
+				
+				if (ii.obj == null)
+				{
+					//搜索最适合的重用item，保证每次刷新需要新建或者重新render的item最少
+					if (forward)
+					{
+						for (j = reuseIndex; j >= oldFirstIndex; j--)
+						{
+							ii2 = this._virtualItems[j];
+							if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer && ii2.obj.resourceURL == url)
+							{
+								ii.obj = ii2.obj;
+								ii2.obj = null;
+								if (j == reuseIndex)
+									reuseIndex--;
+								break;
+							}
+						}
+					}
+					else
+					{
+						for (j = reuseIndex; j <= lastIndex; j++)
+						{
+							ii2 = this._virtualItems[j];
+							if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer && ii2.obj.resourceURL == url)
+							{
+								ii.obj = ii2.obj;
+								ii2.obj = null;
+								if (j == reuseIndex)
+									reuseIndex++;
+								break;
+							}
+						}
+					}
+					
+					if (ii.obj != null)
+					{
+						this.setChildIndex(ii.obj, forward ? curIndex - newFirstIndex : this.numChildren);
+					}
+					else
+					{
+						ii.obj = this._pool.getObject(url);
+						if (forward)
+							this.addChildAt(ii.obj, curIndex - newFirstIndex);
+						else
+							this.addChild(ii.obj);
+					}
+					if (ii.obj instanceof GButton)
+						(<GButton><any>ii.obj).selected = false;
+					
+					needRender = true;
+				}
+				else
+					needRender = forceUpdate;
+				
+				if (needRender)
+				{
+					this.itemRenderer.call(this.callbackThisObj, curIndex % this._numItems, ii.obj);
+					if (curIndex % this._curLineItemCount == 0)
+					{
+						deltaSize += Math.ceil(ii.obj.height) - ii.height;
+						if (curIndex == newFirstIndex && oldFirstIndex > newFirstIndex)
+						{
+							//当内容向下滚动时，如果新出现的项目大小发生变化，需要做一个位置补偿，才不会导致滚动跳动
+							firstItemDeltaSize = Math.ceil(ii.obj.height) - ii.height;
+						}
+					}
+					ii.width = Math.ceil(ii.obj.width);
+					ii.height = Math.ceil(ii.obj.height);
+				}
+				
+				ii.updateFlag = GList.itemInfoVer;
+				ii.obj.setXY(curX, curY);
+				if (curIndex == newFirstIndex) //要显示多一条才不会穿帮
+					max += ii.height;
+				
+				curX += ii.width + this._columnGap;
+				
+				if (curIndex % this._curLineItemCount == this._curLineItemCount - 1)
+				{
+					curX = 0;
+					curY += ii.height + this._lineGap;
+				}
+				curIndex++;
+			}
+			
+			for (i = 0; i < oldCount; i++)
+			{
+				ii = this._virtualItems[oldFirstIndex + i];
+				if (ii.updateFlag != GList.itemInfoVer && ii.obj != null)
+				{
+					this.removeChild(ii.obj);
+					ii.obj = null;
+				}
+			}
+			
+			if (deltaSize != 0 || firstItemDeltaSize != 0)
+				this._scrollPane.changeContentSizeOnScrolling(0, deltaSize, 0, firstItemDeltaSize);
+			
+			if (curIndex > 0 && this.numChildren > 0 && this._container.y < 0 && this.getChildAt(0).y > -this._container.y)//最后一页没填满！
+				this.handleScroll1(false);
+			
+			GList.enterCounter--;
+		}
+		
+		private  handleScroll2(forceUpdate:boolean):void
+		{
+			GList.enterCounter++;
+			if (GList.enterCounter > 3)
+				return;
+			
+			var pos:number = this._scrollPane.scrollingPosX;
+			var max:number = pos + this._scrollPane.viewWidth;
+			var end:boolean = pos == this._scrollPane.contentWidth;//这个标志表示当前需要滚动到最末，无论内容变化大小
+			
+			//寻找当前位置的第一条项目
+			GList.pos_param = pos;
+			var newFirstIndex:number = this.getIndexOnPos2(forceUpdate);
+			pos = GList.pos_param;
+			if (newFirstIndex == this._firstIndex && !forceUpdate)
+			{
+				GList.enterCounter--;
+				return;
+			}
+			
+			var oldFirstIndex:number = this._firstIndex;
+			this._firstIndex = newFirstIndex;
+			var curIndex:number = newFirstIndex;
+			var forward:boolean = oldFirstIndex > newFirstIndex;
+			var oldCount:number = this.numChildren;
+			var lastIndex:number = oldFirstIndex + oldCount - 1;
+			var reuseIndex:number = forward ? lastIndex : oldFirstIndex;
+			var curX:number = pos, curY:number = 0;
+			var needRender:boolean;
+			var deltaSize:number = 0;
+			var firstItemDeltaSize:number  = 0;
+			var url:string = this.defaultItem;
+			var ii:ItemInfo, ii2:ItemInfo;
+			var i:number,j:number;
+			
+			GList.itemInfoVer++;
+			
+			while (curIndex < this._realNumItems && (end || curX < max))
+			{
+				ii = this._virtualItems[curIndex];
+				
+				if (ii.obj == null || forceUpdate)
+				{
+					if (this.itemProvider != null)
+					{
+						url = this.itemProvider.call(this.callbackThisObj, curIndex % this._numItems);
+						if (url == null)
+							url = this.defaultItem;
+					}
+					
+					if (ii.obj != null && ii.obj.resourceURL != url)
+					{
+						this.removeChild(ii.obj);
+						ii.obj = null;
+					}
+				}
+				
+				if (ii.obj == null)
+				{
+					if (forward)
+					{
+						for (j = reuseIndex; j >= oldFirstIndex; j--)
+						{
+							ii2 = this._virtualItems[j];
+							if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer && ii2.obj.resourceURL == url)
+							{
+								ii.obj = ii2.obj;
+								ii2.obj = null;
+								if (j == reuseIndex)
+									reuseIndex--;
+								break;
+							}
+						}
+					}
+					else
+					{
+						for (j = reuseIndex; j <= lastIndex; j++)
+						{
+							ii2 = this._virtualItems[j];
+							if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer && ii2.obj.resourceURL == url)
+							{
+								ii.obj = ii2.obj;
+								ii2.obj = null;
+								if (j == reuseIndex)
+									reuseIndex++;
+								break;
+							}
+						}
+					}
+					
+					if (ii.obj != null)
+					{
+						this.setChildIndex(ii.obj, forward ? curIndex - newFirstIndex : this.numChildren);
+					}
+					else
+					{
+						ii.obj = this._pool.getObject(url);
+						if (forward)
+							this.addChildAt(ii.obj, curIndex - newFirstIndex);
+						else
+							this.addChild(ii.obj);
+					}
+					if (ii.obj instanceof GButton)
+                        (<GButton><any>ii.obj).selected = false;
+					
+					needRender = true;
+				}
+				else
+					needRender = forceUpdate;
+				
+				if (needRender)
+				{
+					this.itemRenderer.call(this.callbackThisObj, curIndex % this._numItems, ii.obj);
+					if (curIndex % this._curLineItemCount == 0)
+					{
+						deltaSize += Math.ceil(ii.obj.width) - ii.width;
+						if (curIndex == newFirstIndex && oldFirstIndex > newFirstIndex)
+						{
+							//当内容向下滚动时，如果新出现的一个项目大小发生变化，需要做一个位置补偿，才不会导致滚动跳动
+							firstItemDeltaSize = Math.ceil(ii.obj.width) - ii.width;
+						}
+					}
+					ii.width = Math.ceil(ii.obj.width);
+					ii.height = Math.ceil(ii.obj.height);
+				}
+				
+				ii.updateFlag = GList.itemInfoVer;
+				ii.obj.setXY(curX, curY);
+				if (curIndex == newFirstIndex) //要显示多一条才不会穿帮
+					max += ii.width;
+				
+				curY += ii.height + this._lineGap;
+				
+				if (curIndex % this._curLineItemCount == this._curLineItemCount - 1)
+				{
+					curY = 0;
+					curX += ii.width + this._columnGap;
+				}
+				curIndex++;
+			}
+			
+			for (i = 0; i < oldCount; i++)
+			{
+				ii = this._virtualItems[oldFirstIndex + i];
+				if (ii.updateFlag != GList.itemInfoVer && ii.obj != null)
+				{
+					this.removeChild(ii.obj);
+					ii.obj = null;
+				}
+			}
+			
+			if (deltaSize != 0 || firstItemDeltaSize != 0)
+				this._scrollPane.changeContentSizeOnScrolling(deltaSize, 0, firstItemDeltaSize, 0);
+			
+			if (curIndex > 0 && this.numChildren > 0 && this._container.x < 0 && this.getChildAt(0).x > - this._container.x)//最后一页没填满！
+				this.handleScroll2(false);
+			
+			GList.enterCounter--;
+		}
+		
+		private  handleScroll3(forceUpdate:boolean):void
+		{
+			var pos:number = this._scrollPane.scrollingPosX;
+			
+			//寻找当前位置的第一条项目
+			GList.pos_param = pos;
+			var newFirstIndex:number = this.getIndexOnPos3(forceUpdate);
+			pos = GList.pos_param;
+			if (newFirstIndex == this._firstIndex && !forceUpdate)
+				return;
+			
+			var oldFirstIndex:number = this._firstIndex;
+			this._firstIndex = newFirstIndex;
+			
+			//分页模式不支持不等高，所以渲染满一页就好了
+			
+			var reuseIndex:number = oldFirstIndex;
+			var virtualItemCount:number = this._virtualItems.length;
+			var pageSize:number = this._curLineItemCount * this._curLineItemCount2;
+			var startCol:number = newFirstIndex % this._curLineItemCount;
+			var viewWidth:number = this.viewWidth;
+			var page:number = Math.floor(newFirstIndex / pageSize);
+			var startIndex:number = page * pageSize;
+			var lastIndex:number = startIndex + pageSize * 2; //测试两页
+			var needRender:boolean;
+			var i:number;
+			var ii:ItemInfo, ii2:ItemInfo;
+			var col:number;
+			
+			GList.itemInfoVer++;
+			
+			//先标记这次要用到的项目
+			for (i = startIndex; i < lastIndex; i++)
+			{
+				if (i >= this._realNumItems)
+					continue;
+				
+				col = i % this._curLineItemCount;
+				if (i - startIndex < pageSize)
+				{
+					if (col < startCol)
+						continue;
+				}
+				else
+				{
+					if (col > startCol)
+						continue;
+				}
+				
+				ii = this._virtualItems[i];
+				ii.updateFlag = GList.itemInfoVer;
+			}
+			
+			var lastObj:GObject = null;
+			var insertIndex:number = 0;
+			for (i = startIndex; i < lastIndex; i++)
+			{
+				if (i >= this._realNumItems)
+					continue;
+				
+				col = i % this._curLineItemCount;
+				if (i - startIndex < pageSize)
+				{
+					if (col < startCol)
+						continue;
+				}
+				else
+				{
+					if (col > startCol)
+						continue;
+				}
+				
+				ii = this._virtualItems[i];
+				if (ii.obj == null)
+				{
+					//寻找看有没有可重用的
+					while (reuseIndex < virtualItemCount)
+					{
+						ii2 = this._virtualItems[reuseIndex];
+						if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer)
+						{
+							ii.obj = ii2.obj;
+							ii2.obj = null;
+							break;
+						}
+						reuseIndex++;
+					}
+					
+					if (insertIndex == -1)
+						insertIndex = this.getChildIndex(lastObj) + 1;
+					
+					if (ii.obj == null)
+					{
+						ii.obj = this._pool.getObject(this.defaultItem);
+						this.addChildAt(ii.obj, insertIndex);
+					}
+					else
+					{
+						insertIndex = this.setChildIndexBefore(ii.obj, insertIndex);
+					}
+					insertIndex++;
+					
+					if (ii.obj instanceof GButton)
+						(<GButton><any>ii.obj).selected = false;
+					
+					needRender = true;
+				}
+				else
+				{
+					needRender = forceUpdate;
+					insertIndex = -1;
+					lastObj = ii.obj;
+				}
+				
+				if (needRender)
+					this.itemRenderer.call(this.callbackThisObj, i % this._numItems, ii.obj);
+				
+				ii.obj.setXY(Math.floor(i / pageSize) * viewWidth + col * (ii.width + this._columnGap),
+					(i / this._curLineItemCount) % this._curLineItemCount2 * (ii.height + this._lineGap));
+			}
+			
+			//释放未使用的
+			for (i = reuseIndex; i < virtualItemCount; i++)
+			{
+				ii = this._virtualItems[i];
+				if (ii.updateFlag != GList.itemInfoVer && ii.obj != null)
+				{
+					this.removeChild(ii.obj);
+					ii.obj = null;
+				}
+			}
+		}
+		
+		private  handleAlign(contentWidth:number, contentHeight:number):void
+		{
+			var newOffsetX:number = 0;
+			var newOffsetY:number = 0;
+			if (this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal || this._layout == ListLayoutType.Pagination)
+			{
+				if (contentHeight < this.viewHeight)
+				{
+					if (this._verticalAlign == VertAlignType.Middle)
+						newOffsetY = Math.floor((this.viewHeight - contentHeight) / 2);
+					else if (this._verticalAlign == VertAlignType.Bottom)
+						newOffsetY = this.viewHeight - contentHeight;
+				}
+			}
+			else
+			{
+				if (contentWidth < this.viewWidth)
+				{
+					if (this._align == AlignType.Center)
+						newOffsetX = Math.floor((this.viewWidth - contentWidth) / 2);
+					else if (this._align == AlignType.Right)
+						newOffsetX = this.viewWidth - contentWidth;
+				}
+			}
+			
+			if (newOffsetX!=this._alignOffset.x || newOffsetY!=this._alignOffset.y)
+			{
+				this._alignOffset.setTo(newOffsetX, newOffsetY);
+				if (this._scrollPane != null)
+					this._scrollPane.adjustMaskContainer();
+				else
+				{
+					this._container.x = this._margin.left + this._alignOffset.x;
+					this._container.y = this._margin.top + this._alignOffset.y;
+				}
+			}
+		}
 
         protected updateBounds(): void {
             var cnt: number = this._children.length;
@@ -1077,7 +1760,12 @@ module fairygui {
             var maxWidth: number = 0;
             var maxHeight: number = 0;
             var cw: number, ch: number = 0;
-            
+            var sw:number, sh:number;
+			var p:number;
+			var cnt:number = this._children.length;
+			var viewWidth:number = this.viewWidth;
+			var viewHeight:number = this.viewHeight;
+
             for(i = 0;i < cnt;i++) {
                 child = this.getChildAt(i);
                 child.ensureSizeCorrect();
@@ -1086,15 +1774,18 @@ module fairygui {
             if (this._layout == ListLayoutType.SingleColumn) {                
                 for (i = 0; i < cnt; i++) {
                     child = this.getChildAt(i);
-                    if (!child.visible)
+                    if (this.foldInvisibleItems && !child.visible)
                         continue;
+
+					sw = Math.ceil(child.width);
+					sh = Math.ceil(child.height);
 
                     if (curY != 0)
                         curY += this._lineGap;
                     child.y = curY;
-                    curY += child.height;
-                    if (child.width > maxWidth)
-                        maxWidth = child.width;
+                    curY += sh;
+                    if (sw > maxWidth)
+                        maxWidth = sw;
                 }
                 cw = curX + maxWidth;
                 ch = curY;
@@ -1105,29 +1796,34 @@ module fairygui {
                     if (!child.visible)
                         continue;
 
+					sw = Math.ceil(child.width);
+					sh = Math.ceil(child.height);
+
                     if (curX != 0)
                         curX += this._columnGap;
                     child.x = curX;
-                    curX += child.width;
-                    if (child.height > maxHeight)
-                        maxHeight = child.height;
+                    curX += sw;
+                    if (sh > maxHeight)
+                        maxHeight = sh;
                 }
                 cw = curX;
                 ch = curY + maxHeight;
             }
             else if (this._layout == ListLayoutType.FlowHorizontal) {
                 var j: number = 0;
-                var viewWidth: number = this.viewWidth;
                 for (i = 0; i < cnt; i++) {
                     child = this.getChildAt(i);
-                    if (!child.visible)
+                    if (this.foldInvisibleItems && !child.visible)
                         continue;
+
+					sw = Math.ceil(child.width);
+					sh = Math.ceil(child.height);
 
                     if (curX != 0)
                         curX += this._columnGap;
 
                     if(this._lineItemCount != 0 && j >= this._lineItemCount
-                        || this._lineItemCount == 0 && curX + child.width > viewWidth && maxHeight != 0) {
+                        || this._lineItemCount == 0 && curX + sw > viewWidth && maxHeight != 0) {
                         //new line
                         curX -= this._columnGap;
                         if(curX > maxWidth)
@@ -1138,27 +1834,29 @@ module fairygui {
                         j = 0;
                     }
                     child.setXY(curX,curY);
-                    curX += child.width;
-                    if(child.height > maxHeight)
-                        maxHeight = child.height;
+                    curX += sw;
+                    if(sh > maxHeight)
+                        maxHeight = sh;
                     j++;
                 }
                 ch = curY + maxHeight;
                 cw = maxWidth;
             }
-            else {
+           else if (this._layout == ListLayoutType.FlowVertical) {
                 j = 0;
-                var viewHeight: number = this.viewHeight;
                 for (i = 0; i < cnt; i++) {
                     child = this.getChildAt(i);
-                    if (!child.visible)
+                    if (this.foldInvisibleItems && !child.visible)
                         continue;
+
+					sw = Math.ceil(child.width);
+					sh = Math.ceil(child.height);
 
                     if (curY != 0)
                         curY += this._lineGap;
 
                     if(this._lineItemCount != 0 && j >= this._lineItemCount
-                        || this._lineItemCount == 0 && curY + child.height > viewHeight && maxWidth != 0) {
+                        || this._lineItemCount == 0 && curY + sh > viewHeight && maxWidth != 0) {
                         curY -= this._lineGap;
                         if(curY > maxHeight)
                             maxHeight = curY;
@@ -1168,14 +1866,57 @@ module fairygui {
                         j = 0;
                     }
                     child.setXY(curX,curY);
-                    curY += child.height;
-                    if(child.width > maxWidth)
-                        maxWidth = child.width;
+                    curY += sh;
+                    if(sw > maxWidth)
+                        maxWidth = sw;
                     j++;
                 }
                 cw = curX + maxWidth;
                 ch = maxHeight;
             }
+            else //pagination
+			{
+				for (i = 0; i < cnt; i++)
+				{
+					child = this.getChildAt(i);
+					if (this.foldInvisibleItems && !child.visible)
+						continue;
+					
+					sw = Math.ceil(child.width);
+					sh = Math.ceil(child.height);
+					
+					if (curX != 0)
+						curX += this._columnGap;
+					
+					if (this._lineItemCount != 0 && j >= this._lineItemCount
+						|| this._lineItemCount == 0 && curX + sw > viewWidth && maxHeight != 0)
+					{
+						//new line
+						curX -= this._columnGap;
+						if (curX > maxWidth)
+							maxWidth = curX;
+						curX = 0;
+						curY += maxHeight + this._lineGap;
+						maxHeight = 0;
+						j = 0;
+						
+						if (curY + sh > viewHeight && maxWidth != 0)//new page
+						{
+							p++;
+							curY = 0;
+						}
+					}
+					child.setXY(p * viewWidth + curX, curY);
+					curX += sw;
+					if (sh > maxHeight)
+						maxHeight = sh;
+					j++;
+				}
+				ch = curY + maxHeight;
+				cw = (p + 1) * viewWidth;
+			}
+			
+            this.handleAlign(cw, ch);
             this.setBounds(0, 0, cw, ch);
         }
 
@@ -1199,6 +1940,14 @@ module fairygui {
             str = xml.attributes.margin;
             if(str)
                 this._margin.parse(str);
+
+            str = xml.attributes.align;
+            if (str)
+                this._align = parseAlignType(str);
+
+            str = xml.attributes.vAlign;
+            if (str)
+                this._verticalAlign = parseVertAlignType(str);
                 
             if(overflow == OverflowType.Scroll) {
                 var scroll: ScrollType;
@@ -1293,6 +2042,18 @@ module fairygui {
                     }
                 }
             }
+        }
+    }
+
+    class ItemInfo
+    {
+        public width:number = 0;
+        public height:number = 0;
+        public obj:GObject;
+        public updateFlag:number;
+        
+        public constructor()
+        {
         }
     }
 }

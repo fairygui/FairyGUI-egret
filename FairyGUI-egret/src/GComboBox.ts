@@ -4,12 +4,15 @@ module fairygui {
     export class GComboBox extends GComponent {
         public dropdown: GComponent;
                 
-        protected _titleObject: GTextField;
+        protected _titleObject: GObject;
+        protected _iconObject: GObject;
         protected _list: GList;
 
-        private _visibleItemCount: number = 0;
         private _items: Array<string>;
         private _values: Array<string>;
+        private _icons: Array<string>;
+
+        private _visibleItemCount: number = 0;
         private _itemsUpdated: boolean;
         private _selectedIndex: number = 0;
         private _buttonController: Controller;
@@ -40,16 +43,37 @@ module fairygui {
             this.updateGear(6);
         }
 
+        public get icon(): string {
+             if (this._iconObject)
+                return this._iconObject.icon;
+            else
+                return null;
+        }
+
+        public set icon(value: string) {
+            if(this._iconObject)
+                this._iconObject.icon = value;
+            this.updateGear(7);
+        }
+
         public get titleColor(): number {
-            if (this._titleObject)
-                return this._titleObject.color;
+            if(this._titleObject instanceof GTextField)
+                return (<GTextField>this._titleObject).color;
+            else if(this._titleObject instanceof GLabel)
+                return (<GLabel>this._titleObject).titleColor;
+            else if(this._titleObject instanceof GButton)
+                return (<GButton>this._titleObject).titleColor;
             else
                 return 0;
         }
 
         public set titleColor(value: number) {
-            if (this._titleObject)
-                this._titleObject.color = value;
+            if(this._titleObject instanceof GTextField)
+                (<GTextField>this._titleObject).color = value;
+            else if(this._titleObject instanceof GLabel)
+                (<GLabel>this._titleObject).titleColor = value;
+            else if(this._titleObject instanceof GButton)
+                (<GButton>this._titleObject).titleColor = value;
         }
 
         public get visibleItemCount(): number {
@@ -84,11 +108,28 @@ module fairygui {
                     this._selectedIndex = 0;
 
                 this.text = this._items[this._selectedIndex];
+                if (this._icons != null && this._selectedIndex < this._icons.length)
+					this.icon = this._icons[this._selectedIndex];
             }
             else
+            {
                 this.text = "";
+                if (this._icons != null)
+					this.icon = null;
+				this._selectedIndex = -1;
+            }
             this._itemsUpdated = true;
         }
+
+		public get icons(): Array<string> {
+			return this._icons;
+		}
+		
+		public set icons(value:Array<string>) {
+			this._icons = value;
+			if (this._icons != null && this._selectedIndex != -1 && this._selectedIndex < this._icons.length)
+				this.icon = this._icons[this._selectedIndex];
+		}
 
         public get values(): Array<string> {
             return this._values;
@@ -111,9 +152,17 @@ module fairygui {
 
             this._selectedIndex = val;
             if (this.selectedIndex >= 0 && this.selectedIndex < this._items.length)
+            {
                 this.text = this._items[this._selectedIndex];
+                if (this._icons != null && this._selectedIndex < this._icons.length)
+					this.icon = this._icons[this._selectedIndex];
+            }
             else
+            {
                 this.text = "";
+                if (this._icons != null)
+					this.icon = null;
+            }
         }
 
         public get value(): string {
@@ -137,7 +186,9 @@ module fairygui {
             var str: string;
 
             this._buttonController = this.getController("button");
-            this._titleObject = <GTextField><any> (this.getChild("title"));
+            this._titleObject = this.getChild("title");
+            this._iconObject = this.getChild("icon");
+
             str = xml.attributes.dropdown;
             if (str) {
                 this.dropdown = <GComponent><any> (UIPackage.createObjectFromURL(str));
@@ -201,6 +252,13 @@ module fairygui {
                         if(cxml.name == "item") {
                             this._items.push(<string><any> (cxml.attributes.title));
                             this._values.push(<string><any> (cxml.attributes.value));
+                            str = cxml.attributes.icon;
+                            if(str)
+                            {
+                                if(!this._icons)
+                                    this._icons = new Array<string>(length);
+                                this._icons[i] = str;
+                            }
                         }
                     }
                 }
@@ -218,6 +276,10 @@ module fairygui {
                 }
                 else
                     this._selectedIndex = -1;
+
+                str = xml.attributes.icon;
+                if(str)
+                    this.icon = str;
                     
                 str = xml.attributes.direction;
 				if(str)
@@ -240,6 +302,7 @@ module fairygui {
                     var item: GObject = this._list.addItemFromPool();
                     item.name = i < this._values.length ? this._values[i] : "";
                     item.text = this._items[i];
+                    item.icon = (this._icons != null && i < this._icons.length) ? this._icons[i] : null;
                 }
                 this._list.resizeToFit(this._visibleItemCount);
             }
@@ -291,6 +354,9 @@ module fairygui {
         }
 
         private __mousedown(evt: egret.TouchEvent): void {
+            if((evt.target instanceof egret.TextField) && (<egret.TextField><any>evt.target).type==egret.TextFieldType.INPUT)
+                return;
+                
             this._down = true;
             GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
 

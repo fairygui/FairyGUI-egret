@@ -15,17 +15,19 @@ module fairygui {
         //image
         public scale9Grid: egret.Rectangle;
         public scaleByTile: boolean;
+        public tileGridIndice: number = 0;
         public smoothing: boolean;
         public texture: egret.Texture;
 
         //movieclip
-        public interval: number;
-        public repeatDelay: number;
+        public interval: number = 0;
+        public repeatDelay: number = 0;
         public swing: boolean;
         public frames: Array<Frame>;
 
         //componenet
         public componentData: any;
+        public displayList: Array<DisplayListItem>;
 
         //sound
         public sound: egret.Sound;

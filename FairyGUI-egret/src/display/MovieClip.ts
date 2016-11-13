@@ -5,13 +5,13 @@ module fairygui {
         public interval: number = 0;
         public swing: boolean;
         public repeatDelay: number = 0;
+        private playState: PlayState;
 
         private _texture: egret.Texture;
         private _needRebuild: boolean;
         private _frameRect: egret.Rectangle;
 
         private _playing: boolean;
-        private _playState: PlayState;
         private _frameCount: number = 0;
         private _frames: Array<Frame>;
         private _currentFrame: number = 0;
@@ -28,7 +28,7 @@ module fairygui {
             super();
             this.$renderNode = new egret.sys.BitmapNode();
             
-            this._playState = new PlayState();
+            this.playState = new PlayState();
             this._playing = true;
             this.touchEnabled = false;
             
@@ -58,7 +58,7 @@ module fairygui {
                 this.setFrame(this._frames[this._currentFrame]);
             else
                 this.setFrame(null);
-            this._playState.rewind();
+            this.playState.rewind();
         }
 
         public get frameCount(): number {
@@ -80,7 +80,7 @@ module fairygui {
         public set currentFrame(value: number) {
             if (this._currentFrame != value) {
                 this._currentFrame = value;
-                this._playState.currentFrame = value;
+                this.playState.currentFrame = value;
                 this.setFrame(this._currentFrame < this._frameCount ? this._frames[this._currentFrame] : null);
             }
         }
@@ -120,16 +120,16 @@ module fairygui {
 
         private update(): void {
             if (this._playing && this._frameCount != 0 && this._status != 3) {
-                this._playState.update(this);
-                if (this._currentFrame != this._playState.currentFrame) {
+                this.playState.update(this);
+                if (this._currentFrame != this.playState.currentFrame) {
                     if (this._status == 1) {
                         this._currentFrame = this._start;
-                        this._playState.currentFrame = this._currentFrame;
+                        this.playState.currentFrame = this._currentFrame;
                         this._status = 0;
                     }
                     else if (this._status == 2) {
                         this._currentFrame = this._endAt;
-                        this._playState.currentFrame = this._currentFrame;
+                        this.playState.currentFrame = this._currentFrame;
                         this._status = 3;
 
                         //play end
@@ -138,7 +138,7 @@ module fairygui {
                         }
                     }
                     else {
-                        this._currentFrame = this._playState.currentFrame;
+                        this._currentFrame = this.playState.currentFrame;
                         if (this._currentFrame == this._end) {
                             if (this._times > 0) {
                                 this._times--;

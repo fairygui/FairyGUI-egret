@@ -9,7 +9,7 @@ module fairygui {
         private _align: AlignType;
         private _verticalAlign: VertAlignType;
         private _autoSize: boolean;
-        private _fill: FillType;
+        private _fill: LoaderFillType;
         private _showErrorSign: boolean;
         private _playing: boolean;
         private _frame: number = 0;
@@ -33,6 +33,7 @@ module fairygui {
             super();
             this._playing = true;
             this._url = "";
+            this._fill = LoaderFillType.None;
             this._align = AlignType.Left;
             this._verticalAlign = VertAlignType.Top;
             this._showErrorSign = true;
@@ -102,11 +103,11 @@ module fairygui {
             }
         }
 
-        public get fill(): FillType {
+        public get fill(): LoaderFillType {
             return this._fill;
         }
 
-        public set fill(value: FillType) {
+        public set fill(value: LoaderFillType) {
             if (this._fill != value) {
                 this._fill = value;
                 this.updateLayout();
@@ -325,21 +326,28 @@ module fairygui {
             }
             else {
                 var sx: number = 1, sy: number = 1;
-                if (this._fill == FillType.Scale || this._fill == FillType.ScaleFree) {
-                    sx = this.width / this._contentSourceWidth;
-                    sy = this.height / this._contentSourceHeight;
-
-                    if (sx != 1 || sy != 1) {
-                        if (this._fill == FillType.Scale) {
-                            if (sx > sy)
-                                sx = sy;
-                            else
-                                sy = sx;
-                        }
-                        this._contentWidth = this._contentSourceWidth * sx;
-                        this._contentHeight = this._contentSourceHeight * sy;
-                    }
-                }
+				if(this._fill!=LoaderFillType.None)
+				{
+					sx = this.width/this._contentSourceWidth;
+					sy = this.height/this._contentSourceHeight;
+					
+					if(sx!=1 || sy!=1)
+					{
+						if (this._fill == LoaderFillType.ScaleMatchHeight)
+							sx = sy;
+						else if (this._fill == LoaderFillType.ScaleMatchWidth)
+							sy = sx;
+						else if (this._fill == LoaderFillType.Scale)
+						{
+							if (sx > sy)
+								sx = sy;
+							else
+								sy = sx;
+						}
+						this._contentWidth = this._contentSourceWidth * sx;
+						this._contentHeight = this._contentSourceHeight * sy;
+					}
+				}
 
                 if (this._content instanceof egret.Bitmap) {
                     this._content.width = this._contentWidth;
@@ -401,7 +409,7 @@ module fairygui {
 
             str = xml.attributes.fill;
             if (str)
-                this._fill = parseFillType(str);
+                this._fill = parseLoaderFillType(str);
 
             this._autoSize = xml.attributes.autoSize == "true";
 

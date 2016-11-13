@@ -60,22 +60,20 @@ module fairygui {
             super.dispose();
         }
 
-        public constructFromResource(pkgItem: PackageItem): void {
-            this._packageItem = pkgItem;
-
-            this._sourceWidth = this._packageItem.width;
-            this._sourceHeight = this._packageItem.height;
+        public constructFromResource(): void {
+            this._sourceWidth = this.packageItem.width;
+            this._sourceHeight = this.packageItem.height;
             this._initWidth = this._sourceWidth;
             this._initHeight = this._sourceHeight;
-            this._content.scale9Grid = pkgItem.scale9Grid;
-            this._content.smoothing = pkgItem.smoothing;
-            if (pkgItem.scaleByTile)
+            this._content.scale9Grid = this.packageItem.scale9Grid;
+            this._content.smoothing = this.packageItem.smoothing;
+            if (this.packageItem.scaleByTile)
                 this._content.fillMode = egret.BitmapFillMode.REPEAT;
 
             this.setSize(this._sourceWidth, this._sourceHeight);
 
-            pkgItem.load();
-            this._content.texture = pkgItem.texture;
+            this.packageItem.load();
+            this._content.texture = this.packageItem.texture;
         }
         
         protected handleXYChanged(): void {

@@ -3,6 +3,8 @@ module fairygui {
 
     export class GObject extends egret.EventDispatcher {
         public data: any;
+        public packageItem: PackageItem;
+        public static draggingObject:GObject;
 
         private _x: number = 0;
         private _y: number = 0;
@@ -44,9 +46,7 @@ module fairygui {
         public _initHeight: number = 0;
         public _id: string;
         public _name: string;
-        public _packageItem: PackageItem;
         public _underConstruct: boolean;
-        public _constructingData: any;
         public _gearLocked: boolean;
         public _yOffset: number = 0;
         //Size的实现方式，有两种，0-GObject的w/h等于DisplayObject的w/h。1-GObject的sourceWidth/sourceHeight等于DisplayObject的w/h，剩余部分由scale实现
@@ -115,6 +115,9 @@ module fairygui {
                     this._parent.setBoundsChangedFlag();
                     this.dispatchEventWith(GObject.XY_CHANGED);
                 }
+
+                if (GObject.draggingObject == this && !GObject.sUpdateInDragging)
+					this.localToGlobalRect(0,0,this.width,this.height,GObject.sGlobalRect);
             }
         }
         
@@ -221,11 +224,11 @@ module fairygui {
         }
 
         public get actualWidth(): number {
-            return this.width * this._scaleX;
+            return this.width * Math.abs(this._scaleX);
         }
         
         public get actualHeight(): number {
-            return this.height * this._scaleY;
+            return this.height * Math.abs(this._scaleY);
         }
 
         public get scaleX(): number {
@@ -373,7 +376,7 @@ module fairygui {
         public set grayed(value: boolean) {
             if(this._grayed != value) {
                 this._grayed = value;
-                this.handleGrayChanged();
+                this.handleGrayedChanged();
                  this.updateGear(3);
             }
         }
@@ -440,7 +443,10 @@ module fairygui {
                 if (this._displayObject)
                     this._displayObject.visible = this._visible;
                 if (this._parent)
+                {
                     this._parent.childStateChanged(this);
+                    this._parent.setBoundsChangedFlag();
+                }
             }
         }
 
@@ -515,6 +521,16 @@ module fairygui {
 			this._displayObject.blendMode = value;
 		}
 
+        public get filters():egret.Filter[]
+		{
+			return this._displayObject.filters;
+		}
+		
+		public set filters(value:egret.Filter[])
+		{
+			this._displayObject.filters = value;
+		}
+
         public get inContainer(): boolean {
             return this._displayObject != null && this._displayObject.parent != null;
         }
@@ -524,8 +540,8 @@ module fairygui {
         }
 
         public get resourceURL(): string {
-            if (this._packageItem != null)
-                return "ui://" + this._packageItem.owner.id + this._packageItem.id;
+            if (this.packageItem != null)
+                return "ui://" + this.packageItem.owner.id + this.packageItem.id;
             else
                 return null;
         }
@@ -567,7 +583,7 @@ module fairygui {
 						gear = new GearIcon(this);
 						break;
 					default:
-						throw new Error("FairyGUI: invalid gear index!");
+						throw "FairyGUI: invalid gear index!";
 				}
 				this._gears[index] = gear;
 			}
@@ -646,63 +662,63 @@ module fairygui {
         }
         
         public get asCom(): GComponent {
-            return <GComponent><any> this;
+            return (this instanceof GComponent)?<GComponent><any> this:null;
         }
 
         public get asButton(): GButton {
-            return <GButton><any> this;
+            return (this instanceof GButton)?<GButton><any> this:null;
         }
 
         public get asLabel(): GLabel {
-            return <GLabel><any> this;
+            return (this instanceof GLabel)?<GLabel><any> this:null;
         }
 
         public get asProgress(): GProgressBar {
-            return <GProgressBar><any> this;
+            return (this instanceof GProgressBar)?<GProgressBar><any> this:null;
         }
 
         public get asTextField(): GTextField {
-            return <GTextField><any> this;
+            return (this instanceof GTextField)?<GTextField><any> this:null;
         }
 
         public get asRichTextField(): GRichTextField {
-            return <GRichTextField><any> this;
+            return (this instanceof GRichTextField)?<GRichTextField><any> this:null;
         }
 
         public get asTextInput(): GTextInput {
-            return <GTextInput><any> this;
+            return (this instanceof GTextInput)?<GTextInput><any> this:null;
         }
 
         public get asLoader(): GLoader {
-            return <GLoader><any> this;
+            return (this instanceof GLoader)?<GLoader><any> this:null;
         }
 
         public get asList(): GList {
-            return <GList><any> this;
+            return (this instanceof GList)?<GList><any> this:null;
         }
 
         public get asGraph(): GGraph {
-            return <GGraph><any> this;
+            return (this instanceof GGraph)?<GGraph><any> this:null;
         }
 
         public get asGroup(): GGroup {
-            return <GGroup><any> this;
+            return (this instanceof GGroup)?<GGroup><any> this:null;
         }
 
         public get asSlider(): GSlider {
-            return <GSlider><any> this;
+            return (this instanceof GSlider)?<GSlider><any> this:null;
         }
 
         public get asComboBox(): GComboBox {
-            return <GComboBox><any> this;
+            return (this instanceof GComboBox)?<GComboBox><any> this:null;
         }
         
         public get asImage(): GImage {
-            return <GImage><any> this;
+            return (this instanceof GImage)?<GImage><any> this:null;
         }
 
         public get asMovieClip(): GMovieClip {
-            return <GMovieClip><any> this;
+            return (this instanceof GMovieClip)?<GMovieClip><any> this:null;
         }
         
         public static cast(obj:egret.DisplayObject):GObject {
@@ -791,15 +807,27 @@ module fairygui {
         }
 
         public get dragging(): boolean {
-            return GObject.sDragging == this;
+            return GObject.draggingObject == this;
         }
 
         public localToGlobal(ax:number=0, ay:number=0, resultPoint?:egret.Point): egret.Point {
+        	if(this._pivotAsAnchor)
+			{
+				ax += this._pivotX*this._width;
+				ay += this._pivotY*this._height;
+			}
+			
             return this._displayObject.localToGlobal(ax, ay, resultPoint);
         }
 
         public globalToLocal(ax:number=0, ay:number=0, resultPoint?:egret.Point): egret.Point {
-            return this._displayObject.globalToLocal(ax, ay, resultPoint);
+            var pt:egret.Point = this._displayObject.globalToLocal(ax, ay, resultPoint);
+            if(this._pivotAsAnchor)
+			{
+				pt.x -= this._pivotX*this._width;
+				pt.y -= this._pivotY*this._height;
+			}
+            return pt;
         }
         
         public localToRoot(ax: number = 0,ay: number = 0,resultPoint?: egret.Point): egret.Point {
@@ -922,7 +950,7 @@ module fairygui {
             0.3,0.6,0,0,0,
             0,0,0,1,0
         ];
-        protected handleGrayChanged(): void {
+        protected handleGrayedChanged(): void {
             if(this._displayObject) {
                 if(this._grayed) {
                     var colorFlilter = new egret.ColorMatrixFilter(GObject.colorMatrix);
@@ -933,8 +961,7 @@ module fairygui {
             }
         }
 
-        public constructFromResource(pkgItem: PackageItem): void {
-            this._packageItem = pkgItem;
+        public constructFromResource(): void {
         }
 
         public setup_beforeAdd(xml: any): void {
@@ -1001,14 +1028,36 @@ module fairygui {
             if (str)
                 this.alpha = parseFloat(str);
 
-            this.touchable = xml.attributes.touchable != "false";
-            this.visible = xml.attributes.visible != "false";
-            this.grayed = xml.attributes.grayed == "true";
+            if(xml.attributes.touchable == "false")
+                this.touchable = false; 
+            if(xml.attributes.visible == "false")
+                this.visible = false;
+            if(xml.attributes.grayed == "true")
+                this.grayed = true;
             this.tooltips = xml.attributes.tooltips;
 
             str = xml.attributes.blend;
 			if (str)
 				this.blendMode = str;
+
+            str = xml.attributes.filter;
+			if (str)
+			{
+				switch (str)
+				{
+					case "color":
+						str = xml.attributes.filterData;
+						arr = str.split(",");
+						var cm:ColorMatrix = new ColorMatrix();
+						cm.adjustBrightness(parseFloat(arr[0]));
+						cm.adjustContrast(parseFloat(arr[1]));
+						cm.adjustSaturation(parseFloat(arr[2]));
+						cm.adjustHue(parseFloat(arr[3]));
+						var cf:egret.ColorMatrixFilter = new egret.ColorMatrixFilter(cm.matrix);					
+						this.filters = [cf];
+						break;
+				}
+			}
         }
 
 		private static GearXMLKeys:any = {
@@ -1043,13 +1092,13 @@ module fairygui {
 
         //drag support
         //-------------------------------------------------------------------
-        private static sDragging: GObject;
         private static sGlobalDragStart: egret.Point = new egret.Point();
         private static sGlobalRect: egret.Rectangle = new egret.Rectangle();
         private static sHelperPoint: egret.Point = new egret.Point();
         private static sDragHelperRect: egret.Rectangle = new egret.Rectangle();
+        private static sUpdateInDragging:boolean;
         private _touchDownPoint: egret.Point;
-        
+
         private initDrag(): void {
             if (this._draggable)
                 this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__begin, this);
@@ -1058,8 +1107,8 @@ module fairygui {
         }
 
         private dragBegin(evt: egret.TouchEvent): void {
-            if (GObject.sDragging != null)
-                GObject.sDragging.stopDrag();
+            if (GObject.draggingObject != null)
+                GObject.draggingObject.stopDrag();
 
             if (evt != null) {
                 GObject.sGlobalDragStart.x = evt.stageX;
@@ -1070,17 +1119,17 @@ module fairygui {
                 GObject.sGlobalDragStart.y = GRoot.mouseY;
             }
             this.localToGlobalRect(0,0,this.width,this.height,GObject.sGlobalRect);
-            GObject.sDragging = this;
+            GObject.draggingObject = this;
 
             GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__moving2, this);
             GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__end2, this);
         }
 
         private dragEnd(): void {
-            if (GObject.sDragging == this) {
+            if (GObject.draggingObject == this) {
                 GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.__moving2, this);
                 GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__end2, this);
-                GObject.sDragging = null;
+                GObject.draggingObject = null;
             }
         }
 
@@ -1146,12 +1195,20 @@ module fairygui {
                 }
             }
 
+            GObject.sUpdateInDragging = true;
             var pt: egret.Point = this.parent.globalToLocal(xx,yy,GObject.sHelperPoint);
             this.setXY(Math.round(pt.x),Math.round(pt.y));
+            GObject.sUpdateInDragging = false;
+
+            var dragEvent: DragEvent = new DragEvent(DragEvent.DRAG_MOVING);
+            dragEvent.stageX = evt.stageX;
+            dragEvent.stageY = evt.stageY;
+            dragEvent.touchPointID = evt.touchPointID;
+            this.dispatchEvent(dragEvent);
         }
 
         private __end2(evt: egret.TouchEvent): void {
-            if (GObject.sDragging == this) {
+            if (GObject.draggingObject == this) {
                 this.stopDrag();
 
                 var dragEvent: DragEvent = new DragEvent(DragEvent.DRAG_END);

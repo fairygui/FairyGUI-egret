@@ -47,8 +47,10 @@ module fairygui {
                 return;
 
             var arr: Array<GObject> = this._pool[url];
-            if (!arr)
-                return;
+            if (arr == null) {
+                arr = new Array<GObject>();
+                this._pool[url] = arr;
+            }
 
             this._count++;
             arr.push(obj);

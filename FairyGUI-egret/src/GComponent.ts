@@ -16,6 +16,7 @@ module fairygui {
         public _rootContainer: UIContainer;
         public _container: egret.DisplayObjectContainer;
         public _scrollPane: ScrollPane;
+        public _alignOffset: egret.Point;
 
         public constructor() {
             super();
@@ -23,6 +24,7 @@ module fairygui {
             this._controllers = new Array<Controller>();
             this._transitions = new Array<Transition>();
             this._margin = new Margin();
+            this._alignOffset = new egret.Point();
         }
 
         protected createDisplayObject(): void {
@@ -33,13 +35,23 @@ module fairygui {
         }
 
         public dispose(): void {
+            var i:number;
+			
+			var transCnt:number = this._transitions.length;
+			for (i = 0; i < transCnt; ++i)
+			{
+				var trans:Transition = this._transitions[i];
+				trans.dispose();
+			}
+
             var numChildren: number = this._children.length;
-            for(var i: number = numChildren - 1;i >= 0;--i) {
+            for(i = numChildren - 1;i >= 0;--i) {
                 var obj:GObject = this._children[i];
                 obj.parent = null;//avoid removeFromParent call
                 obj.dispose();
             }
 
+            this._boundsChanged = false;
             super.dispose();
         }
 
@@ -216,13 +228,35 @@ module fairygui {
             this._setChildIndex(child,oldIndex,index);
         }
 
-        private _setChildIndex(child: GObject,oldIndex: number,index: number = 0): void {
+        public setChildIndexBefore(child:GObject, index:number):number
+		{
+			var oldIndex:number = this._children.indexOf(child);
+			if (oldIndex == -1) 
+				throw "Not a child of this container";
+			
+			if(child.sortingOrder!=0) //no effect
+				return oldIndex;
+			
+			var cnt:number = this._children.length;
+			if(this._sortingChildCount>0)
+			{
+				if (index > (cnt - this._sortingChildCount - 1))
+					index = cnt - this._sortingChildCount - 1;
+			}
+			
+			if (oldIndex < index)
+				return this._setChildIndex(child, oldIndex, index - 1);
+			else
+				return this._setChildIndex(child, oldIndex, index);
+		}
+
+        private _setChildIndex(child: GObject,oldIndex: number,index: number = 0): number {
             var cnt: number = this._children.length;
             if(index > cnt)
                 index = cnt;
 
             if(oldIndex == index)
-                return;
+                return oldIndex;
 
             this._children.splice(oldIndex,1);
             this._children.splice(index,0,child);
@@ -240,6 +274,8 @@ module fairygui {
 
                 this.setBoundsChangedFlag();
             }
+
+            return index;
         }
 
         public swapChildren(child1: GObject,child2: GObject): void {
@@ -261,6 +297,22 @@ module fairygui {
         public get numChildren(): number {
             return this._children.length;
         }
+
+        public isAncestorOf(child:GObject):boolean
+		{
+			if (child == null)
+				return false;
+			
+			var p:GComponent = child.parent;
+			while(p)
+			{
+				if(p == this)
+					return true;
+				
+				p = p.parent;
+			}
+			return false;
+		}
 
         public addController(controller: Controller): void {
             this._controllers.push(controller);
@@ -286,7 +338,7 @@ module fairygui {
         public removeController(c: Controller): void {
             var index: number = this._controllers.indexOf(c);
             if(index == -1)
-                throw new Error("controller not exists");
+                throw "controller not exists";
 
             c._parent = null;
             this._controllers.splice(index,1);
@@ -438,11 +490,21 @@ module fairygui {
         public set margin(value: Margin) {
             this._margin.copy(value);
             if(this._rootContainer.scrollRect != null) {
-                this._container.x = this._margin.left;
-                this._container.y = this._margin.top;
+                this._container.x = this._margin.left + this._alignOffset.x;
+                this._container.y = this._margin.top + this._alignOffset.y;
             }
             this.handleSizeChanged();
         }
+
+        public get mask():egret.DisplayObject | egret.Rectangle
+		{
+			return this._rootContainer.mask;
+		}
+		
+		public set mask(value: egret.DisplayObject | egret.Rectangle)
+		{
+			this._rootContainer.mask = value;
+		}
         
         protected updateOpaque() {
             if(!this._rootContainer.hitArea)
@@ -467,8 +529,11 @@ module fairygui {
             flags: number,
             vtScrollBarRes: string,
             hzScrollBarRes: string): void {
-            this._container = new egret.DisplayObjectContainer();
-            this._rootContainer.addChild(this._container);
+            if(this._rootContainer==this._container)
+            {
+                this._container = new egret.DisplayObjectContainer();
+                this._rootContainer.addChild(this._container);
+            }
             this._scrollPane = new ScrollPane(this,scroll,scrollBarMargin,scrollBarDisplay,flags,vtScrollBarRes,hzScrollBarRes);
 
             this.setBoundsChangedFlag();
@@ -476,15 +541,21 @@ module fairygui {
         
         protected setupOverflow(overflow: OverflowType): void {
             if(overflow == OverflowType.Hidden) {
-                this._container = new egret.DisplayObjectContainer();
-                this._rootContainer.addChild(this._container);
+                if(this._rootContainer==this._container)
+                {
+                    this._container = new egret.DisplayObjectContainer();
+                    this._rootContainer.addChild(this._container);
+                }
                 this.updateScrollRect();
                 this._container.x = this._margin.left;
                 this._container.y = this._margin.top;
             }
             else if(this._margin.left != 0 || this._margin.top != 0) {
-                this._container = new egret.DisplayObjectContainer();
-                this._rootContainer.addChild(this._container);
+                if(this._rootContainer==this._container)
+                {
+                    this._container = new egret.DisplayObjectContainer();
+                    this._rootContainer.addChild(this._container);
+                }
                 this._container.x = this._margin.left;
                 this._container.y = this._margin.top;
             }
@@ -494,7 +565,7 @@ module fairygui {
 
         protected handleSizeChanged(): void {
             if(this._scrollPane)
-                this._scrollPane.setSize(this.width,this.height);
+                this._scrollPane.onOwnerSizeChanged();
             else if(this._rootContainer.scrollRect != null)
                 this.updateScrollRect();
 
@@ -502,7 +573,7 @@ module fairygui {
                 this.updateOpaque();
         }
 
-        protected handleGrayChanged(): void {
+        protected handleGrayedChanged(): void {
             var c: Controller = this.getController("grayed");
             if(c != null) {
                 c.selectedIndex = this.grayed ? 1 : 0;
@@ -538,22 +609,21 @@ module fairygui {
         }
 
         protected updateBounds(): void {
-            var ax: number,ay: number,aw: number,ah: number = 0;
-            if(this._children.length > 0) {
+            var ax: number=0,ay: number=0,aw: number=0,ah: number=0;
+            var len:number = this._children.length;
+            if(len > 0) {
                 ax = Number.POSITIVE_INFINITY,ay = Number.POSITIVE_INFINITY;
                 var ar: number = Number.NEGATIVE_INFINITY,ab: number = Number.NEGATIVE_INFINITY;
                 var tmp: number = 0;
-
                 var i: number = 0;
-                var length1: number = this._children.length;
-                
-                for(i1 = 0;i1 < length1;i1++) {
-                    child = this._children[i1];
+
+                for(i = 0;i < len;i++) {
+                    child = this._children[i];
                     child.ensureSizeCorrect();
                 }
                 
-                for(var i1: number = 0;i1 < length1;i1++) {
-                    var child: GObject = this._children[i1];
+                for(var i: number = 0;i < len;i++) {
+                    var child: GObject = this._children[i];
                     tmp = child.x;
                     if(tmp < ax)
                         ax = tmp;
@@ -569,12 +639,6 @@ module fairygui {
                 }
                 aw = ar - ax;
                 ah = ab - ay;
-            }
-            else {
-                ax = 0;
-                ay = 0;
-                aw = 0;
-                ah = 0;
             }
 
             this.setBounds(ax,ay,aw,ah);
@@ -702,12 +766,13 @@ module fairygui {
             }
         }
 
-        public constructFromResource(pkgItem: PackageItem): void {
-            this._packageItem = pkgItem;
-            this.constructFromXML(this._packageItem.owner.getItemAsset(this._packageItem));
+        public constructFromResource(): void {
+            this.constructFromResource2(null, 0);
         }
 
-        protected constructFromXML(xml: any): void {
+        public constructFromResource2(objectPool:Array<GObject>, poolIndex:number): void {
+            var xml:any = this.packageItem.owner.getItemAsset(this.packageItem);
+
             this._underConstruct = true;
             
             var str: string;
@@ -787,70 +852,78 @@ module fairygui {
             this._buildingDisplayList = true;
 
             var col: any = xml.children;
-            if(col) {
-                var displayList: any = null;
-                var controller: Controller;
-                var length1: number = col.length;
-                for(var i1: number = 0;i1 < length1;i1++) {
-                    var cxml: any = col[i1];
-                    if(cxml.name == "displayList") {
-                        displayList = cxml.children;
-                        continue;
-                    }
-                    else if(cxml.name == "controller") {
-                        controller = new Controller();
-                        this._controllers.push(controller);
-                        controller._parent = this;
-                        controller.setup(cxml);
-                    }
-                }
+            var length1: number = 0;
+            if(col)
+                length1 = col.length;
 
-                if(displayList) {
-                    var u: GObject;
-                    var length2: number = displayList.length;
-                    for(var i2: number = 0;i2 < length2;i2++) {
-                        cxml = displayList[i2];
-                        u = this.constructChild(cxml);
-                        if(!u)
-                            continue;
+            var i:number;
+            var controller: Controller;
+            for(i = 0;i < length1;i++) {
+                var cxml: any = col[i];
+                if(cxml.name == "controller") {
+                    controller = new Controller();
+                    this._controllers.push(controller);
+                    controller._parent = this;
+                    controller.setup(cxml);
+                }
+            }
 
-                        u._underConstruct = true;
-                        u._constructingData = cxml;
-                        u.setup_beforeAdd(cxml);
-                        this.addChild(u);
-                    }
-                }
+            var child:GObject;			
+			var displayList:Array<DisplayListItem> = this.packageItem.displayList;
+			var childCount:number = displayList.length;
+			for (i = 0; i < childCount; i++)
+			{
+				var di:DisplayListItem = displayList[i];
+				
+				if (objectPool != null)
+				{
+					child = objectPool[poolIndex + i];
+				}
+				else if (di.packageItem)
+				{
+					child = UIObjectFactory.newObject(di.packageItem);
+					child.packageItem = di.packageItem;
+					child.constructFromResource();
+				}
+				else
+					child = UIObjectFactory.newObject2(di.type);
+				
+				child._underConstruct = true;
+				child.setup_beforeAdd(di.desc);
+				child.parent = this;
+				this._children.push(child);
+			}
 
-                this.relations.setup(xml);
+            this.relations.setup(xml);
+            
+            for (i = 0; i < childCount; i++)
+				this._children[i].relations.setup(displayList[i].desc);
+			
+			for (i = 0; i < childCount; i++)
+			{
+				child = this._children[i];
+				child.setup_afterAdd(displayList[i].desc);
+				child._underConstruct = false;
+			}
 
-                length2 = this._children.length;
-                for(i2 = 0;i2 < length2;i2++) {
-                    u = this._children[i2];
-                    u.relations.setup(u._constructingData);
-                }
-                
-                for(i2 = 0;i2 < length2;i2++) {
-                    u = this._children[i2];
-                    u.setup_afterAdd(u._constructingData);
-                    u._underConstruct = false;
-                    u._constructingData = null;
-                }
+            str = xml.attributes.mask;
+			if(str)
+				this.mask = this.getChildById(str).displayObject;
 
-                var trans: Transition;
-                for(i1 = 0;i1 < length1;i1++) {
-                    var cxml: any = col[i1];
-                    if(cxml.name == "transition") {
-                        trans = new Transition(this);
-                        this._transitions.push(trans);
-                        trans.setup(cxml);
-                    }
+            var trans: Transition;
+            for(i = 0;i < length1;i++) {
+                var cxml: any = col[i];
+                if(cxml.name == "transition") {
+                    trans = new Transition(this);
+                    this._transitions.push(trans);
+                    trans.setup(cxml);
                 }
-                
-                if(this._transitions.length>0)
-                {
-                    this.displayObject.addEventListener(egret.Event.ADDED_TO_STAGE, this.___added, this);
-                    this.displayObject.addEventListener(egret.Event.REMOVED_FROM_STAGE,this.___removed,this);
-                }
+            }
+            
+            if(this._transitions.length>0)
+            {
+                this.displayObject.addEventListener(egret.Event.ADDED_TO_STAGE, this.___added, this);
+                this.displayObject.addEventListener(egret.Event.REMOVED_FROM_STAGE,this.___removed,this);
             }
 
             this.applyAllControllers();
@@ -859,11 +932,17 @@ module fairygui {
             this._underConstruct = false;
             
             length1 = this._children.length;
-            for (i1 = 0; i1 < length1; i1++) {
-                var child: GObject = this._children[i1];
+            for (i = 0; i < length1; i++) {
+                var child: GObject = this._children[i];
                 if (child.displayObject != null && child.finalVisible)
                     this._container.addChild(child.displayObject);
             }
+
+            this.setBoundsChangedFlag();
+            this.constructFromXML(xml);
+        }
+
+        protected constructFromXML(xml: any): void {
         }
         
         private ___added(evt:egret.Event):void {
@@ -879,38 +958,7 @@ module fairygui {
             var cnt: number = this._transitions.length;
             for(var i: number = 0;i < cnt;++i) {
                 var trans: Transition = this._transitions[i];
-                trans.stop(false, true);
-            }
-        }
-
-        private constructChild(xml: any): GObject {
-            var pkgId: string = xml.attributes.pkg;
-            var thisPkg: UIPackage = this._packageItem.owner;
-            var pkg: UIPackage;
-            if (pkgId && pkgId != thisPkg.id) {
-                pkg = UIPackage.getById(pkgId);
-                if (!pkg)
-                    return null;
-            }
-            else
-                pkg = thisPkg;
-
-            var src: string = xml.attributes.src;
-            if (src) {
-                var pi: PackageItem = pkg.getItem(src);
-                if (!pi)
-                    return null;
-
-                var g: GObject = pkg.createObject2(pi);
-                return g;
-            }
-            else {
-                var str: string = xml.name;
-                if (str == "text" && xml.attributes.input == "true")
-                    g = new GTextInput();
-                else
-                    g = UIObjectFactory.newObject2(str);
-                return g;
+                trans.stop(false, false);
             }
         }
     }

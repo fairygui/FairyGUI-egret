@@ -7,10 +7,11 @@ module fairygui {
         public repeatedCount: number = 0;
 
         private _curFrame: number = 0;
-        private _lastTime: number;
+        private _lastTime: number = 0;
         private _curFrameDelay: number = 0;
 
         public constructor() {
+            this._lastTime = egret.getTimer();
         }
 
         public update(mc: MovieClip): void {
@@ -18,13 +19,21 @@ module fairygui {
             var elapsed: number = t - this._lastTime;
             this._lastTime = t;
 
+            var cur:number = this._curFrame;
+            if(cur>=mc.frameCount)
+                cur = mc.frameCount-1;
+
             this.reachEnding = false;
             this._curFrameDelay += elapsed;
-            var interval: number = mc.interval + mc.frames[this._curFrame].addDelay + ((this._curFrame == 0 && this.repeatedCount > 0) ? mc.repeatDelay : 0);
+            var interval: number = mc.interval + mc.frames[cur].addDelay 
+                + ((cur == 0 && this.repeatedCount > 0) ? mc.repeatDelay : 0);
             if (this._curFrameDelay < interval)
                 return;
 
-            this._curFrameDelay = 0;			
+            this._curFrameDelay -= interval;
+            if(this._curFrameDelay>mc.interval)
+                this._curFrameDelay = mc.interval;
+                			
 			if (mc.swing)
 			{
 				if(this.reversed)

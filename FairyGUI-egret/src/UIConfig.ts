@@ -56,5 +56,7 @@ module fairygui {
         
         // When click the window, brings to front automatically.
         public static bringWindowToFrontOnClick:boolean = true;
+
+        public static frameTimeForAsyncUIConstruction:number = 2;
     }
 }

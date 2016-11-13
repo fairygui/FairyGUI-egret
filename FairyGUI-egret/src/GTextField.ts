@@ -619,8 +619,8 @@ module fairygui {
             }
         }
 
-        protected handleGrayChanged(): void {
-            super.handleGrayChanged();
+        protected handleGrayedChanged(): void {
+            super.handleGrayedChanged();
             this.updateTextFormat();
         }
 

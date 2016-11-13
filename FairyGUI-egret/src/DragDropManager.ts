@@ -16,6 +16,7 @@ module fairygui {
             this._agent.draggable = true;
             this._agent.touchable = false;//important
             this._agent.setSize(100,100);
+            this._agent.setPivot(0.5,0.5,true);
             this._agent.sortingOrder = 1000000;
             this._agent.addEventListener(fairygui.DragEvent.DRAG_END,this.__dragEnd,this);
         }
@@ -35,7 +36,7 @@ module fairygui {
             this._sourceData = sourceData;
             this._agent.url = icon;
             fairygui.GRoot.inst.addChild(this._agent);
-            var pt: egret.Point = source.localToRoot();
+            var pt: egret.Point = GRoot.inst.globalToLocal(GRoot.mouseX, GRoot.mouseY);
             this._agent.setXY(pt.x,pt.y);
             this._agent.startDrag(touchPointID);
         }

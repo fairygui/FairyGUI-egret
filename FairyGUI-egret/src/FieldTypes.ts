@@ -3,8 +3,8 @@ module fairygui {
     export enum AutoSizeType { None, Both, Height };
     export enum AlignType { Left, Center, Right };
     export enum VertAlignType { Top, Middle, Bottom };
-    export enum FillType { None, Scale, ScaleFree };
-    export enum ListLayoutType { SingleColumn, SingleRow, FlowHorizontal, FlowVertical };
+    export enum LoaderFillType { None, Scale, ScaleMatchHeight, ScaleMatchWidth, ScaleFree };
+    export enum ListLayoutType { SingleColumn, SingleRow, FlowHorizontal, FlowVertical, Pagination };
     export enum ListSelectionMode { Single, Multiple, Multiple_SingleClick, None };
     export enum OverflowType { Visible, Hidden, Scroll, Scale, ScaleFree };
     export enum PackageItemType { Image, Swf, MovieClip, Sound, Component, Misc, Font, Atlas };
@@ -102,16 +102,20 @@ module fairygui {
         }
     }
 
-    export function parseFillType(value: string): FillType {
+    export function parseLoaderFillType(value: string): LoaderFillType {
         switch (value) {
             case "none":
-                return FillType.None;
+                return LoaderFillType.None;
             case "scale":
-                return FillType.Scale;
+                return LoaderFillType.Scale;
+            case "scaleMatchHeight":
+                return LoaderFillType.ScaleMatchHeight;
+            case "scaleMatchWidth":
+                return LoaderFillType.ScaleMatchWidth;
             case "scaleFree":
-                return FillType.ScaleFree;
+                return LoaderFillType.ScaleFree;
             default:
-                return FillType.None;
+                return LoaderFillType.None;
         }
     }
 
@@ -125,6 +129,8 @@ module fairygui {
                 return ListLayoutType.FlowHorizontal;
             case "flow_vt":
                 return ListLayoutType.FlowVertical;
+            case "pagination":
+                return ListLayoutType.Pagination;
             default:
                 return ListLayoutType.SingleColumn;
         }
