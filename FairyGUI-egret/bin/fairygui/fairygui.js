@@ -2413,8 +2413,6 @@ var fairygui;
                     }
                     item.value.f1 = startValue.f1;
                     item.value.f2 = startValue.f2;
-                    item.value.b1 = startValue.b1;
-                    item.value.b2 = startValue.b2;
                     if (!endValue.b1)
                         endValue.f1 = item.value.f1;
                     if (!endValue.b2)
