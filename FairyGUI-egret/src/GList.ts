@@ -1311,7 +1311,7 @@ module fairygui {
 					
 					if (ii.obj != null && ii.obj.resourceURL != url)
 					{
-						this.removeChild(ii.obj);
+						this.removeChildToPool(ii.obj);
 						ii.obj = null;
 					}
 				}
@@ -1406,7 +1406,7 @@ module fairygui {
 				ii = this._virtualItems[oldFirstIndex + i];
 				if (ii.updateFlag != GList.itemInfoVer && ii.obj != null)
 				{
-					this.removeChild(ii.obj);
+					this.removeChildToPool(ii.obj);
 					ii.obj = null;
 				}
 			}
@@ -1472,7 +1472,7 @@ module fairygui {
 					
 					if (ii.obj != null && ii.obj.resourceURL != url)
 					{
-						this.removeChild(ii.obj);
+						this.removeChildToPool(ii.obj);
 						ii.obj = null;
 					}
 				}
@@ -1566,7 +1566,7 @@ module fairygui {
 				ii = this._virtualItems[oldFirstIndex + i];
 				if (ii.updateFlag != GList.itemInfoVer && ii.obj != null)
 				{
-					this.removeChild(ii.obj);
+					this.removeChildToPool(ii.obj);
 					ii.obj = null;
 				}
 			}
@@ -1707,7 +1707,7 @@ module fairygui {
 				ii = this._virtualItems[i];
 				if (ii.updateFlag != GList.itemInfoVer && ii.obj != null)
 				{
-					this.removeChild(ii.obj);
+					this.removeChildToPool(ii.obj);
 					ii.obj = null;
 				}
 			}

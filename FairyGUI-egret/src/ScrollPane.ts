@@ -568,8 +568,13 @@ module fairygui {
 				this._xOffset += deltaPosX;
 				this._yOffset += deltaPosY;
 				
-				this._y1 = this._y2 = this._container.y;
-				this._x1 = this._x2 = this._container.x;
+				var tmp:number = this._y2 - this._y1;
+				this._y1 = this._container.y;
+				this._y2 = this._y1 + tmp;
+
+				tmp = this._x2 - this._x1;
+				this._x1 = this._container.x;
+				this._x2 = this._x1 + tmp;
 				
 				this._yPos = -this._container.y;
 				this._xPos = -this._container.x;
@@ -1094,8 +1099,8 @@ module fairygui {
             var time: number = (egret.getTimer() - this._time2) / 1000;
             if (time == 0)
                 time = 0.001;
-            var yVelocity: number = (this._container.y - this._y2) / time;
-            var xVelocity: number = (this._container.x - this._x2) / time;
+            var yVelocity: number = (this._container.y - this._y2) / time * 2 * UIConfig.defaultTouchScrollSpeedRatio;
+            var xVelocity: number = (this._container.x - this._x2) / time * 2 * UIConfig.defaultTouchScrollSpeedRatio;
             var duration: number = 0.3;
 
             this._throwTween.start.x = this._container.x;
