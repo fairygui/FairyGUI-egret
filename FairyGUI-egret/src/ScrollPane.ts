@@ -765,7 +765,7 @@ module fairygui {
 						this._yPerc = this._yPos / this._yOverlap;
 				}
 				
-				if(this._xOverlap && this._xPerc!=1 && this._xPerc!=0)
+				if(this._xOverlap>0 && this._xPerc!=1 && this._xPerc!=0)
 				{
 					page = Math.floor(this._xPos / this._pageSizeH);
 					delta = this._xPos - page*this._pageSizeH;

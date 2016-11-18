@@ -2417,6 +2417,8 @@ var fairygui;
                         endValue.f1 = item.value.f1;
                     if (!endValue.b2)
                         endValue.f2 = item.value.f2;
+                    item.value.b1 = startValue.b1 || endValue.b1;
+                    item.value.b2 = startValue.b2 || endValue.b2;
                     toProps.f1 = endValue.f1;
                     toProps.f2 = endValue.f2;
                     break;
@@ -7496,7 +7498,7 @@ var fairygui;
                             url = this.defaultItem;
                     }
                     if (ii.obj != null && ii.obj.resourceURL != url) {
-                        this.removeChild(ii.obj);
+                        this.removeChildToPool(ii.obj);
                         ii.obj = null;
                     }
                 }
@@ -7568,7 +7570,7 @@ var fairygui;
             for (i = 0; i < oldCount; i++) {
                 ii = this._virtualItems[oldFirstIndex + i];
                 if (ii.updateFlag != GList.itemInfoVer && ii.obj != null) {
-                    this.removeChild(ii.obj);
+                    this.removeChildToPool(ii.obj);
                     ii.obj = null;
                 }
             }
@@ -7617,7 +7619,7 @@ var fairygui;
                             url = this.defaultItem;
                     }
                     if (ii.obj != null && ii.obj.resourceURL != url) {
-                        this.removeChild(ii.obj);
+                        this.removeChildToPool(ii.obj);
                         ii.obj = null;
                     }
                 }
@@ -7688,7 +7690,7 @@ var fairygui;
             for (i = 0; i < oldCount; i++) {
                 ii = this._virtualItems[oldFirstIndex + i];
                 if (ii.updateFlag != GList.itemInfoVer && ii.obj != null) {
-                    this.removeChild(ii.obj);
+                    this.removeChildToPool(ii.obj);
                     ii.obj = null;
                 }
             }
@@ -7791,7 +7793,7 @@ var fairygui;
             for (i = reuseIndex; i < virtualItemCount; i++) {
                 ii = this._virtualItems[i];
                 if (ii.updateFlag != GList.itemInfoVer && ii.obj != null) {
-                    this.removeChild(ii.obj);
+                    this.removeChildToPool(ii.obj);
                     ii.obj = null;
                 }
             }
@@ -11787,8 +11789,12 @@ var fairygui;
                 this.validateHolderPos();
                 this._xOffset += deltaPosX;
                 this._yOffset += deltaPosY;
-                this._y1 = this._y2 = this._container.y;
-                this._x1 = this._x2 = this._container.x;
+                var tmp = this._y2 - this._y1;
+                this._y1 = this._container.y;
+                this._y2 = this._y1 + tmp;
+                tmp = this._x2 - this._x1;
+                this._x1 = this._container.x;
+                this._x2 = this._x1 + tmp;
                 this._yPos = -this._container.y;
                 this._xPos = -this._container.x;
             }
@@ -11946,7 +11952,7 @@ var fairygui;
                     else
                         this._yPerc = this._yPos / this._yOverlap;
                 }
-                if (this._xOverlap && this._xPerc != 1 && this._xPerc != 0) {
+                if (this._xOverlap > 0 && this._xPerc != 1 && this._xPerc != 0) {
                     page = Math.floor(this._xPos / this._pageSizeH);
                     delta = this._xPos - page * this._pageSizeH;
                     if (delta > this._pageSizeH / 2)
@@ -12214,8 +12220,8 @@ var fairygui;
             var time = (egret.getTimer() - this._time2) / 1000;
             if (time == 0)
                 time = 0.001;
-            var yVelocity = (this._container.y - this._y2) / time;
-            var xVelocity = (this._container.x - this._x2) / time;
+            var yVelocity = (this._container.y - this._y2) / time * 2 * fairygui.UIConfig.defaultTouchScrollSpeedRatio;
+            var xVelocity = (this._container.x - this._x2) / time * 2 * fairygui.UIConfig.defaultTouchScrollSpeedRatio;
             var duration = 0.3;
             this._throwTween.start.x = this._container.x;
             this._throwTween.start.y = this._container.y;
@@ -12426,6 +12432,8 @@ var fairygui;
         UIConfig.buttonSoundVolumeScale = 1;
         //Scrolling step in pixels
         UIConfig.defaultScrollSpeed = 25;
+        // Speed ratio of scrollpane when its touch dragging.
+        UIConfig.defaultTouchScrollSpeedRatio = 1;
         //Default scrollbar display mode. Recommened visible for Desktop and Auto for mobile.
         UIConfig.defaultScrollBarDisplay = fairygui.ScrollBarDisplayType.Visible;
         //Allow dragging the content to scroll. Recommeded true for mobile.

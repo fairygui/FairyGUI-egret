@@ -1703,6 +1703,7 @@ declare module fairygui {
         static horizontalScrollBar: string;
         static verticalScrollBar: string;
         static defaultScrollSpeed: number;
+        static defaultTouchScrollSpeedRatio: number;
         static defaultScrollBarDisplay: number;
         static defaultScrollTouchEffect: boolean;
         static defaultScrollBounceEffect: boolean;
