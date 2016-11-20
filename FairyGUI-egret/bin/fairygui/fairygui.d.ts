@@ -1780,7 +1780,7 @@ declare module fairygui {
         getItemAsset(item: PackageItem): any;
         private loadComponentChildren(item);
         private getDesc(fn);
-        private translateComponent(xml, strings);
+        private translateComponent(item);
         private createSpriteTexture(sprite);
         private createSubTexture(atlasTexture, uvRect);
         private loadMovieClip(item);
