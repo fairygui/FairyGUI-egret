@@ -48,6 +48,28 @@ module fairygui {
                 this.handleXYChanged();
             }
         }
+
+        public get texture():egret.Texture {
+            return this._content.texture;
+        }
+
+        public set texture(value:egret.Texture) {
+            if (value != null)
+            {
+                this._sourceWidth = value.textureWidth;
+                this._sourceHeight = value.textureHeight;
+            }
+            else
+            {
+                this._sourceWidth = 0;
+                this._sourceHeight = 0;
+            }
+            this._initWidth =  this._sourceWidth;
+            this._initHeight = this._sourceHeight;
+            this._content.scale9Grid = null;
+             this._content.fillMode = egret.BitmapFillMode.SCALE;
+            this._content.texture = value;
+        }
         
         protected createDisplayObject(): void {
             this._content = new egret.Bitmap();

@@ -975,6 +975,7 @@ declare module fairygui {
         color: number;
         private applyColor();
         flip: FlipType;
+        texture: egret.Texture;
         protected createDisplayObject(): void;
         dispose(): void;
         constructFromResource(): void;
@@ -1148,8 +1149,10 @@ declare module fairygui {
         private applyColor();
         showErrorSign: boolean;
         content: egret.Bitmap | fairygui.MovieClip;
+        texture: egret.Texture;
         protected loadContent(): void;
         protected loadFromPackage(itemURL: string): void;
+        private switchToMovieMode(value);
         protected loadExternal(): void;
         protected freeExternal(texture: egret.Texture): void;
         protected onExternalLoadSuccess(texture: egret.Texture): void;

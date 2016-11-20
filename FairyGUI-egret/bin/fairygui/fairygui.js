@@ -6249,6 +6249,26 @@ var fairygui;
                 }
             }
         );
+        d(p, "texture"
+            ,function () {
+                return this._content.texture;
+            }
+            ,function (value) {
+                if (value != null) {
+                    this._sourceWidth = value.textureWidth;
+                    this._sourceHeight = value.textureHeight;
+                }
+                else {
+                    this._sourceWidth = 0;
+                    this._sourceHeight = 0;
+                }
+                this._initWidth = this._sourceWidth;
+                this._initHeight = this._sourceHeight;
+                this._content.scale9Grid = null;
+                this._content.fillMode = egret.BitmapFillMode.SCALE;
+                this._content.texture = value;
+            }
+        );
         p.createDisplayObject = function () {
             this._content = new egret.Bitmap();
             this._content["$owner"] = this;
@@ -8304,6 +8324,27 @@ var fairygui;
                 return this._content;
             }
         );
+        d(p, "texture"
+            ,function () {
+                if (this._content instanceof egret.Bitmap)
+                    return this._content.texture;
+                else
+                    return null;
+            }
+            ,function (value) {
+                this.url = null;
+                this.switchToMovieMode(false);
+                this._content.texture = value;
+                if (value != null) {
+                    this._contentSourceWidth = value.textureWidth;
+                    this._contentSourceHeight = value.textureHeight;
+                }
+                else {
+                    this._contentSourceWidth = this._contentHeight = 0;
+                }
+                this.updateLayout();
+            }
+        );
         p.loadContent = function () {
             this.clearContent();
             if (!this._url)
@@ -8322,37 +8363,29 @@ var fairygui;
                         this.setErrorState();
                     }
                     else {
-                        if (!(this._content instanceof egret.Bitmap)) {
-                            this._content = new egret.Bitmap();
-                            this._container.addChild(this._content);
-                        }
-                        else
-                            this._container.addChild(this._content);
-                        this._content.texture = this._contentItem.texture;
-                        this._content.scale9Grid = this._contentItem.scale9Grid;
+                        this.switchToMovieMode(false);
+                        var bm = this._content;
+                        bm.texture = this._contentItem.texture;
+                        bm.scale9Grid = this._contentItem.scale9Grid;
                         if (this._contentItem.scaleByTile)
-                            this._content.fillMode = egret.BitmapFillMode.REPEAT;
+                            bm.fillMode = egret.BitmapFillMode.REPEAT;
                         else
-                            this._content.fillMode = egret.BitmapFillMode.SCALE;
+                            bm.fillMode = egret.BitmapFillMode.SCALE;
                         this._contentSourceWidth = this._contentItem.width;
                         this._contentSourceHeight = this._contentItem.height;
                         this.updateLayout();
                     }
                 }
                 else if (this._contentItem.type == fairygui.PackageItemType.MovieClip) {
-                    if (!(this._content instanceof fairygui.MovieClip)) {
-                        this._content = new fairygui.MovieClip();
-                        this._container.addChild(this._content);
-                    }
-                    else
-                        this._container.addChild(this._content);
+                    this.switchToMovieMode(true);
                     this._contentSourceWidth = this._contentItem.width;
                     this._contentSourceHeight = this._contentItem.height;
-                    this._content.interval = this._contentItem.interval;
-                    this._content.swing = this._contentItem.swing;
-                    this._content.repeatDelay = this._contentItem.repeatDelay;
-                    this._content.frames = this._contentItem.frames;
-                    this._content.boundsRect = new egret.Rectangle(0, 0, this._contentSourceWidth, this._contentSourceHeight);
+                    var mc = this._content;
+                    mc.interval = this._contentItem.interval;
+                    mc.swing = this._contentItem.swing;
+                    mc.repeatDelay = this._contentItem.repeatDelay;
+                    mc.frames = this._contentItem.frames;
+                    mc.boundsRect = new egret.Rectangle(0, 0, this._contentSourceWidth, this._contentSourceHeight);
                     this.updateLayout();
                 }
                 else
@@ -8360,6 +8393,17 @@ var fairygui;
             }
             else
                 this.setErrorState();
+        };
+        p.switchToMovieMode = function (value) {
+            if (value) {
+                if (!(this._content instanceof fairygui.MovieClip))
+                    this._content = new fairygui.MovieClip();
+            }
+            else {
+                if (!(this._content instanceof egret.Bitmap))
+                    this._content = new egret.Bitmap();
+            }
+            this._container.addChild(this._content);
         };
         p.loadExternal = function () {
             RES.getResAsync(this._url, this.__getResCompleted, this);
@@ -12641,9 +12685,11 @@ var fairygui;
             var str;
             var arr;
             var buf = RES.getRes(this._resKey);
-            if (buf == null)
+            if (!buf)
+                buf = RES.getRes(this._resKey + "_fui");
+            if (!buf)
                 throw "Resource '" + this._resKey + "' not found, please check default.res.json!";
-            this.decompressPackage(RES.getRes(this._resKey));
+            this.decompressPackage(buf);
             str = this.getDesc("sprites.bytes");
             arr = str.split(UIPackage.sep1);
             var cnt = arr.length;
@@ -12853,12 +12899,17 @@ var fairygui;
                         item.decoded = true;
                         var fileName = (item.file != null && item.file.length > 0) ? item.file : (item.id + ".png");
                         item.texture = RES.getRes(this._resKey + "@" + fairygui.ToolSet.getFileName(fileName));
+                        if (!item.texture)
+                            item.texture = RES.getRes(this._resKey + "@" + fileName.replace("\.", "_"));
                     }
                     return item.texture;
                 case fairygui.PackageItemType.Sound:
                     if (!item.decoded) {
                         item.decoded = true;
-                        item.sound = RES.getRes(this._resKey + "@" + item.id);
+                        var fileName = (item.file != null && item.file.length > 0) ? item.file : (item.id + ".mp3");
+                        item.sound = RES.getRes(this._resKey + "@" + fairygui.ToolSet.getFileName(fileName));
+                        if (!item.sound)
+                            item.sound = RES.getRes(this._resKey + "@" + fileName.replace("\.", "_"));
                     }
                     return item.sound;
                 case fairygui.PackageItemType.Font:
@@ -12926,7 +12977,7 @@ var fairygui;
                 }
             }
             else
-                item.displayList = new fairygui.DisplayListItem[0];
+                item.displayList = new Array();
         };
         p.getDesc = function (fn) {
             return this._resData[fn];

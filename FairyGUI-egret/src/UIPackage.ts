@@ -137,10 +137,12 @@ module fairygui {
             var arr: string[];
 
             var buf: any = RES.getRes(this._resKey);
-            if(buf==null)
+            if(!buf)
+                buf = RES.getRes(this._resKey + "_fui");
+            if(!buf)
                 throw "Resource '" + this._resKey + "' not found, please check default.res.json!";
 
-            this.decompressPackage(RES.getRes(this._resKey));
+            this.decompressPackage(buf);
 
             str = this.getDesc("sprites.bytes");
 
@@ -373,13 +375,18 @@ module fairygui {
                         item.decoded = true;
                         var fileName:string = (item.file != null && item.file.length > 0) ? item.file : (item.id + ".png");
                         item.texture = RES.getRes(this._resKey + "@" + ToolSet.getFileName(fileName));
+                        if(!item.texture)
+                            item.texture = RES.getRes(this._resKey + "@" + fileName.replace("\.","_"));
                     }
                     return item.texture;
 
                 case PackageItemType.Sound:
                     if (!item.decoded) {
                         item.decoded = true;
-                        item.sound = RES.getRes(this._resKey + "@" + item.id);
+                        var fileName:string = (item.file != null && item.file.length > 0) ? item.file : (item.id + ".mp3");
+                        item.sound = RES.getRes(this._resKey + "@" + ToolSet.getFileName(fileName));
+                        if(!item.sound)
+                            item.sound = RES.getRes(this._resKey + "@" + fileName.replace("\.","_"));
                     }
                     return item.sound;
 
@@ -459,7 +466,7 @@ module fairygui {
 				}
 			}
 			else
-				item.displayList =new DisplayListItem[0];
+				item.displayList = new Array<DisplayListItem>();
 		}
         
         private getDesc(fn:string):string {
