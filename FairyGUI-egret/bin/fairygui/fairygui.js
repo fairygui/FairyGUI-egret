@@ -7060,9 +7060,9 @@ var fairygui;
         p.scrollToView = function (index, ani, setFirst) {
             if (ani === void 0) { ani = false; }
             if (setFirst === void 0) { setFirst = false; }
-            if (this._numItems == 0)
-                return;
             if (this._virtual) {
+                if (this._numItems == 0)
+                    return;
                 this.checkVirtualList();
                 if (index >= this._virtualItems.length)
                     throw "Invalid child index: " + index + ">" + this._virtualItems.length;

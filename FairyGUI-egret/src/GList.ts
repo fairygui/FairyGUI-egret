@@ -709,11 +709,11 @@ module fairygui {
         }
         
         public scrollToView(index: number,ani: boolean = false,setFirst: boolean = false):void  {
-			if(this._numItems==0)
-				return;
-
             if (this._virtual)
 			{
+				if(this._numItems==0)
+					return;
+
 				this.checkVirtualList();
 				
 				if (index >= this._virtualItems.length)
