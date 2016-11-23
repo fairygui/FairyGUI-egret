@@ -260,9 +260,12 @@ module fairygui {
         }
 
         public setPosX(value: number, ani: boolean = false): void {
+            this._owner.ensureBoundsCorrect();
+
+            value = ToolSet.clamp(value, 0, this._xOverlap);
 	        if(value!=this._xPos)
 			{
-				this._xPos = ToolSet.clamp(value, 0, this._xOverlap);
+				this._xPos = value;
 				this._xPerc = this._xOverlap==0?0:this._xPos/this._xOverlap;
 				
 				this.posChanged(ani);
@@ -278,9 +281,12 @@ module fairygui {
         }
 
         public setPosY(value: number, ani: boolean= false): void {
+            this._owner.ensureBoundsCorrect();
+
+            value = ToolSet.clamp(value, 0, this._yOverlap);
             if(value!=this._yPos)
 			{
-				this._yPos = ToolSet.clamp(value, 0, this._yOverlap);
+				this._yPos = value;
 				this._yPerc = this._yOverlap==0?0:this._yPos/this._yOverlap;
 				
 				this.posChanged(ani);

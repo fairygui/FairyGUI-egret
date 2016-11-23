@@ -708,7 +708,10 @@ module fairygui {
             }
         }
         
-        public scrollToView(index: number,ani: boolean = false,setFirst: boolean = false):void  {				
+        public scrollToView(index: number,ani: boolean = false,setFirst: boolean = false):void  {
+			if(this._numItems==0)
+				return;
+
             if (this._virtual)
 			{
 				this.checkVirtualList();
@@ -716,6 +719,9 @@ module fairygui {
 				if (index >= this._virtualItems.length)
 					throw "Invalid child index: " + index + ">" + this._virtualItems.length;
 				
+				if(this._loop)
+					index = Math.floor(this._firstIndex/this._numItems)*this._numItems+index;
+
 				var rect:egret.Rectangle;
 				var ii:ItemInfo = this._virtualItems[index];
 				var pos:number = 0;
@@ -1752,6 +1758,9 @@ module fairygui {
 		}
 
         protected updateBounds(): void {
+			if(this._virtual)
+				return;
+				
             var cnt: number = this._children.length;
             var i: number = 0;
             var child: GObject;

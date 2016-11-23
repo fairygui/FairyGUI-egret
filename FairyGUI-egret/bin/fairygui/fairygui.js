@@ -7060,10 +7060,14 @@ var fairygui;
         p.scrollToView = function (index, ani, setFirst) {
             if (ani === void 0) { ani = false; }
             if (setFirst === void 0) { setFirst = false; }
+            if (this._numItems == 0)
+                return;
             if (this._virtual) {
                 this.checkVirtualList();
                 if (index >= this._virtualItems.length)
                     throw "Invalid child index: " + index + ">" + this._virtualItems.length;
+                if (this._loop)
+                    index = Math.floor(this._firstIndex / this._numItems) * this._numItems + index;
                 var rect;
                 var ii = this._virtualItems[index];
                 var pos = 0;
@@ -7848,6 +7852,8 @@ var fairygui;
             }
         };
         p.updateBounds = function () {
+            if (this._virtual)
+                return;
             var cnt = this._children.length;
             var i = 0;
             var child;
@@ -11552,8 +11558,10 @@ var fairygui;
         );
         p.setPosX = function (value, ani) {
             if (ani === void 0) { ani = false; }
+            this._owner.ensureBoundsCorrect();
+            value = fairygui.ToolSet.clamp(value, 0, this._xOverlap);
             if (value != this._xPos) {
-                this._xPos = fairygui.ToolSet.clamp(value, 0, this._xOverlap);
+                this._xPos = value;
                 this._xPerc = this._xOverlap == 0 ? 0 : this._xPos / this._xOverlap;
                 this.posChanged(ani);
             }
@@ -11568,8 +11576,10 @@ var fairygui;
         );
         p.setPosY = function (value, ani) {
             if (ani === void 0) { ani = false; }
+            this._owner.ensureBoundsCorrect();
+            value = fairygui.ToolSet.clamp(value, 0, this._yOverlap);
             if (value != this._yPos) {
-                this._yPos = fairygui.ToolSet.clamp(value, 0, this._yOverlap);
+                this._yPos = value;
                 this._yPerc = this._yOverlap == 0 ? 0 : this._yPos / this._yOverlap;
                 this.posChanged(ani);
             }
