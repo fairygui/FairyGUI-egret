@@ -17,6 +17,8 @@ module fairygui {
             this._agent.touchable = false;//important
             this._agent.setSize(100,100);
             this._agent.setPivot(0.5,0.5,true);
+			this._agent.align = AlignType.Center;
+			this._agent.verticalAlign = VertAlignType.Middle;
             this._agent.sortingOrder = 1000000;
             this._agent.addEventListener(fairygui.DragEvent.DRAG_END,this.__dragEnd,this);
         }
