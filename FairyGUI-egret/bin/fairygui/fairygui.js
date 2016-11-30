@@ -1736,7 +1736,7 @@ var fairygui;
                 if (this.tweener != null) {
                     if (this._tweenTarget.width != gv.width || this._tweenTarget.height != gv.height
                         || this._tweenTarget.scaleX != gv.scaleX || this._tweenTarget.scaleY != gv.scaleY) {
-                        this.tweener.tick(100000000);
+                        this.tweener["tick"] ? this.tweener["tick"](100000000) : this.tweener["$tick"](100000000);
                         this.tweener = null;
                     }
                     else
@@ -1770,6 +1770,7 @@ var fairygui;
                         .call(function () {
                         this._owner.internalVisible--;
                         this._tweener = null;
+                        this._owner.dispatchEventWith(fairygui.GObject.GEAR_STOP, false);
                     }, this);
                 }
             }
@@ -1859,7 +1860,7 @@ var fairygui;
             if (this._tween && !fairygui.UIPackage._constructing && !fairygui.GearBase.disableAllTweenEffect) {
                 if (this.tweener) {
                     if (this._tweenTarget.x != pt.x || this._tweenTarget.y != pt.y) {
-                        this.tweener.tick(100000000);
+                        this.tweener["tick"] ? this.tweener["tick"](100000000) : this.tweener["$tick"](100000000);
                         this.tweener = null;
                     }
                     else
@@ -1886,6 +1887,7 @@ var fairygui;
                         .call(function () {
                         this._owner.internalVisible--;
                         this._tweener = null;
+                        this._owner.dispatchEventWith(fairygui.GObject.GEAR_STOP, false);
                     }, this);
                 }
             }
@@ -4086,6 +4088,7 @@ var fairygui;
         GObject.XY_CHANGED = "__xyChanged";
         GObject.SIZE_CHANGED = "__sizeChanged";
         GObject.SIZE_DELAY_CHANGE = "__sizeDelayChange";
+        GObject.GEAR_STOP = "gearStop";
         GObject.colorMatrix = [
             0.3, 0.6, 0, 0, 0,
             0.3, 0.6, 0, 0, 0,
@@ -5856,7 +5859,7 @@ var fairygui;
                 this._owner._gearLocked = false;
                 if (this.tweener != null) {
                     if (this._tweenTarget.alpha != gv.alpha || this._tweenTarget.rotation != gv.rotation) {
-                        this.tweener.tick(100000000);
+                        this.tweener["tick"] ? this.tweener["tick"](100000000) : this.tweener["$tick"](100000000);
                         this.tweener = null;
                     }
                     else
@@ -5888,6 +5891,7 @@ var fairygui;
                         .call(function () {
                         this._owner.internalVisible--;
                         this._tweener = null;
+                        this._owner.dispatchEventWith(fairygui.GObject.GEAR_STOP, false);
                     }, this);
                 }
             }
@@ -6293,10 +6297,12 @@ var fairygui;
         };
         p.handleXYChanged = function () {
             _super.prototype.handleXYChanged.call(this);
-            if (this._content.scaleX == -1)
-                this._content.x += this.width;
-            if (this._content.scaleY == -1)
-                this._content.y += this.height;
+            if (this._flip != fairygui.FlipType.None) {
+                if (this._content.scaleX == -1)
+                    this._content.x += this.width;
+                if (this._content.scaleY == -1)
+                    this._content.y += this.height;
+            }
         };
         p.handleSizeChanged = function () {
             this._content.width = this.width;
@@ -7811,7 +7817,7 @@ var fairygui;
                 }
                 if (needRender)
                     this.itemRenderer.call(this.callbackThisObj, i % this._numItems, ii.obj);
-                ii.obj.setXY(Math.floor(i / pageSize) * viewWidth + col * (ii.width + this._columnGap), (i / this._curLineItemCount) % this._curLineItemCount2 * (ii.height + this._lineGap));
+                ii.obj.setXY(Math.floor(i / pageSize) * viewWidth + col * (ii.width + this._columnGap), Math.floor(i / this._curLineItemCount) % this._curLineItemCount2 * (ii.height + this._lineGap));
             }
             //释放未使用的
             for (i = reuseIndex; i < virtualItemCount; i++) {

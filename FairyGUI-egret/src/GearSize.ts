@@ -49,7 +49,7 @@ module fairygui {
                 if(this.tweener!=null)	{
 					if (this._tweenTarget.width != gv.width || this._tweenTarget.height != gv.height
 						|| this._tweenTarget.scaleX != gv.scaleX || this._tweenTarget.scaleY != gv.scaleY)	{
-						this.tweener.tick(100000000);
+                        this.tweener["tick"]?this.tweener["tick"](100000000):this.tweener["$tick"](100000000);
 						this.tweener = null;
 					}
 					else
@@ -86,6 +86,7 @@ module fairygui {
                         .call(function(): void {
                             this._owner.internalVisible--;
                             this._tweener = null;
+                            this._owner.dispatchEventWith(GObject.GEAR_STOP, false);
                         },this);
                 }
             }

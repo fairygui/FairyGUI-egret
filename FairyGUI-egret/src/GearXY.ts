@@ -42,7 +42,7 @@ module fairygui {
             if(this._tween && !UIPackage._constructing && !GearBase.disableAllTweenEffect) {
                 if(this.tweener) {
 					if(this._tweenTarget.x!=pt.x || this._tweenTarget.y!=pt.y) {
-						this.tweener.tick(100000000);
+						this.tweener["tick"]?this.tweener["tick"](100000000):this.tweener["$tick"](100000000);
 						this.tweener = null;
 					}
 					else
@@ -70,6 +70,7 @@ module fairygui {
                         .call(function(): void {
                             this._owner.internalVisible--;
                             this._tweener = null;
+                            this._owner.dispatchEventWith(GObject.GEAR_STOP, false);
                         }, this);
                 }
             }

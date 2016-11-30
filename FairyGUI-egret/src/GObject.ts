@@ -57,7 +57,8 @@ module fairygui {
         public static XY_CHANGED: string = "__xyChanged";
         public static SIZE_CHANGED: string = "__sizeChanged";
         public static SIZE_DELAY_CHANGE: string = "__sizeDelayChange";
-
+        public static GEAR_STOP: string = "gearStop";
+        
         public constructor() {
             super();
 

@@ -1704,7 +1704,7 @@ module fairygui {
 					this.itemRenderer.call(this.callbackThisObj, i % this._numItems, ii.obj);
 				
 				ii.obj.setXY(Math.floor(i / pageSize) * viewWidth + col * (ii.width + this._columnGap),
-					(i / this._curLineItemCount) % this._curLineItemCount2 * (ii.height + this._lineGap));
+					Math.floor(i / this._curLineItemCount) % this._curLineItemCount2 * (ii.height + this._lineGap));
 			}
 			
 			//释放未使用的

@@ -545,6 +545,7 @@ declare module fairygui {
         static XY_CHANGED: string;
         static SIZE_CHANGED: string;
         static SIZE_DELAY_CHANGE: string;
+        static GEAR_STOP: string;
         constructor();
         id: string;
         name: string;

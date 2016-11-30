@@ -100,10 +100,12 @@ module fairygui {
         
         protected handleXYChanged(): void {
             super.handleXYChanged();
-            if(this._content.scaleX==-1)
-                this._content.x += this.width;
-            if(this._content.scaleY==-1)
-                this._content.y += this.height;
+            if(this._flip != FlipType.None) {
+                if(this._content.scaleX==-1)
+                    this._content.x += this.width;
+                if(this._content.scaleY==-1)
+                    this._content.y += this.height;
+            }
         }
 
         protected handleSizeChanged(): void {
