@@ -376,28 +376,28 @@ module fairygui {
                 
                 if(item.tween) {
                     if(this._reversed)
-                        startTime = delay + (this._maxTime - item.time - item.duration)*1000;
+                        startTime = delay + this._maxTime - item.time - item.duration;
                     else
-                        startTime = delay + item.time * 1000;
+                        startTime = delay + item.time;
                    if(startTime>0 && (item.type==TransitionActionType.XY || item.type==TransitionActionType.Size)) {
                         this._totalTasks++;
                         item.completed = false;
-                        item.tweener = egret.Tween.get(item.value).wait(startTime).call(this.__delayCall,this,[item]);
+                        item.tweener = egret.Tween.get(item.value).wait(startTime*1000).call(this.__delayCall,this,[item]);
                    }
                    else
                         this.startTween(item, startTime);
                 }
                 else {
                     if(this._reversed)
-                        startTime = delay + (this._maxTime - item.time) * 1000;
+                        startTime = delay + this._maxTime - item.time;
                     else
-                        startTime = delay + item.time * 1000;
+                        startTime = delay + item.time;
                     if(startTime == 0)
                         this.applyValue(item,item.value);
                     else {                       
                         this._totalTasks++;
                         item.completed = false;
-                        item.tweener = egret.Tween.get(item.value).wait(startTime).call(this.__delayCall2,this,[item]);
+                        item.tweener = egret.Tween.get(item.value).wait(startTime*1000).call(this.__delayCall2,this,[item]);
                     }
                 }
             }
@@ -498,7 +498,7 @@ module fairygui {
 
             item.tweener = egret.Tween.get(item.value,initProps);
             if(delay!=0)
-                item.tweener.wait(delay);
+                item.tweener.wait(delay*1000);
             else
                 this.applyValue(item,item.value);
 
