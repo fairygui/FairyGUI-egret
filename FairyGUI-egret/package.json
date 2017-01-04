@@ -1,6 +1,6 @@
 {
 	"name": "egret",
-	"version": "3.1.7",
+	"version": "3.2.2",
 	"modules": [
 		{
 			"name": "fairygui",
@@ -20,12 +20,16 @@
 				"event/StateChangeEvent.ts",
 				"utils/UBBParser.ts",
 				"utils/ToolSet.ts",
+				"utils/ColorMatrix.ts",
 				"FieldTypes.ts",
 				"GearBase.ts",
 				"GearSize.ts",
 				"GearXY.ts",
+				"GearText.ts",
+				"GearIcon.ts",
 				"Transition.ts",
 				"GObject.ts",
+				"DisplayListItem.ts",
 				"PackageItem.ts",
 				"GComponent.ts",
 				"GButton.ts",
@@ -34,8 +38,6 @@
 				"GearColor.ts",
 				"GearDisplay.ts",
 				"GearLook.ts",
-				"GearText.ts",
-				"GearIcon.ts",
 				"GGraph.ts",
 				"GGroup.ts",
 				"GImage.ts",
@@ -65,7 +67,8 @@
 				"UIObjectFactory.ts",
 				"UIPackage.ts",
 				"Window.ts",
-				"DragDropManager.ts"
+				"DragDropManager.ts",
+				"AsyncOperation.ts"
 			],
 			"root": "../FairyGUI-egret/src/fairygui"
 		}
