@@ -1,7 +1,7 @@
 
 module fairygui {
 
-    export class GGraph extends GObject {
+    export class GGraph extends GObject implements IColorGear {
         private _graphics: egret.Graphics;
 
         private _type: number = 0;
@@ -60,6 +60,18 @@ module fairygui {
                 this._graphics.clear();
             }
         }
+
+        public get color():number
+		{
+			return this._fillColor;
+		}
+		
+		public set color(value:number) 
+		{
+			this._fillColor = value;
+            if(this._type != 0)
+             this.drawCommon();
+		}
 
         private drawCommon(): void {
             this.graphics;

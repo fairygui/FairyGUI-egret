@@ -5986,6 +5986,16 @@ var fairygui;
                 this._graphics.clear();
             }
         };
+        d(p, "color"
+            ,function () {
+                return this._fillColor;
+            }
+            ,function (value) {
+                this._fillColor = value;
+                if (this._type != 0)
+                    this.drawCommon();
+            }
+        );
         p.drawCommon = function () {
             this.graphics;
             this._graphics.clear();
@@ -6125,7 +6135,7 @@ var fairygui;
         return GGraph;
     }(fairygui.GObject));
     fairygui.GGraph = GGraph;
-    egret.registerClass(GGraph,'fairygui.GGraph');
+    egret.registerClass(GGraph,'fairygui.GGraph',["fairygui.IColorGear"]);
 })(fairygui || (fairygui = {}));
 
 var fairygui;

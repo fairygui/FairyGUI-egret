@@ -933,7 +933,7 @@ declare module fairygui {
     }
 }
 declare module fairygui {
-    class GGraph extends GObject {
+    class GGraph extends GObject implements IColorGear {
         private _graphics;
         private _type;
         private _lineSize;
@@ -947,6 +947,7 @@ declare module fairygui {
         drawRect(lineSize: number, lineColor: number, lineAlpha: number, fillColor: number, fillAlpha: number, corner?: Array<number>): void;
         drawEllipse(lineSize: number, lineColor: number, lineAlpha: number, fillColor: number, fillAlpha: number): void;
         clearGraphics(): void;
+        color: number;
         private drawCommon();
         replaceMe(target: GObject): void;
         addBeforeMe(target: GObject): void;
