@@ -86,14 +86,36 @@ module fairygui {
         }
 
         public static getItemByURL(url: string): PackageItem {
-            if(ToolSet.startsWith(url,"ui://")) {
-                var pkgId: string = url.substr(5,8);
-                var srcId: string = url.substr(13);
-                var pkg: UIPackage = UIPackage.getById(pkgId);
-                if(pkg)
-                    return pkg.getItemById(srcId);
-            }
-            return null;
+			var pos1:number = url.indexOf("//");
+			if (pos1 == -1)
+				return null;
+			
+			var pos2:number = url.indexOf("/", pos1 + 2);
+			if (pos2 == -1)
+			{
+				if (url.length > 13)
+				{
+					var pkgId:string = url.substr(5, 8);
+					var pkg:UIPackage = UIPackage.getById(pkgId);
+					if (pkg != null)
+					{
+						var srcId:string = url.substr(13);
+						return pkg.getItemById(srcId);
+					}
+				}
+			}
+			else
+			{
+				var pkgName:string = url.substr(pos1 + 2, pos2 - pos1 - 2);
+				pkg = UIPackage.getByName(pkgName);
+				if (pkg != null)
+				{
+					var srcName:string = url.substr(pos2 + 1);
+					return pkg.getItemByName(srcName);
+				}
+			}
+			
+			return null;
         }
 
         public static getBitmapFontByURL(url: string): BitmapFont {
@@ -193,6 +215,7 @@ module fairygui {
             for(var i1: number = 0;i1 < length1;i1++) {
                 cxml = resources[i1];
                 pi = new PackageItem();
+                pi.owner = this;
                 pi.type = parsePackageItemType(cxml.name);
                 pi.id = cxml.attributes.id;
                 pi.name = cxml.attributes.name;
@@ -228,9 +251,12 @@ module fairygui {
                         pi.smoothing = str != "false";
                         break;
                     }
+                
+                    case PackageItemType.Component:
+                        UIObjectFactory.$resolvePackageItemExtension(pi);
+                        break;
                 }
 
-                pi.owner = this;
                 this._items.push(pi);
                 this._itemsById[pi.id] = pi;
                 if(pi.name != null)
