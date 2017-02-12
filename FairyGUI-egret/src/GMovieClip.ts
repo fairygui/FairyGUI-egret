@@ -1,7 +1,7 @@
 
 module fairygui {
 
-    export class GMovieClip extends GObject implements IAnimationGear, IColorGear {
+    export class GMovieClip extends GObject {
         private _movieClip: MovieClip;
 
         public constructor() {
@@ -10,7 +10,7 @@ module fairygui {
         }
         
         public get color(): number {
-            return 0
+            return 0;
         }
         
         public set color(value: number) {

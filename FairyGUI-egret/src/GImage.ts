@@ -1,7 +1,7 @@
 
 module fairygui {
 
-    export class GImage extends GObject implements IColorGear {
+    export class GImage extends GObject {
         private _content: egret.Bitmap;
         private _color: number;
         private _flip: FlipType;

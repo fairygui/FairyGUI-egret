@@ -1,7 +1,7 @@
 
 module fairygui {
 
-    export class GLoader extends GObject implements IAnimationGear,IColorGear {
+    export class GLoader extends GObject {
         private _gearAnimation: GearAnimation;
         private _gearColor: GearColor;
 

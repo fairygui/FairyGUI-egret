@@ -1,7 +1,7 @@
 
 module fairygui {
 
-    export class GGraph extends GObject implements IColorGear {
+    export class GGraph extends GObject {
         private _graphics: egret.Graphics;
 
         private _type: number = 0;

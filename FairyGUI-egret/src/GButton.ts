@@ -249,17 +249,15 @@ module fairygui {
                     var color: number = (r << 16) + (r << 8) + r;
                     for(var i: number = 0;i < cnt;i++) {
                         var obj: GObject = this.getChildAt(i);
-                        if((obj instanceof GImage) || (obj instanceof GLoader) 
-                            || (obj instanceof GMovieClip))//instanceof IColorGear
-                            (<IColorGear><any>obj).color = color;
+                        if(obj["color"]!=undefined)
+                            (<any>obj).color = color;
                     }
                 }
                 else {
                     for(var i:number = 0;i < cnt;i++) {
                         var obj:GObject = this.getChildAt(i);
-                        if((obj instanceof GImage) || (obj instanceof GLoader)
-                            || (obj instanceof GMovieClip))
-                            (<IColorGear><any>obj).color = 0xFFFFFF;
+                        if(obj["color"]!=undefined)
+                            (<any>obj).color = 0xFFFFFF;
                     }
                 }
             }

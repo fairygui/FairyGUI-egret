@@ -685,13 +685,13 @@ module fairygui {
 					item.target.setSkew(value.f1, value.f2);
 					break;
                 case TransitionActionType.Color:
-                    (<IColorGear><any>item.target).color = value.c;
+                    (<any>item.target).color = value.c;
                     break;
                 case TransitionActionType.Animation:
                     if(!value.b1)
-                        value.i = (<IAnimationGear><any>item.target).frame;
-                    (<IAnimationGear><any>item.target).frame = value.i;
-                    (<IAnimationGear><any>item.target).playing = value.b;
+                        value.i = (<any>item.target).frame;
+                    (<any>item.target).frame = value.i;
+                    (<any>item.target).playing = value.b;
                     break;
                 case TransitionActionType.Visible:
                     item.target.visible = value.b;
