@@ -1,7 +1,7 @@
 
 module fairygui {
 
-    export class GLabel extends GComponent {
+    export class GLabel extends GComponent implements IColorGear {
         protected _titleObject: GObject;
         protected _iconObject: GObject;
 
@@ -59,6 +59,15 @@ module fairygui {
                 (<GLabel>this._titleObject).titleColor = value;
             else if(this._titleObject instanceof GButton)
                 (<GButton>this._titleObject).titleColor = value;
+            this.updateGear(4);
+        }
+
+        public get color(): number {
+            return this.titleColor;
+        }
+        
+        public set color(value: number) {
+            this.titleColor = value;
         }
 
         public set editable(val: boolean) {
