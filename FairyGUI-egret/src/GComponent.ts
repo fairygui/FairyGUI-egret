@@ -945,6 +945,23 @@ module fairygui {
         protected constructFromXML(xml: any): void {
         }
         
+        public setup_afterAdd(xml:any):void
+		{
+			super.setup_afterAdd(xml);
+			
+			var str:String = xml.attributes.controller;
+			if(str)
+			{
+				var arr:string[] = str.split(",");
+				for(var i:number=0;i<arr.length;i+=2)
+				{
+					var cc:Controller = this.getController(arr[i]);
+					if(cc)
+						cc.selectedPageId = arr[i+1];
+				}
+			}
+		}
+
         private ___added(evt:egret.Event):void {
             var cnt: number = this._transitions.length;
             for(var i: number = 0;i < cnt;++i) {
