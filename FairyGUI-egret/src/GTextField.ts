@@ -129,7 +129,7 @@ module fairygui {
         public set color(value: number) {
             if (this._color != value) {
                 this._color = value;
-               this.updateGear(4);
+                this.updateGear(4);
                 this.updateTextFormat();
             }
         }

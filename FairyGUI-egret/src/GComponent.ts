@@ -974,8 +974,7 @@ module fairygui {
         private ___removed(evt: egret.Event): void {
             var cnt: number = this._transitions.length;
             for(var i: number = 0;i < cnt;++i) {
-                var trans: Transition = this._transitions[i];
-                trans.stop(false, false);
+                this._transitions[i].OnOwnerRemovedFromStage();
             }
         }
     }

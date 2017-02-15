@@ -21,6 +21,9 @@ module fairygui {
         private _autoPlay: boolean;
 
         public static OPTION_IGNORE_DISPLAY_CONTROLLER: number = 1;
+        public static OPTION_AUTO_STOP_DISABLED: number = 2;
+		public static OPTION_AUTO_STOP_AT_END: number = 4;
+        
         private static FRAME_RATE: number = 24;
 
         public constructor(owner: GComponent) {
@@ -357,6 +360,11 @@ module fairygui {
                 }
             }
         }
+
+		public OnOwnerRemovedFromStage():void {
+			if ((this._options & Transition.OPTION_AUTO_STOP_DISABLED) == 0)
+				this.stop((this._options & Transition.OPTION_AUTO_STOP_AT_END) != 0 ? true : false, false);
+		}
 
         private internalPlay(delay: number=0) {
             this._ownerBaseX = this._owner.x;
