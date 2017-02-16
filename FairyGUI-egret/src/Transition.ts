@@ -80,13 +80,12 @@ module fairygui {
                 this._onCompleteParam = onCompleteParam;
                 this._onCompleteObj = onCompleteObj;
 
-                this._owner.internalVisible++;
                 if((this._options & Transition.OPTION_IGNORE_DISPLAY_CONTROLLER) != 0) {
                     var cnt: number = this._items.length;
                     for(var i: number = 0;i < cnt;i++) {
                         var item: TransitionItem = this._items[i];
                         if(item.target != null && item.target != this._owner)
-                            item.target.internalVisible++;
+                            item.displayLockToken = item.target.addDisplayLock();
                     }
                 }
             }
@@ -109,8 +108,6 @@ module fairygui {
                 this._onComplete = null;
                 this._onCompleteParam = null;
                 this._onCompleteObj = null;
-
-                this._owner.internalVisible--;
 
                 var cnt: number = this._items.length;
                 var i:number;
@@ -144,8 +141,10 @@ module fairygui {
         }
         
         private stopItem(item:TransitionItem, setToComplete:boolean):void {
-            if ((this._options & Transition.OPTION_IGNORE_DISPLAY_CONTROLLER) != 0 && item.target != this._owner)
-				item.target.internalVisible--;
+            if (item.displayLockToken!=0) {
+				item.target.releaseDisplayLock(item.displayLockToken);
+                item.displayLockToken = 0;
+            }
 			
 			if (item.type == TransitionActionType.ColorFilter && item.filterCreated)
 				item.target.filters = null;
@@ -610,23 +609,24 @@ module fairygui {
                     egret.callLater(this.internalPlay,this,0);
                     else {
                         this._playing = false;
-                        this._owner.internalVisible--;
-                        
+
                         var cnt: number = this._items.length;
 						for (var i:number = 0; i < cnt; i++)
 						{
 							var item:TransitionItem = this._items[i];
 							if (item.target != null)
 							{
-								if((this._options & Transition.OPTION_IGNORE_DISPLAY_CONTROLLER) != 0 && item.target!=this._owner)
-									item.target.internalVisible--;
-							}
-							
-							if (item.filterCreated)
-							{
-								item.filterCreated = false;
-								item.target.filters = null;
-							}
+                                if (item.displayLockToken!=0) {
+                                    item.target.releaseDisplayLock(item.displayLockToken);
+                                    item.displayLockToken = 0;
+                                }
+
+                                if (item.filterCreated)
+                                {
+                                    item.filterCreated = false;
+                                    item.target.filters = null;
+                                }
+                            }
 						}
 
                         if(this._onComplete != null) {
@@ -1031,6 +1031,7 @@ module fairygui {
         public completed: boolean = false;
         public target: fairygui.GObject;
         public filterCreated: boolean;
+        public displayLockToken: number = 0;
 
         public constructor() {
             this.easeType = egret.Ease.quadOut;

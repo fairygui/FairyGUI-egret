@@ -8,6 +8,7 @@ module fairygui {
         protected _easeType: Function;
         protected _tweenTime: number;
         protected _tweenDelay: number;
+        protected _displayLockToken: number;
 
         protected _owner: GObject;
         protected _controller: Controller;
@@ -17,6 +18,7 @@ module fairygui {
             this._easeType = egret.Ease.quadOut;
             this._tweenTime = 0.3;
             this._tweenDelay = 0;
+            this._displayLockToken = 0;
         }
 
         public get controller(): Controller {

@@ -34,9 +34,6 @@ module fairygui {
         }
 
         public updateState(): void {
-            if (this._controller==null || this._owner._gearLocked || this._owner._underConstruct)
-                return;
-
             this._storage[this._controller.selectedPageId] = this._owner.icon;
         }
     }

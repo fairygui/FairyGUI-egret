@@ -26,7 +26,8 @@ module fairygui {
         private _pivotOffsetX: number = 0;
         private _pivotOffsetY: number = 0;
         private _sortingOrder: number = 0;
-        private _internalVisible: number = 1;
+        private _internalVisible: boolean = true;
+        private _handlingController: boolean = false;
         private _focusable: boolean = false;
         private _tooltips: string;
         private _pixelSnapping: boolean = false;
@@ -451,24 +452,8 @@ module fairygui {
             }
         }
 
-        public set internalVisible(value: number) {
-            if(value < 0)
-                value = 0;
-            var oldValue: boolean = this._internalVisible > 0;
-            var newValue: boolean = value > 0;
-            this._internalVisible = value;
-            if(oldValue != newValue) {
-                if(this._parent)
-                    this._parent.childStateChanged(this);
-            }
-        }
-        
-        public get internalVisible(): number {
-            return this._internalVisible;
-        }
-
         public get finalVisible(): boolean {
-            return this._visible && this._internalVisible>0 && (!this._group || this._group.finalVisible);
+            return this._visible && this._internalVisible && (!this._group || this._group.finalVisible);
         }
 
         public get sortingOrder(): number {
@@ -591,14 +576,64 @@ module fairygui {
 			return gear;
 		}
 		
-		protected updateGear(index:number):void {
-			if (this._gears[index] != null)
-				this._gears[index].updateState();
+
+		protected updateGear(index:number):void
+		{
+			if(this._underConstruct || this._gearLocked)
+				return;
+			
+			var gear:GearBase = this._gears[index];
+			if ( gear!= null && gear.controller!=null)
+				gear.updateState();
 		}
 		
-		public updateGearFromRelations(index:number, dx:number, dy:number):void	{
+		public checkGearController(index:number, c:Controller):Boolean
+		{
+			return this._gears[index] != null && this._gears[index].controller==c;
+		}
+		
+		public updateGearFromRelations(index:number, dx:number, dy:number):void
+		{
 			if (this._gears[index] != null)
 				this._gears[index].updateFromRelations(dx, dy);
+		}
+		
+		public addDisplayLock():number
+		{
+			var gearDisplay:GearDisplay = <GearDisplay>this._gears[0];
+			if(gearDisplay && gearDisplay.controller)
+			{
+				var ret:number = gearDisplay.addLock();
+				this.checkGearDisplay();
+				
+				return ret;
+			}
+			else
+				return 0;
+		}
+		
+		public releaseDisplayLock(token:number):void
+		{
+			var gearDisplay:GearDisplay = <GearDisplay>this._gears[0];
+			if(gearDisplay && gearDisplay.controller)
+			{
+				gearDisplay.releaseLock(token);
+				this.checkGearDisplay();
+			}
+		}
+		
+		private checkGearDisplay():void
+		{
+			if(this._handlingController)
+				return;
+			
+			var connected:boolean = this._gears[0]==null || (<GearDisplay>this._gears[0]).connected;
+			if(connected!=this._internalVisible)
+			{
+				this._internalVisible = connected;
+				if(this._parent)
+					this._parent.childStateChanged(this);
+			}
 		}
 		
 		public get gearXY():GearXY
@@ -869,12 +904,16 @@ module fairygui {
         }
         
         public handleControllerChanged(c: Controller): void {
+            this._handlingController = true;
 			for (var i:number = 0; i < 8; i++)
 			{
 				var gear:GearBase = this._gears[i];
 				if (gear != null && gear.controller == c)
 					gear.apply();
 			}
+            this._handlingController = false;
+
+            this.checkGearDisplay();
         }
 
         protected createDisplayObject(): void {

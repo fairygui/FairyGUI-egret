@@ -49,7 +49,8 @@ module fairygui {
 						return;
 				}
                 if(this._owner.x != pt.x || this._owner.y != pt.y) {
-                    this._owner.internalVisible++;
+					if(this._owner.checkGearController(0, this._controller))
+						this._displayLockToken = this._owner.addDisplayLock();
                     this._tweenTarget = pt;
                     
                     var vars: any = {
@@ -68,7 +69,10 @@ module fairygui {
                         .wait(this._tweenDelay * 1000)
                         .to({ x: pt.x,y: pt.y },this._tweenTime * 1000,this._easeType)
                         .call(function(): void {
-                            this._owner.internalVisible--;
+                            if(this._displayLockToken!=0) {
+                                this._owner.releaseDisplayLock(this._displayLockToken);
+                                this._displayLockToken = 0;
+                            }
                             this._tweener = null;
                             this._owner.dispatchEventWith(GObject.GEAR_STOP, false);
                         }, this);
@@ -82,9 +86,6 @@ module fairygui {
         }
 
         public updateState(): void {
-            if (this._controller==null || this._owner._gearLocked || this._owner._underConstruct)
-                return;
-
             var pt: egret.Point = this._storage[this._controller.selectedPageId];
             if(!pt) {
                 pt = new egret.Point();

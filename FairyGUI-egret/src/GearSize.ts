@@ -59,7 +59,8 @@ module fairygui {
                 var a: boolean = gv.width != this._owner.width || gv.height != this._owner.height;
                 var b: boolean = gv.scaleX != this._owner.scaleX || gv.scaleY != this._owner.scaleY;
                 if(a || b) {
-                    this._owner.internalVisible++;
+					if(this._owner.checkGearController(0, this._controller))
+						this._displayLockToken = this._owner.addDisplayLock();
                     this._tweenTarget = gv;
                     
                     var vars: any = {
@@ -84,7 +85,10 @@ module fairygui {
                         .to({ width: gv.width, height: gv.height, scaleX: gv.scaleX, scaleY: gv.scaleY },
                             this._tweenTime * 1000, this._easeType)
                         .call(function(): void {
-                            this._owner.internalVisible--;
+                            if(this._displayLockToken!=0) {
+                                this._owner.releaseDisplayLock(this._displayLockToken);
+                                this._displayLockToken = 0;
+                            }
                             this._tweener = null;
                             this._owner.dispatchEventWith(GObject.GEAR_STOP, false);
                         },this);
@@ -99,9 +103,6 @@ module fairygui {
         }
 
         public updateState(): void {
-            if (this._controller==null || this._owner._gearLocked || this._owner._underConstruct)
-                return;
-
             var gv: GearSizeValue = this._storage[this._controller.selectedPageId];
             if(!gv) {
                 gv = new GearSizeValue();

@@ -58,9 +58,6 @@ module fairygui {
         }
 
         public updateState(): void {
-            if (this._controller==null || this._owner._gearLocked || this._owner._underConstruct)
-                return;
-
 			var gv:GearColorValue = this._storage[this._controller.selectedPageId];
 			if(!gv)
 			{
