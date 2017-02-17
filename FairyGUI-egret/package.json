@@ -1,6 +1,6 @@
 {
 	"name": "egret",
-	"version": "4.0.1",
+	"version": "3.2.6",
 	"modules": [
 		{
 			"name": "fairygui",

@@ -1,3 +1,3144 @@
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var fairygui;
+(function (fairygui) {
+    var Controller = (function (_super) {
+        __extends(Controller, _super);
+        function Controller() {
+            var _this = _super.call(this) || this;
+            _this._selectedIndex = 0;
+            _this._previousIndex = 0;
+            _this._pageIds = [];
+            _this._pageNames = [];
+            _this._selectedIndex = -1;
+            _this._previousIndex = -1;
+            return _this;
+        }
+        Object.defineProperty(Controller.prototype, "name", {
+            get: function () {
+                return this._name;
+            },
+            set: function (value) {
+                this._name = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "parent", {
+            get: function () {
+                return this._parent;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "selectedIndex", {
+            get: function () {
+                return this._selectedIndex;
+            },
+            set: function (value) {
+                if (this._selectedIndex != value) {
+                    if (value > this._pageIds.length - 1)
+                        throw "index out of bounds: " + value;
+                    this._previousIndex = this._selectedIndex;
+                    this._selectedIndex = value;
+                    this._parent.applyController(this);
+                    this.dispatchEvent(new fairygui.StateChangeEvent(fairygui.StateChangeEvent.CHANGED));
+                    if (this._playingTransition) {
+                        this._playingTransition.stop();
+                        this._playingTransition = null;
+                    }
+                    if (this._pageTransitions) {
+                        var len = this._pageTransitions.length;
+                        for (var i = 0; i < len; i++) {
+                            var pt = this._pageTransitions[i];
+                            if (pt.toIndex == this._selectedIndex && (pt.fromIndex == -1 || pt.fromIndex == this._previousIndex)) {
+                                this._playingTransition = this.parent.getTransition(pt.transitionName);
+                                break;
+                            }
+                        }
+                        if (this._playingTransition)
+                            this._playingTransition.play(function () { this._playingTransition = null; }, this);
+                    }
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        //功能和设置selectedIndex一样，但不会触发事件
+        Controller.prototype.setSelectedIndex = function (value) {
+            if (value === void 0) { value = 0; }
+            if (this._selectedIndex != value) {
+                if (value > this._pageIds.length - 1)
+                    throw "index out of bounds: " + value;
+                this._previousIndex = this._selectedIndex;
+                this._selectedIndex = value;
+                this._parent.applyController(this);
+                if (this._playingTransition) {
+                    this._playingTransition.stop();
+                    this._playingTransition = null;
+                }
+            }
+        };
+        Object.defineProperty(Controller.prototype, "previsousIndex", {
+            get: function () {
+                return this._previousIndex;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "selectedPage", {
+            get: function () {
+                if (this._selectedIndex == -1)
+                    return null;
+                else
+                    return this._pageNames[this._selectedIndex];
+            },
+            set: function (val) {
+                var i = this._pageNames.indexOf(val);
+                if (i == -1)
+                    i = 0;
+                this.selectedIndex = i;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        //功能和设置selectedPage一样，但不会触发事件
+        Controller.prototype.setSelectedPage = function (value) {
+            var i = this._pageNames.indexOf(value);
+            if (i == -1)
+                i = 0;
+            this.setSelectedIndex(i);
+        };
+        Object.defineProperty(Controller.prototype, "previousPage", {
+            get: function () {
+                if (this._previousIndex == -1)
+                    return null;
+                else
+                    return this._pageNames[this._previousIndex];
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "pageCount", {
+            get: function () {
+                return this._pageIds.length;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Controller.prototype.getPageName = function (index) {
+            if (index === void 0) { index = 0; }
+            return this._pageNames[index];
+        };
+        Controller.prototype.addPage = function (name) {
+            if (name === void 0) { name = ""; }
+            this.addPageAt(name, this._pageIds.length);
+        };
+        Controller.prototype.addPageAt = function (name, index) {
+            if (index === void 0) { index = 0; }
+            var nid = "" + (Controller._nextPageId++);
+            if (index == this._pageIds.length) {
+                this._pageIds.push(nid);
+                this._pageNames.push(name);
+            }
+            else {
+                this._pageIds.splice(index, 0, nid);
+                this._pageNames.splice(index, 0, name);
+            }
+        };
+        Controller.prototype.removePage = function (name) {
+            var i = this._pageNames.indexOf(name);
+            if (i != -1) {
+                this._pageIds.splice(i, 1);
+                this._pageNames.splice(i, 1);
+                if (this._selectedIndex >= this._pageIds.length)
+                    this.selectedIndex = this._selectedIndex - 1;
+                else
+                    this._parent.applyController(this);
+            }
+        };
+        Controller.prototype.removePageAt = function (index) {
+            if (index === void 0) { index = 0; }
+            this._pageIds.splice(index, 1);
+            this._pageNames.splice(index, 1);
+            if (this._selectedIndex >= this._pageIds.length)
+                this.selectedIndex = this._selectedIndex - 1;
+            else
+                this._parent.applyController(this);
+        };
+        Controller.prototype.clearPages = function () {
+            this._pageIds.length = 0;
+            this._pageNames.length = 0;
+            if (this._selectedIndex != -1)
+                this.selectedIndex = -1;
+            else
+                this._parent.applyController(this);
+        };
+        Controller.prototype.hasPage = function (aName) {
+            return this._pageNames.indexOf(aName) != -1;
+        };
+        Controller.prototype.getPageIndexById = function (aId) {
+            return this._pageIds.indexOf(aId);
+        };
+        Controller.prototype.getPageIdByName = function (aName) {
+            var i = this._pageNames.indexOf(aName);
+            if (i != -1)
+                return this._pageIds[i];
+            else
+                return null;
+        };
+        Controller.prototype.getPageNameById = function (aId) {
+            var i = this._pageIds.indexOf(aId);
+            if (i != -1)
+                return this._pageNames[i];
+            else
+                return null;
+        };
+        Controller.prototype.getPageId = function (index) {
+            if (index === void 0) { index = 0; }
+            return this._pageIds[index];
+        };
+        Object.defineProperty(Controller.prototype, "selectedPageId", {
+            get: function () {
+                if (this._selectedIndex == -1)
+                    return null;
+                else
+                    return this._pageIds[this._selectedIndex];
+            },
+            set: function (val) {
+                var i = this._pageIds.indexOf(val);
+                this.selectedIndex = i;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "oppositePageId", {
+            set: function (val) {
+                var i = this._pageIds.indexOf(val);
+                if (i > 0)
+                    this.selectedIndex = 0;
+                else if (this._pageIds.length > 1)
+                    this.selectedIndex = 1;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "previousPageId", {
+            get: function () {
+                if (this._previousIndex == -1)
+                    return null;
+                else
+                    return this._pageIds[this._previousIndex];
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Controller.prototype.setup = function (xml) {
+            this._name = xml.attributes.name;
+            this._autoRadioGroupDepth = xml.attributes.autoRadioGroupDepth == "true";
+            var i = 0;
+            var k = 0;
+            var str = xml.attributes.pages;
+            if (str) {
+                var arr = str.split(",");
+                var cnt = arr.length;
+                for (i = 0; i < cnt; i += 2) {
+                    this._pageIds.push(arr[i]);
+                    this._pageNames.push(arr[i + 1]);
+                }
+            }
+            str = xml.attributes.transitions;
+            if (str) {
+                this._pageTransitions = new Array();
+                arr = str.split(",");
+                cnt = arr.length;
+                for (i = 0; i < cnt; i++) {
+                    str = arr[i];
+                    if (!str)
+                        continue;
+                    var pt = new PageTransition();
+                    k = str.indexOf("=");
+                    pt.transitionName = str.substr(k + 1);
+                    str = str.substring(0, k);
+                    k = str.indexOf("-");
+                    pt.toIndex = parseInt(str.substring(k + 1));
+                    str = str.substring(0, k);
+                    if (str == "*")
+                        pt.fromIndex = -1;
+                    else
+                        pt.fromIndex = parseInt(str);
+                    this._pageTransitions.push(pt);
+                }
+            }
+            if (this._parent && this._pageIds.length > 0)
+                this._selectedIndex = 0;
+            else
+                this._selectedIndex = -1;
+        };
+        return Controller;
+    }(egret.EventDispatcher));
+    Controller._nextPageId = 0;
+    fairygui.Controller = Controller;
+    __reflect(Controller.prototype, "fairygui.Controller");
+    var PageTransition = (function () {
+        function PageTransition() {
+            this.fromIndex = 0;
+            this.toIndex = 0;
+        }
+        return PageTransition;
+    }());
+    __reflect(PageTransition.prototype, "PageTransition");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var fairygui;
+(function (fairygui) {
+    var Frame = (function () {
+        function Frame() {
+            this.addDelay = 0;
+            this.rect = new egret.Rectangle();
+        }
+        return Frame;
+    }());
+    fairygui.Frame = Frame;
+    __reflect(Frame.prototype, "fairygui.Frame");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var fairygui;
+(function (fairygui) {
+    var MovieClip = (function (_super) {
+        __extends(MovieClip, _super);
+        function MovieClip() {
+            var _this = _super.call(this) || this;
+            _this.interval = 0;
+            _this.repeatDelay = 0;
+            _this._frameCount = 0;
+            _this._currentFrame = 0;
+            _this._start = 0;
+            _this._end = 0;
+            _this._times = 0;
+            _this._endAt = 0;
+            _this._status = 0; //0-none, 1-next loop, 2-ending, 3-ended
+            _this.$renderNode = new egret.sys.BitmapNode();
+            _this.playState = new fairygui.PlayState();
+            _this._playing = true;
+            _this.touchEnabled = false;
+            _this.setPlaySettings();
+            return _this;
+        }
+        Object.defineProperty(MovieClip.prototype, "frames", {
+            get: function () {
+                return this._frames;
+            },
+            set: function (value) {
+                this._frames = value;
+                if (this._frames != null)
+                    this._frameCount = this._frames.length;
+                else
+                    this._frameCount = 0;
+                if (this._end == -1 || this._end > this._frameCount - 1)
+                    this._end = this._frameCount - 1;
+                if (this._endAt == -1 || this._endAt > this._frameCount - 1)
+                    this._endAt = this._frameCount - 1;
+                if (this._currentFrame < 0 || this._currentFrame > this._frameCount - 1)
+                    this._currentFrame = this._frameCount - 1;
+                if (this._frameCount > 0)
+                    this.setFrame(this._frames[this._currentFrame]);
+                else
+                    this.setFrame(null);
+                this.playState.rewind();
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(MovieClip.prototype, "frameCount", {
+            get: function () {
+                return this._frameCount;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(MovieClip.prototype, "boundsRect", {
+            get: function () {
+                return this._boundsRect;
+            },
+            set: function (value) {
+                this._boundsRect = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(MovieClip.prototype, "currentFrame", {
+            get: function () {
+                return this._currentFrame;
+            },
+            set: function (value) {
+                if (this._currentFrame != value) {
+                    this._currentFrame = value;
+                    this.playState.currentFrame = value;
+                    this.setFrame(this._currentFrame < this._frameCount ? this._frames[this._currentFrame] : null);
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(MovieClip.prototype, "playing", {
+            get: function () {
+                return this._playing;
+            },
+            set: function (value) {
+                this._playing = value;
+                if (value && this.stage != null) {
+                    fairygui.GTimers.inst.add(0, 0, this.update, this);
+                }
+                else {
+                    fairygui.GTimers.inst.remove(this.update, this);
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
+        MovieClip.prototype.setPlaySettings = function (start, end, times, endAt, endCallback, callbackObj) {
+            if (start === void 0) { start = 0; }
+            if (end === void 0) { end = -1; }
+            if (times === void 0) { times = 0; }
+            if (endAt === void 0) { endAt = -1; }
+            if (endCallback === void 0) { endCallback = null; }
+            if (callbackObj === void 0) { callbackObj = null; }
+            this._start = start;
+            this._end = end;
+            if (this._end == -1 || this._end > this._frameCount - 1)
+                this._end = this._frameCount - 1;
+            this._times = times;
+            this._endAt = endAt;
+            if (this._endAt == -1)
+                this._endAt = this._end;
+            this._status = 0;
+            this._callback = endCallback;
+            this._callbackObj = callbackObj;
+            this.currentFrame = start;
+        };
+        MovieClip.prototype.update = function () {
+            if (this._playing && this._frameCount != 0 && this._status != 3) {
+                this.playState.update(this);
+                if (this._currentFrame != this.playState.currentFrame) {
+                    if (this._status == 1) {
+                        this._currentFrame = this._start;
+                        this.playState.currentFrame = this._currentFrame;
+                        this._status = 0;
+                    }
+                    else if (this._status == 2) {
+                        this._currentFrame = this._endAt;
+                        this.playState.currentFrame = this._currentFrame;
+                        this._status = 3;
+                        //play end
+                        if (this._callback != null) {
+                            fairygui.GTimers.inst.callLater(this.__playEnd, this);
+                        }
+                    }
+                    else {
+                        this._currentFrame = this.playState.currentFrame;
+                        if (this._currentFrame == this._end) {
+                            if (this._times > 0) {
+                                this._times--;
+                                if (this._times == 0)
+                                    this._status = 2;
+                                else
+                                    this._status = 1;
+                            }
+                        }
+                    }
+                    //draw
+                    this.setFrame(this._frames[this._currentFrame]);
+                }
+            }
+        };
+        MovieClip.prototype.__playEnd = function () {
+            if (this._callback != null) {
+                var f = this._callback;
+                var fObj = this._callbackObj;
+                this._callback = null;
+                this._callbackObj = null;
+                if (f.length == 1)
+                    f.call(fObj, this);
+                else
+                    f.call(fObj);
+            }
+        };
+        MovieClip.prototype.setFrame = function (frame) {
+            if (frame == null) {
+                this._texture = null;
+            }
+            else {
+                this._texture = frame.texture;
+                this._frameRect = frame.rect;
+            }
+            this.$invalidateContentBounds();
+        };
+        MovieClip.prototype.$render = function () {
+            var texture = this._texture;
+            if (texture) {
+                var offsetX = Math.round(texture._offsetX) + this._frameRect.x;
+                var offsetY = Math.round(texture._offsetY) + this._frameRect.y;
+                var bitmapWidth = texture._bitmapWidth;
+                var bitmapHeight = texture._bitmapHeight;
+                var textureWidth = texture.$getTextureWidth();
+                var textureHeight = texture.$getTextureHeight();
+                var destW = Math.round(texture.$getScaleBitmapWidth());
+                var destH = Math.round(texture.$getScaleBitmapHeight());
+                var sourceWidth = texture._sourceWidth;
+                var sourceHeight = texture._sourceHeight;
+                egret.sys.BitmapNode.$updateTextureData(this.$renderNode, texture._bitmapData, texture._bitmapX, texture._bitmapY, bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight, destW, destH, sourceWidth, sourceHeight, null, egret.BitmapFillMode.SCALE, true);
+            }
+        };
+        MovieClip.prototype.$measureContentBounds = function (bounds) {
+            if (this._texture) {
+                var x = Math.round(this._texture._offsetX) + this._frameRect.x;
+                var y = Math.round(this._texture._offsetY) + this._frameRect.y;
+                var w = this._texture.$getTextureWidth();
+                var h = this._texture.$getTextureHeight();
+                bounds.setTo(x, y, w, h);
+            }
+            else {
+                bounds.setEmpty();
+            }
+        };
+        MovieClip.prototype.$onAddToStage = function (stage, nestLevel) {
+            _super.prototype.$onAddToStage.call(this, stage, nestLevel);
+            if (this._playing)
+                fairygui.GTimers.inst.add(0, 0, this.update, this);
+        };
+        MovieClip.prototype.$onRemoveFromStage = function () {
+            _super.prototype.$onRemoveFromStage.call(this);
+            if (this._playing)
+                fairygui.GTimers.inst.remove(this.update, this);
+        };
+        return MovieClip;
+    }(egret.DisplayObject));
+    fairygui.MovieClip = MovieClip;
+    __reflect(MovieClip.prototype, "fairygui.MovieClip");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var fairygui;
+(function (fairygui) {
+    var PlayState = (function () {
+        function PlayState() {
+            this.repeatedCount = 0;
+            this._curFrame = 0;
+            this._lastTime = 0;
+            this._curFrameDelay = 0;
+            this._lastTime = egret.getTimer();
+        }
+        PlayState.prototype.update = function (mc) {
+            var t = egret.getTimer();
+            var elapsed = t - this._lastTime;
+            this._lastTime = t;
+            var cur = this._curFrame;
+            if (cur >= mc.frameCount)
+                cur = mc.frameCount - 1;
+            this.reachEnding = false;
+            this._curFrameDelay += elapsed;
+            var interval = mc.interval + mc.frames[cur].addDelay
+                + ((cur == 0 && this.repeatedCount > 0) ? mc.repeatDelay : 0);
+            if (this._curFrameDelay < interval)
+                return;
+            this._curFrameDelay -= interval;
+            if (this._curFrameDelay > mc.interval)
+                this._curFrameDelay = mc.interval;
+            if (mc.swing) {
+                if (this.reversed) {
+                    this._curFrame--;
+                    if (this._curFrame < 0) {
+                        this._curFrame = Math.min(1, mc.frameCount - 1);
+                        this.repeatedCount++;
+                        this.reversed = !this.reversed;
+                    }
+                }
+                else {
+                    this._curFrame++;
+                    if (this._curFrame > mc.frameCount - 1) {
+                        this._curFrame = Math.max(0, mc.frameCount - 2);
+                        this.repeatedCount++;
+                        this.reachEnding = true;
+                        this.reversed = !this.reversed;
+                    }
+                }
+            }
+            else {
+                this._curFrame++;
+                if (this._curFrame > mc.frameCount - 1) {
+                    this._curFrame = 0;
+                    this.repeatedCount++;
+                    this.reachEnding = true;
+                }
+            }
+        };
+        Object.defineProperty(PlayState.prototype, "currentFrame", {
+            get: function () {
+                return this._curFrame;
+            },
+            set: function (value) {
+                this._curFrame = value;
+                this._curFrameDelay = 0;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        PlayState.prototype.rewind = function () {
+            this._curFrame = 0;
+            this._curFrameDelay = 0;
+            this.reversed = false;
+            this.reachEnding = false;
+        };
+        PlayState.prototype.reset = function () {
+            this._curFrame = 0;
+            this._curFrameDelay = 0;
+            this.repeatedCount = 0;
+            this.reachEnding = false;
+            this.reversed = false;
+        };
+        PlayState.prototype.copy = function (src) {
+            this._curFrame = src._curFrame;
+            this._curFrameDelay = src._curFrameDelay;
+            this.repeatedCount = src.repeatedCount;
+            this.reachEnding = src.reachEnding;
+            this.reversed = src.reversed;
+        };
+        return PlayState;
+    }());
+    fairygui.PlayState = PlayState;
+    __reflect(PlayState.prototype, "fairygui.PlayState");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var fairygui;
+(function (fairygui) {
+    var UIContainer = (function (_super) {
+        __extends(UIContainer, _super);
+        function UIContainer() {
+            var _this = _super.call(this) || this;
+            _this.touchEnabled = true;
+            _this.touchChildren = true;
+            return _this;
+        }
+        Object.defineProperty(UIContainer.prototype, "hitArea", {
+            get: function () {
+                return this._hitArea;
+            },
+            set: function (value) {
+                if (this._hitArea && value) {
+                    this._hitArea.x = value.x;
+                    this._hitArea.y = value.y;
+                    this._hitArea.width = value.width;
+                    this._hitArea.height = value.height;
+                }
+                else
+                    this._hitArea = (value ? value.clone() : null);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        UIContainer.prototype.$hitTest = function (stageX, stageY) {
+            var ret = _super.prototype.$hitTest.call(this, stageX, stageY);
+            if (ret == this) {
+                if (!this.touchEnabled || this._hitArea == null)
+                    return null;
+            }
+            else if (ret == null && this.touchEnabled && this._hitArea != null) {
+                var m = this.$getInvertedConcatenatedMatrix();
+                var localX = m.a * stageX + m.c * stageY + m.tx;
+                var localY = m.b * stageX + m.d * stageY + m.ty;
+                if (this._hitArea.contains(localX, localY))
+                    ret = this;
+            }
+            return ret;
+        };
+        return UIContainer;
+    }(egret.DisplayObjectContainer));
+    fairygui.UIContainer = UIContainer;
+    __reflect(UIContainer.prototype, "fairygui.UIContainer");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var fairygui;
+(function (fairygui) {
+    var UISprite = (function (_super) {
+        __extends(UISprite, _super);
+        function UISprite() {
+            var _this = _super.call(this) || this;
+            _this.touchEnabled = true;
+            _this.touchChildren = true;
+            return _this;
+        }
+        Object.defineProperty(UISprite.prototype, "hitArea", {
+            get: function () {
+                return this._hitArea;
+            },
+            set: function (value) {
+                if (this._hitArea && value) {
+                    this._hitArea.x = value.x;
+                    this._hitArea.y = value.y;
+                    this._hitArea.width = value.width;
+                    this._hitArea.height = value.height;
+                }
+                else
+                    this._hitArea = (value ? value.clone() : null);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        UISprite.prototype.$hitTest = function (stageX, stageY) {
+            var ret = _super.prototype.$hitTest.call(this, stageX, stageY);
+            if (ret == this) {
+                if (!this.touchEnabled || this._hitArea == null)
+                    return null;
+            }
+            else if (ret == null && this.touchEnabled && this._hitArea != null) {
+                var m = this.$getInvertedConcatenatedMatrix();
+                var localX = m.a * stageX + m.c * stageY + m.tx;
+                var localY = m.b * stageX + m.d * stageY + m.ty;
+                if (this._hitArea.contains(localX, localY))
+                    ret = this;
+            }
+            return ret;
+        };
+        return UISprite;
+    }(egret.Sprite));
+    fairygui.UISprite = UISprite;
+    __reflect(UISprite.prototype, "fairygui.UISprite");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var fairygui;
+(function (fairygui) {
+    var BitmapFont = (function () {
+        function BitmapFont() {
+            this.size = 0;
+            this.glyphs = {};
+        }
+        return BitmapFont;
+    }());
+    fairygui.BitmapFont = BitmapFont;
+    __reflect(BitmapFont.prototype, "fairygui.BitmapFont");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var fairygui;
+(function (fairygui) {
+    var BMGlyph = (function () {
+        function BMGlyph() {
+            this.x = 0;
+            this.y = 0;
+            this.offsetX = 0;
+            this.offsetY = 0;
+            this.width = 0;
+            this.height = 0;
+            this.advance = 0;
+            this.lineHeight = 0;
+            this.channel = 0;
+        }
+        return BMGlyph;
+    }());
+    fairygui.BMGlyph = BMGlyph;
+    __reflect(BMGlyph.prototype, "fairygui.BMGlyph");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var fairygui;
+(function (fairygui) {
+    var DragEvent = (function (_super) {
+        __extends(DragEvent, _super);
+        function DragEvent(type, stageX, stageY, touchPointID) {
+            if (stageX === void 0) { stageX = 0; }
+            if (stageY === void 0) { stageY = 0; }
+            if (touchPointID === void 0) { touchPointID = -1; }
+            var _this = _super.call(this, type, false) || this;
+            _this.touchPointID = 0;
+            _this.stageX = stageX;
+            _this.stageY = stageY;
+            _this.touchPointID = touchPointID;
+            return _this;
+        }
+        DragEvent.prototype.preventDefault = function () {
+            this._prevented = true;
+        };
+        DragEvent.prototype.isDefaultPrevented = function () {
+            return this._prevented;
+        };
+        return DragEvent;
+    }(egret.Event));
+    DragEvent.DRAG_START = "__dragStart";
+    DragEvent.DRAG_END = "__dragEnd";
+    DragEvent.DRAG_MOVING = "__dragMoving";
+    fairygui.DragEvent = DragEvent;
+    __reflect(DragEvent.prototype, "fairygui.DragEvent");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var fairygui;
+(function (fairygui) {
+    var DropEvent = (function (_super) {
+        __extends(DropEvent, _super);
+        function DropEvent(type, source) {
+            if (source === void 0) { source = null; }
+            var _this = _super.call(this, type, false) || this;
+            _this.source = source;
+            return _this;
+        }
+        return DropEvent;
+    }(egret.Event));
+    DropEvent.DROP = "__drop";
+    fairygui.DropEvent = DropEvent;
+    __reflect(DropEvent.prototype, "fairygui.DropEvent");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var fairygui;
+(function (fairygui) {
+    var ItemEvent = (function (_super) {
+        __extends(ItemEvent, _super);
+        function ItemEvent(type, itemObject, stageX, stageY) {
+            if (itemObject === void 0) { itemObject = null; }
+            if (stageX === void 0) { stageX = 0; }
+            if (stageY === void 0) { stageY = 0; }
+            var _this = _super.call(this, type, false) || this;
+            _this.itemObject = itemObject;
+            _this.stageX = stageX;
+            _this.stageY = stageY;
+            return _this;
+        }
+        return ItemEvent;
+    }(egret.Event));
+    ItemEvent.CLICK = "___itemClick";
+    fairygui.ItemEvent = ItemEvent;
+    __reflect(ItemEvent.prototype, "fairygui.ItemEvent");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var fairygui;
+(function (fairygui) {
+    var StateChangeEvent = (function (_super) {
+        __extends(StateChangeEvent, _super);
+        function StateChangeEvent(type) {
+            return _super.call(this, type, false) || this;
+        }
+        return StateChangeEvent;
+    }(egret.Event));
+    StateChangeEvent.CHANGED = "___stateChanged";
+    fairygui.StateChangeEvent = StateChangeEvent;
+    __reflect(StateChangeEvent.prototype, "fairygui.StateChangeEvent");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var fairygui;
+(function (fairygui) {
+    var UBBParser = (function () {
+        function UBBParser() {
+            this._readPos = 0;
+            this.smallFontSize = 12;
+            this.normalFontSize = 14;
+            this.largeFontSize = 16;
+            this.defaultImgWidth = 0;
+            this.defaultImgHeight = 0;
+            this._handlers = {};
+            this._handlers["url"] = this.onTag_URL;
+            this._handlers["img"] = this.onTag_IMG;
+            this._handlers["b"] = this.onTag_Simple;
+            this._handlers["i"] = this.onTag_Simple;
+            this._handlers["u"] = this.onTag_Simple;
+            this._handlers["sup"] = this.onTag_Simple;
+            this._handlers["sub"] = this.onTag_Simple;
+            this._handlers["color"] = this.onTag_COLOR;
+            this._handlers["font"] = this.onTag_FONT;
+            this._handlers["size"] = this.onTag_SIZE;
+        }
+        UBBParser.prototype.onTag_URL = function (tagName, end, attr) {
+            if (!end) {
+                if (attr != null)
+                    return "<a href=\"" + attr + "\" target=\"_blank\">";
+                else {
+                    var href = this.getTagText();
+                    return "<a href=\"" + href + "\" target=\"_blank\">";
+                }
+            }
+            else
+                return "</a>";
+        };
+        UBBParser.prototype.onTag_IMG = function (tagName, end, attr) {
+            if (!end) {
+                var src = this.getTagText(true);
+                if (!src)
+                    return null;
+                if (this.defaultImgWidth)
+                    return "<img src=\"" + src + "\" width=\"" + this.defaultImgWidth + "\" height=\"" + this.defaultImgHeight + "\"/>";
+                else
+                    return "<img src=\"" + src + "\"/>";
+            }
+            else
+                return null;
+        };
+        UBBParser.prototype.onTag_Simple = function (tagName, end, attr) {
+            return end ? ("</" + tagName + ">") : ("<" + tagName + ">");
+        };
+        UBBParser.prototype.onTag_COLOR = function (tagName, end, attr) {
+            if (!end)
+                return "<font color=\"" + attr + "\">";
+            else
+                return "</font>";
+        };
+        UBBParser.prototype.onTag_FONT = function (tagName, end, attr) {
+            if (!end)
+                return "<font face=\"" + attr + "\">";
+            else
+                return "</font>";
+        };
+        UBBParser.prototype.onTag_SIZE = function (tagName, end, attr) {
+            if (!end) {
+                if (attr == "normal")
+                    attr = "" + this.normalFontSize;
+                else if (attr == "small")
+                    attr = "" + this.smallFontSize;
+                else if (attr == "large")
+                    attr = "" + this.largeFontSize;
+                else if (attr.length && attr.charAt(0) == "+")
+                    attr = "" + (this.smallFontSize + parseInt(attr.substr(1)));
+                else if (attr.length && attr.charAt(0) == "-")
+                    attr = "" + (this.smallFontSize - parseInt(attr.substr(1)));
+                return "<font size=\"" + attr + "\">";
+            }
+            else
+                return "</font>";
+        };
+        UBBParser.prototype.getTagText = function (remove) {
+            if (remove === void 0) { remove = false; }
+            var pos = this._text.indexOf("[", this._readPos);
+            if (pos == -1)
+                return null;
+            var ret = this._text.substring(this._readPos, pos);
+            if (remove)
+                this._readPos = pos;
+            return ret;
+        };
+        UBBParser.prototype.parse = function (text) {
+            this._text = text;
+            var pos1 = 0, pos2, pos3 = 0;
+            var end;
+            var tag, attr;
+            var repl;
+            var func;
+            while ((pos2 = this._text.indexOf("[", pos1)) != -1) {
+                pos1 = pos2;
+                pos2 = this._text.indexOf("]", pos1);
+                if (pos2 == -1)
+                    break;
+                end = this._text.charAt(pos1 + 1) == '/';
+                tag = this._text.substring(end ? pos1 + 2 : pos1 + 1, pos2);
+                pos2++;
+                this._readPos = pos2;
+                attr = null;
+                repl = null;
+                pos3 = tag.indexOf("=");
+                if (pos3 != -1) {
+                    attr = tag.substring(pos3 + 1);
+                    tag = tag.substring(0, pos3);
+                }
+                tag = tag.toLowerCase();
+                func = this._handlers[tag];
+                if (func != null) {
+                    repl = func.call(this, tag, end, attr);
+                    if (repl == null)
+                        repl = "";
+                }
+                else {
+                    pos1 = pos2;
+                    continue;
+                }
+                this._text = this._text.substring(0, pos1) + repl + this._text.substring(this._readPos);
+            }
+            return this._text;
+        };
+        return UBBParser;
+    }());
+    UBBParser.inst = new UBBParser();
+    fairygui.UBBParser = UBBParser;
+    __reflect(UBBParser.prototype, "fairygui.UBBParser");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var fairygui;
+(function (fairygui) {
+    var ToolSet = (function () {
+        function ToolSet() {
+        }
+        ToolSet.getFileName = function (source) {
+            var i = source.lastIndexOf("/");
+            if (i != -1)
+                source = source.substr(i + 1);
+            i = source.lastIndexOf("\\");
+            if (i != -1)
+                source = source.substr(i + 1);
+            i = source.lastIndexOf(".");
+            if (i != -1)
+                return source.substring(0, i);
+            else
+                return source;
+        };
+        ToolSet.startsWith = function (source, str, ignoreCase) {
+            if (ignoreCase === void 0) { ignoreCase = false; }
+            if (!source)
+                return false;
+            else if (source.length < str.length)
+                return false;
+            else {
+                source = source.substring(0, str.length);
+                if (!ignoreCase)
+                    return source == str;
+                else
+                    return source.toLowerCase() == str.toLowerCase();
+            }
+        };
+        ToolSet.endsWith = function (source, str, ignoreCase) {
+            if (ignoreCase === void 0) { ignoreCase = false; }
+            if (!source)
+                return false;
+            else if (source.length < str.length)
+                return false;
+            else {
+                source = source.substring(source.length - str.length);
+                if (!ignoreCase)
+                    return source == str;
+                else
+                    return source.toLowerCase() == str.toLowerCase();
+            }
+        };
+        ToolSet.trim = function (targetString) {
+            return ToolSet.trimLeft(ToolSet.trimRight(targetString));
+        };
+        ToolSet.trimLeft = function (targetString) {
+            var tempChar = "";
+            for (var i = 0; i < targetString.length; i++) {
+                tempChar = targetString.charAt(i);
+                if (tempChar != " " && tempChar != "\n" && tempChar != "\r") {
+                    break;
+                }
+            }
+            return targetString.substr(i);
+        };
+        ToolSet.trimRight = function (targetString) {
+            var tempChar = "";
+            for (var i = targetString.length - 1; i >= 0; i--) {
+                tempChar = targetString.charAt(i);
+                if (tempChar != " " && tempChar != "\n" && tempChar != "\r") {
+                    break;
+                }
+            }
+            return targetString.substring(0, i + 1);
+        };
+        ToolSet.convertToHtmlColor = function (argb, hasAlpha) {
+            if (hasAlpha === void 0) { hasAlpha = false; }
+            var alpha;
+            if (hasAlpha)
+                alpha = (argb >> 24 & 0xFF).toString(16);
+            else
+                alpha = "";
+            var red = (argb >> 16 & 0xFF).toString(16);
+            var green = (argb >> 8 & 0xFF).toString(16);
+            var blue = (argb & 0xFF).toString(16);
+            if (alpha.length == 1)
+                alpha = "0" + alpha;
+            if (red.length == 1)
+                red = "0" + red;
+            if (green.length == 1)
+                green = "0" + green;
+            if (blue.length == 1)
+                blue = "0" + blue;
+            return "#" + alpha + red + green + blue;
+        };
+        ToolSet.convertFromHtmlColor = function (str, hasAlpha) {
+            if (hasAlpha === void 0) { hasAlpha = false; }
+            if (str.length < 1)
+                return 0;
+            if (str.charAt(0) == "#")
+                str = str.substr(1);
+            if (str.length == 8)
+                return (parseInt(str.substr(0, 2), 16) << 24) + parseInt(str.substr(2), 16);
+            else if (hasAlpha)
+                return 0xFF000000 + parseInt(str, 16);
+            else
+                return parseInt(str, 16);
+        };
+        ToolSet.displayObjectToGObject = function (obj) {
+            while (obj != null && !(obj instanceof egret.Stage)) {
+                if (obj["$owner"])
+                    return obj["$owner"];
+                obj = obj.parent;
+            }
+            return null;
+        };
+        ToolSet.findChildNode = function (xml, name) {
+            var col = xml.children;
+            if (col) {
+                var length1 = col.length;
+                for (var i1 = 0; i1 < length1; i1++) {
+                    var cxml = col[i1];
+                    if (cxml.name == name) {
+                        return cxml;
+                    }
+                }
+            }
+            return null;
+        };
+        ToolSet.encodeHTML = function (str) {
+            if (!str)
+                return "";
+            else
+                return str.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("'", "&apos;");
+        };
+        ToolSet.parseUBB = function (text) {
+            return ToolSet.defaultUBBParser.parse(text);
+        };
+        ToolSet.clamp = function (value, min, max) {
+            if (value < min)
+                value = min;
+            else if (value > max)
+                value = max;
+            return value;
+        };
+        ToolSet.clamp01 = function (value) {
+            if (value > 1)
+                value = 1;
+            else if (value < 0)
+                value = 0;
+            return value;
+        };
+        return ToolSet;
+    }());
+    ToolSet.defaultUBBParser = new fairygui.UBBParser();
+    fairygui.ToolSet = ToolSet;
+    __reflect(ToolSet.prototype, "fairygui.ToolSet");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var fairygui;
+(function (fairygui) {
+    var ColorMatrix = (function () {
+        function ColorMatrix() {
+            this.matrix = new Array(ColorMatrix.LENGTH);
+            this.reset();
+        }
+        ColorMatrix.create = function (p_brightness, p_contrast, p_saturation, p_hue) {
+            var ret = new ColorMatrix();
+            ret.adjustColor(p_brightness, p_contrast, p_saturation, p_hue);
+            return ret;
+        };
+        // public methods:
+        ColorMatrix.prototype.reset = function () {
+            for (var i = 0; i < ColorMatrix.LENGTH; i++) {
+                this.matrix[i] = ColorMatrix.IDENTITY_MATRIX[i];
+            }
+        };
+        ColorMatrix.prototype.invert = function () {
+            this.multiplyMatrix([-1, 0, 0, 0, 255,
+                0, -1, 0, 0, 255,
+                0, 0, -1, 0, 255,
+                0, 0, 0, 1, 0]);
+        };
+        ColorMatrix.prototype.adjustColor = function (p_brightness, p_contrast, p_saturation, p_hue) {
+            this.adjustHue(p_hue);
+            this.adjustContrast(p_contrast);
+            this.adjustBrightness(p_brightness);
+            this.adjustSaturation(p_saturation);
+        };
+        ColorMatrix.prototype.adjustBrightness = function (p_val) {
+            p_val = this.cleanValue(p_val, 1) * 255;
+            this.multiplyMatrix([
+                1, 0, 0, 0, p_val,
+                0, 1, 0, 0, p_val,
+                0, 0, 1, 0, p_val,
+                0, 0, 0, 1, 0
+            ]);
+        };
+        ColorMatrix.prototype.adjustContrast = function (p_val) {
+            p_val = this.cleanValue(p_val, 1);
+            var s = p_val + 1;
+            var o = 128 * (1 - s);
+            this.multiplyMatrix([
+                s, 0, 0, 0, o,
+                0, s, 0, 0, o,
+                0, 0, s, 0, o,
+                0, 0, 0, 1, 0
+            ]);
+        };
+        ColorMatrix.prototype.adjustSaturation = function (p_val) {
+            p_val = this.cleanValue(p_val, 1);
+            p_val += 1;
+            var invSat = 1 - p_val;
+            var invLumR = invSat * ColorMatrix.LUMA_R;
+            var invLumG = invSat * ColorMatrix.LUMA_G;
+            var invLumB = invSat * ColorMatrix.LUMA_B;
+            this.multiplyMatrix([
+                (invLumR + p_val), invLumG, invLumB, 0, 0,
+                invLumR, (invLumG + p_val), invLumB, 0, 0,
+                invLumR, invLumG, (invLumB + p_val), 0, 0,
+                0, 0, 0, 1, 0
+            ]);
+        };
+        ColorMatrix.prototype.adjustHue = function (p_val) {
+            p_val = this.cleanValue(p_val, 1);
+            p_val *= Math.PI;
+            var cos = Math.cos(p_val);
+            var sin = Math.sin(p_val);
+            this.multiplyMatrix([
+                ((ColorMatrix.LUMA_R + (cos * (1 - ColorMatrix.LUMA_R))) + (sin * -(ColorMatrix.LUMA_R))), ((ColorMatrix.LUMA_G + (cos * -(ColorMatrix.LUMA_G))) + (sin * -(ColorMatrix.LUMA_G))), ((ColorMatrix.LUMA_B + (cos * -(ColorMatrix.LUMA_B))) + (sin * (1 - ColorMatrix.LUMA_B))), 0, 0,
+                ((ColorMatrix.LUMA_R + (cos * -(ColorMatrix.LUMA_R))) + (sin * 0.143)), ((ColorMatrix.LUMA_G + (cos * (1 - ColorMatrix.LUMA_G))) + (sin * 0.14)), ((ColorMatrix.LUMA_B + (cos * -(ColorMatrix.LUMA_B))) + (sin * -0.283)), 0, 0,
+                ((ColorMatrix.LUMA_R + (cos * -(ColorMatrix.LUMA_R))) + (sin * -((1 - ColorMatrix.LUMA_R)))), ((ColorMatrix.LUMA_G + (cos * -(ColorMatrix.LUMA_G))) + (sin * ColorMatrix.LUMA_G)), ((ColorMatrix.LUMA_B + (cos * (1 - ColorMatrix.LUMA_B))) + (sin * ColorMatrix.LUMA_B)), 0, 0,
+                0, 0, 0, 1, 0
+            ]);
+        };
+        ColorMatrix.prototype.concat = function (p_matrix) {
+            if (p_matrix.length != ColorMatrix.LENGTH) {
+                return;
+            }
+            this.multiplyMatrix(p_matrix);
+        };
+        ColorMatrix.prototype.clone = function () {
+            var result = new ColorMatrix();
+            result.copyMatrix(this.matrix);
+            return result;
+        };
+        ColorMatrix.prototype.copyMatrix = function (p_matrix) {
+            var l = ColorMatrix.LENGTH;
+            for (var i = 0; i < l; i++) {
+                this.matrix[i] = p_matrix[i];
+            }
+        };
+        ColorMatrix.prototype.multiplyMatrix = function (p_matrix) {
+            var col = [];
+            var i = 0;
+            for (var y = 0; y < 4; ++y) {
+                for (var x = 0; x < 5; ++x) {
+                    col[i + x] = p_matrix[i] * this.matrix[x] +
+                        p_matrix[i + 1] * this.matrix[x + 5] +
+                        p_matrix[i + 2] * this.matrix[x + 10] +
+                        p_matrix[i + 3] * this.matrix[x + 15] +
+                        (x == 4 ? p_matrix[i + 4] : 0);
+                }
+                i += 5;
+            }
+            this.copyMatrix(col);
+        };
+        ColorMatrix.prototype.cleanValue = function (p_val, p_limit) {
+            return Math.min(p_limit, Math.max(-p_limit, p_val));
+        };
+        return ColorMatrix;
+    }());
+    // identity matrix constant:
+    ColorMatrix.IDENTITY_MATRIX = [
+        1, 0, 0, 0, 0,
+        0, 1, 0, 0, 0,
+        0, 0, 1, 0, 0,
+        0, 0, 0, 1, 0
+    ];
+    ColorMatrix.LENGTH = ColorMatrix.IDENTITY_MATRIX.length;
+    ColorMatrix.LUMA_R = 0.299;
+    ColorMatrix.LUMA_G = 0.587;
+    ColorMatrix.LUMA_B = 0.114;
+    fairygui.ColorMatrix = ColorMatrix;
+    __reflect(ColorMatrix.prototype, "fairygui.ColorMatrix");
+})(fairygui || (fairygui = {}));
+
+var fairygui;
+(function (fairygui) {
+    var ButtonMode;
+    (function (ButtonMode) {
+        ButtonMode[ButtonMode["Common"] = 0] = "Common";
+        ButtonMode[ButtonMode["Check"] = 1] = "Check";
+        ButtonMode[ButtonMode["Radio"] = 2] = "Radio";
+    })(ButtonMode = fairygui.ButtonMode || (fairygui.ButtonMode = {}));
+    ;
+    var AutoSizeType;
+    (function (AutoSizeType) {
+        AutoSizeType[AutoSizeType["None"] = 0] = "None";
+        AutoSizeType[AutoSizeType["Both"] = 1] = "Both";
+        AutoSizeType[AutoSizeType["Height"] = 2] = "Height";
+    })(AutoSizeType = fairygui.AutoSizeType || (fairygui.AutoSizeType = {}));
+    ;
+    var AlignType;
+    (function (AlignType) {
+        AlignType[AlignType["Left"] = 0] = "Left";
+        AlignType[AlignType["Center"] = 1] = "Center";
+        AlignType[AlignType["Right"] = 2] = "Right";
+    })(AlignType = fairygui.AlignType || (fairygui.AlignType = {}));
+    ;
+    var VertAlignType;
+    (function (VertAlignType) {
+        VertAlignType[VertAlignType["Top"] = 0] = "Top";
+        VertAlignType[VertAlignType["Middle"] = 1] = "Middle";
+        VertAlignType[VertAlignType["Bottom"] = 2] = "Bottom";
+    })(VertAlignType = fairygui.VertAlignType || (fairygui.VertAlignType = {}));
+    ;
+    var LoaderFillType;
+    (function (LoaderFillType) {
+        LoaderFillType[LoaderFillType["None"] = 0] = "None";
+        LoaderFillType[LoaderFillType["Scale"] = 1] = "Scale";
+        LoaderFillType[LoaderFillType["ScaleMatchHeight"] = 2] = "ScaleMatchHeight";
+        LoaderFillType[LoaderFillType["ScaleMatchWidth"] = 3] = "ScaleMatchWidth";
+        LoaderFillType[LoaderFillType["ScaleFree"] = 4] = "ScaleFree";
+    })(LoaderFillType = fairygui.LoaderFillType || (fairygui.LoaderFillType = {}));
+    ;
+    var ListLayoutType;
+    (function (ListLayoutType) {
+        ListLayoutType[ListLayoutType["SingleColumn"] = 0] = "SingleColumn";
+        ListLayoutType[ListLayoutType["SingleRow"] = 1] = "SingleRow";
+        ListLayoutType[ListLayoutType["FlowHorizontal"] = 2] = "FlowHorizontal";
+        ListLayoutType[ListLayoutType["FlowVertical"] = 3] = "FlowVertical";
+        ListLayoutType[ListLayoutType["Pagination"] = 4] = "Pagination";
+    })(ListLayoutType = fairygui.ListLayoutType || (fairygui.ListLayoutType = {}));
+    ;
+    var ListSelectionMode;
+    (function (ListSelectionMode) {
+        ListSelectionMode[ListSelectionMode["Single"] = 0] = "Single";
+        ListSelectionMode[ListSelectionMode["Multiple"] = 1] = "Multiple";
+        ListSelectionMode[ListSelectionMode["Multiple_SingleClick"] = 2] = "Multiple_SingleClick";
+        ListSelectionMode[ListSelectionMode["None"] = 3] = "None";
+    })(ListSelectionMode = fairygui.ListSelectionMode || (fairygui.ListSelectionMode = {}));
+    ;
+    var OverflowType;
+    (function (OverflowType) {
+        OverflowType[OverflowType["Visible"] = 0] = "Visible";
+        OverflowType[OverflowType["Hidden"] = 1] = "Hidden";
+        OverflowType[OverflowType["Scroll"] = 2] = "Scroll";
+        OverflowType[OverflowType["Scale"] = 3] = "Scale";
+        OverflowType[OverflowType["ScaleFree"] = 4] = "ScaleFree";
+    })(OverflowType = fairygui.OverflowType || (fairygui.OverflowType = {}));
+    ;
+    var PackageItemType;
+    (function (PackageItemType) {
+        PackageItemType[PackageItemType["Image"] = 0] = "Image";
+        PackageItemType[PackageItemType["Swf"] = 1] = "Swf";
+        PackageItemType[PackageItemType["MovieClip"] = 2] = "MovieClip";
+        PackageItemType[PackageItemType["Sound"] = 3] = "Sound";
+        PackageItemType[PackageItemType["Component"] = 4] = "Component";
+        PackageItemType[PackageItemType["Misc"] = 5] = "Misc";
+        PackageItemType[PackageItemType["Font"] = 6] = "Font";
+        PackageItemType[PackageItemType["Atlas"] = 7] = "Atlas";
+    })(PackageItemType = fairygui.PackageItemType || (fairygui.PackageItemType = {}));
+    ;
+    var ProgressTitleType;
+    (function (ProgressTitleType) {
+        ProgressTitleType[ProgressTitleType["Percent"] = 0] = "Percent";
+        ProgressTitleType[ProgressTitleType["ValueAndMax"] = 1] = "ValueAndMax";
+        ProgressTitleType[ProgressTitleType["Value"] = 2] = "Value";
+        ProgressTitleType[ProgressTitleType["Max"] = 3] = "Max";
+    })(ProgressTitleType = fairygui.ProgressTitleType || (fairygui.ProgressTitleType = {}));
+    ;
+    var ScrollBarDisplayType;
+    (function (ScrollBarDisplayType) {
+        ScrollBarDisplayType[ScrollBarDisplayType["Default"] = 0] = "Default";
+        ScrollBarDisplayType[ScrollBarDisplayType["Visible"] = 1] = "Visible";
+        ScrollBarDisplayType[ScrollBarDisplayType["Auto"] = 2] = "Auto";
+        ScrollBarDisplayType[ScrollBarDisplayType["Hidden"] = 3] = "Hidden";
+    })(ScrollBarDisplayType = fairygui.ScrollBarDisplayType || (fairygui.ScrollBarDisplayType = {}));
+    ;
+    var ScrollType;
+    (function (ScrollType) {
+        ScrollType[ScrollType["Horizontal"] = 0] = "Horizontal";
+        ScrollType[ScrollType["Vertical"] = 1] = "Vertical";
+        ScrollType[ScrollType["Both"] = 2] = "Both";
+    })(ScrollType = fairygui.ScrollType || (fairygui.ScrollType = {}));
+    ;
+    var FlipType;
+    (function (FlipType) {
+        FlipType[FlipType["None"] = 0] = "None";
+        FlipType[FlipType["Horizontal"] = 1] = "Horizontal";
+        FlipType[FlipType["Vertical"] = 2] = "Vertical";
+        FlipType[FlipType["Both"] = 3] = "Both";
+    })(FlipType = fairygui.FlipType || (fairygui.FlipType = {}));
+    ;
+    var RelationType;
+    (function (RelationType) {
+        RelationType[RelationType["Left_Left"] = 0] = "Left_Left";
+        RelationType[RelationType["Left_Center"] = 1] = "Left_Center";
+        RelationType[RelationType["Left_Right"] = 2] = "Left_Right";
+        RelationType[RelationType["Center_Center"] = 3] = "Center_Center";
+        RelationType[RelationType["Right_Left"] = 4] = "Right_Left";
+        RelationType[RelationType["Right_Center"] = 5] = "Right_Center";
+        RelationType[RelationType["Right_Right"] = 6] = "Right_Right";
+        RelationType[RelationType["Top_Top"] = 7] = "Top_Top";
+        RelationType[RelationType["Top_Middle"] = 8] = "Top_Middle";
+        RelationType[RelationType["Top_Bottom"] = 9] = "Top_Bottom";
+        RelationType[RelationType["Middle_Middle"] = 10] = "Middle_Middle";
+        RelationType[RelationType["Bottom_Top"] = 11] = "Bottom_Top";
+        RelationType[RelationType["Bottom_Middle"] = 12] = "Bottom_Middle";
+        RelationType[RelationType["Bottom_Bottom"] = 13] = "Bottom_Bottom";
+        RelationType[RelationType["Width"] = 14] = "Width";
+        RelationType[RelationType["Height"] = 15] = "Height";
+        RelationType[RelationType["LeftExt_Left"] = 16] = "LeftExt_Left";
+        RelationType[RelationType["LeftExt_Right"] = 17] = "LeftExt_Right";
+        RelationType[RelationType["RightExt_Left"] = 18] = "RightExt_Left";
+        RelationType[RelationType["RightExt_Right"] = 19] = "RightExt_Right";
+        RelationType[RelationType["TopExt_Top"] = 20] = "TopExt_Top";
+        RelationType[RelationType["TopExt_Bottom"] = 21] = "TopExt_Bottom";
+        RelationType[RelationType["BottomExt_Top"] = 22] = "BottomExt_Top";
+        RelationType[RelationType["BottomExt_Bottom"] = 23] = "BottomExt_Bottom";
+        RelationType[RelationType["Size"] = 24] = "Size";
+    })(RelationType = fairygui.RelationType || (fairygui.RelationType = {}));
+    ;
+    function parseButtonMode(value) {
+        switch (value) {
+            case "Common":
+                return ButtonMode.Common;
+            case "Check":
+                return ButtonMode.Check;
+            case "Radio":
+                return ButtonMode.Radio;
+            default:
+                return ButtonMode.Common;
+        }
+    }
+    fairygui.parseButtonMode = parseButtonMode;
+    function parseAutoSizeType(value) {
+        switch (value) {
+            case "none":
+                return AutoSizeType.None;
+            case "both":
+                return AutoSizeType.Both;
+            case "height":
+                return AutoSizeType.Height;
+            default:
+                return AutoSizeType.None;
+        }
+    }
+    fairygui.parseAutoSizeType = parseAutoSizeType;
+    function parseAlignType(value) {
+        switch (value) {
+            case "left":
+                return AlignType.Left;
+            case "center":
+                return AlignType.Center;
+            case "right":
+                return AlignType.Right;
+            default:
+                return AlignType.Left;
+        }
+    }
+    fairygui.parseAlignType = parseAlignType;
+    function getAlignTypeString(type) {
+        return type == AlignType.Left ? egret.HorizontalAlign.LEFT :
+            (type == AlignType.Center ? egret.HorizontalAlign.CENTER : egret.HorizontalAlign.RIGHT);
+    }
+    fairygui.getAlignTypeString = getAlignTypeString;
+    function parseVertAlignType(value) {
+        switch (value) {
+            case "top":
+                return VertAlignType.Top;
+            case "middle":
+                return VertAlignType.Middle;
+            case "bottom":
+                return VertAlignType.Bottom;
+            default:
+                return VertAlignType.Top;
+        }
+    }
+    fairygui.parseVertAlignType = parseVertAlignType;
+    function parseLoaderFillType(value) {
+        switch (value) {
+            case "none":
+                return LoaderFillType.None;
+            case "scale":
+                return LoaderFillType.Scale;
+            case "scaleMatchHeight":
+                return LoaderFillType.ScaleMatchHeight;
+            case "scaleMatchWidth":
+                return LoaderFillType.ScaleMatchWidth;
+            case "scaleFree":
+                return LoaderFillType.ScaleFree;
+            default:
+                return LoaderFillType.None;
+        }
+    }
+    fairygui.parseLoaderFillType = parseLoaderFillType;
+    function parseListLayoutType(value) {
+        switch (value) {
+            case "column":
+                return ListLayoutType.SingleColumn;
+            case "row":
+                return ListLayoutType.SingleRow;
+            case "flow_hz":
+                return ListLayoutType.FlowHorizontal;
+            case "flow_vt":
+                return ListLayoutType.FlowVertical;
+            case "pagination":
+                return ListLayoutType.Pagination;
+            default:
+                return ListLayoutType.SingleColumn;
+        }
+    }
+    fairygui.parseListLayoutType = parseListLayoutType;
+    function parseListSelectionMode(value) {
+        switch (value) {
+            case "single":
+                return ListSelectionMode.Single;
+            case "multiple":
+                return ListSelectionMode.Multiple;
+            case "multipleSingleClick":
+                return ListSelectionMode.Multiple_SingleClick;
+            case "none":
+                return ListSelectionMode.None;
+            default:
+                return ListSelectionMode.Single;
+        }
+    }
+    fairygui.parseListSelectionMode = parseListSelectionMode;
+    function parseOverflowType(value) {
+        switch (value) {
+            case "visible":
+                return OverflowType.Visible;
+            case "hidden":
+                return OverflowType.Hidden;
+            case "scroll":
+                return OverflowType.Scroll;
+            case "scale":
+                return OverflowType.Scale;
+            case "scaleFree":
+                return OverflowType.ScaleFree;
+            default:
+                return OverflowType.Visible;
+        }
+    }
+    fairygui.parseOverflowType = parseOverflowType;
+    function parsePackageItemType(value) {
+        switch (value) {
+            case "image":
+                return PackageItemType.Image;
+            case "movieclip":
+                return PackageItemType.MovieClip;
+            case "sound":
+                return PackageItemType.Sound;
+            case "component":
+                return PackageItemType.Component;
+            case "swf":
+                return PackageItemType.Swf;
+            case "font":
+                return PackageItemType.Font;
+            case "atlas":
+                return PackageItemType.Atlas;
+            default:
+                return PackageItemType.Misc;
+        }
+    }
+    fairygui.parsePackageItemType = parsePackageItemType;
+    function parseProgressTitleType(value) {
+        switch (value) {
+            case "percent":
+                return ProgressTitleType.Percent;
+            case "valueAndmax":
+                return ProgressTitleType.ValueAndMax;
+            case "value":
+                return ProgressTitleType.Value;
+            case "max":
+                return ProgressTitleType.Max;
+            default:
+                return ProgressTitleType.Percent;
+        }
+    }
+    fairygui.parseProgressTitleType = parseProgressTitleType;
+    function parseScrollBarDisplayType(value) {
+        switch (value) {
+            case "default":
+                return ScrollBarDisplayType.Default;
+            case "visible":
+                return ScrollBarDisplayType.Visible;
+            case "auto":
+                return ScrollBarDisplayType.Auto;
+            case "hidden":
+                return ScrollBarDisplayType.Hidden;
+            default:
+                return ScrollBarDisplayType.Default;
+        }
+    }
+    fairygui.parseScrollBarDisplayType = parseScrollBarDisplayType;
+    function parseScrollType(value) {
+        switch (value) {
+            case "horizontal":
+                return ScrollType.Horizontal;
+            case "vertical":
+                return ScrollType.Vertical;
+            case "both":
+                return ScrollType.Both;
+            default:
+                return ScrollType.Vertical;
+        }
+    }
+    fairygui.parseScrollType = parseScrollType;
+    function parseFlipType(value) {
+        switch (value) {
+            case "hz":
+                return FlipType.Horizontal;
+            case "vt":
+                return FlipType.Vertical;
+            case "both":
+                return FlipType.Both;
+            default:
+                return FlipType.None;
+        }
+    }
+    fairygui.parseFlipType = parseFlipType;
+    var EaseMap = {
+        "Linear": egret.Ease.getPowIn(1),
+        "Elastic.In": egret.Ease.elasticIn,
+        "Elastic.Out": egret.Ease.elasticOut,
+        "Elastic.InOut": egret.Ease.elasticInOut,
+        "Quad.In": egret.Ease.quadIn,
+        "Quad.Out": egret.Ease.quadOut,
+        "Quad.InOut": egret.Ease.quadInOut,
+        "Cube.In": egret.Ease.cubicIn,
+        "Cube.Out": egret.Ease.cubicOut,
+        "Cube.InOut": egret.Ease.cubicInOut,
+        "Quart.In": egret.Ease.quartIn,
+        "Quart.Out": egret.Ease.quartOut,
+        "Quart.InOut": egret.Ease.quartInOut,
+        "Quint.In": egret.Ease.quintIn,
+        "Quint.Out": egret.Ease.quintOut,
+        "Quint.InOut": egret.Ease.quintInOut,
+        "Sine.In": egret.Ease.sineIn,
+        "Sine.Out": egret.Ease.sineOut,
+        "Sine.InOut": egret.Ease.sineInOut,
+        "Bounce.In": egret.Ease.bounceIn,
+        "Bounce.Out": egret.Ease.bounceOut,
+        "Bounce.InOut": egret.Ease.bounceInOut,
+        "Circ.In": egret.Ease.circIn,
+        "Circ.Out": egret.Ease.circOut,
+        "Circ.InOut": egret.Ease.circInOut,
+        "Expo.In": egret.Ease.quartIn,
+        "Expo.Out": egret.Ease.quartOut,
+        "Expo.InOut": egret.Ease.quartInOut,
+        "Back.In": egret.Ease.backIn,
+        "Back.Out": egret.Ease.backOut,
+        "Back.InOut": egret.Ease.backInOut
+    };
+    function ParseEaseType(value) {
+        var ret = EaseMap[value];
+        if (!ret)
+            ret = egret.Ease.quartOut;
+        return ret;
+    }
+    fairygui.ParseEaseType = ParseEaseType;
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var fairygui;
+(function (fairygui) {
+    var GearBase = (function () {
+        function GearBase(owner) {
+            this._owner = owner;
+            this._easeType = egret.Ease.quadOut;
+            this._tweenTime = 0.3;
+            this._tweenDelay = 0;
+            this._displayLockToken = 0;
+        }
+        Object.defineProperty(GearBase.prototype, "controller", {
+            get: function () {
+                return this._controller;
+            },
+            set: function (val) {
+                if (val != this._controller) {
+                    this._controller = val;
+                    if (this._controller)
+                        this.init();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GearBase.prototype, "tween", {
+            get: function () {
+                return this._tween;
+            },
+            set: function (val) {
+                this._tween = val;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GearBase.prototype, "tweenDelay", {
+            get: function () {
+                return this._tweenDelay;
+            },
+            set: function (val) {
+                this._tweenDelay = val;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GearBase.prototype, "tweenTime", {
+            get: function () {
+                return this._tweenTime;
+            },
+            set: function (value) {
+                this._tweenTime = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GearBase.prototype, "easeType", {
+            get: function () {
+                return this._easeType;
+            },
+            set: function (value) {
+                this._easeType = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GearBase.prototype.setup = function (xml) {
+            this._controller = this._owner.parent.getController(xml.attributes.controller);
+            if (this._controller == null)
+                return;
+            this.init();
+            var str;
+            str = xml.attributes.tween;
+            if (str)
+                this._tween = true;
+            str = xml.attributes.ease;
+            if (str)
+                this._easeType = fairygui.ParseEaseType(str);
+            str = xml.attributes.duration;
+            if (str)
+                this._tweenTime = parseFloat(str);
+            str = xml.attributes.delay;
+            if (str)
+                this._tweenDelay = parseFloat(str);
+            if (this instanceof fairygui.GearDisplay) {
+                str = xml.attributes.pages;
+                if (str)
+                    this.pages = str.split(",");
+            }
+            else {
+                var pages;
+                var values;
+                str = xml.attributes.pages;
+                if (str)
+                    pages = str.split(",");
+                str = xml.attributes.values;
+                if (str)
+                    values = str.split("|");
+                if (pages && values) {
+                    for (var i = 0; i < values.length; i++)
+                        this.addStatus(pages[i], values[i]);
+                }
+                str = xml.attributes.default;
+                if (str)
+                    this.addStatus(null, str);
+            }
+        };
+        GearBase.prototype.updateFromRelations = function (dx, dy) {
+        };
+        GearBase.prototype.addStatus = function (pageId, value) {
+        };
+        GearBase.prototype.init = function () {
+        };
+        GearBase.prototype.apply = function () {
+        };
+        GearBase.prototype.updateState = function () {
+        };
+        return GearBase;
+    }());
+    GearBase.disableAllTweenEffect = false;
+    fairygui.GearBase = GearBase;
+    __reflect(GearBase.prototype, "fairygui.GearBase");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var fairygui;
+(function (fairygui) {
+    var GearSize = (function (_super) {
+        __extends(GearSize, _super);
+        function GearSize(owner) {
+            return _super.call(this, owner) || this;
+        }
+        GearSize.prototype.init = function () {
+            this._default = new GearSizeValue(this._owner.width, this._owner.height, this._owner.scaleX, this._owner.scaleY);
+            this._storage = {};
+        };
+        GearSize.prototype.addStatus = function (pageId, value) {
+            if (value == "-")
+                return;
+            var arr = value.split(",");
+            var gv;
+            if (pageId == null)
+                gv = this._default;
+            else {
+                gv = new GearSizeValue();
+                this._storage[pageId] = gv;
+            }
+            gv.width = parseInt(arr[0]);
+            gv.height = parseInt(arr[1]);
+            if (arr.length > 2) {
+                gv.scaleX = parseFloat(arr[2]);
+                gv.scaleY = parseFloat(arr[3]);
+            }
+        };
+        GearSize.prototype.apply = function () {
+            var gv = this._storage[this._controller.selectedPageId];
+            if (!gv)
+                gv = this._default;
+            if (this._tween && !fairygui.UIPackage._constructing && !fairygui.GearBase.disableAllTweenEffect) {
+                if (this.tweener != null) {
+                    if (this._tweenTarget.width != gv.width || this._tweenTarget.height != gv.height
+                        || this._tweenTarget.scaleX != gv.scaleX || this._tweenTarget.scaleY != gv.scaleY) {
+                        this.tweener["tick"] ? this.tweener["tick"](100000000) : this.tweener["$tick"](100000000);
+                        this.tweener = null;
+                    }
+                    else
+                        return;
+                }
+                var a = gv.width != this._owner.width || gv.height != this._owner.height;
+                var b = gv.scaleX != this._owner.scaleX || gv.scaleY != this._owner.scaleY;
+                if (a || b) {
+                    if (this._owner.checkGearController(0, this._controller))
+                        this._displayLockToken = this._owner.addDisplayLock();
+                    this._tweenTarget = gv;
+                    var vars = {
+                        onChange: function () {
+                            this._owner._gearLocked = true;
+                            if (a)
+                                this._owner.setSize(this._tweenValue.width, this._tweenValue.height, this._owner.gearXY.controller == this._controller);
+                            if (b)
+                                this._owner.setScale(this._tweenValue.scaleX, this._tweenValue.scaleY);
+                            this._owner._gearLocked = false;
+                        },
+                        onChangeObj: this
+                    };
+                    if (this._tweenValue == null)
+                        this._tweenValue = new GearSizeValue();
+                    this._tweenValue.width = this._owner.width;
+                    this._tweenValue.height = this._owner.height;
+                    this._tweenValue.scaleX = this._owner.scaleX;
+                    this._tweenValue.scaleY = this._owner.scaleY;
+                    this.tweener = egret.Tween.get(this._tweenValue, vars)
+                        .wait(this._tweenDelay * 1000)
+                        .to({ width: gv.width, height: gv.height, scaleX: gv.scaleX, scaleY: gv.scaleY }, this._tweenTime * 1000, this._easeType)
+                        .call(function () {
+                        if (this._displayLockToken != 0) {
+                            this._owner.releaseDisplayLock(this._displayLockToken);
+                            this._displayLockToken = 0;
+                        }
+                        this._tweener = null;
+                        this._owner.dispatchEventWith(fairygui.GObject.GEAR_STOP, false);
+                    }, this);
+                }
+            }
+            else {
+                this._owner._gearLocked = true;
+                this._owner.setSize(gv.width, gv.height, this._owner.gearXY.controller == this._controller);
+                this._owner.setScale(gv.scaleX, gv.scaleY);
+                this._owner._gearLocked = false;
+            }
+        };
+        GearSize.prototype.updateState = function () {
+            var gv = this._storage[this._controller.selectedPageId];
+            if (!gv) {
+                gv = new GearSizeValue();
+                this._storage[this._controller.selectedPageId] = gv;
+            }
+            gv.width = this._owner.width;
+            gv.height = this._owner.height;
+            gv.scaleX = this._owner.scaleX;
+            gv.scaleY = this._owner.scaleY;
+        };
+        GearSize.prototype.updateFromRelations = function (dx, dy) {
+            if (this._controller == null || this._storage == null)
+                return;
+            for (var key in this._storage) {
+                var gv = this._storage[key];
+                gv.width += dx;
+                gv.height += dy;
+            }
+            this._default.width += dx;
+            this._default.height += dy;
+            this.updateState();
+        };
+        return GearSize;
+    }(fairygui.GearBase));
+    fairygui.GearSize = GearSize;
+    __reflect(GearSize.prototype, "fairygui.GearSize");
+    var GearSizeValue = (function () {
+        function GearSizeValue(width, height, scaleX, scaleY) {
+            if (width === void 0) { width = 0; }
+            if (height === void 0) { height = 0; }
+            if (scaleX === void 0) { scaleX = 0; }
+            if (scaleY === void 0) { scaleY = 0; }
+            this.width = width;
+            this.height = height;
+            this.scaleX = scaleX;
+            this.scaleY = scaleY;
+        }
+        return GearSizeValue;
+    }());
+    __reflect(GearSizeValue.prototype, "GearSizeValue");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var fairygui;
+(function (fairygui) {
+    var GearXY = (function (_super) {
+        __extends(GearXY, _super);
+        function GearXY(owner) {
+            return _super.call(this, owner) || this;
+        }
+        GearXY.prototype.init = function () {
+            this._default = new egret.Point(this._owner.x, this._owner.y);
+            this._storage = {};
+        };
+        GearXY.prototype.addStatus = function (pageId, value) {
+            if (value == "-")
+                return;
+            var arr = value.split(",");
+            var pt;
+            if (pageId == null)
+                pt = this._default;
+            else {
+                pt = new egret.Point();
+                this._storage[pageId] = pt;
+            }
+            pt.x = parseInt(arr[0]);
+            pt.y = parseInt(arr[1]);
+        };
+        GearXY.prototype.apply = function () {
+            var pt = this._storage[this._controller.selectedPageId];
+            if (!pt)
+                pt = this._default;
+            if (this._tween && !fairygui.UIPackage._constructing && !fairygui.GearBase.disableAllTweenEffect) {
+                if (this.tweener) {
+                    if (this._tweenTarget.x != pt.x || this._tweenTarget.y != pt.y) {
+                        this.tweener["tick"] ? this.tweener["tick"](100000000) : this.tweener["$tick"](100000000);
+                        this.tweener = null;
+                    }
+                    else
+                        return;
+                }
+                if (this._owner.x != pt.x || this._owner.y != pt.y) {
+                    if (this._owner.checkGearController(0, this._controller))
+                        this._displayLockToken = this._owner.addDisplayLock();
+                    this._tweenTarget = pt;
+                    var vars = {
+                        onChange: function () {
+                            this._owner._gearLocked = true;
+                            this._owner.setXY(this._tweenValue.x, this._tweenValue.y);
+                            this._owner._gearLocked = false;
+                        },
+                        onChangeObj: this
+                    };
+                    if (this._tweenValue == null)
+                        this._tweenValue = new egret.Point();
+                    this._tweenValue.x = this._owner.x;
+                    this._tweenValue.y = this._owner.y;
+                    this.tweener = egret.Tween.get(this._tweenValue, vars)
+                        .wait(this._tweenDelay * 1000)
+                        .to({ x: pt.x, y: pt.y }, this._tweenTime * 1000, this._easeType)
+                        .call(function () {
+                        if (this._displayLockToken != 0) {
+                            this._owner.releaseDisplayLock(this._displayLockToken);
+                            this._displayLockToken = 0;
+                        }
+                        this._tweener = null;
+                        this._owner.dispatchEventWith(fairygui.GObject.GEAR_STOP, false);
+                    }, this);
+                }
+            }
+            else {
+                this._owner._gearLocked = true;
+                this._owner.setXY(pt.x, pt.y);
+                this._owner._gearLocked = false;
+            }
+        };
+        GearXY.prototype.updateState = function () {
+            var pt = this._storage[this._controller.selectedPageId];
+            if (!pt) {
+                pt = new egret.Point();
+                this._storage[this._controller.selectedPageId] = pt;
+            }
+            pt.x = this._owner.x;
+            pt.y = this._owner.y;
+        };
+        GearXY.prototype.updateFromRelations = function (dx, dy) {
+            if (this._controller == null || this._storage == null)
+                return;
+            for (var key in this._storage) {
+                var pt = this._storage[key];
+                pt.x += dx;
+                pt.y += dy;
+            }
+            this._default.x += dx;
+            this._default.y += dy;
+            this.updateState();
+        };
+        return GearXY;
+    }(fairygui.GearBase));
+    fairygui.GearXY = GearXY;
+    __reflect(GearXY.prototype, "fairygui.GearXY");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var fairygui;
+(function (fairygui) {
+    var GearText = (function (_super) {
+        __extends(GearText, _super);
+        function GearText(owner) {
+            return _super.call(this, owner) || this;
+        }
+        GearText.prototype.init = function () {
+            this._default = this._owner.text;
+            this._storage = {};
+        };
+        GearText.prototype.addStatus = function (pageId, value) {
+            if (pageId == null)
+                this._default = value;
+            else
+                this._storage[pageId] = value;
+        };
+        GearText.prototype.apply = function () {
+            this._owner._gearLocked = true;
+            var data = this._storage[this._controller.selectedPageId];
+            if (data != undefined)
+                this._owner.text = data;
+            else
+                this._owner.text = this._default;
+            this._owner._gearLocked = false;
+        };
+        GearText.prototype.updateState = function () {
+            this._storage[this._controller.selectedPageId] = this._owner.text;
+        };
+        return GearText;
+    }(fairygui.GearBase));
+    fairygui.GearText = GearText;
+    __reflect(GearText.prototype, "fairygui.GearText");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var fairygui;
+(function (fairygui) {
+    var GearIcon = (function (_super) {
+        __extends(GearIcon, _super);
+        function GearIcon(owner) {
+            return _super.call(this, owner) || this;
+        }
+        GearIcon.prototype.init = function () {
+            this._default = this._owner.icon;
+            this._storage = {};
+        };
+        GearIcon.prototype.addStatus = function (pageId, value) {
+            if (pageId == null)
+                this._default = value;
+            else
+                this._storage[pageId] = value;
+        };
+        GearIcon.prototype.apply = function () {
+            this._owner._gearLocked = true;
+            var data = this._storage[this._controller.selectedPageId];
+            if (data != undefined)
+                this._owner.icon = data;
+            else
+                this._owner.icon = this._default;
+            this._owner._gearLocked = false;
+        };
+        GearIcon.prototype.updateState = function () {
+            this._storage[this._controller.selectedPageId] = this._owner.icon;
+        };
+        return GearIcon;
+    }(fairygui.GearBase));
+    fairygui.GearIcon = GearIcon;
+    __reflect(GearIcon.prototype, "fairygui.GearIcon");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var fairygui;
+(function (fairygui) {
+    var Transition = (function () {
+        function Transition(owner) {
+            this.autoPlayRepeat = 1;
+            this.autoPlayDelay = 0;
+            this._ownerBaseX = 0;
+            this._ownerBaseY = 0;
+            this._totalTimes = 0;
+            this._totalTasks = 0;
+            this._playing = false;
+            this._options = 0;
+            this._maxTime = 0;
+            this._owner = owner;
+            this._items = new Array();
+        }
+        Object.defineProperty(Transition.prototype, "autoPlay", {
+            get: function () {
+                return this._autoPlay;
+            },
+            set: function (value) {
+                if (this._autoPlay != value) {
+                    this._autoPlay = value;
+                    if (this._autoPlay) {
+                        if (this._owner.onStage)
+                            this.play(null, null, this.autoPlayRepeat, this.autoPlayDelay);
+                    }
+                    else {
+                        if (!this._owner.onStage)
+                            this.stop(false, true);
+                    }
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Transition.prototype.play = function (onComplete, onCompleteObj, onCompleteParam, times, delay) {
+            if (onComplete === void 0) { onComplete = null; }
+            if (onCompleteObj === void 0) { onCompleteObj = null; }
+            if (onCompleteParam === void 0) { onCompleteParam = null; }
+            if (times === void 0) { times = 1; }
+            if (delay === void 0) { delay = 0; }
+            this._play(onComplete, onCompleteObj, onCompleteParam, times, delay, false);
+        };
+        Transition.prototype.playReverse = function (onComplete, onCompleteObj, onCompleteParam, times, delay) {
+            if (onComplete === void 0) { onComplete = null; }
+            if (onCompleteObj === void 0) { onCompleteObj = null; }
+            if (onCompleteParam === void 0) { onCompleteParam = null; }
+            if (times === void 0) { times = 1; }
+            if (delay === void 0) { delay = 0; }
+            this._play(onComplete, onCompleteObj, onCompleteParam, times, delay, true);
+        };
+        Transition.prototype._play = function (onComplete, onCompleteObj, onCompleteParam, times, delay, reversed) {
+            if (onComplete === void 0) { onComplete = null; }
+            if (onCompleteObj === void 0) { onCompleteObj = null; }
+            if (onCompleteParam === void 0) { onCompleteParam = null; }
+            if (times === void 0) { times = 1; }
+            if (delay === void 0) { delay = 0; }
+            if (reversed === void 0) { reversed = false; }
+            this.stop();
+            if (times == 0)
+                times = 1;
+            else if (times == -1)
+                times = Number.MAX_VALUE;
+            this._totalTimes = times;
+            this._reversed = reversed;
+            this.internalPlay(delay);
+            this._playing = this._totalTasks > 0;
+            if (this._playing) {
+                this._onComplete = onComplete;
+                this._onCompleteParam = onCompleteParam;
+                this._onCompleteObj = onCompleteObj;
+                if ((this._options & Transition.OPTION_IGNORE_DISPLAY_CONTROLLER) != 0) {
+                    var cnt = this._items.length;
+                    for (var i = 0; i < cnt; i++) {
+                        var item = this._items[i];
+                        if (item.target != null && item.target != this._owner)
+                            item.displayLockToken = item.target.addDisplayLock();
+                    }
+                }
+            }
+            else if (onComplete != null) {
+                if (onComplete.length > 0)
+                    onComplete.call(this._onCompleteObj, onCompleteParam);
+                else
+                    onComplete(this._onCompleteObj);
+            }
+        };
+        Transition.prototype.stop = function (setToComplete, processCallback) {
+            if (setToComplete === void 0) { setToComplete = true; }
+            if (processCallback === void 0) { processCallback = false; }
+            if (this._playing) {
+                this._playing = false;
+                this._totalTasks = 0;
+                this._totalTimes = 0;
+                var func = this._onComplete;
+                var param = this._onCompleteParam;
+                var thisObj = this._onCompleteObj;
+                this._onComplete = null;
+                this._onCompleteParam = null;
+                this._onCompleteObj = null;
+                var cnt = this._items.length;
+                var i;
+                var item;
+                if (this._reversed) {
+                    for (i = cnt - 1; i >= 0; i--) {
+                        item = this._items[i];
+                        if (item.target == null)
+                            continue;
+                        this.stopItem(item, setToComplete);
+                    }
+                }
+                else {
+                    for (i = 0; i < cnt; i++) {
+                        item = this._items[i];
+                        if (item.target == null)
+                            continue;
+                        this.stopItem(item, setToComplete);
+                    }
+                }
+                if (processCallback && func != null) {
+                    if (func.length > 0)
+                        func.call(thisObj, param);
+                    else
+                        func.call(thisObj);
+                }
+            }
+        };
+        Transition.prototype.stopItem = function (item, setToComplete) {
+            if (item.displayLockToken != 0) {
+                item.target.releaseDisplayLock(item.displayLockToken);
+                item.displayLockToken = 0;
+            }
+            if (item.type == TransitionActionType.ColorFilter && item.filterCreated)
+                item.target.filters = null;
+            if (item.completed)
+                return;
+            if (item.tweener != null) {
+                item.tweener.setPaused(true);
+                item.tweener = null;
+            }
+            if (item.type == TransitionActionType.Transition) {
+                var trans = (item.target).getTransition(item.value.s);
+                if (trans != null)
+                    trans.stop(setToComplete, false);
+            }
+            else if (item.type == TransitionActionType.Shake) {
+                if (fairygui.GTimers.inst.exists(this.__shake, item)) {
+                    fairygui.GTimers.inst.remove(this.__shake, item);
+                    item.target._gearLocked = true;
+                    item.target.setXY(item.target.x - item.startValue.f1, item.target.y - item.startValue.f2);
+                    item.target._gearLocked = false;
+                }
+            }
+            else {
+                if (setToComplete) {
+                    if (item.tween) {
+                        if (!item.yoyo || item.repeat % 2 == 0)
+                            this.applyValue(item, this._reversed ? item.startValue : item.endValue);
+                        else
+                            this.applyValue(item, this._reversed ? item.endValue : item.startValue);
+                    }
+                    else if (item.type != TransitionActionType.Sound)
+                        this.applyValue(item, item.value);
+                }
+            }
+        };
+        Transition.prototype.dispose = function () {
+            if (!this._playing)
+                return;
+            this._playing = false;
+            var cnt = this._items.length;
+            for (var i = 0; i < cnt; i++) {
+                var item = this._items[i];
+                if (item.target == null || item.completed)
+                    continue;
+                if (item.tweener != null) {
+                    item.tweener.setPaused(true);
+                    item.tweener = null;
+                }
+                if (item.type == TransitionActionType.Transition) {
+                    var trans = item.target.getTransition(item.value.s);
+                    if (trans != null)
+                        trans.dispose();
+                }
+                else if (item.type == TransitionActionType.Shake) {
+                    fairygui.GTimers.inst.remove(this.__shake, item);
+                }
+            }
+        };
+        Object.defineProperty(Transition.prototype, "playing", {
+            get: function () {
+                return this._playing;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Transition.prototype.setValue = function (label) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
+            var cnt = this._items.length;
+            var value;
+            for (var i = 0; i < cnt; i++) {
+                var item = this._items[i];
+                if (item.label == null && item.label2 == null)
+                    continue;
+                if (item.label == label) {
+                    if (item.tween)
+                        value = item.startValue;
+                    else
+                        value = item.value;
+                }
+                else if (item.label2 == label) {
+                    value = item.endValue;
+                }
+                else
+                    continue;
+                switch (item.type) {
+                    case TransitionActionType.XY:
+                    case TransitionActionType.Size:
+                    case TransitionActionType.Pivot:
+                    case TransitionActionType.Scale:
+                    case TransitionActionType.Skew:
+                        value.b1 = true;
+                        value.b2 = true;
+                        value.f1 = parseFloat(args[0]);
+                        value.f2 = parseFloat(args[1]);
+                        break;
+                    case TransitionActionType.Alpha:
+                        value.f1 = parseFloat(args[0]);
+                        break;
+                    case TransitionActionType.Rotation:
+                        value.i = parseInt(args[0]);
+                        break;
+                    case TransitionActionType.Color:
+                        value.c = parseFloat(args[0]);
+                        break;
+                    case TransitionActionType.Animation:
+                        value.i = parseInt(args[0]);
+                        if (args.length > 1)
+                            value.b = args[1];
+                        break;
+                    case TransitionActionType.Visible:
+                        value.b = args[0];
+                        break;
+                    case TransitionActionType.Sound:
+                        value.s = args[0];
+                        if (args.length > 1)
+                            value.f1 = parseFloat(args[1]);
+                        break;
+                    case TransitionActionType.Transition:
+                        value.s = args[0];
+                        if (args.length > 1)
+                            value.i = parseInt(args[1]);
+                        break;
+                    case TransitionActionType.Shake:
+                        value.f1 = parseFloat(args[0]);
+                        if (args.length > 1)
+                            value.f2 = parseFloat(args[1]);
+                        break;
+                    case TransitionActionType.ColorFilter:
+                        value.f1 = parseFloat(args[0]);
+                        value.f2 = parseFloat(args[1]);
+                        value.f3 = parseFloat(args[2]);
+                        value.f4 = parseFloat(args[3]);
+                        break;
+                }
+            }
+        };
+        Transition.prototype.setHook = function (label, callback, thisObj) {
+            var cnt = this._items.length;
+            for (var i = 0; i < cnt; i++) {
+                var item = this._items[i];
+                if (item.label == label) {
+                    item.hook = callback;
+                    item.hookObj = thisObj;
+                    break;
+                }
+                else if (item.label2 == label) {
+                    item.hook2 = callback;
+                    item.hook2Obj = thisObj;
+                    break;
+                }
+            }
+        };
+        Transition.prototype.clearHooks = function () {
+            var cnt = this._items.length;
+            for (var i = 0; i < cnt; i++) {
+                var item = this._items[i];
+                item.hook = null;
+                item.hookObj = null;
+                item.hook2 = null;
+                item.hook2Obj = null;
+            }
+        };
+        Transition.prototype.setTarget = function (label, newTarget) {
+            var cnt = this._items.length;
+            var value;
+            for (var i = 0; i < cnt; i++) {
+                var item = this._items[i];
+                if (item.label == null && item.label2 == null)
+                    continue;
+                item.targetId = newTarget.id;
+            }
+        };
+        Transition.prototype.setDuration = function (label, value) {
+            var cnt = this._items.length;
+            for (var i = 0; i < cnt; i++) {
+                var item = this._items[i];
+                if (item.tween && item.label == label)
+                    item.duration = value;
+            }
+        };
+        Transition.prototype.updateFromRelations = function (targetId, dx, dy) {
+            var cnt = this._items.length;
+            if (cnt == 0)
+                return;
+            for (var i = 0; i < cnt; i++) {
+                var item = this._items[i];
+                if (item.type == TransitionActionType.XY && item.targetId == targetId) {
+                    if (item.tween) {
+                        item.startValue.f1 += dx;
+                        item.startValue.f2 += dy;
+                        item.endValue.f1 += dx;
+                        item.endValue.f2 += dy;
+                    }
+                    else {
+                        item.value.f1 += dx;
+                        item.value.f2 += dy;
+                    }
+                }
+            }
+        };
+        Transition.prototype.OnOwnerRemovedFromStage = function () {
+            if ((this._options & Transition.OPTION_AUTO_STOP_DISABLED) == 0)
+                this.stop((this._options & Transition.OPTION_AUTO_STOP_AT_END) != 0 ? true : false, false);
+        };
+        Transition.prototype.internalPlay = function (delay) {
+            if (delay === void 0) { delay = 0; }
+            this._ownerBaseX = this._owner.x;
+            this._ownerBaseY = this._owner.y;
+            this._totalTasks = 0;
+            var cnt = this._items.length;
+            var startTime;
+            var item;
+            for (var i = 0; i < cnt; i++) {
+                item = this._items[i];
+                if (item.targetId)
+                    item.target = this._owner.getChildById(item.targetId);
+                else
+                    item.target = this._owner;
+                if (item.target == null)
+                    continue;
+                if (item.tween) {
+                    if (this._reversed)
+                        startTime = delay + this._maxTime - item.time - item.duration;
+                    else
+                        startTime = delay + item.time;
+                    if (startTime > 0 && (item.type == TransitionActionType.XY || item.type == TransitionActionType.Size)) {
+                        this._totalTasks++;
+                        item.completed = false;
+                        item.tweener = egret.Tween.get(item.value).wait(startTime * 1000).call(this.__delayCall, this, [item]);
+                    }
+                    else
+                        this.startTween(item, startTime);
+                }
+                else {
+                    if (this._reversed)
+                        startTime = delay + this._maxTime - item.time;
+                    else
+                        startTime = delay + item.time;
+                    if (startTime == 0)
+                        this.applyValue(item, item.value);
+                    else {
+                        this._totalTasks++;
+                        item.completed = false;
+                        item.tweener = egret.Tween.get(item.value).wait(startTime * 1000).call(this.__delayCall2, this, [item]);
+                    }
+                }
+            }
+        };
+        Transition.prototype.prepareValue = function (item, toProps, reversed) {
+            if (reversed === void 0) { reversed = false; }
+            var startValue;
+            var endValue;
+            if (reversed) {
+                startValue = item.endValue;
+                endValue = item.startValue;
+            }
+            else {
+                startValue = item.startValue;
+                endValue = item.endValue;
+            }
+            switch (item.type) {
+                case TransitionActionType.XY:
+                case TransitionActionType.Size:
+                    if (item.type == TransitionActionType.XY) {
+                        if (item.target == this._owner) {
+                            if (!startValue.b1)
+                                startValue.f1 = 0;
+                            if (!startValue.b2)
+                                startValue.f2 = 0;
+                        }
+                        else {
+                            if (!startValue.b1)
+                                startValue.f1 = item.target.x;
+                            if (!startValue.b2)
+                                startValue.f2 = item.target.y;
+                        }
+                    }
+                    else {
+                        if (!startValue.b1)
+                            startValue.f1 = item.target.width;
+                        if (!startValue.b2)
+                            startValue.f2 = item.target.height;
+                    }
+                    item.value.f1 = startValue.f1;
+                    item.value.f2 = startValue.f2;
+                    if (!endValue.b1)
+                        endValue.f1 = item.value.f1;
+                    if (!endValue.b2)
+                        endValue.f2 = item.value.f2;
+                    item.value.b1 = startValue.b1 || endValue.b1;
+                    item.value.b2 = startValue.b2 || endValue.b2;
+                    toProps.f1 = endValue.f1;
+                    toProps.f2 = endValue.f2;
+                    break;
+                case TransitionActionType.Scale:
+                case TransitionActionType.Skew:
+                    item.value.f1 = startValue.f1;
+                    item.value.f2 = startValue.f2;
+                    toProps.f1 = endValue.f1;
+                    toProps.f2 = endValue.f2;
+                    break;
+                case TransitionActionType.Alpha:
+                    item.value.f1 = startValue.f1;
+                    toProps.f1 = endValue.f1;
+                    break;
+                case TransitionActionType.Rotation:
+                    item.value.i = startValue.i;
+                    toProps.i = endValue.i;
+                    break;
+                case TransitionActionType.ColorFilter:
+                    item.value.f1 = startValue.f1;
+                    item.value.f2 = startValue.f2;
+                    item.value.f3 = startValue.f3;
+                    item.value.f4 = startValue.f4;
+                    toProps.f1 = endValue.f1;
+                    toProps.f2 = endValue.f2;
+                    toProps.f3 = endValue.f3;
+                    toProps.f4 = endValue.f4;
+                    break;
+            }
+        };
+        Transition.prototype.startTween = function (item, delay) {
+            var initProps, toProps;
+            initProps = {};
+            toProps = {};
+            this._totalTasks++;
+            item.completed = false;
+            this.prepareValue(item, toProps, this._reversed);
+            item.tweener = egret.Tween.get(item.value, initProps);
+            if (delay != 0)
+                item.tweener.wait(delay * 1000);
+            else
+                this.applyValue(item, item.value);
+            item.tweener.call(this.__tweenStart, this, [item]);
+            item.tweener.to(toProps, item.duration * 1000, item.easeType);
+            if (item.repeat != 0) {
+                item.tweenTimes = 0;
+                item.tweener.call(this.__tweenRepeatComplete, this, [item]);
+            }
+            else
+                item.tweener.call(this.__tweenComplete, this, [item]);
+        };
+        Transition.prototype.__delayCall = function (item) {
+            item.tweener = null;
+            this._totalTasks--;
+            this.startTween(item, 0);
+        };
+        Transition.prototype.__delayCall2 = function (item) {
+            item.tweener = null;
+            this._totalTasks--;
+            item.completed = true;
+            this.applyValue(item, item.value);
+            if (item.hook != null)
+                item.hook.call(item.hookObj);
+            this.checkAllComplete();
+        };
+        Transition.prototype.__tweenStart = function (item) {
+            if (item.tweener != null) {
+                if (item.hook != null)
+                    item.hook.call(item.hookObj);
+                //因为egret的onChange在wait的时候已经开始调用，因此只能放在这里注册侦听
+                item.tweener.addEventListener("change", this.__tweenUpdate, [this, item]);
+            }
+        };
+        Transition.prototype.__tweenUpdate = function () {
+            var args = this;
+            var trans = args[0];
+            var item = args[1];
+            trans.applyValue(item, item.value);
+        };
+        Transition.prototype.__tweenComplete = function (item) {
+            item.tweener = null;
+            this._totalTasks--;
+            item.completed = true;
+            if (item.hook2 != null)
+                item.hook2.call(item.hook2Obj);
+            this.checkAllComplete();
+        };
+        Transition.prototype.__tweenRepeatComplete = function (item) {
+            item.tweenTimes++;
+            if (item.repeat == -1 || item.tweenTimes < item.repeat + 1) {
+                var initProps, toProps;
+                initProps = {};
+                toProps = {};
+                initProps.onChange = this.__tweenUpdate;
+                initProps.onChangeObj = [this, item];
+                var reversed;
+                if (item.yoyo) {
+                    if (this._reversed)
+                        reversed = item.tweenTimes % 2 == 0;
+                    else
+                        reversed = item.tweenTimes % 2 == 1;
+                }
+                else
+                    reversed = this._reversed;
+                this.prepareValue(item, toProps, reversed);
+                item.tweener = egret.Tween.get(item.value, initProps);
+                item.tweener.to(toProps, item.duration * 1000, item.easeType)
+                    .call(this.__tweenRepeatComplete, this, [item]);
+            }
+            else
+                this.__tweenComplete(item);
+        };
+        Transition.prototype.__playTransComplete = function (item) {
+            this._totalTasks--;
+            item.completed = true;
+            this.checkAllComplete();
+        };
+        Transition.prototype.checkAllComplete = function () {
+            if (this._playing && this._totalTasks == 0) {
+                if (this._totalTimes < 0) {
+                    //不立刻调用的原因是egret.Tween在onComplete之后，还会调用onChange
+                    egret.callLater(this.internalPlay, this, 0);
+                }
+                else {
+                    this._totalTimes--;
+                    if (this._totalTimes > 0)
+                        egret.callLater(this.internalPlay, this, 0);
+                    else {
+                        this._playing = false;
+                        var cnt = this._items.length;
+                        for (var i = 0; i < cnt; i++) {
+                            var item = this._items[i];
+                            if (item.target != null) {
+                                if (item.displayLockToken != 0) {
+                                    item.target.releaseDisplayLock(item.displayLockToken);
+                                    item.displayLockToken = 0;
+                                }
+                                if (item.filterCreated) {
+                                    item.filterCreated = false;
+                                    item.target.filters = null;
+                                }
+                            }
+                        }
+                        if (this._onComplete != null) {
+                            var func = this._onComplete;
+                            var param = this._onCompleteParam;
+                            var thisObj = this._onCompleteObj;
+                            this._onComplete = null;
+                            this._onCompleteParam = null;
+                            this._onCompleteObj = null;
+                            if (func.length > 0)
+                                func.call(thisObj, param);
+                            else
+                                func.call(thisObj);
+                        }
+                    }
+                }
+            }
+        };
+        Transition.prototype.applyValue = function (item, value) {
+            item.target._gearLocked = true;
+            switch (item.type) {
+                case TransitionActionType.XY:
+                    if (item.target == this._owner) {
+                        var f1 = 0, f2 = 0;
+                        if (!value.b1)
+                            f1 = item.target.x;
+                        else
+                            f1 = value.f1 + this._ownerBaseX;
+                        if (!value.b2)
+                            f2 = item.target.y;
+                        else
+                            f2 = value.f2 + this._ownerBaseY;
+                        item.target.setXY(f1, f2);
+                    }
+                    else {
+                        if (!value.b1)
+                            value.f1 = item.target.x;
+                        if (!value.b2)
+                            value.f2 = item.target.y;
+                        item.target.setXY(value.f1, value.f2);
+                    }
+                    break;
+                case TransitionActionType.Size:
+                    if (!value.b1)
+                        value.f1 = item.target.width;
+                    if (!value.b2)
+                        value.f2 = item.target.height;
+                    item.target.setSize(value.f1, value.f2);
+                    break;
+                case TransitionActionType.Pivot:
+                    item.target.setPivot(value.f1, value.f2);
+                    break;
+                case TransitionActionType.Alpha:
+                    item.target.alpha = value.f1;
+                    break;
+                case TransitionActionType.Rotation:
+                    item.target.rotation = value.i;
+                    break;
+                case TransitionActionType.Scale:
+                    item.target.setScale(value.f1, value.f2);
+                    break;
+                case TransitionActionType.Skew:
+                    item.target.setSkew(value.f1, value.f2);
+                    break;
+                case TransitionActionType.Color:
+                    item.target.color = value.c;
+                    break;
+                case TransitionActionType.Animation:
+                    if (!value.b1)
+                        value.i = item.target.frame;
+                    item.target.frame = value.i;
+                    item.target.playing = value.b;
+                    break;
+                case TransitionActionType.Visible:
+                    item.target.visible = value.b;
+                    break;
+                case TransitionActionType.Transition:
+                    var trans = item.target.getTransition(value.s);
+                    if (trans != null) {
+                        if (value.i == 0)
+                            trans.stop(false, true);
+                        else if (trans.playing)
+                            trans._totalTimes = value.i == -1 ? Number.MAX_VALUE : value.i;
+                        else {
+                            item.completed = false;
+                            this._totalTasks++;
+                            if (this._reversed)
+                                trans.playReverse(this.__playTransComplete, this, item, item.value.i);
+                            else
+                                trans.play(this.__playTransComplete, this, item, item.value.i);
+                        }
+                    }
+                    break;
+                case TransitionActionType.Sound:
+                    var pi = fairygui.UIPackage.getItemByURL(value.s);
+                    if (pi) {
+                        var sound = pi.owner.getItemAsset(pi);
+                        if (sound)
+                            fairygui.GRoot.inst.playOneShotSound(sound, value.f1);
+                    }
+                    break;
+                case TransitionActionType.Shake:
+                    item.startValue.f1 = 0; //offsetX
+                    item.startValue.f2 = 0; //offsetY
+                    item.startValue.f3 = item.value.f2; //shakePeriod
+                    item.startValue.i = egret.getTimer(); //startTime
+                    fairygui.GTimers.inst.add(1, 0, this.__shake, item, this);
+                    this._totalTasks++;
+                    item.completed = false;
+                    break;
+                case TransitionActionType.ColorFilter:
+                    var arr = item.target.filters;
+                    var cf;
+                    if (!arr || !(arr[0] instanceof egret.ColorMatrixFilter)) {
+                        cf = new egret.ColorMatrixFilter();
+                        arr = [cf];
+                        item.filterCreated = true;
+                    }
+                    else
+                        cf = arr[0];
+                    var cm = new fairygui.ColorMatrix();
+                    cm.adjustBrightness(value.f1);
+                    cm.adjustContrast(value.f2);
+                    cm.adjustSaturation(value.f3);
+                    cm.adjustHue(value.f4);
+                    cf.matrix = cm.matrix;
+                    item.target.filters = arr;
+            }
+            item.target._gearLocked = false;
+        };
+        Transition.prototype.__shake = function (trans) {
+            var item = this;
+            trans.__shakeItem(item);
+        };
+        Transition.prototype.__shakeItem = function (item) {
+            var r = Math.ceil(item.value.f1 * item.startValue.f3 / item.value.f2);
+            var rx = (Math.random() * 2 - 1) * r;
+            var ry = (Math.random() * 2 - 1) * r;
+            rx = rx > 0 ? Math.ceil(rx) : Math.floor(rx);
+            ry = ry > 0 ? Math.ceil(ry) : Math.floor(ry);
+            item.target._gearLocked = true;
+            item.target.setXY(item.target.x - item.startValue.f1 + rx, item.target.y - item.startValue.f2 + ry);
+            item.target._gearLocked = false;
+            item.startValue.f1 = rx;
+            item.startValue.f2 = ry;
+            var t = egret.getTimer();
+            item.startValue.f3 -= (t - item.startValue.i) / 1000;
+            item.startValue.i = t;
+            if (item.startValue.f3 <= 0) {
+                item.target._gearLocked = true;
+                item.target.setXY(item.target.x - item.startValue.f1, item.target.y - item.startValue.f2);
+                item.target._gearLocked = false;
+                item.completed = true;
+                this._totalTasks--;
+                fairygui.GTimers.inst.remove(this.__shake, item);
+                this.checkAllComplete();
+            }
+        };
+        Transition.prototype.setup = function (xml) {
+            this.name = xml.attributes.name;
+            var str = xml.attributes.options;
+            if (str)
+                this._options = parseInt(str);
+            this._autoPlay = xml.attributes.autoPlay == "true";
+            if (this._autoPlay) {
+                str = xml.attributes.autoPlayRepeat;
+                if (str)
+                    this.autoPlayRepeat = parseInt(str);
+                str = xml.attributes.autoPlayDelay;
+                if (str)
+                    this.autoPlayDelay = parseFloat(str);
+            }
+            var col = xml.children;
+            var length1 = col.length;
+            for (var i1 = 0; i1 < length1; i1++) {
+                var cxml = col[i1];
+                if (cxml.name != "item")
+                    continue;
+                var item = new TransitionItem();
+                this._items.push(item);
+                item.time = parseInt(cxml.attributes.time) / Transition.FRAME_RATE;
+                item.targetId = cxml.attributes.target;
+                str = cxml.attributes.type;
+                switch (str) {
+                    case "XY":
+                        item.type = TransitionActionType.XY;
+                        break;
+                    case "Size":
+                        item.type = TransitionActionType.Size;
+                        break;
+                    case "Scale":
+                        item.type = TransitionActionType.Scale;
+                        break;
+                    case "Pivot":
+                        item.type = TransitionActionType.Pivot;
+                        break;
+                    case "Alpha":
+                        item.type = TransitionActionType.Alpha;
+                        break;
+                    case "Rotation":
+                        item.type = TransitionActionType.Rotation;
+                        break;
+                    case "Color":
+                        item.type = TransitionActionType.Color;
+                        break;
+                    case "Animation":
+                        item.type = TransitionActionType.Animation;
+                        break;
+                    case "Visible":
+                        item.type = TransitionActionType.Visible;
+                        break;
+                    case "Sound":
+                        item.type = TransitionActionType.Sound;
+                        break;
+                    case "Transition":
+                        item.type = TransitionActionType.Transition;
+                        break;
+                    case "Shake":
+                        item.type = TransitionActionType.Shake;
+                        break;
+                    case "ColorFilter":
+                        item.type = TransitionActionType.ColorFilter;
+                        break;
+                    case "Skew":
+                        item.type = TransitionActionType.Skew;
+                        break;
+                    default:
+                        item.type = TransitionActionType.Unknown;
+                        break;
+                }
+                item.tween = cxml.attributes.tween == "true";
+                item.label = cxml.attributes.label;
+                if (item.tween) {
+                    item.duration = parseInt(cxml.attributes.duration) / Transition.FRAME_RATE;
+                    if (item.time + item.duration > this._maxTime)
+                        this._maxTime = item.time + item.duration;
+                    str = cxml.attributes.ease;
+                    if (str)
+                        item.easeType = fairygui.ParseEaseType(str);
+                    str = cxml.attributes.repeat;
+                    if (str)
+                        item.repeat = parseInt(str);
+                    item.yoyo = cxml.attributes.yoyo == "true";
+                    item.label2 = cxml.attributes.label2;
+                    var v = cxml.attributes.endValue;
+                    if (v) {
+                        this.decodeValue(item.type, cxml.attributes.startValue, item.startValue);
+                        this.decodeValue(item.type, v, item.endValue);
+                    }
+                    else {
+                        item.tween = false;
+                        this.decodeValue(item.type, cxml.attributes.startValue, item.value);
+                    }
+                }
+                else {
+                    if (item.time > this._maxTime)
+                        this._maxTime = item.time;
+                    this.decodeValue(item.type, cxml.attributes.value, item.value);
+                }
+            }
+        };
+        Transition.prototype.decodeValue = function (type, str, value) {
+            var arr;
+            switch (type) {
+                case TransitionActionType.XY:
+                case TransitionActionType.Size:
+                case TransitionActionType.Pivot:
+                case TransitionActionType.Skew:
+                    arr = str.split(",");
+                    if (arr[0] == "-") {
+                        value.b1 = false;
+                    }
+                    else {
+                        value.f1 = parseFloat(arr[0]);
+                        value.b1 = true;
+                    }
+                    if (arr[1] == "-") {
+                        value.b2 = false;
+                    }
+                    else {
+                        value.f2 = parseFloat(arr[1]);
+                        value.b2 = true;
+                    }
+                    break;
+                case TransitionActionType.Alpha:
+                    value.f1 = parseFloat(str);
+                    break;
+                case TransitionActionType.Rotation:
+                    value.i = parseInt(str);
+                    break;
+                case TransitionActionType.Scale:
+                    arr = str.split(",");
+                    value.f1 = parseFloat(arr[0]);
+                    value.f2 = parseFloat(arr[1]);
+                    break;
+                case TransitionActionType.Color:
+                    value.c = fairygui.ToolSet.convertFromHtmlColor(str);
+                    break;
+                case TransitionActionType.Animation:
+                    arr = str.split(",");
+                    if (arr[0] == "-") {
+                        value.b1 = false;
+                    }
+                    else {
+                        value.i = parseInt(arr[0]);
+                        value.b1 = true;
+                    }
+                    value.b = arr[1] == "p";
+                    break;
+                case TransitionActionType.Visible:
+                    value.b = str == "true";
+                    break;
+                case TransitionActionType.Sound:
+                    arr = str.split(",");
+                    value.s = arr[0];
+                    if (arr.length > 1) {
+                        var intv = parseInt(arr[1]);
+                        if (intv == 0 || intv == 100)
+                            value.f1 = 1;
+                        else
+                            value.f1 = intv / 100;
+                    }
+                    else
+                        value.f1 = 1;
+                    break;
+                case TransitionActionType.Transition:
+                    arr = str.split(",");
+                    value.s = arr[0];
+                    if (arr.length > 1)
+                        value.i = parseInt(arr[1]);
+                    else
+                        value.i = 1;
+                    break;
+                case TransitionActionType.Shake:
+                    arr = str.split(",");
+                    value.f1 = parseFloat(arr[0]);
+                    value.f2 = parseFloat(arr[1]);
+                    break;
+                case TransitionActionType.ColorFilter:
+                    arr = str.split(",");
+                    value.f1 = parseFloat(arr[0]);
+                    value.f2 = parseFloat(arr[1]);
+                    value.f3 = parseFloat(arr[2]);
+                    value.f4 = parseFloat(arr[3]);
+                    break;
+            }
+        };
+        return Transition;
+    }());
+    Transition.OPTION_IGNORE_DISPLAY_CONTROLLER = 1;
+    Transition.OPTION_AUTO_STOP_DISABLED = 2;
+    Transition.OPTION_AUTO_STOP_AT_END = 4;
+    Transition.FRAME_RATE = 24;
+    fairygui.Transition = Transition;
+    __reflect(Transition.prototype, "fairygui.Transition");
+    var TransitionActionType = (function () {
+        function TransitionActionType() {
+        }
+        return TransitionActionType;
+    }());
+    TransitionActionType.XY = 0;
+    TransitionActionType.Size = 1;
+    TransitionActionType.Scale = 2;
+    TransitionActionType.Pivot = 3;
+    TransitionActionType.Alpha = 4;
+    TransitionActionType.Rotation = 5;
+    TransitionActionType.Color = 6;
+    TransitionActionType.Animation = 7;
+    TransitionActionType.Visible = 8;
+    TransitionActionType.Sound = 9;
+    TransitionActionType.Transition = 10;
+    TransitionActionType.Shake = 11;
+    TransitionActionType.ColorFilter = 12;
+    TransitionActionType.Skew = 13;
+    TransitionActionType.Unknown = 14;
+    __reflect(TransitionActionType.prototype, "TransitionActionType");
+    var TransitionItem = (function () {
+        function TransitionItem() {
+            this.time = 0;
+            this.type = 0;
+            this.duration = 0;
+            this.repeat = 0;
+            this.yoyo = false;
+            this.tween = false;
+            this.tweenTimes = 0;
+            this.completed = false;
+            this.displayLockToken = 0;
+            this.easeType = egret.Ease.quadOut;
+            this.value = new TransitionValue();
+            this.startValue = new TransitionValue();
+            this.endValue = new TransitionValue();
+        }
+        return TransitionItem;
+    }());
+    __reflect(TransitionItem.prototype, "TransitionItem");
+    var TransitionValue = (function () {
+        function TransitionValue() {
+            this.f1 = 0;
+            this.f2 = 0;
+            this.f3 = 0;
+            this.f4 = 0;
+            this.i = 0;
+            this.c = 0;
+            this.b = false;
+            this.b1 = true;
+            this.b2 = true;
+        }
+        return TransitionValue;
+    }());
+    __reflect(TransitionValue.prototype, "TransitionValue");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -1293,637 +4434,59 @@ var fairygui;
     GObject.sHelperPoint = new egret.Point();
     GObject.sDragHelperRect = new egret.Rectangle();
     fairygui.GObject = GObject;
+    __reflect(GObject.prototype, "fairygui.GObject");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
-    var UBBParser = (function () {
-        function UBBParser() {
-            this._readPos = 0;
-            this.smallFontSize = 12;
-            this.normalFontSize = 14;
-            this.largeFontSize = 16;
-            this.defaultImgWidth = 0;
-            this.defaultImgHeight = 0;
-            this._handlers = {};
-            this._handlers["url"] = this.onTag_URL;
-            this._handlers["img"] = this.onTag_IMG;
-            this._handlers["b"] = this.onTag_Simple;
-            this._handlers["i"] = this.onTag_Simple;
-            this._handlers["u"] = this.onTag_Simple;
-            this._handlers["sup"] = this.onTag_Simple;
-            this._handlers["sub"] = this.onTag_Simple;
-            this._handlers["color"] = this.onTag_COLOR;
-            this._handlers["font"] = this.onTag_FONT;
-            this._handlers["size"] = this.onTag_SIZE;
+    var DisplayListItem = (function () {
+        function DisplayListItem(packageItem, type) {
+            this.packageItem = packageItem;
+            this.type = type;
         }
-        UBBParser.prototype.onTag_URL = function (tagName, end, attr) {
-            if (!end) {
-                if (attr != null)
-                    return "<a href=\"" + attr + "\" target=\"_blank\">";
-                else {
-                    var href = this.getTagText();
-                    return "<a href=\"" + href + "\" target=\"_blank\">";
-                }
-            }
-            else
-                return "</a>";
-        };
-        UBBParser.prototype.onTag_IMG = function (tagName, end, attr) {
-            if (!end) {
-                var src = this.getTagText(true);
-                if (!src)
-                    return null;
-                if (this.defaultImgWidth)
-                    return "<img src=\"" + src + "\" width=\"" + this.defaultImgWidth + "\" height=\"" + this.defaultImgHeight + "\"/>";
-                else
-                    return "<img src=\"" + src + "\"/>";
-            }
-            else
-                return null;
-        };
-        UBBParser.prototype.onTag_Simple = function (tagName, end, attr) {
-            return end ? ("</" + tagName + ">") : ("<" + tagName + ">");
-        };
-        UBBParser.prototype.onTag_COLOR = function (tagName, end, attr) {
-            if (!end)
-                return "<font color=\"" + attr + "\">";
-            else
-                return "</font>";
-        };
-        UBBParser.prototype.onTag_FONT = function (tagName, end, attr) {
-            if (!end)
-                return "<font face=\"" + attr + "\">";
-            else
-                return "</font>";
-        };
-        UBBParser.prototype.onTag_SIZE = function (tagName, end, attr) {
-            if (!end) {
-                if (attr == "normal")
-                    attr = "" + this.normalFontSize;
-                else if (attr == "small")
-                    attr = "" + this.smallFontSize;
-                else if (attr == "large")
-                    attr = "" + this.largeFontSize;
-                else if (attr.length && attr.charAt(0) == "+")
-                    attr = "" + (this.smallFontSize + parseInt(attr.substr(1)));
-                else if (attr.length && attr.charAt(0) == "-")
-                    attr = "" + (this.smallFontSize - parseInt(attr.substr(1)));
-                return "<font size=\"" + attr + "\">";
-            }
-            else
-                return "</font>";
-        };
-        UBBParser.prototype.getTagText = function (remove) {
-            if (remove === void 0) { remove = false; }
-            var pos = this._text.indexOf("[", this._readPos);
-            if (pos == -1)
-                return null;
-            var ret = this._text.substring(this._readPos, pos);
-            if (remove)
-                this._readPos = pos;
-            return ret;
-        };
-        UBBParser.prototype.parse = function (text) {
-            this._text = text;
-            var pos1 = 0, pos2, pos3 = 0;
-            var end;
-            var tag, attr;
-            var repl;
-            var func;
-            while ((pos2 = this._text.indexOf("[", pos1)) != -1) {
-                pos1 = pos2;
-                pos2 = this._text.indexOf("]", pos1);
-                if (pos2 == -1)
-                    break;
-                end = this._text.charAt(pos1 + 1) == '/';
-                tag = this._text.substring(end ? pos1 + 2 : pos1 + 1, pos2);
-                pos2++;
-                this._readPos = pos2;
-                attr = null;
-                repl = null;
-                pos3 = tag.indexOf("=");
-                if (pos3 != -1) {
-                    attr = tag.substring(pos3 + 1);
-                    tag = tag.substring(0, pos3);
-                }
-                tag = tag.toLowerCase();
-                func = this._handlers[tag];
-                if (func != null) {
-                    repl = func.call(this, tag, end, attr);
-                    if (repl == null)
-                        repl = "";
-                }
-                else {
-                    pos1 = pos2;
-                    continue;
-                }
-                this._text = this._text.substring(0, pos1) + repl + this._text.substring(this._readPos);
-            }
-            return this._text;
-        };
-        return UBBParser;
+        return DisplayListItem;
     }());
-    UBBParser.inst = new UBBParser();
-    fairygui.UBBParser = UBBParser;
+    fairygui.DisplayListItem = DisplayListItem;
+    __reflect(DisplayListItem.prototype, "fairygui.DisplayListItem");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
-    var ButtonMode;
-    (function (ButtonMode) {
-        ButtonMode[ButtonMode["Common"] = 0] = "Common";
-        ButtonMode[ButtonMode["Check"] = 1] = "Check";
-        ButtonMode[ButtonMode["Radio"] = 2] = "Radio";
-    })(ButtonMode = fairygui.ButtonMode || (fairygui.ButtonMode = {}));
-    ;
-    var AutoSizeType;
-    (function (AutoSizeType) {
-        AutoSizeType[AutoSizeType["None"] = 0] = "None";
-        AutoSizeType[AutoSizeType["Both"] = 1] = "Both";
-        AutoSizeType[AutoSizeType["Height"] = 2] = "Height";
-    })(AutoSizeType = fairygui.AutoSizeType || (fairygui.AutoSizeType = {}));
-    ;
-    var AlignType;
-    (function (AlignType) {
-        AlignType[AlignType["Left"] = 0] = "Left";
-        AlignType[AlignType["Center"] = 1] = "Center";
-        AlignType[AlignType["Right"] = 2] = "Right";
-    })(AlignType = fairygui.AlignType || (fairygui.AlignType = {}));
-    ;
-    var VertAlignType;
-    (function (VertAlignType) {
-        VertAlignType[VertAlignType["Top"] = 0] = "Top";
-        VertAlignType[VertAlignType["Middle"] = 1] = "Middle";
-        VertAlignType[VertAlignType["Bottom"] = 2] = "Bottom";
-    })(VertAlignType = fairygui.VertAlignType || (fairygui.VertAlignType = {}));
-    ;
-    var LoaderFillType;
-    (function (LoaderFillType) {
-        LoaderFillType[LoaderFillType["None"] = 0] = "None";
-        LoaderFillType[LoaderFillType["Scale"] = 1] = "Scale";
-        LoaderFillType[LoaderFillType["ScaleMatchHeight"] = 2] = "ScaleMatchHeight";
-        LoaderFillType[LoaderFillType["ScaleMatchWidth"] = 3] = "ScaleMatchWidth";
-        LoaderFillType[LoaderFillType["ScaleFree"] = 4] = "ScaleFree";
-    })(LoaderFillType = fairygui.LoaderFillType || (fairygui.LoaderFillType = {}));
-    ;
-    var ListLayoutType;
-    (function (ListLayoutType) {
-        ListLayoutType[ListLayoutType["SingleColumn"] = 0] = "SingleColumn";
-        ListLayoutType[ListLayoutType["SingleRow"] = 1] = "SingleRow";
-        ListLayoutType[ListLayoutType["FlowHorizontal"] = 2] = "FlowHorizontal";
-        ListLayoutType[ListLayoutType["FlowVertical"] = 3] = "FlowVertical";
-        ListLayoutType[ListLayoutType["Pagination"] = 4] = "Pagination";
-    })(ListLayoutType = fairygui.ListLayoutType || (fairygui.ListLayoutType = {}));
-    ;
-    var ListSelectionMode;
-    (function (ListSelectionMode) {
-        ListSelectionMode[ListSelectionMode["Single"] = 0] = "Single";
-        ListSelectionMode[ListSelectionMode["Multiple"] = 1] = "Multiple";
-        ListSelectionMode[ListSelectionMode["Multiple_SingleClick"] = 2] = "Multiple_SingleClick";
-        ListSelectionMode[ListSelectionMode["None"] = 3] = "None";
-    })(ListSelectionMode = fairygui.ListSelectionMode || (fairygui.ListSelectionMode = {}));
-    ;
-    var OverflowType;
-    (function (OverflowType) {
-        OverflowType[OverflowType["Visible"] = 0] = "Visible";
-        OverflowType[OverflowType["Hidden"] = 1] = "Hidden";
-        OverflowType[OverflowType["Scroll"] = 2] = "Scroll";
-        OverflowType[OverflowType["Scale"] = 3] = "Scale";
-        OverflowType[OverflowType["ScaleFree"] = 4] = "ScaleFree";
-    })(OverflowType = fairygui.OverflowType || (fairygui.OverflowType = {}));
-    ;
-    var PackageItemType;
-    (function (PackageItemType) {
-        PackageItemType[PackageItemType["Image"] = 0] = "Image";
-        PackageItemType[PackageItemType["Swf"] = 1] = "Swf";
-        PackageItemType[PackageItemType["MovieClip"] = 2] = "MovieClip";
-        PackageItemType[PackageItemType["Sound"] = 3] = "Sound";
-        PackageItemType[PackageItemType["Component"] = 4] = "Component";
-        PackageItemType[PackageItemType["Misc"] = 5] = "Misc";
-        PackageItemType[PackageItemType["Font"] = 6] = "Font";
-        PackageItemType[PackageItemType["Atlas"] = 7] = "Atlas";
-    })(PackageItemType = fairygui.PackageItemType || (fairygui.PackageItemType = {}));
-    ;
-    var ProgressTitleType;
-    (function (ProgressTitleType) {
-        ProgressTitleType[ProgressTitleType["Percent"] = 0] = "Percent";
-        ProgressTitleType[ProgressTitleType["ValueAndMax"] = 1] = "ValueAndMax";
-        ProgressTitleType[ProgressTitleType["Value"] = 2] = "Value";
-        ProgressTitleType[ProgressTitleType["Max"] = 3] = "Max";
-    })(ProgressTitleType = fairygui.ProgressTitleType || (fairygui.ProgressTitleType = {}));
-    ;
-    var ScrollBarDisplayType;
-    (function (ScrollBarDisplayType) {
-        ScrollBarDisplayType[ScrollBarDisplayType["Default"] = 0] = "Default";
-        ScrollBarDisplayType[ScrollBarDisplayType["Visible"] = 1] = "Visible";
-        ScrollBarDisplayType[ScrollBarDisplayType["Auto"] = 2] = "Auto";
-        ScrollBarDisplayType[ScrollBarDisplayType["Hidden"] = 3] = "Hidden";
-    })(ScrollBarDisplayType = fairygui.ScrollBarDisplayType || (fairygui.ScrollBarDisplayType = {}));
-    ;
-    var ScrollType;
-    (function (ScrollType) {
-        ScrollType[ScrollType["Horizontal"] = 0] = "Horizontal";
-        ScrollType[ScrollType["Vertical"] = 1] = "Vertical";
-        ScrollType[ScrollType["Both"] = 2] = "Both";
-    })(ScrollType = fairygui.ScrollType || (fairygui.ScrollType = {}));
-    ;
-    var FlipType;
-    (function (FlipType) {
-        FlipType[FlipType["None"] = 0] = "None";
-        FlipType[FlipType["Horizontal"] = 1] = "Horizontal";
-        FlipType[FlipType["Vertical"] = 2] = "Vertical";
-        FlipType[FlipType["Both"] = 3] = "Both";
-    })(FlipType = fairygui.FlipType || (fairygui.FlipType = {}));
-    ;
-    var RelationType;
-    (function (RelationType) {
-        RelationType[RelationType["Left_Left"] = 0] = "Left_Left";
-        RelationType[RelationType["Left_Center"] = 1] = "Left_Center";
-        RelationType[RelationType["Left_Right"] = 2] = "Left_Right";
-        RelationType[RelationType["Center_Center"] = 3] = "Center_Center";
-        RelationType[RelationType["Right_Left"] = 4] = "Right_Left";
-        RelationType[RelationType["Right_Center"] = 5] = "Right_Center";
-        RelationType[RelationType["Right_Right"] = 6] = "Right_Right";
-        RelationType[RelationType["Top_Top"] = 7] = "Top_Top";
-        RelationType[RelationType["Top_Middle"] = 8] = "Top_Middle";
-        RelationType[RelationType["Top_Bottom"] = 9] = "Top_Bottom";
-        RelationType[RelationType["Middle_Middle"] = 10] = "Middle_Middle";
-        RelationType[RelationType["Bottom_Top"] = 11] = "Bottom_Top";
-        RelationType[RelationType["Bottom_Middle"] = 12] = "Bottom_Middle";
-        RelationType[RelationType["Bottom_Bottom"] = 13] = "Bottom_Bottom";
-        RelationType[RelationType["Width"] = 14] = "Width";
-        RelationType[RelationType["Height"] = 15] = "Height";
-        RelationType[RelationType["LeftExt_Left"] = 16] = "LeftExt_Left";
-        RelationType[RelationType["LeftExt_Right"] = 17] = "LeftExt_Right";
-        RelationType[RelationType["RightExt_Left"] = 18] = "RightExt_Left";
-        RelationType[RelationType["RightExt_Right"] = 19] = "RightExt_Right";
-        RelationType[RelationType["TopExt_Top"] = 20] = "TopExt_Top";
-        RelationType[RelationType["TopExt_Bottom"] = 21] = "TopExt_Bottom";
-        RelationType[RelationType["BottomExt_Top"] = 22] = "BottomExt_Top";
-        RelationType[RelationType["BottomExt_Bottom"] = 23] = "BottomExt_Bottom";
-        RelationType[RelationType["Size"] = 24] = "Size";
-    })(RelationType = fairygui.RelationType || (fairygui.RelationType = {}));
-    ;
-    function parseButtonMode(value) {
-        switch (value) {
-            case "Common":
-                return ButtonMode.Common;
-            case "Check":
-                return ButtonMode.Check;
-            case "Radio":
-                return ButtonMode.Radio;
-            default:
-                return ButtonMode.Common;
+    var PackageItem = (function () {
+        function PackageItem() {
+            this.width = 0;
+            this.height = 0;
+            this.tileGridIndice = 0;
+            //movieclip
+            this.interval = 0;
+            this.repeatDelay = 0;
         }
-    }
-    fairygui.parseButtonMode = parseButtonMode;
-    function parseAutoSizeType(value) {
-        switch (value) {
-            case "none":
-                return AutoSizeType.None;
-            case "both":
-                return AutoSizeType.Both;
-            case "height":
-                return AutoSizeType.Height;
-            default:
-                return AutoSizeType.None;
-        }
-    }
-    fairygui.parseAutoSizeType = parseAutoSizeType;
-    function parseAlignType(value) {
-        switch (value) {
-            case "left":
-                return AlignType.Left;
-            case "center":
-                return AlignType.Center;
-            case "right":
-                return AlignType.Right;
-            default:
-                return AlignType.Left;
-        }
-    }
-    fairygui.parseAlignType = parseAlignType;
-    function getAlignTypeString(type) {
-        return type == AlignType.Left ? egret.HorizontalAlign.LEFT :
-            (type == AlignType.Center ? egret.HorizontalAlign.CENTER : egret.HorizontalAlign.RIGHT);
-    }
-    fairygui.getAlignTypeString = getAlignTypeString;
-    function parseVertAlignType(value) {
-        switch (value) {
-            case "top":
-                return VertAlignType.Top;
-            case "middle":
-                return VertAlignType.Middle;
-            case "bottom":
-                return VertAlignType.Bottom;
-            default:
-                return VertAlignType.Top;
-        }
-    }
-    fairygui.parseVertAlignType = parseVertAlignType;
-    function parseLoaderFillType(value) {
-        switch (value) {
-            case "none":
-                return LoaderFillType.None;
-            case "scale":
-                return LoaderFillType.Scale;
-            case "scaleMatchHeight":
-                return LoaderFillType.ScaleMatchHeight;
-            case "scaleMatchWidth":
-                return LoaderFillType.ScaleMatchWidth;
-            case "scaleFree":
-                return LoaderFillType.ScaleFree;
-            default:
-                return LoaderFillType.None;
-        }
-    }
-    fairygui.parseLoaderFillType = parseLoaderFillType;
-    function parseListLayoutType(value) {
-        switch (value) {
-            case "column":
-                return ListLayoutType.SingleColumn;
-            case "row":
-                return ListLayoutType.SingleRow;
-            case "flow_hz":
-                return ListLayoutType.FlowHorizontal;
-            case "flow_vt":
-                return ListLayoutType.FlowVertical;
-            case "pagination":
-                return ListLayoutType.Pagination;
-            default:
-                return ListLayoutType.SingleColumn;
-        }
-    }
-    fairygui.parseListLayoutType = parseListLayoutType;
-    function parseListSelectionMode(value) {
-        switch (value) {
-            case "single":
-                return ListSelectionMode.Single;
-            case "multiple":
-                return ListSelectionMode.Multiple;
-            case "multipleSingleClick":
-                return ListSelectionMode.Multiple_SingleClick;
-            case "none":
-                return ListSelectionMode.None;
-            default:
-                return ListSelectionMode.Single;
-        }
-    }
-    fairygui.parseListSelectionMode = parseListSelectionMode;
-    function parseOverflowType(value) {
-        switch (value) {
-            case "visible":
-                return OverflowType.Visible;
-            case "hidden":
-                return OverflowType.Hidden;
-            case "scroll":
-                return OverflowType.Scroll;
-            case "scale":
-                return OverflowType.Scale;
-            case "scaleFree":
-                return OverflowType.ScaleFree;
-            default:
-                return OverflowType.Visible;
-        }
-    }
-    fairygui.parseOverflowType = parseOverflowType;
-    function parsePackageItemType(value) {
-        switch (value) {
-            case "image":
-                return PackageItemType.Image;
-            case "movieclip":
-                return PackageItemType.MovieClip;
-            case "sound":
-                return PackageItemType.Sound;
-            case "component":
-                return PackageItemType.Component;
-            case "swf":
-                return PackageItemType.Swf;
-            case "font":
-                return PackageItemType.Font;
-            case "atlas":
-                return PackageItemType.Atlas;
-            default:
-                return PackageItemType.Misc;
-        }
-    }
-    fairygui.parsePackageItemType = parsePackageItemType;
-    function parseProgressTitleType(value) {
-        switch (value) {
-            case "percent":
-                return ProgressTitleType.Percent;
-            case "valueAndmax":
-                return ProgressTitleType.ValueAndMax;
-            case "value":
-                return ProgressTitleType.Value;
-            case "max":
-                return ProgressTitleType.Max;
-            default:
-                return ProgressTitleType.Percent;
-        }
-    }
-    fairygui.parseProgressTitleType = parseProgressTitleType;
-    function parseScrollBarDisplayType(value) {
-        switch (value) {
-            case "default":
-                return ScrollBarDisplayType.Default;
-            case "visible":
-                return ScrollBarDisplayType.Visible;
-            case "auto":
-                return ScrollBarDisplayType.Auto;
-            case "hidden":
-                return ScrollBarDisplayType.Hidden;
-            default:
-                return ScrollBarDisplayType.Default;
-        }
-    }
-    fairygui.parseScrollBarDisplayType = parseScrollBarDisplayType;
-    function parseScrollType(value) {
-        switch (value) {
-            case "horizontal":
-                return ScrollType.Horizontal;
-            case "vertical":
-                return ScrollType.Vertical;
-            case "both":
-                return ScrollType.Both;
-            default:
-                return ScrollType.Vertical;
-        }
-    }
-    fairygui.parseScrollType = parseScrollType;
-    function parseFlipType(value) {
-        switch (value) {
-            case "hz":
-                return FlipType.Horizontal;
-            case "vt":
-                return FlipType.Vertical;
-            case "both":
-                return FlipType.Both;
-            default:
-                return FlipType.None;
-        }
-    }
-    fairygui.parseFlipType = parseFlipType;
-    var EaseMap = {
-        "Linear": egret.Ease.getPowIn(1),
-        "Elastic.In": egret.Ease.elasticIn,
-        "Elastic.Out": egret.Ease.elasticOut,
-        "Elastic.InOut": egret.Ease.elasticInOut,
-        "Quad.In": egret.Ease.quadIn,
-        "Quad.Out": egret.Ease.quadOut,
-        "Quad.InOut": egret.Ease.quadInOut,
-        "Cube.In": egret.Ease.cubicIn,
-        "Cube.Out": egret.Ease.cubicOut,
-        "Cube.InOut": egret.Ease.cubicInOut,
-        "Quart.In": egret.Ease.quartIn,
-        "Quart.Out": egret.Ease.quartOut,
-        "Quart.InOut": egret.Ease.quartInOut,
-        "Quint.In": egret.Ease.quintIn,
-        "Quint.Out": egret.Ease.quintOut,
-        "Quint.InOut": egret.Ease.quintInOut,
-        "Sine.In": egret.Ease.sineIn,
-        "Sine.Out": egret.Ease.sineOut,
-        "Sine.InOut": egret.Ease.sineInOut,
-        "Bounce.In": egret.Ease.bounceIn,
-        "Bounce.Out": egret.Ease.bounceOut,
-        "Bounce.InOut": egret.Ease.bounceInOut,
-        "Circ.In": egret.Ease.circIn,
-        "Circ.Out": egret.Ease.circOut,
-        "Circ.InOut": egret.Ease.circInOut,
-        "Expo.In": egret.Ease.quartIn,
-        "Expo.Out": egret.Ease.quartOut,
-        "Expo.InOut": egret.Ease.quartInOut,
-        "Back.In": egret.Ease.backIn,
-        "Back.Out": egret.Ease.backOut,
-        "Back.InOut": egret.Ease.backInOut
-    };
-    function ParseEaseType(value) {
-        var ret = EaseMap[value];
-        if (!ret)
-            ret = egret.Ease.quartOut;
-        return ret;
-    }
-    fairygui.ParseEaseType = ParseEaseType;
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var GearBase = (function () {
-        function GearBase(owner) {
-            this._owner = owner;
-            this._easeType = egret.Ease.quadOut;
-            this._tweenTime = 0.3;
-            this._tweenDelay = 0;
-            this._displayLockToken = 0;
-        }
-        Object.defineProperty(GearBase.prototype, "controller", {
-            get: function () {
-                return this._controller;
-            },
-            set: function (val) {
-                if (val != this._controller) {
-                    this._controller = val;
-                    if (this._controller)
-                        this.init();
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GearBase.prototype, "tween", {
-            get: function () {
-                return this._tween;
-            },
-            set: function (val) {
-                this._tween = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GearBase.prototype, "tweenDelay", {
-            get: function () {
-                return this._tweenDelay;
-            },
-            set: function (val) {
-                this._tweenDelay = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GearBase.prototype, "tweenTime", {
-            get: function () {
-                return this._tweenTime;
-            },
-            set: function (value) {
-                this._tweenTime = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GearBase.prototype, "easeType", {
-            get: function () {
-                return this._easeType;
-            },
-            set: function (value) {
-                this._easeType = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        GearBase.prototype.setup = function (xml) {
-            this._controller = this._owner.parent.getController(xml.attributes.controller);
-            if (this._controller == null)
-                return;
-            this.init();
-            var str;
-            str = xml.attributes.tween;
-            if (str)
-                this._tween = true;
-            str = xml.attributes.ease;
-            if (str)
-                this._easeType = fairygui.ParseEaseType(str);
-            str = xml.attributes.duration;
-            if (str)
-                this._tweenTime = parseFloat(str);
-            str = xml.attributes.delay;
-            if (str)
-                this._tweenDelay = parseFloat(str);
-            if (this instanceof fairygui.GearDisplay) {
-                str = xml.attributes.pages;
-                if (str)
-                    this.pages = str.split(",");
-            }
-            else {
-                var pages;
-                var values;
-                str = xml.attributes.pages;
-                if (str)
-                    pages = str.split(",");
-                str = xml.attributes.values;
-                if (str)
-                    values = str.split("|");
-                if (pages && values) {
-                    for (var i = 0; i < values.length; i++)
-                        this.addStatus(pages[i], values[i]);
-                }
-                str = xml.attributes.default;
-                if (str)
-                    this.addStatus(null, str);
-            }
+        PackageItem.prototype.load = function () {
+            return this.owner.getItemAsset(this);
         };
-        GearBase.prototype.updateFromRelations = function (dx, dy) {
+        PackageItem.prototype.toString = function () {
+            return this.name;
         };
-        GearBase.prototype.addStatus = function (pageId, value) {
-        };
-        GearBase.prototype.init = function () {
-        };
-        GearBase.prototype.apply = function () {
-        };
-        GearBase.prototype.updateState = function () {
-        };
-        return GearBase;
+        return PackageItem;
     }());
-    GearBase.disableAllTweenEffect = false;
-    fairygui.GearBase = GearBase;
+    fairygui.PackageItem = PackageItem;
+    __reflect(PackageItem.prototype, "fairygui.PackageItem");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GComponent = (function (_super) {
@@ -2760,3193 +5323,17 @@ var fairygui;
         return GComponent;
     }(fairygui.GObject));
     fairygui.GComponent = GComponent;
+    __reflect(GComponent.prototype, "fairygui.GComponent");
 })(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var GObjectPool = (function () {
-        function GObjectPool() {
-            this._count = 0;
-            this._pool = {};
-        }
-        GObjectPool.prototype.clear = function () {
-            var length1 = this._pool.length;
-            for (var i1 = 0; i1 < length1; i1++) {
-                var arr = this._pool[i1];
-                var cnt = arr.length;
-                for (var i = 0; i < cnt; i++)
-                    arr[i].dispose();
-            }
-            this._pool = {};
-            this._count = 0;
-        };
-        Object.defineProperty(GObjectPool.prototype, "count", {
-            get: function () {
-                return this._count;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        GObjectPool.prototype.getObject = function (url) {
-            var arr = this._pool[url];
-            if (arr == null) {
-                arr = new Array();
-                this._pool[url] = arr;
-            }
-            if (arr.length) {
-                this._count--;
-                return arr.shift();
-            }
-            var child = fairygui.UIPackage.createObjectFromURL(url);
-            return child;
-        };
-        GObjectPool.prototype.returnObject = function (obj) {
-            var url = obj.resourceURL;
-            if (!url)
-                return;
-            var arr = this._pool[url];
-            if (arr == null) {
-                arr = new Array();
-                this._pool[url] = arr;
-            }
-            this._count++;
-            arr.push(obj);
-        };
-        return GObjectPool;
-    }());
-    fairygui.GObjectPool = GObjectPool;
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var GTextField = (function (_super) {
-        __extends(GTextField, _super);
-        function GTextField() {
-            var _this = _super.call(this) || this;
-            _this._fontSize = 0;
-            _this._leading = 0;
-            _this._letterSpacing = 0;
-            _this._textWidth = 0;
-            _this._textHeight = 0;
-            _this._fontSize = 12;
-            _this._align = fairygui.AlignType.Left;
-            _this._verticalAlign = fairygui.VertAlignType.Top;
-            _this._text = "";
-            _this._leading = 3;
-            _this._color = 0;
-            _this._autoSize = fairygui.AutoSizeType.Both;
-            _this._widthAutoSize = true;
-            _this._heightAutoSize = true;
-            _this._bitmapPool = new Array();
-            return _this;
-        }
-        GTextField.prototype.createDisplayObject = function () {
-            this._textField = new egret.TextField();
-            this._textField["$owner"] = this;
-            this._textField.touchEnabled = false;
-            this.setDisplayObject(this._textField);
-        };
-        GTextField.prototype.switchBitmapMode = function (val) {
-            if (val && this.displayObject == this._textField) {
-                if (this._bitmapContainer == null) {
-                    this._bitmapContainer = new egret.Sprite();
-                    this._bitmapContainer["$owner"] = this;
-                }
-                this.switchDisplayObject(this._bitmapContainer);
-            }
-            else if (!val && this.displayObject == this._bitmapContainer)
-                this.switchDisplayObject(this._textField);
-        };
-        GTextField.prototype.dispose = function () {
-            _super.prototype.dispose.call(this);
-            this._bitmapFont = null;
-        };
-        Object.defineProperty(GTextField.prototype, "text", {
-            get: function () {
-                return this._text;
-            },
-            set: function (value) {
-                this._text = value;
-                if (this._text == null)
-                    this._text = "";
-                this.updateGear(6);
-                if (this.parent && this.parent._underConstruct)
-                    this.renderNow();
-                else
-                    this.render();
-            },
-            enumerable: true,
-            configurable: true
-        });
-        GTextField.prototype.updateTextFieldText = function () {
-            if (this._ubbEnabled)
-                this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(fairygui.ToolSet.encodeHTML(this._text)));
-            else
-                this._textField.text = this._text;
-        };
-        Object.defineProperty(GTextField.prototype, "font", {
-            get: function () {
-                return this._font;
-            },
-            set: function (value) {
-                if (this._font != value) {
-                    this._font = value;
-                    this.updateTextFormat();
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GTextField.prototype, "fontSize", {
-            get: function () {
-                return this._fontSize;
-            },
-            set: function (value) {
-                if (value < 0)
-                    return;
-                if (this._fontSize != value) {
-                    this._fontSize = value;
-                    this.updateTextFormat();
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GTextField.prototype, "color", {
-            get: function () {
-                return this._color;
-            },
-            set: function (value) {
-                if (this._color != value) {
-                    this._color = value;
-                    this.updateGear(4);
-                    this.updateTextFormat();
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GTextField.prototype, "align", {
-            get: function () {
-                return this._align;
-            },
-            set: function (value) {
-                if (this._align != value) {
-                    this._align = value;
-                    this.updateTextFormat();
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GTextField.prototype, "verticalAlign", {
-            get: function () {
-                return this._verticalAlign;
-            },
-            set: function (value) {
-                if (this._verticalAlign != value) {
-                    this._verticalAlign = value;
-                    this.doAlign();
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GTextField.prototype, "leading", {
-            get: function () {
-                return this._leading;
-            },
-            set: function (value) {
-                if (this._leading != value) {
-                    this._leading = value;
-                    this.updateTextFormat();
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GTextField.prototype, "letterSpacing", {
-            get: function () {
-                return this._letterSpacing;
-            },
-            set: function (value) {
-                if (this._letterSpacing != value) {
-                    this._letterSpacing = value;
-                    this.updateTextFormat();
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GTextField.prototype, "underline", {
-            get: function () {
-                //return this._underline;
-                return false;
-            },
-            set: function (value) {
-                //not support yet
-                //this._textField.underline = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GTextField.prototype, "bold", {
-            get: function () {
-                return this._textField.bold;
-            },
-            set: function (value) {
-                this._textField.bold = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GTextField.prototype, "italic", {
-            get: function () {
-                return this._textField.italic;
-            },
-            set: function (value) {
-                this._textField.italic = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GTextField.prototype, "singleLine", {
-            get: function () {
-                return !this._textField.multiline;
-            },
-            set: function (value) {
-                value = !value;
-                if (this._textField.multiline != value) {
-                    this._textField.multiline = value;
-                    this.render();
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GTextField.prototype, "stroke", {
-            get: function () {
-                return this._textField.stroke;
-            },
-            set: function (value) {
-                this._textField.stroke = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GTextField.prototype, "strokeColor", {
-            get: function () {
-                return this._textField.strokeColor;
-            },
-            set: function (value) {
-                this._textField.strokeColor = value;
-                this.updateGear(4);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GTextField.prototype, "ubbEnabled", {
-            get: function () {
-                return this._ubbEnabled;
-            },
-            set: function (value) {
-                if (this._ubbEnabled != value) {
-                    this._ubbEnabled = value;
-                    this.render();
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GTextField.prototype, "autoSize", {
-            get: function () {
-                return this._autoSize;
-            },
-            set: function (value) {
-                if (this._autoSize != value) {
-                    this._autoSize = value;
-                    this._widthAutoSize = value == fairygui.AutoSizeType.Both;
-                    this._heightAutoSize = value == fairygui.AutoSizeType.Both || value == fairygui.AutoSizeType.Height;
-                    this.render();
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GTextField.prototype, "textWidth", {
-            get: function () {
-                if (this._requireRender)
-                    this.renderNow();
-                return this._textWidth;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        GTextField.prototype.ensureSizeCorrect = function () {
-            if (this._sizeDirty && this._requireRender)
-                this.renderNow();
-        };
-        GTextField.prototype.updateTextFormat = function () {
-            this._textField.size = this._fontSize;
-            if (fairygui.ToolSet.startsWith(this._font, "ui://"))
-                this._bitmapFont = fairygui.UIPackage.getBitmapFontByURL(this._font);
-            else {
-                this._bitmapFont = null;
-                if (this._font)
-                    this._textField.fontFamily = this._font;
-                else
-                    this._textField.fontFamily = fairygui.UIConfig.defaultFont;
-            }
-            if (this.grayed)
-                this._textField.textColor = 0xAAAAAA;
-            else
-                this._textField.textColor = this._color;
-            this._textField.textAlign = fairygui.getAlignTypeString(this._align);
-            this._textField.lineSpacing = this._leading;
-            //this._textField.letterSpacing = this._letterSpacing;
-            if (!this._underConstruct)
-                this.render();
-        };
-        GTextField.prototype.render = function () {
-            if (!this._requireRender) {
-                this._requireRender = true;
-                egret.callLater(this.__render, this);
-            }
-            if (!this._sizeDirty && (this._widthAutoSize || this._heightAutoSize)) {
-                this._sizeDirty = true;
-                this.dispatchEventWith(fairygui.GObject.SIZE_DELAY_CHANGE);
-            }
-        };
-        GTextField.prototype.__render = function () {
-            if (this._requireRender)
-                this.renderNow();
-        };
-        GTextField.prototype.renderNow = function (updateBounds) {
-            if (updateBounds === void 0) { updateBounds = true; }
-            this._requireRender = false;
-            this._sizeDirty = false;
-            if (this._bitmapFont != null) {
-                this.renderWithBitmapFont(updateBounds);
-                return;
-            }
-            this.switchBitmapMode(false);
-            this._textField.width = this._widthAutoSize ? 10000 : Math.ceil(this.width);
-            this.updateTextFieldText();
-            this._textWidth = Math.ceil(this._textField.textWidth);
-            if (this._textWidth > 0)
-                this._textWidth += 4;
-            this._textHeight = Math.ceil(this._textField.textHeight);
-            if (this._textHeight > 0)
-                this._textHeight += 4;
-            var w, h = 0;
-            if (this._widthAutoSize) {
-                w = this._textWidth;
-                this._textField.width = w;
-            }
-            else
-                w = this.width;
-            if (this._heightAutoSize) {
-                h = this._textHeight;
-                if (!this._widthAutoSize)
-                    this._textField.height = this._textHeight;
-            }
-            else {
-                h = this.height;
-                if (this._textHeight > h)
-                    this._textHeight = h;
-                this._textField.height = this._textHeight;
-            }
-            if (updateBounds) {
-                this._updatingSize = true;
-                this.setSize(w, h);
-                this._updatingSize = false;
-                this.doAlign();
-            }
-        };
-        GTextField.prototype.renderWithBitmapFont = function (updateBounds) {
-            this.switchBitmapMode(true);
-            var cnt = this._bitmapContainer.numChildren;
-            for (var i = 0; i < cnt; i++) {
-                var obj = this._bitmapContainer.getChildAt(i);
-                this._bitmapPool.push(obj);
-            }
-            this._bitmapContainer.removeChildren();
-            if (!this._lines)
-                this._lines = new Array();
-            else
-                LineInfo.returnList(this._lines);
-            var letterSpacing = this._letterSpacing;
-            var lineSpacing = this._leading - 1;
-            var rectWidth = this.width - GTextField.GUTTER_X * 2;
-            var lineWidth = 0, lineHeight = 0, lineTextHeight = 0;
-            var glyphWidth = 0, glyphHeight = 0;
-            var wordChars = 0, wordStart = 0, wordEnd = 0;
-            var lastLineHeight = 0;
-            var lineBuffer = "";
-            var lineY = GTextField.GUTTER_Y;
-            var line;
-            var wordWrap = !this._widthAutoSize && this._textField.multiline;
-            var fontScale = this._bitmapFont.resizable ? this._fontSize / this._bitmapFont.size : 1;
-            this._textWidth = 0;
-            this._textHeight = 0;
-            var textLength = this._text.length;
-            for (var offset = 0; offset < textLength; ++offset) {
-                var ch = this._text.charAt(offset);
-                var cc = ch.charCodeAt(offset);
-                if (ch == "\n") {
-                    lineBuffer += ch;
-                    line = LineInfo.borrow();
-                    line.width = lineWidth;
-                    if (lineTextHeight == 0) {
-                        if (lastLineHeight == 0)
-                            lastLineHeight = Math.ceil(this._fontSize * fontScale);
-                        if (lineHeight == 0)
-                            lineHeight = lastLineHeight;
-                        lineTextHeight = lineHeight;
-                    }
-                    line.height = lineHeight;
-                    lastLineHeight = lineHeight;
-                    line.textHeight = lineTextHeight;
-                    line.text = lineBuffer;
-                    line.y = lineY;
-                    lineY += (line.height + lineSpacing);
-                    if (line.width > this._textWidth)
-                        this._textWidth = line.width;
-                    this._lines.push(line);
-                    lineBuffer = "";
-                    lineWidth = 0;
-                    lineHeight = 0;
-                    lineTextHeight = 0;
-                    wordChars = 0;
-                    wordStart = 0;
-                    wordEnd = 0;
-                    continue;
-                }
-                if (cc > 256 || cc <= 32) {
-                    if (wordChars > 0)
-                        wordEnd = lineWidth;
-                    wordChars = 0;
-                }
-                else {
-                    if (wordChars == 0)
-                        wordStart = lineWidth;
-                    wordChars++;
-                }
-                if (ch == " ") {
-                    glyphWidth = Math.ceil(this._fontSize / 2);
-                    glyphHeight = Math.ceil(this._fontSize);
-                }
-                else {
-                    var glyph = this._bitmapFont.glyphs[ch];
-                    if (glyph) {
-                        glyphWidth = Math.ceil(glyph.advance * fontScale);
-                        glyphHeight = Math.ceil(glyph.lineHeight * fontScale);
-                    }
-                    else if (ch == " ") {
-                        glyphWidth = Math.ceil(this._bitmapFont.size * fontScale / 2);
-                        glyphHeight = Math.ceil(this._bitmapFont.size * fontScale);
-                    }
-                    else {
-                        glyphWidth = 0;
-                        glyphHeight = 0;
-                    }
-                }
-                if (glyphHeight > lineTextHeight)
-                    lineTextHeight = glyphHeight;
-                if (glyphHeight > lineHeight)
-                    lineHeight = glyphHeight;
-                if (lineWidth != 0)
-                    lineWidth += letterSpacing;
-                lineWidth += glyphWidth;
-                if (!wordWrap || lineWidth <= rectWidth) {
-                    lineBuffer += ch;
-                }
-                else {
-                    line = LineInfo.borrow();
-                    line.height = lineHeight;
-                    line.textHeight = lineTextHeight;
-                    if (lineBuffer.length == 0) {
-                        line.text = ch;
-                    }
-                    else if (wordChars > 0 && wordEnd > 0) {
-                        lineBuffer += ch;
-                        var len = lineBuffer.length - wordChars;
-                        line.text = fairygui.ToolSet.trimRight(lineBuffer.substr(0, len));
-                        line.width = wordEnd;
-                        lineBuffer = lineBuffer.substr(len + 1);
-                        lineWidth -= wordStart;
-                    }
-                    else {
-                        line.text = lineBuffer;
-                        line.width = lineWidth - (glyphWidth + letterSpacing);
-                        lineBuffer = ch;
-                        lineWidth = glyphWidth;
-                        lineHeight = glyphHeight;
-                        lineTextHeight = glyphHeight;
-                    }
-                    line.y = lineY;
-                    lineY += (line.height + lineSpacing);
-                    if (line.width > this._textWidth)
-                        this._textWidth = line.width;
-                    wordChars = 0;
-                    wordStart = 0;
-                    wordEnd = 0;
-                    this._lines.push(line);
-                }
-            }
-            if (lineBuffer.length > 0
-                || this._lines.length > 0 && fairygui.ToolSet.endsWith(this._lines[this._lines.length - 1].text, "\n")) {
-                line = LineInfo.borrow();
-                line.width = lineWidth;
-                if (lineHeight == 0)
-                    lineHeight = lastLineHeight;
-                if (lineTextHeight == 0)
-                    lineTextHeight = lineHeight;
-                line.height = lineHeight;
-                line.textHeight = lineTextHeight;
-                line.text = lineBuffer;
-                line.y = lineY;
-                if (line.width > this._textWidth)
-                    this._textWidth = line.width;
-                this._lines.push(line);
-            }
-            if (this._textWidth > 0)
-                this._textWidth += GTextField.GUTTER_X * 2;
-            var count = this._lines.length;
-            if (count == 0) {
-                this._textHeight = 0;
-            }
-            else {
-                line = this._lines[this._lines.length - 1];
-                this._textHeight = line.y + line.height + GTextField.GUTTER_Y;
-            }
-            var w, h = 0;
-            if (this._widthAutoSize) {
-                if (this._textWidth == 0)
-                    w = 0;
-                else
-                    w = this._textWidth;
-            }
-            else
-                w = this.width;
-            if (this._heightAutoSize) {
-                if (this._textHeight == 0)
-                    h = 0;
-                else
-                    h = this._textHeight;
-            }
-            else
-                h = this.height;
-            if (updateBounds) {
-                this._updatingSize = true;
-                this.setSize(w, h);
-                this._updatingSize = false;
-                this.doAlign();
-            }
-            if (w == 0 || h == 0)
-                return;
-            var charX = GTextField.GUTTER_X;
-            var lineIndent = 0;
-            var charIndent = 0;
-            rectWidth = this.width - GTextField.GUTTER_X * 2;
-            var lineCount = this._lines.length;
-            for (var i = 0; i < lineCount; i++) {
-                line = this._lines[i];
-                charX = GTextField.GUTTER_X;
-                if (this._align == fairygui.AlignType.Center)
-                    lineIndent = (rectWidth - line.width) / 2;
-                else if (this._align == fairygui.AlignType.Right)
-                    lineIndent = rectWidth - line.width;
-                else
-                    lineIndent = 0;
-                textLength = line.text.length;
-                for (var j = 0; j < textLength; j++) {
-                    ch = line.text.charAt(j);
-                    glyph = this._bitmapFont.glyphs[ch];
-                    if (glyph != null) {
-                        charIndent = (line.height + line.textHeight) / 2 - Math.ceil(glyph.lineHeight * fontScale);
-                        var bm;
-                        if (this._bitmapPool.length)
-                            bm = this._bitmapPool.pop();
-                        else {
-                            bm = new egret.Bitmap();
-                            bm.smoothing = true;
-                        }
-                        bm.x = charX + lineIndent + Math.ceil(glyph.offsetX * fontScale);
-                        bm.y = line.y + charIndent + Math.ceil(glyph.offsetY * fontScale);
-                        bm.texture = glyph.texture;
-                        bm.scaleX = fontScale;
-                        bm.scaleY = fontScale;
-                        this._bitmapContainer.addChild(bm);
-                        charX += letterSpacing + Math.ceil(glyph.advance * fontScale);
-                    }
-                    else if (ch == " ") {
-                        charX += letterSpacing + Math.ceil(this._bitmapFont.size * fontScale / 2);
-                    }
-                    else {
-                        charX += letterSpacing;
-                    }
-                } //text loop
-            } //line loop
-        };
-        GTextField.prototype.handleSizeChanged = function () {
-            if (!this._updatingSize) {
-                if (!this._widthAutoSize)
-                    this.render();
-                else
-                    this.doAlign();
-            }
-        };
-        GTextField.prototype.handleGrayedChanged = function () {
-            _super.prototype.handleGrayedChanged.call(this);
-            this.updateTextFormat();
-        };
-        GTextField.prototype.doAlign = function () {
-            if (this._verticalAlign == fairygui.VertAlignType.Top || this._textHeight == 0)
-                this._yOffset = GTextField.GUTTER_Y;
-            else {
-                var dh = this.height - this._textHeight;
-                if (dh < 0)
-                    dh = 0;
-                if (this._verticalAlign == fairygui.VertAlignType.Middle)
-                    this._yOffset = Math.floor(dh / 2);
-                else
-                    this._yOffset = Math.floor(dh);
-            }
-            this.displayObject.y = this.y + this._yOffset;
-        };
-        GTextField.prototype.setup_beforeAdd = function (xml) {
-            _super.prototype.setup_beforeAdd.call(this, xml);
-            var str;
-            str = xml.attributes.font;
-            if (str)
-                this._font = str;
-            str = xml.attributes.fontSize;
-            if (str)
-                this._fontSize = parseInt(str);
-            str = xml.attributes.color;
-            if (str)
-                this._color = fairygui.ToolSet.convertFromHtmlColor(str);
-            str = xml.attributes.align;
-            if (str)
-                this._align = fairygui.parseAlignType(str);
-            str = xml.attributes.vAlign;
-            if (str)
-                this._verticalAlign = fairygui.parseVertAlignType(str);
-            str = xml.attributes.leading;
-            if (str)
-                this._leading = parseInt(str);
-            else
-                this._leading = 3;
-            str = xml.attributes.letterSpacing;
-            if (str)
-                this._letterSpacing = parseInt(str);
-            this._ubbEnabled = xml.attributes.ubb == "true";
-            str = xml.attributes.autoSize;
-            if (str) {
-                this._autoSize = fairygui.parseAutoSizeType(str);
-                this._widthAutoSize = this._autoSize == fairygui.AutoSizeType.Both;
-                this._heightAutoSize = this._autoSize == fairygui.AutoSizeType.Both || this._autoSize == fairygui.AutoSizeType.Height;
-            }
-            //this._textField.underline = xml.attributes.underline == "true";
-            this._textField.italic = xml.attributes.italic == "true";
-            this._textField.bold = xml.attributes.bold == "true";
-            this._textField.multiline = xml.attributes.singleLine != "true";
-            str = xml.attributes.strokeColor;
-            if (str) {
-                this._textField.strokeColor = fairygui.ToolSet.convertFromHtmlColor(str);
-                str = xml.attributes.strokeSize;
-                if (str)
-                    this.stroke = parseInt(str) + 1;
-                else
-                    this.stroke = 2;
-            }
-        };
-        GTextField.prototype.setup_afterAdd = function (xml) {
-            _super.prototype.setup_afterAdd.call(this, xml);
-            this.updateTextFormat();
-            var str = xml.attributes.text;
-            if (str != null && str.length > 0)
-                this.text = str;
-            this._sizeDirty = false;
-        };
-        return GTextField;
-    }(fairygui.GObject));
-    GTextField.GUTTER_X = 2;
-    GTextField.GUTTER_Y = 2;
-    fairygui.GTextField = GTextField;
-    var LineInfo = (function () {
-        function LineInfo() {
-            this.width = 0;
-            this.height = 0;
-            this.textHeight = 0;
-            this.y = 0;
-        }
-        LineInfo.borrow = function () {
-            if (LineInfo.pool.length) {
-                var ret = LineInfo.pool.pop();
-                ret.width = 0;
-                ret.height = 0;
-                ret.textHeight = 0;
-                ret.text = null;
-                ret.y = 0;
-                return ret;
-            }
-            else
-                return new LineInfo();
-        };
-        LineInfo.returns = function (value) {
-            LineInfo.pool.push(value);
-        };
-        LineInfo.returnList = function (value) {
-            var length = value.length;
-            for (var i = 0; i < length; i++) {
-                var li = value[i];
-                LineInfo.pool.push(li);
-            }
-            value.length = 0;
-        };
-        return LineInfo;
-    }());
-    LineInfo.pool = [];
-    fairygui.LineInfo = LineInfo;
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var GearLook = (function (_super) {
-        __extends(GearLook, _super);
-        function GearLook(owner) {
-            return _super.call(this, owner) || this;
-        }
-        GearLook.prototype.init = function () {
-            this._default = new GearLookValue(this._owner.alpha, this._owner.rotation, this._owner.grayed);
-            this._storage = {};
-        };
-        GearLook.prototype.addStatus = function (pageId, value) {
-            if (value == "-")
-                return;
-            var arr = value.split(",");
-            var gv;
-            if (pageId == null)
-                gv = this._default;
-            else {
-                gv = new GearLookValue();
-                this._storage[pageId] = gv;
-            }
-            gv.alpha = parseFloat(arr[0]);
-            gv.rotation = parseInt(arr[1]);
-            gv.grayed = arr[2] == "1" ? true : false;
-        };
-        GearLook.prototype.apply = function () {
-            var gv = this._storage[this._controller.selectedPageId];
-            if (!gv)
-                gv = this._default;
-            if (this._tween && !fairygui.UIPackage._constructing && !fairygui.GearBase.disableAllTweenEffect) {
-                this._owner._gearLocked = true;
-                this._owner.grayed = gv.grayed;
-                this._owner._gearLocked = false;
-                if (this.tweener != null) {
-                    if (this._tweenTarget.alpha != gv.alpha || this._tweenTarget.rotation != gv.rotation) {
-                        this.tweener["tick"] ? this.tweener["tick"](100000000) : this.tweener["$tick"](100000000);
-                        this.tweener = null;
-                    }
-                    else
-                        return;
-                }
-                var a = gv.alpha != this._owner.alpha;
-                var b = gv.rotation != this._owner.rotation;
-                if (a || b) {
-                    if (this._owner.checkGearController(0, this._controller))
-                        this._displayLockToken = this._owner.addDisplayLock();
-                    this._tweenTarget = gv;
-                    var vars = {
-                        onChange: function () {
-                            this._owner._gearLocked = true;
-                            if (a)
-                                this._owner.alpha = this._tweenValue.x;
-                            if (b)
-                                this._owner.rotation = this._tweenValue.y;
-                            this._owner._gearLocked = false;
-                        },
-                        onChangeObj: this
-                    };
-                    if (this._tweenValue == null)
-                        this._tweenValue = new egret.Point();
-                    this._tweenValue.x = this._owner.alpha;
-                    this._tweenValue.y = this._owner.rotation;
-                    this.tweener = egret.Tween.get(this._tweenValue, vars)
-                        .wait(this._tweenDelay * 1000)
-                        .to({ x: gv.alpha, y: gv.rotation }, this._tweenTime * 1000, this._easeType)
-                        .call(function () {
-                        if (this._displayLockToken != 0) {
-                            this._owner.releaseDisplayLock(this._displayLockToken);
-                            this._displayLockToken = 0;
-                        }
-                        this._tweener = null;
-                        this._owner.dispatchEventWith(fairygui.GObject.GEAR_STOP, false);
-                    }, this);
-                }
-            }
-            else {
-                this._owner._gearLocked = true;
-                this._owner.grayed = gv.grayed;
-                this._owner.alpha = gv.alpha;
-                this._owner.rotation = gv.rotation;
-                this._owner._gearLocked = false;
-            }
-        };
-        GearLook.prototype.updateState = function () {
-            var gv = this._storage[this._controller.selectedPageId];
-            if (!gv) {
-                gv = new GearLookValue();
-                this._storage[this._controller.selectedPageId] = gv;
-            }
-            gv.alpha = this._owner.alpha;
-            gv.rotation = this._owner.rotation;
-            gv.grayed = this._owner.grayed;
-        };
-        return GearLook;
-    }(fairygui.GearBase));
-    fairygui.GearLook = GearLook;
-    var GearLookValue = (function () {
-        function GearLookValue(alpha, rotation, grayed) {
-            if (alpha === void 0) { alpha = 0; }
-            if (rotation === void 0) { rotation = 0; }
-            if (grayed === void 0) { grayed = false; }
-            this.alpha = alpha;
-            this.rotation = rotation;
-            this.grayed = grayed;
-        }
-        return GearLookValue;
-    }());
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var DragEvent = (function (_super) {
-        __extends(DragEvent, _super);
-        function DragEvent(type, stageX, stageY, touchPointID) {
-            if (stageX === void 0) { stageX = 0; }
-            if (stageY === void 0) { stageY = 0; }
-            if (touchPointID === void 0) { touchPointID = -1; }
-            var _this = _super.call(this, type, false) || this;
-            _this.touchPointID = 0;
-            _this.stageX = stageX;
-            _this.stageY = stageY;
-            _this.touchPointID = touchPointID;
-            return _this;
-        }
-        DragEvent.prototype.preventDefault = function () {
-            this._prevented = true;
-        };
-        DragEvent.prototype.isDefaultPrevented = function () {
-            return this._prevented;
-        };
-        return DragEvent;
-    }(egret.Event));
-    DragEvent.DRAG_START = "__dragStart";
-    DragEvent.DRAG_END = "__dragEnd";
-    DragEvent.DRAG_MOVING = "__dragMoving";
-    fairygui.DragEvent = DragEvent;
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var DropEvent = (function (_super) {
-        __extends(DropEvent, _super);
-        function DropEvent(type, source) {
-            if (source === void 0) { source = null; }
-            var _this = _super.call(this, type, false) || this;
-            _this.source = source;
-            return _this;
-        }
-        return DropEvent;
-    }(egret.Event));
-    DropEvent.DROP = "__drop";
-    fairygui.DropEvent = DropEvent;
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var ItemEvent = (function (_super) {
-        __extends(ItemEvent, _super);
-        function ItemEvent(type, itemObject, stageX, stageY) {
-            if (itemObject === void 0) { itemObject = null; }
-            if (stageX === void 0) { stageX = 0; }
-            if (stageY === void 0) { stageY = 0; }
-            var _this = _super.call(this, type, false) || this;
-            _this.itemObject = itemObject;
-            _this.stageX = stageX;
-            _this.stageY = stageY;
-            return _this;
-        }
-        return ItemEvent;
-    }(egret.Event));
-    ItemEvent.CLICK = "___itemClick";
-    fairygui.ItemEvent = ItemEvent;
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var StateChangeEvent = (function (_super) {
-        __extends(StateChangeEvent, _super);
-        function StateChangeEvent(type) {
-            return _super.call(this, type, false) || this;
-        }
-        return StateChangeEvent;
-    }(egret.Event));
-    StateChangeEvent.CHANGED = "___stateChanged";
-    fairygui.StateChangeEvent = StateChangeEvent;
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var Controller = (function (_super) {
-        __extends(Controller, _super);
-        function Controller() {
-            var _this = _super.call(this) || this;
-            _this._selectedIndex = 0;
-            _this._previousIndex = 0;
-            _this._pageIds = [];
-            _this._pageNames = [];
-            _this._selectedIndex = -1;
-            _this._previousIndex = -1;
-            return _this;
-        }
-        Object.defineProperty(Controller.prototype, "name", {
-            get: function () {
-                return this._name;
-            },
-            set: function (value) {
-                this._name = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Controller.prototype, "parent", {
-            get: function () {
-                return this._parent;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Controller.prototype, "selectedIndex", {
-            get: function () {
-                return this._selectedIndex;
-            },
-            set: function (value) {
-                if (this._selectedIndex != value) {
-                    if (value > this._pageIds.length - 1)
-                        throw "index out of bounds: " + value;
-                    this._previousIndex = this._selectedIndex;
-                    this._selectedIndex = value;
-                    this._parent.applyController(this);
-                    this.dispatchEvent(new fairygui.StateChangeEvent(fairygui.StateChangeEvent.CHANGED));
-                    if (this._playingTransition) {
-                        this._playingTransition.stop();
-                        this._playingTransition = null;
-                    }
-                    if (this._pageTransitions) {
-                        var len = this._pageTransitions.length;
-                        for (var i = 0; i < len; i++) {
-                            var pt = this._pageTransitions[i];
-                            if (pt.toIndex == this._selectedIndex && (pt.fromIndex == -1 || pt.fromIndex == this._previousIndex)) {
-                                this._playingTransition = this.parent.getTransition(pt.transitionName);
-                                break;
-                            }
-                        }
-                        if (this._playingTransition)
-                            this._playingTransition.play(function () { this._playingTransition = null; }, this);
-                    }
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        //功能和设置selectedIndex一样，但不会触发事件
-        Controller.prototype.setSelectedIndex = function (value) {
-            if (value === void 0) { value = 0; }
-            if (this._selectedIndex != value) {
-                if (value > this._pageIds.length - 1)
-                    throw "index out of bounds: " + value;
-                this._previousIndex = this._selectedIndex;
-                this._selectedIndex = value;
-                this._parent.applyController(this);
-                if (this._playingTransition) {
-                    this._playingTransition.stop();
-                    this._playingTransition = null;
-                }
-            }
-        };
-        Object.defineProperty(Controller.prototype, "previsousIndex", {
-            get: function () {
-                return this._previousIndex;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Controller.prototype, "selectedPage", {
-            get: function () {
-                if (this._selectedIndex == -1)
-                    return null;
-                else
-                    return this._pageNames[this._selectedIndex];
-            },
-            set: function (val) {
-                var i = this._pageNames.indexOf(val);
-                if (i == -1)
-                    i = 0;
-                this.selectedIndex = i;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        //功能和设置selectedPage一样，但不会触发事件
-        Controller.prototype.setSelectedPage = function (value) {
-            var i = this._pageNames.indexOf(value);
-            if (i == -1)
-                i = 0;
-            this.setSelectedIndex(i);
-        };
-        Object.defineProperty(Controller.prototype, "previousPage", {
-            get: function () {
-                if (this._previousIndex == -1)
-                    return null;
-                else
-                    return this._pageNames[this._previousIndex];
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Controller.prototype, "pageCount", {
-            get: function () {
-                return this._pageIds.length;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Controller.prototype.getPageName = function (index) {
-            if (index === void 0) { index = 0; }
-            return this._pageNames[index];
-        };
-        Controller.prototype.addPage = function (name) {
-            if (name === void 0) { name = ""; }
-            this.addPageAt(name, this._pageIds.length);
-        };
-        Controller.prototype.addPageAt = function (name, index) {
-            if (index === void 0) { index = 0; }
-            var nid = "" + (Controller._nextPageId++);
-            if (index == this._pageIds.length) {
-                this._pageIds.push(nid);
-                this._pageNames.push(name);
-            }
-            else {
-                this._pageIds.splice(index, 0, nid);
-                this._pageNames.splice(index, 0, name);
-            }
-        };
-        Controller.prototype.removePage = function (name) {
-            var i = this._pageNames.indexOf(name);
-            if (i != -1) {
-                this._pageIds.splice(i, 1);
-                this._pageNames.splice(i, 1);
-                if (this._selectedIndex >= this._pageIds.length)
-                    this.selectedIndex = this._selectedIndex - 1;
-                else
-                    this._parent.applyController(this);
-            }
-        };
-        Controller.prototype.removePageAt = function (index) {
-            if (index === void 0) { index = 0; }
-            this._pageIds.splice(index, 1);
-            this._pageNames.splice(index, 1);
-            if (this._selectedIndex >= this._pageIds.length)
-                this.selectedIndex = this._selectedIndex - 1;
-            else
-                this._parent.applyController(this);
-        };
-        Controller.prototype.clearPages = function () {
-            this._pageIds.length = 0;
-            this._pageNames.length = 0;
-            if (this._selectedIndex != -1)
-                this.selectedIndex = -1;
-            else
-                this._parent.applyController(this);
-        };
-        Controller.prototype.hasPage = function (aName) {
-            return this._pageNames.indexOf(aName) != -1;
-        };
-        Controller.prototype.getPageIndexById = function (aId) {
-            return this._pageIds.indexOf(aId);
-        };
-        Controller.prototype.getPageIdByName = function (aName) {
-            var i = this._pageNames.indexOf(aName);
-            if (i != -1)
-                return this._pageIds[i];
-            else
-                return null;
-        };
-        Controller.prototype.getPageNameById = function (aId) {
-            var i = this._pageIds.indexOf(aId);
-            if (i != -1)
-                return this._pageNames[i];
-            else
-                return null;
-        };
-        Controller.prototype.getPageId = function (index) {
-            if (index === void 0) { index = 0; }
-            return this._pageIds[index];
-        };
-        Object.defineProperty(Controller.prototype, "selectedPageId", {
-            get: function () {
-                if (this._selectedIndex == -1)
-                    return null;
-                else
-                    return this._pageIds[this._selectedIndex];
-            },
-            set: function (val) {
-                var i = this._pageIds.indexOf(val);
-                this.selectedIndex = i;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Controller.prototype, "oppositePageId", {
-            set: function (val) {
-                var i = this._pageIds.indexOf(val);
-                if (i > 0)
-                    this.selectedIndex = 0;
-                else if (this._pageIds.length > 1)
-                    this.selectedIndex = 1;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Controller.prototype, "previousPageId", {
-            get: function () {
-                if (this._previousIndex == -1)
-                    return null;
-                else
-                    return this._pageIds[this._previousIndex];
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Controller.prototype.setup = function (xml) {
-            this._name = xml.attributes.name;
-            this._autoRadioGroupDepth = xml.attributes.autoRadioGroupDepth == "true";
-            var i = 0;
-            var k = 0;
-            var str = xml.attributes.pages;
-            if (str) {
-                var arr = str.split(",");
-                var cnt = arr.length;
-                for (i = 0; i < cnt; i += 2) {
-                    this._pageIds.push(arr[i]);
-                    this._pageNames.push(arr[i + 1]);
-                }
-            }
-            str = xml.attributes.transitions;
-            if (str) {
-                this._pageTransitions = new Array();
-                arr = str.split(",");
-                cnt = arr.length;
-                for (i = 0; i < cnt; i++) {
-                    str = arr[i];
-                    if (!str)
-                        continue;
-                    var pt = new PageTransition();
-                    k = str.indexOf("=");
-                    pt.transitionName = str.substr(k + 1);
-                    str = str.substring(0, k);
-                    k = str.indexOf("-");
-                    pt.toIndex = parseInt(str.substring(k + 1));
-                    str = str.substring(0, k);
-                    if (str == "*")
-                        pt.fromIndex = -1;
-                    else
-                        pt.fromIndex = parseInt(str);
-                    this._pageTransitions.push(pt);
-                }
-            }
-            if (this._parent && this._pageIds.length > 0)
-                this._selectedIndex = 0;
-            else
-                this._selectedIndex = -1;
-        };
-        return Controller;
-    }(egret.EventDispatcher));
-    Controller._nextPageId = 0;
-    fairygui.Controller = Controller;
-    var PageTransition = (function () {
-        function PageTransition() {
-            this.fromIndex = 0;
-            this.toIndex = 0;
-        }
-        return PageTransition;
-    }());
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var ToolSet = (function () {
-        function ToolSet() {
-        }
-        ToolSet.getFileName = function (source) {
-            var i = source.lastIndexOf("/");
-            if (i != -1)
-                source = source.substr(i + 1);
-            i = source.lastIndexOf("\\");
-            if (i != -1)
-                source = source.substr(i + 1);
-            i = source.lastIndexOf(".");
-            if (i != -1)
-                return source.substring(0, i);
-            else
-                return source;
-        };
-        ToolSet.startsWith = function (source, str, ignoreCase) {
-            if (ignoreCase === void 0) { ignoreCase = false; }
-            if (!source)
-                return false;
-            else if (source.length < str.length)
-                return false;
-            else {
-                source = source.substring(0, str.length);
-                if (!ignoreCase)
-                    return source == str;
-                else
-                    return source.toLowerCase() == str.toLowerCase();
-            }
-        };
-        ToolSet.endsWith = function (source, str, ignoreCase) {
-            if (ignoreCase === void 0) { ignoreCase = false; }
-            if (!source)
-                return false;
-            else if (source.length < str.length)
-                return false;
-            else {
-                source = source.substring(source.length - str.length);
-                if (!ignoreCase)
-                    return source == str;
-                else
-                    return source.toLowerCase() == str.toLowerCase();
-            }
-        };
-        ToolSet.trim = function (targetString) {
-            return ToolSet.trimLeft(ToolSet.trimRight(targetString));
-        };
-        ToolSet.trimLeft = function (targetString) {
-            var tempChar = "";
-            for (var i = 0; i < targetString.length; i++) {
-                tempChar = targetString.charAt(i);
-                if (tempChar != " " && tempChar != "\n" && tempChar != "\r") {
-                    break;
-                }
-            }
-            return targetString.substr(i);
-        };
-        ToolSet.trimRight = function (targetString) {
-            var tempChar = "";
-            for (var i = targetString.length - 1; i >= 0; i--) {
-                tempChar = targetString.charAt(i);
-                if (tempChar != " " && tempChar != "\n" && tempChar != "\r") {
-                    break;
-                }
-            }
-            return targetString.substring(0, i + 1);
-        };
-        ToolSet.convertToHtmlColor = function (argb, hasAlpha) {
-            if (hasAlpha === void 0) { hasAlpha = false; }
-            var alpha;
-            if (hasAlpha)
-                alpha = (argb >> 24 & 0xFF).toString(16);
-            else
-                alpha = "";
-            var red = (argb >> 16 & 0xFF).toString(16);
-            var green = (argb >> 8 & 0xFF).toString(16);
-            var blue = (argb & 0xFF).toString(16);
-            if (alpha.length == 1)
-                alpha = "0" + alpha;
-            if (red.length == 1)
-                red = "0" + red;
-            if (green.length == 1)
-                green = "0" + green;
-            if (blue.length == 1)
-                blue = "0" + blue;
-            return "#" + alpha + red + green + blue;
-        };
-        ToolSet.convertFromHtmlColor = function (str, hasAlpha) {
-            if (hasAlpha === void 0) { hasAlpha = false; }
-            if (str.length < 1)
-                return 0;
-            if (str.charAt(0) == "#")
-                str = str.substr(1);
-            if (str.length == 8)
-                return (parseInt(str.substr(0, 2), 16) << 24) + parseInt(str.substr(2), 16);
-            else if (hasAlpha)
-                return 0xFF000000 + parseInt(str, 16);
-            else
-                return parseInt(str, 16);
-        };
-        ToolSet.displayObjectToGObject = function (obj) {
-            while (obj != null && !(obj instanceof egret.Stage)) {
-                if (obj["$owner"])
-                    return obj["$owner"];
-                obj = obj.parent;
-            }
-            return null;
-        };
-        ToolSet.findChildNode = function (xml, name) {
-            var col = xml.children;
-            if (col) {
-                var length1 = col.length;
-                for (var i1 = 0; i1 < length1; i1++) {
-                    var cxml = col[i1];
-                    if (cxml.name == name) {
-                        return cxml;
-                    }
-                }
-            }
-            return null;
-        };
-        ToolSet.encodeHTML = function (str) {
-            if (!str)
-                return "";
-            else
-                return str.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("'", "&apos;");
-        };
-        ToolSet.parseUBB = function (text) {
-            return ToolSet.defaultUBBParser.parse(text);
-        };
-        ToolSet.clamp = function (value, min, max) {
-            if (value < min)
-                value = min;
-            else if (value > max)
-                value = max;
-            return value;
-        };
-        ToolSet.clamp01 = function (value) {
-            if (value > 1)
-                value = 1;
-            else if (value < 0)
-                value = 0;
-            return value;
-        };
-        return ToolSet;
-    }());
-    ToolSet.defaultUBBParser = new fairygui.UBBParser();
-    fairygui.ToolSet = ToolSet;
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var ColorMatrix = (function () {
-        function ColorMatrix() {
-            this.matrix = new Array(ColorMatrix.LENGTH);
-            this.reset();
-        }
-        ColorMatrix.create = function (p_brightness, p_contrast, p_saturation, p_hue) {
-            var ret = new ColorMatrix();
-            ret.adjustColor(p_brightness, p_contrast, p_saturation, p_hue);
-            return ret;
-        };
-        // public methods:
-        ColorMatrix.prototype.reset = function () {
-            for (var i = 0; i < ColorMatrix.LENGTH; i++) {
-                this.matrix[i] = ColorMatrix.IDENTITY_MATRIX[i];
-            }
-        };
-        ColorMatrix.prototype.invert = function () {
-            this.multiplyMatrix([-1, 0, 0, 0, 255,
-                0, -1, 0, 0, 255,
-                0, 0, -1, 0, 255,
-                0, 0, 0, 1, 0]);
-        };
-        ColorMatrix.prototype.adjustColor = function (p_brightness, p_contrast, p_saturation, p_hue) {
-            this.adjustHue(p_hue);
-            this.adjustContrast(p_contrast);
-            this.adjustBrightness(p_brightness);
-            this.adjustSaturation(p_saturation);
-        };
-        ColorMatrix.prototype.adjustBrightness = function (p_val) {
-            p_val = this.cleanValue(p_val, 1) * 255;
-            this.multiplyMatrix([
-                1, 0, 0, 0, p_val,
-                0, 1, 0, 0, p_val,
-                0, 0, 1, 0, p_val,
-                0, 0, 0, 1, 0
-            ]);
-        };
-        ColorMatrix.prototype.adjustContrast = function (p_val) {
-            p_val = this.cleanValue(p_val, 1);
-            var s = p_val + 1;
-            var o = 128 * (1 - s);
-            this.multiplyMatrix([
-                s, 0, 0, 0, o,
-                0, s, 0, 0, o,
-                0, 0, s, 0, o,
-                0, 0, 0, 1, 0
-            ]);
-        };
-        ColorMatrix.prototype.adjustSaturation = function (p_val) {
-            p_val = this.cleanValue(p_val, 1);
-            p_val += 1;
-            var invSat = 1 - p_val;
-            var invLumR = invSat * ColorMatrix.LUMA_R;
-            var invLumG = invSat * ColorMatrix.LUMA_G;
-            var invLumB = invSat * ColorMatrix.LUMA_B;
-            this.multiplyMatrix([
-                (invLumR + p_val), invLumG, invLumB, 0, 0,
-                invLumR, (invLumG + p_val), invLumB, 0, 0,
-                invLumR, invLumG, (invLumB + p_val), 0, 0,
-                0, 0, 0, 1, 0
-            ]);
-        };
-        ColorMatrix.prototype.adjustHue = function (p_val) {
-            p_val = this.cleanValue(p_val, 1);
-            p_val *= Math.PI;
-            var cos = Math.cos(p_val);
-            var sin = Math.sin(p_val);
-            this.multiplyMatrix([
-                ((ColorMatrix.LUMA_R + (cos * (1 - ColorMatrix.LUMA_R))) + (sin * -(ColorMatrix.LUMA_R))), ((ColorMatrix.LUMA_G + (cos * -(ColorMatrix.LUMA_G))) + (sin * -(ColorMatrix.LUMA_G))), ((ColorMatrix.LUMA_B + (cos * -(ColorMatrix.LUMA_B))) + (sin * (1 - ColorMatrix.LUMA_B))), 0, 0,
-                ((ColorMatrix.LUMA_R + (cos * -(ColorMatrix.LUMA_R))) + (sin * 0.143)), ((ColorMatrix.LUMA_G + (cos * (1 - ColorMatrix.LUMA_G))) + (sin * 0.14)), ((ColorMatrix.LUMA_B + (cos * -(ColorMatrix.LUMA_B))) + (sin * -0.283)), 0, 0,
-                ((ColorMatrix.LUMA_R + (cos * -(ColorMatrix.LUMA_R))) + (sin * -((1 - ColorMatrix.LUMA_R)))), ((ColorMatrix.LUMA_G + (cos * -(ColorMatrix.LUMA_G))) + (sin * ColorMatrix.LUMA_G)), ((ColorMatrix.LUMA_B + (cos * (1 - ColorMatrix.LUMA_B))) + (sin * ColorMatrix.LUMA_B)), 0, 0,
-                0, 0, 0, 1, 0
-            ]);
-        };
-        ColorMatrix.prototype.concat = function (p_matrix) {
-            if (p_matrix.length != ColorMatrix.LENGTH) {
-                return;
-            }
-            this.multiplyMatrix(p_matrix);
-        };
-        ColorMatrix.prototype.clone = function () {
-            var result = new ColorMatrix();
-            result.copyMatrix(this.matrix);
-            return result;
-        };
-        ColorMatrix.prototype.copyMatrix = function (p_matrix) {
-            var l = ColorMatrix.LENGTH;
-            for (var i = 0; i < l; i++) {
-                this.matrix[i] = p_matrix[i];
-            }
-        };
-        ColorMatrix.prototype.multiplyMatrix = function (p_matrix) {
-            var col = [];
-            var i = 0;
-            for (var y = 0; y < 4; ++y) {
-                for (var x = 0; x < 5; ++x) {
-                    col[i + x] = p_matrix[i] * this.matrix[x] +
-                        p_matrix[i + 1] * this.matrix[x + 5] +
-                        p_matrix[i + 2] * this.matrix[x + 10] +
-                        p_matrix[i + 3] * this.matrix[x + 15] +
-                        (x == 4 ? p_matrix[i + 4] : 0);
-                }
-                i += 5;
-            }
-            this.copyMatrix(col);
-        };
-        ColorMatrix.prototype.cleanValue = function (p_val, p_limit) {
-            return Math.min(p_limit, Math.max(-p_limit, p_val));
-        };
-        return ColorMatrix;
-    }());
-    // identity matrix constant:
-    ColorMatrix.IDENTITY_MATRIX = [
-        1, 0, 0, 0, 0,
-        0, 1, 0, 0, 0,
-        0, 0, 1, 0, 0,
-        0, 0, 0, 1, 0
-    ];
-    ColorMatrix.LENGTH = ColorMatrix.IDENTITY_MATRIX.length;
-    ColorMatrix.LUMA_R = 0.299;
-    ColorMatrix.LUMA_G = 0.587;
-    ColorMatrix.LUMA_B = 0.114;
-    fairygui.ColorMatrix = ColorMatrix;
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var MovieClip = (function (_super) {
-        __extends(MovieClip, _super);
-        function MovieClip() {
-            var _this = _super.call(this) || this;
-            _this.interval = 0;
-            _this.repeatDelay = 0;
-            _this._frameCount = 0;
-            _this._currentFrame = 0;
-            _this._start = 0;
-            _this._end = 0;
-            _this._times = 0;
-            _this._endAt = 0;
-            _this._status = 0; //0-none, 1-next loop, 2-ending, 3-ended
-            _this.$renderNode = new egret.sys.BitmapNode();
-            _this.playState = new fairygui.PlayState();
-            _this._playing = true;
-            _this.touchEnabled = false;
-            _this.setPlaySettings();
-            return _this;
-        }
-        Object.defineProperty(MovieClip.prototype, "frames", {
-            get: function () {
-                return this._frames;
-            },
-            set: function (value) {
-                this._frames = value;
-                if (this._frames != null)
-                    this._frameCount = this._frames.length;
-                else
-                    this._frameCount = 0;
-                if (this._end == -1 || this._end > this._frameCount - 1)
-                    this._end = this._frameCount - 1;
-                if (this._endAt == -1 || this._endAt > this._frameCount - 1)
-                    this._endAt = this._frameCount - 1;
-                if (this._currentFrame < 0 || this._currentFrame > this._frameCount - 1)
-                    this._currentFrame = this._frameCount - 1;
-                if (this._frameCount > 0)
-                    this.setFrame(this._frames[this._currentFrame]);
-                else
-                    this.setFrame(null);
-                this.playState.rewind();
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(MovieClip.prototype, "frameCount", {
-            get: function () {
-                return this._frameCount;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(MovieClip.prototype, "boundsRect", {
-            get: function () {
-                return this._boundsRect;
-            },
-            set: function (value) {
-                this._boundsRect = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(MovieClip.prototype, "currentFrame", {
-            get: function () {
-                return this._currentFrame;
-            },
-            set: function (value) {
-                if (this._currentFrame != value) {
-                    this._currentFrame = value;
-                    this.playState.currentFrame = value;
-                    this.setFrame(this._currentFrame < this._frameCount ? this._frames[this._currentFrame] : null);
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(MovieClip.prototype, "playing", {
-            get: function () {
-                return this._playing;
-            },
-            set: function (value) {
-                this._playing = value;
-                if (value && this.stage != null) {
-                    fairygui.GTimers.inst.add(0, 0, this.update, this);
-                }
-                else {
-                    fairygui.GTimers.inst.remove(this.update, this);
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
-        MovieClip.prototype.setPlaySettings = function (start, end, times, endAt, endCallback, callbackObj) {
-            if (start === void 0) { start = 0; }
-            if (end === void 0) { end = -1; }
-            if (times === void 0) { times = 0; }
-            if (endAt === void 0) { endAt = -1; }
-            if (endCallback === void 0) { endCallback = null; }
-            if (callbackObj === void 0) { callbackObj = null; }
-            this._start = start;
-            this._end = end;
-            if (this._end == -1 || this._end > this._frameCount - 1)
-                this._end = this._frameCount - 1;
-            this._times = times;
-            this._endAt = endAt;
-            if (this._endAt == -1)
-                this._endAt = this._end;
-            this._status = 0;
-            this._callback = endCallback;
-            this._callbackObj = callbackObj;
-            this.currentFrame = start;
-        };
-        MovieClip.prototype.update = function () {
-            if (this._playing && this._frameCount != 0 && this._status != 3) {
-                this.playState.update(this);
-                if (this._currentFrame != this.playState.currentFrame) {
-                    if (this._status == 1) {
-                        this._currentFrame = this._start;
-                        this.playState.currentFrame = this._currentFrame;
-                        this._status = 0;
-                    }
-                    else if (this._status == 2) {
-                        this._currentFrame = this._endAt;
-                        this.playState.currentFrame = this._currentFrame;
-                        this._status = 3;
-                        //play end
-                        if (this._callback != null) {
-                            fairygui.GTimers.inst.callLater(this.__playEnd, this);
-                        }
-                    }
-                    else {
-                        this._currentFrame = this.playState.currentFrame;
-                        if (this._currentFrame == this._end) {
-                            if (this._times > 0) {
-                                this._times--;
-                                if (this._times == 0)
-                                    this._status = 2;
-                                else
-                                    this._status = 1;
-                            }
-                        }
-                    }
-                    //draw
-                    this.setFrame(this._frames[this._currentFrame]);
-                }
-            }
-        };
-        MovieClip.prototype.__playEnd = function () {
-            if (this._callback != null) {
-                var f = this._callback;
-                var fObj = this._callbackObj;
-                this._callback = null;
-                this._callbackObj = null;
-                if (f.length == 1)
-                    f.call(fObj, this);
-                else
-                    f.call(fObj);
-            }
-        };
-        MovieClip.prototype.setFrame = function (frame) {
-            if (frame == null) {
-                this._texture = null;
-            }
-            else {
-                this._texture = frame.texture;
-                this._frameRect = frame.rect;
-            }
-            this.$invalidateContentBounds();
-        };
-        MovieClip.prototype.$render = function () {
-            var texture = this._texture;
-            if (texture) {
-                var offsetX = Math.round(texture._offsetX) + this._frameRect.x;
-                var offsetY = Math.round(texture._offsetY) + this._frameRect.y;
-                var bitmapWidth = texture._bitmapWidth;
-                var bitmapHeight = texture._bitmapHeight;
-                var textureWidth = texture.$getTextureWidth();
-                var textureHeight = texture.$getTextureHeight();
-                var destW = Math.round(texture.$getScaleBitmapWidth());
-                var destH = Math.round(texture.$getScaleBitmapHeight());
-                var sourceWidth = texture._sourceWidth;
-                var sourceHeight = texture._sourceHeight;
-                egret.sys.BitmapNode.$updateTextureData(this.$renderNode, texture._bitmapData, texture._bitmapX, texture._bitmapY, bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight, destW, destH, sourceWidth, sourceHeight, null, egret.BitmapFillMode.SCALE, true);
-            }
-        };
-        MovieClip.prototype.$measureContentBounds = function (bounds) {
-            if (this._texture) {
-                var x = Math.round(this._texture._offsetX) + this._frameRect.x;
-                var y = Math.round(this._texture._offsetY) + this._frameRect.y;
-                var w = this._texture.$getTextureWidth();
-                var h = this._texture.$getTextureHeight();
-                bounds.setTo(x, y, w, h);
-            }
-            else {
-                bounds.setEmpty();
-            }
-        };
-        MovieClip.prototype.$onAddToStage = function (stage, nestLevel) {
-            _super.prototype.$onAddToStage.call(this, stage, nestLevel);
-            if (this._playing)
-                fairygui.GTimers.inst.add(0, 0, this.update, this);
-        };
-        MovieClip.prototype.$onRemoveFromStage = function () {
-            _super.prototype.$onRemoveFromStage.call(this);
-            if (this._playing)
-                fairygui.GTimers.inst.remove(this.update, this);
-        };
-        return MovieClip;
-    }(egret.DisplayObject));
-    fairygui.MovieClip = MovieClip;
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var PlayState = (function () {
-        function PlayState() {
-            this.repeatedCount = 0;
-            this._curFrame = 0;
-            this._lastTime = 0;
-            this._curFrameDelay = 0;
-            this._lastTime = egret.getTimer();
-        }
-        PlayState.prototype.update = function (mc) {
-            var t = egret.getTimer();
-            var elapsed = t - this._lastTime;
-            this._lastTime = t;
-            var cur = this._curFrame;
-            if (cur >= mc.frameCount)
-                cur = mc.frameCount - 1;
-            this.reachEnding = false;
-            this._curFrameDelay += elapsed;
-            var interval = mc.interval + mc.frames[cur].addDelay
-                + ((cur == 0 && this.repeatedCount > 0) ? mc.repeatDelay : 0);
-            if (this._curFrameDelay < interval)
-                return;
-            this._curFrameDelay -= interval;
-            if (this._curFrameDelay > mc.interval)
-                this._curFrameDelay = mc.interval;
-            if (mc.swing) {
-                if (this.reversed) {
-                    this._curFrame--;
-                    if (this._curFrame < 0) {
-                        this._curFrame = Math.min(1, mc.frameCount - 1);
-                        this.repeatedCount++;
-                        this.reversed = !this.reversed;
-                    }
-                }
-                else {
-                    this._curFrame++;
-                    if (this._curFrame > mc.frameCount - 1) {
-                        this._curFrame = Math.max(0, mc.frameCount - 2);
-                        this.repeatedCount++;
-                        this.reachEnding = true;
-                        this.reversed = !this.reversed;
-                    }
-                }
-            }
-            else {
-                this._curFrame++;
-                if (this._curFrame > mc.frameCount - 1) {
-                    this._curFrame = 0;
-                    this.repeatedCount++;
-                    this.reachEnding = true;
-                }
-            }
-        };
-        Object.defineProperty(PlayState.prototype, "currentFrame", {
-            get: function () {
-                return this._curFrame;
-            },
-            set: function (value) {
-                this._curFrame = value;
-                this._curFrameDelay = 0;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        PlayState.prototype.rewind = function () {
-            this._curFrame = 0;
-            this._curFrameDelay = 0;
-            this.reversed = false;
-            this.reachEnding = false;
-        };
-        PlayState.prototype.reset = function () {
-            this._curFrame = 0;
-            this._curFrameDelay = 0;
-            this.repeatedCount = 0;
-            this.reachEnding = false;
-            this.reversed = false;
-        };
-        PlayState.prototype.copy = function (src) {
-            this._curFrame = src._curFrame;
-            this._curFrameDelay = src._curFrameDelay;
-            this.repeatedCount = src.repeatedCount;
-            this.reachEnding = src.reachEnding;
-            this.reversed = src.reversed;
-        };
-        return PlayState;
-    }());
-    fairygui.PlayState = PlayState;
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var GearSize = (function (_super) {
-        __extends(GearSize, _super);
-        function GearSize(owner) {
-            return _super.call(this, owner) || this;
-        }
-        GearSize.prototype.init = function () {
-            this._default = new GearSizeValue(this._owner.width, this._owner.height, this._owner.scaleX, this._owner.scaleY);
-            this._storage = {};
-        };
-        GearSize.prototype.addStatus = function (pageId, value) {
-            if (value == "-")
-                return;
-            var arr = value.split(",");
-            var gv;
-            if (pageId == null)
-                gv = this._default;
-            else {
-                gv = new GearSizeValue();
-                this._storage[pageId] = gv;
-            }
-            gv.width = parseInt(arr[0]);
-            gv.height = parseInt(arr[1]);
-            if (arr.length > 2) {
-                gv.scaleX = parseFloat(arr[2]);
-                gv.scaleY = parseFloat(arr[3]);
-            }
-        };
-        GearSize.prototype.apply = function () {
-            var gv = this._storage[this._controller.selectedPageId];
-            if (!gv)
-                gv = this._default;
-            if (this._tween && !fairygui.UIPackage._constructing && !fairygui.GearBase.disableAllTweenEffect) {
-                if (this.tweener != null) {
-                    if (this._tweenTarget.width != gv.width || this._tweenTarget.height != gv.height
-                        || this._tweenTarget.scaleX != gv.scaleX || this._tweenTarget.scaleY != gv.scaleY) {
-                        this.tweener["tick"] ? this.tweener["tick"](100000000) : this.tweener["$tick"](100000000);
-                        this.tweener = null;
-                    }
-                    else
-                        return;
-                }
-                var a = gv.width != this._owner.width || gv.height != this._owner.height;
-                var b = gv.scaleX != this._owner.scaleX || gv.scaleY != this._owner.scaleY;
-                if (a || b) {
-                    if (this._owner.checkGearController(0, this._controller))
-                        this._displayLockToken = this._owner.addDisplayLock();
-                    this._tweenTarget = gv;
-                    var vars = {
-                        onChange: function () {
-                            this._owner._gearLocked = true;
-                            if (a)
-                                this._owner.setSize(this._tweenValue.width, this._tweenValue.height, this._owner.gearXY.controller == this._controller);
-                            if (b)
-                                this._owner.setScale(this._tweenValue.scaleX, this._tweenValue.scaleY);
-                            this._owner._gearLocked = false;
-                        },
-                        onChangeObj: this
-                    };
-                    if (this._tweenValue == null)
-                        this._tweenValue = new GearSizeValue();
-                    this._tweenValue.width = this._owner.width;
-                    this._tweenValue.height = this._owner.height;
-                    this._tweenValue.scaleX = this._owner.scaleX;
-                    this._tweenValue.scaleY = this._owner.scaleY;
-                    this.tweener = egret.Tween.get(this._tweenValue, vars)
-                        .wait(this._tweenDelay * 1000)
-                        .to({ width: gv.width, height: gv.height, scaleX: gv.scaleX, scaleY: gv.scaleY }, this._tweenTime * 1000, this._easeType)
-                        .call(function () {
-                        if (this._displayLockToken != 0) {
-                            this._owner.releaseDisplayLock(this._displayLockToken);
-                            this._displayLockToken = 0;
-                        }
-                        this._tweener = null;
-                        this._owner.dispatchEventWith(fairygui.GObject.GEAR_STOP, false);
-                    }, this);
-                }
-            }
-            else {
-                this._owner._gearLocked = true;
-                this._owner.setSize(gv.width, gv.height, this._owner.gearXY.controller == this._controller);
-                this._owner.setScale(gv.scaleX, gv.scaleY);
-                this._owner._gearLocked = false;
-            }
-        };
-        GearSize.prototype.updateState = function () {
-            var gv = this._storage[this._controller.selectedPageId];
-            if (!gv) {
-                gv = new GearSizeValue();
-                this._storage[this._controller.selectedPageId] = gv;
-            }
-            gv.width = this._owner.width;
-            gv.height = this._owner.height;
-            gv.scaleX = this._owner.scaleX;
-            gv.scaleY = this._owner.scaleY;
-        };
-        GearSize.prototype.updateFromRelations = function (dx, dy) {
-            if (this._controller == null || this._storage == null)
-                return;
-            for (var key in this._storage) {
-                var gv = this._storage[key];
-                gv.width += dx;
-                gv.height += dy;
-            }
-            this._default.width += dx;
-            this._default.height += dy;
-            this.updateState();
-        };
-        return GearSize;
-    }(fairygui.GearBase));
-    fairygui.GearSize = GearSize;
-    var GearSizeValue = (function () {
-        function GearSizeValue(width, height, scaleX, scaleY) {
-            if (width === void 0) { width = 0; }
-            if (height === void 0) { height = 0; }
-            if (scaleX === void 0) { scaleX = 0; }
-            if (scaleY === void 0) { scaleY = 0; }
-            this.width = width;
-            this.height = height;
-            this.scaleX = scaleX;
-            this.scaleY = scaleY;
-        }
-        return GearSizeValue;
-    }());
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var GearXY = (function (_super) {
-        __extends(GearXY, _super);
-        function GearXY(owner) {
-            return _super.call(this, owner) || this;
-        }
-        GearXY.prototype.init = function () {
-            this._default = new egret.Point(this._owner.x, this._owner.y);
-            this._storage = {};
-        };
-        GearXY.prototype.addStatus = function (pageId, value) {
-            if (value == "-")
-                return;
-            var arr = value.split(",");
-            var pt;
-            if (pageId == null)
-                pt = this._default;
-            else {
-                pt = new egret.Point();
-                this._storage[pageId] = pt;
-            }
-            pt.x = parseInt(arr[0]);
-            pt.y = parseInt(arr[1]);
-        };
-        GearXY.prototype.apply = function () {
-            var pt = this._storage[this._controller.selectedPageId];
-            if (!pt)
-                pt = this._default;
-            if (this._tween && !fairygui.UIPackage._constructing && !fairygui.GearBase.disableAllTweenEffect) {
-                if (this.tweener) {
-                    if (this._tweenTarget.x != pt.x || this._tweenTarget.y != pt.y) {
-                        this.tweener["tick"] ? this.tweener["tick"](100000000) : this.tweener["$tick"](100000000);
-                        this.tweener = null;
-                    }
-                    else
-                        return;
-                }
-                if (this._owner.x != pt.x || this._owner.y != pt.y) {
-                    if (this._owner.checkGearController(0, this._controller))
-                        this._displayLockToken = this._owner.addDisplayLock();
-                    this._tweenTarget = pt;
-                    var vars = {
-                        onChange: function () {
-                            this._owner._gearLocked = true;
-                            this._owner.setXY(this._tweenValue.x, this._tweenValue.y);
-                            this._owner._gearLocked = false;
-                        },
-                        onChangeObj: this
-                    };
-                    if (this._tweenValue == null)
-                        this._tweenValue = new egret.Point();
-                    this._tweenValue.x = this._owner.x;
-                    this._tweenValue.y = this._owner.y;
-                    this.tweener = egret.Tween.get(this._tweenValue, vars)
-                        .wait(this._tweenDelay * 1000)
-                        .to({ x: pt.x, y: pt.y }, this._tweenTime * 1000, this._easeType)
-                        .call(function () {
-                        if (this._displayLockToken != 0) {
-                            this._owner.releaseDisplayLock(this._displayLockToken);
-                            this._displayLockToken = 0;
-                        }
-                        this._tweener = null;
-                        this._owner.dispatchEventWith(fairygui.GObject.GEAR_STOP, false);
-                    }, this);
-                }
-            }
-            else {
-                this._owner._gearLocked = true;
-                this._owner.setXY(pt.x, pt.y);
-                this._owner._gearLocked = false;
-            }
-        };
-        GearXY.prototype.updateState = function () {
-            var pt = this._storage[this._controller.selectedPageId];
-            if (!pt) {
-                pt = new egret.Point();
-                this._storage[this._controller.selectedPageId] = pt;
-            }
-            pt.x = this._owner.x;
-            pt.y = this._owner.y;
-        };
-        GearXY.prototype.updateFromRelations = function (dx, dy) {
-            if (this._controller == null || this._storage == null)
-                return;
-            for (var key in this._storage) {
-                var pt = this._storage[key];
-                pt.x += dx;
-                pt.y += dy;
-            }
-            this._default.x += dx;
-            this._default.y += dy;
-            this.updateState();
-        };
-        return GearXY;
-    }(fairygui.GearBase));
-    fairygui.GearXY = GearXY;
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var GearText = (function (_super) {
-        __extends(GearText, _super);
-        function GearText(owner) {
-            return _super.call(this, owner) || this;
-        }
-        GearText.prototype.init = function () {
-            this._default = this._owner.text;
-            this._storage = {};
-        };
-        GearText.prototype.addStatus = function (pageId, value) {
-            if (pageId == null)
-                this._default = value;
-            else
-                this._storage[pageId] = value;
-        };
-        GearText.prototype.apply = function () {
-            this._owner._gearLocked = true;
-            var data = this._storage[this._controller.selectedPageId];
-            if (data != undefined)
-                this._owner.text = data;
-            else
-                this._owner.text = this._default;
-            this._owner._gearLocked = false;
-        };
-        GearText.prototype.updateState = function () {
-            this._storage[this._controller.selectedPageId] = this._owner.text;
-        };
-        return GearText;
-    }(fairygui.GearBase));
-    fairygui.GearText = GearText;
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var GearIcon = (function (_super) {
-        __extends(GearIcon, _super);
-        function GearIcon(owner) {
-            return _super.call(this, owner) || this;
-        }
-        GearIcon.prototype.init = function () {
-            this._default = this._owner.icon;
-            this._storage = {};
-        };
-        GearIcon.prototype.addStatus = function (pageId, value) {
-            if (pageId == null)
-                this._default = value;
-            else
-                this._storage[pageId] = value;
-        };
-        GearIcon.prototype.apply = function () {
-            this._owner._gearLocked = true;
-            var data = this._storage[this._controller.selectedPageId];
-            if (data != undefined)
-                this._owner.icon = data;
-            else
-                this._owner.icon = this._default;
-            this._owner._gearLocked = false;
-        };
-        GearIcon.prototype.updateState = function () {
-            this._storage[this._controller.selectedPageId] = this._owner.icon;
-        };
-        return GearIcon;
-    }(fairygui.GearBase));
-    fairygui.GearIcon = GearIcon;
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var Transition = (function () {
-        function Transition(owner) {
-            this.autoPlayRepeat = 1;
-            this.autoPlayDelay = 0;
-            this._ownerBaseX = 0;
-            this._ownerBaseY = 0;
-            this._totalTimes = 0;
-            this._totalTasks = 0;
-            this._playing = false;
-            this._options = 0;
-            this._maxTime = 0;
-            this._owner = owner;
-            this._items = new Array();
-        }
-        Object.defineProperty(Transition.prototype, "autoPlay", {
-            get: function () {
-                return this._autoPlay;
-            },
-            set: function (value) {
-                if (this._autoPlay != value) {
-                    this._autoPlay = value;
-                    if (this._autoPlay) {
-                        if (this._owner.onStage)
-                            this.play(null, null, this.autoPlayRepeat, this.autoPlayDelay);
-                    }
-                    else {
-                        if (!this._owner.onStage)
-                            this.stop(false, true);
-                    }
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Transition.prototype.play = function (onComplete, onCompleteObj, onCompleteParam, times, delay) {
-            if (onComplete === void 0) { onComplete = null; }
-            if (onCompleteObj === void 0) { onCompleteObj = null; }
-            if (onCompleteParam === void 0) { onCompleteParam = null; }
-            if (times === void 0) { times = 1; }
-            if (delay === void 0) { delay = 0; }
-            this._play(onComplete, onCompleteObj, onCompleteParam, times, delay, false);
-        };
-        Transition.prototype.playReverse = function (onComplete, onCompleteObj, onCompleteParam, times, delay) {
-            if (onComplete === void 0) { onComplete = null; }
-            if (onCompleteObj === void 0) { onCompleteObj = null; }
-            if (onCompleteParam === void 0) { onCompleteParam = null; }
-            if (times === void 0) { times = 1; }
-            if (delay === void 0) { delay = 0; }
-            this._play(onComplete, onCompleteObj, onCompleteParam, times, delay, true);
-        };
-        Transition.prototype._play = function (onComplete, onCompleteObj, onCompleteParam, times, delay, reversed) {
-            if (onComplete === void 0) { onComplete = null; }
-            if (onCompleteObj === void 0) { onCompleteObj = null; }
-            if (onCompleteParam === void 0) { onCompleteParam = null; }
-            if (times === void 0) { times = 1; }
-            if (delay === void 0) { delay = 0; }
-            if (reversed === void 0) { reversed = false; }
-            this.stop();
-            if (times == 0)
-                times = 1;
-            else if (times == -1)
-                times = Number.MAX_VALUE;
-            this._totalTimes = times;
-            this._reversed = reversed;
-            this.internalPlay(delay);
-            this._playing = this._totalTasks > 0;
-            if (this._playing) {
-                this._onComplete = onComplete;
-                this._onCompleteParam = onCompleteParam;
-                this._onCompleteObj = onCompleteObj;
-                if ((this._options & Transition.OPTION_IGNORE_DISPLAY_CONTROLLER) != 0) {
-                    var cnt = this._items.length;
-                    for (var i = 0; i < cnt; i++) {
-                        var item = this._items[i];
-                        if (item.target != null && item.target != this._owner)
-                            item.displayLockToken = item.target.addDisplayLock();
-                    }
-                }
-            }
-            else if (onComplete != null) {
-                if (onComplete.length > 0)
-                    onComplete.call(this._onCompleteObj, onCompleteParam);
-                else
-                    onComplete(this._onCompleteObj);
-            }
-        };
-        Transition.prototype.stop = function (setToComplete, processCallback) {
-            if (setToComplete === void 0) { setToComplete = true; }
-            if (processCallback === void 0) { processCallback = false; }
-            if (this._playing) {
-                this._playing = false;
-                this._totalTasks = 0;
-                this._totalTimes = 0;
-                var func = this._onComplete;
-                var param = this._onCompleteParam;
-                var thisObj = this._onCompleteObj;
-                this._onComplete = null;
-                this._onCompleteParam = null;
-                this._onCompleteObj = null;
-                var cnt = this._items.length;
-                var i;
-                var item;
-                if (this._reversed) {
-                    for (i = cnt - 1; i >= 0; i--) {
-                        item = this._items[i];
-                        if (item.target == null)
-                            continue;
-                        this.stopItem(item, setToComplete);
-                    }
-                }
-                else {
-                    for (i = 0; i < cnt; i++) {
-                        item = this._items[i];
-                        if (item.target == null)
-                            continue;
-                        this.stopItem(item, setToComplete);
-                    }
-                }
-                if (processCallback && func != null) {
-                    if (func.length > 0)
-                        func.call(thisObj, param);
-                    else
-                        func.call(thisObj);
-                }
-            }
-        };
-        Transition.prototype.stopItem = function (item, setToComplete) {
-            if (item.displayLockToken != 0) {
-                item.target.releaseDisplayLock(item.displayLockToken);
-                item.displayLockToken = 0;
-            }
-            if (item.type == TransitionActionType.ColorFilter && item.filterCreated)
-                item.target.filters = null;
-            if (item.completed)
-                return;
-            if (item.tweener != null) {
-                item.tweener.setPaused(true);
-                item.tweener = null;
-            }
-            if (item.type == TransitionActionType.Transition) {
-                var trans = (item.target).getTransition(item.value.s);
-                if (trans != null)
-                    trans.stop(setToComplete, false);
-            }
-            else if (item.type == TransitionActionType.Shake) {
-                if (fairygui.GTimers.inst.exists(this.__shake, item)) {
-                    fairygui.GTimers.inst.remove(this.__shake, item);
-                    item.target._gearLocked = true;
-                    item.target.setXY(item.target.x - item.startValue.f1, item.target.y - item.startValue.f2);
-                    item.target._gearLocked = false;
-                }
-            }
-            else {
-                if (setToComplete) {
-                    if (item.tween) {
-                        if (!item.yoyo || item.repeat % 2 == 0)
-                            this.applyValue(item, this._reversed ? item.startValue : item.endValue);
-                        else
-                            this.applyValue(item, this._reversed ? item.endValue : item.startValue);
-                    }
-                    else if (item.type != TransitionActionType.Sound)
-                        this.applyValue(item, item.value);
-                }
-            }
-        };
-        Transition.prototype.dispose = function () {
-            if (!this._playing)
-                return;
-            this._playing = false;
-            var cnt = this._items.length;
-            for (var i = 0; i < cnt; i++) {
-                var item = this._items[i];
-                if (item.target == null || item.completed)
-                    continue;
-                if (item.tweener != null) {
-                    item.tweener.setPaused(true);
-                    item.tweener = null;
-                }
-                if (item.type == TransitionActionType.Transition) {
-                    var trans = item.target.getTransition(item.value.s);
-                    if (trans != null)
-                        trans.dispose();
-                }
-                else if (item.type == TransitionActionType.Shake) {
-                    fairygui.GTimers.inst.remove(this.__shake, item);
-                }
-            }
-        };
-        Object.defineProperty(Transition.prototype, "playing", {
-            get: function () {
-                return this._playing;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Transition.prototype.setValue = function (label) {
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
-            var cnt = this._items.length;
-            var value;
-            for (var i = 0; i < cnt; i++) {
-                var item = this._items[i];
-                if (item.label == null && item.label2 == null)
-                    continue;
-                if (item.label == label) {
-                    if (item.tween)
-                        value = item.startValue;
-                    else
-                        value = item.value;
-                }
-                else if (item.label2 == label) {
-                    value = item.endValue;
-                }
-                else
-                    continue;
-                switch (item.type) {
-                    case TransitionActionType.XY:
-                    case TransitionActionType.Size:
-                    case TransitionActionType.Pivot:
-                    case TransitionActionType.Scale:
-                    case TransitionActionType.Skew:
-                        value.b1 = true;
-                        value.b2 = true;
-                        value.f1 = parseFloat(args[0]);
-                        value.f2 = parseFloat(args[1]);
-                        break;
-                    case TransitionActionType.Alpha:
-                        value.f1 = parseFloat(args[0]);
-                        break;
-                    case TransitionActionType.Rotation:
-                        value.i = parseInt(args[0]);
-                        break;
-                    case TransitionActionType.Color:
-                        value.c = parseFloat(args[0]);
-                        break;
-                    case TransitionActionType.Animation:
-                        value.i = parseInt(args[0]);
-                        if (args.length > 1)
-                            value.b = args[1];
-                        break;
-                    case TransitionActionType.Visible:
-                        value.b = args[0];
-                        break;
-                    case TransitionActionType.Sound:
-                        value.s = args[0];
-                        if (args.length > 1)
-                            value.f1 = parseFloat(args[1]);
-                        break;
-                    case TransitionActionType.Transition:
-                        value.s = args[0];
-                        if (args.length > 1)
-                            value.i = parseInt(args[1]);
-                        break;
-                    case TransitionActionType.Shake:
-                        value.f1 = parseFloat(args[0]);
-                        if (args.length > 1)
-                            value.f2 = parseFloat(args[1]);
-                        break;
-                    case TransitionActionType.ColorFilter:
-                        value.f1 = parseFloat(args[0]);
-                        value.f2 = parseFloat(args[1]);
-                        value.f3 = parseFloat(args[2]);
-                        value.f4 = parseFloat(args[3]);
-                        break;
-                }
-            }
-        };
-        Transition.prototype.setHook = function (label, callback, thisObj) {
-            var cnt = this._items.length;
-            for (var i = 0; i < cnt; i++) {
-                var item = this._items[i];
-                if (item.label == label) {
-                    item.hook = callback;
-                    item.hookObj = thisObj;
-                    break;
-                }
-                else if (item.label2 == label) {
-                    item.hook2 = callback;
-                    item.hook2Obj = thisObj;
-                    break;
-                }
-            }
-        };
-        Transition.prototype.clearHooks = function () {
-            var cnt = this._items.length;
-            for (var i = 0; i < cnt; i++) {
-                var item = this._items[i];
-                item.hook = null;
-                item.hookObj = null;
-                item.hook2 = null;
-                item.hook2Obj = null;
-            }
-        };
-        Transition.prototype.setTarget = function (label, newTarget) {
-            var cnt = this._items.length;
-            var value;
-            for (var i = 0; i < cnt; i++) {
-                var item = this._items[i];
-                if (item.label == null && item.label2 == null)
-                    continue;
-                item.targetId = newTarget.id;
-            }
-        };
-        Transition.prototype.setDuration = function (label, value) {
-            var cnt = this._items.length;
-            for (var i = 0; i < cnt; i++) {
-                var item = this._items[i];
-                if (item.tween && item.label == label)
-                    item.duration = value;
-            }
-        };
-        Transition.prototype.updateFromRelations = function (targetId, dx, dy) {
-            var cnt = this._items.length;
-            if (cnt == 0)
-                return;
-            for (var i = 0; i < cnt; i++) {
-                var item = this._items[i];
-                if (item.type == TransitionActionType.XY && item.targetId == targetId) {
-                    if (item.tween) {
-                        item.startValue.f1 += dx;
-                        item.startValue.f2 += dy;
-                        item.endValue.f1 += dx;
-                        item.endValue.f2 += dy;
-                    }
-                    else {
-                        item.value.f1 += dx;
-                        item.value.f2 += dy;
-                    }
-                }
-            }
-        };
-        Transition.prototype.OnOwnerRemovedFromStage = function () {
-            if ((this._options & Transition.OPTION_AUTO_STOP_DISABLED) == 0)
-                this.stop((this._options & Transition.OPTION_AUTO_STOP_AT_END) != 0 ? true : false, false);
-        };
-        Transition.prototype.internalPlay = function (delay) {
-            if (delay === void 0) { delay = 0; }
-            this._ownerBaseX = this._owner.x;
-            this._ownerBaseY = this._owner.y;
-            this._totalTasks = 0;
-            var cnt = this._items.length;
-            var startTime;
-            var item;
-            for (var i = 0; i < cnt; i++) {
-                item = this._items[i];
-                if (item.targetId)
-                    item.target = this._owner.getChildById(item.targetId);
-                else
-                    item.target = this._owner;
-                if (item.target == null)
-                    continue;
-                if (item.tween) {
-                    if (this._reversed)
-                        startTime = delay + this._maxTime - item.time - item.duration;
-                    else
-                        startTime = delay + item.time;
-                    if (startTime > 0 && (item.type == TransitionActionType.XY || item.type == TransitionActionType.Size)) {
-                        this._totalTasks++;
-                        item.completed = false;
-                        item.tweener = egret.Tween.get(item.value).wait(startTime * 1000).call(this.__delayCall, this, [item]);
-                    }
-                    else
-                        this.startTween(item, startTime);
-                }
-                else {
-                    if (this._reversed)
-                        startTime = delay + this._maxTime - item.time;
-                    else
-                        startTime = delay + item.time;
-                    if (startTime == 0)
-                        this.applyValue(item, item.value);
-                    else {
-                        this._totalTasks++;
-                        item.completed = false;
-                        item.tweener = egret.Tween.get(item.value).wait(startTime * 1000).call(this.__delayCall2, this, [item]);
-                    }
-                }
-            }
-        };
-        Transition.prototype.prepareValue = function (item, toProps, reversed) {
-            if (reversed === void 0) { reversed = false; }
-            var startValue;
-            var endValue;
-            if (reversed) {
-                startValue = item.endValue;
-                endValue = item.startValue;
-            }
-            else {
-                startValue = item.startValue;
-                endValue = item.endValue;
-            }
-            switch (item.type) {
-                case TransitionActionType.XY:
-                case TransitionActionType.Size:
-                    if (item.type == TransitionActionType.XY) {
-                        if (item.target == this._owner) {
-                            if (!startValue.b1)
-                                startValue.f1 = 0;
-                            if (!startValue.b2)
-                                startValue.f2 = 0;
-                        }
-                        else {
-                            if (!startValue.b1)
-                                startValue.f1 = item.target.x;
-                            if (!startValue.b2)
-                                startValue.f2 = item.target.y;
-                        }
-                    }
-                    else {
-                        if (!startValue.b1)
-                            startValue.f1 = item.target.width;
-                        if (!startValue.b2)
-                            startValue.f2 = item.target.height;
-                    }
-                    item.value.f1 = startValue.f1;
-                    item.value.f2 = startValue.f2;
-                    if (!endValue.b1)
-                        endValue.f1 = item.value.f1;
-                    if (!endValue.b2)
-                        endValue.f2 = item.value.f2;
-                    item.value.b1 = startValue.b1 || endValue.b1;
-                    item.value.b2 = startValue.b2 || endValue.b2;
-                    toProps.f1 = endValue.f1;
-                    toProps.f2 = endValue.f2;
-                    break;
-                case TransitionActionType.Scale:
-                case TransitionActionType.Skew:
-                    item.value.f1 = startValue.f1;
-                    item.value.f2 = startValue.f2;
-                    toProps.f1 = endValue.f1;
-                    toProps.f2 = endValue.f2;
-                    break;
-                case TransitionActionType.Alpha:
-                    item.value.f1 = startValue.f1;
-                    toProps.f1 = endValue.f1;
-                    break;
-                case TransitionActionType.Rotation:
-                    item.value.i = startValue.i;
-                    toProps.i = endValue.i;
-                    break;
-                case TransitionActionType.ColorFilter:
-                    item.value.f1 = startValue.f1;
-                    item.value.f2 = startValue.f2;
-                    item.value.f3 = startValue.f3;
-                    item.value.f4 = startValue.f4;
-                    toProps.f1 = endValue.f1;
-                    toProps.f2 = endValue.f2;
-                    toProps.f3 = endValue.f3;
-                    toProps.f4 = endValue.f4;
-                    break;
-            }
-        };
-        Transition.prototype.startTween = function (item, delay) {
-            var initProps, toProps;
-            initProps = {};
-            toProps = {};
-            this._totalTasks++;
-            item.completed = false;
-            this.prepareValue(item, toProps, this._reversed);
-            item.tweener = egret.Tween.get(item.value, initProps);
-            if (delay != 0)
-                item.tweener.wait(delay * 1000);
-            else
-                this.applyValue(item, item.value);
-            item.tweener.call(this.__tweenStart, this, [item]);
-            item.tweener.to(toProps, item.duration * 1000, item.easeType);
-            if (item.repeat != 0) {
-                item.tweenTimes = 0;
-                item.tweener.call(this.__tweenRepeatComplete, this, [item]);
-            }
-            else
-                item.tweener.call(this.__tweenComplete, this, [item]);
-        };
-        Transition.prototype.__delayCall = function (item) {
-            item.tweener = null;
-            this._totalTasks--;
-            this.startTween(item, 0);
-        };
-        Transition.prototype.__delayCall2 = function (item) {
-            item.tweener = null;
-            this._totalTasks--;
-            item.completed = true;
-            this.applyValue(item, item.value);
-            if (item.hook != null)
-                item.hook.call(item.hookObj);
-            this.checkAllComplete();
-        };
-        Transition.prototype.__tweenStart = function (item) {
-            if (item.tweener != null) {
-                if (item.hook != null)
-                    item.hook.call(item.hookObj);
-                //因为egret的onChange在wait的时候已经开始调用，因此只能放在这里注册侦听
-                item.tweener.addEventListener("change", this.__tweenUpdate, [this, item]);
-            }
-        };
-        Transition.prototype.__tweenUpdate = function () {
-            var args = this;
-            var trans = args[0];
-            var item = args[1];
-            trans.applyValue(item, item.value);
-        };
-        Transition.prototype.__tweenComplete = function (item) {
-            item.tweener = null;
-            this._totalTasks--;
-            item.completed = true;
-            if (item.hook2 != null)
-                item.hook2.call(item.hook2Obj);
-            this.checkAllComplete();
-        };
-        Transition.prototype.__tweenRepeatComplete = function (item) {
-            item.tweenTimes++;
-            if (item.repeat == -1 || item.tweenTimes < item.repeat + 1) {
-                var initProps, toProps;
-                initProps = {};
-                toProps = {};
-                initProps.onChange = this.__tweenUpdate;
-                initProps.onChangeObj = [this, item];
-                var reversed;
-                if (item.yoyo) {
-                    if (this._reversed)
-                        reversed = item.tweenTimes % 2 == 0;
-                    else
-                        reversed = item.tweenTimes % 2 == 1;
-                }
-                else
-                    reversed = this._reversed;
-                this.prepareValue(item, toProps, reversed);
-                item.tweener = egret.Tween.get(item.value, initProps);
-                item.tweener.to(toProps, item.duration * 1000, item.easeType)
-                    .call(this.__tweenRepeatComplete, this, [item]);
-            }
-            else
-                this.__tweenComplete(item);
-        };
-        Transition.prototype.__playTransComplete = function (item) {
-            this._totalTasks--;
-            item.completed = true;
-            this.checkAllComplete();
-        };
-        Transition.prototype.checkAllComplete = function () {
-            if (this._playing && this._totalTasks == 0) {
-                if (this._totalTimes < 0) {
-                    //不立刻调用的原因是egret.Tween在onComplete之后，还会调用onChange
-                    egret.callLater(this.internalPlay, this, 0);
-                }
-                else {
-                    this._totalTimes--;
-                    if (this._totalTimes > 0)
-                        egret.callLater(this.internalPlay, this, 0);
-                    else {
-                        this._playing = false;
-                        var cnt = this._items.length;
-                        for (var i = 0; i < cnt; i++) {
-                            var item = this._items[i];
-                            if (item.target != null) {
-                                if (item.displayLockToken != 0) {
-                                    item.target.releaseDisplayLock(item.displayLockToken);
-                                    item.displayLockToken = 0;
-                                }
-                                if (item.filterCreated) {
-                                    item.filterCreated = false;
-                                    item.target.filters = null;
-                                }
-                            }
-                        }
-                        if (this._onComplete != null) {
-                            var func = this._onComplete;
-                            var param = this._onCompleteParam;
-                            var thisObj = this._onCompleteObj;
-                            this._onComplete = null;
-                            this._onCompleteParam = null;
-                            this._onCompleteObj = null;
-                            if (func.length > 0)
-                                func.call(thisObj, param);
-                            else
-                                func.call(thisObj);
-                        }
-                    }
-                }
-            }
-        };
-        Transition.prototype.applyValue = function (item, value) {
-            item.target._gearLocked = true;
-            switch (item.type) {
-                case TransitionActionType.XY:
-                    if (item.target == this._owner) {
-                        var f1 = 0, f2 = 0;
-                        if (!value.b1)
-                            f1 = item.target.x;
-                        else
-                            f1 = value.f1 + this._ownerBaseX;
-                        if (!value.b2)
-                            f2 = item.target.y;
-                        else
-                            f2 = value.f2 + this._ownerBaseY;
-                        item.target.setXY(f1, f2);
-                    }
-                    else {
-                        if (!value.b1)
-                            value.f1 = item.target.x;
-                        if (!value.b2)
-                            value.f2 = item.target.y;
-                        item.target.setXY(value.f1, value.f2);
-                    }
-                    break;
-                case TransitionActionType.Size:
-                    if (!value.b1)
-                        value.f1 = item.target.width;
-                    if (!value.b2)
-                        value.f2 = item.target.height;
-                    item.target.setSize(value.f1, value.f2);
-                    break;
-                case TransitionActionType.Pivot:
-                    item.target.setPivot(value.f1, value.f2);
-                    break;
-                case TransitionActionType.Alpha:
-                    item.target.alpha = value.f1;
-                    break;
-                case TransitionActionType.Rotation:
-                    item.target.rotation = value.i;
-                    break;
-                case TransitionActionType.Scale:
-                    item.target.setScale(value.f1, value.f2);
-                    break;
-                case TransitionActionType.Skew:
-                    item.target.setSkew(value.f1, value.f2);
-                    break;
-                case TransitionActionType.Color:
-                    item.target.color = value.c;
-                    break;
-                case TransitionActionType.Animation:
-                    if (!value.b1)
-                        value.i = item.target.frame;
-                    item.target.frame = value.i;
-                    item.target.playing = value.b;
-                    break;
-                case TransitionActionType.Visible:
-                    item.target.visible = value.b;
-                    break;
-                case TransitionActionType.Transition:
-                    var trans = item.target.getTransition(value.s);
-                    if (trans != null) {
-                        if (value.i == 0)
-                            trans.stop(false, true);
-                        else if (trans.playing)
-                            trans._totalTimes = value.i == -1 ? Number.MAX_VALUE : value.i;
-                        else {
-                            item.completed = false;
-                            this._totalTasks++;
-                            if (this._reversed)
-                                trans.playReverse(this.__playTransComplete, this, item, item.value.i);
-                            else
-                                trans.play(this.__playTransComplete, this, item, item.value.i);
-                        }
-                    }
-                    break;
-                case TransitionActionType.Sound:
-                    var pi = fairygui.UIPackage.getItemByURL(value.s);
-                    if (pi) {
-                        var sound = pi.owner.getItemAsset(pi);
-                        if (sound)
-                            fairygui.GRoot.inst.playOneShotSound(sound, value.f1);
-                    }
-                    break;
-                case TransitionActionType.Shake:
-                    item.startValue.f1 = 0; //offsetX
-                    item.startValue.f2 = 0; //offsetY
-                    item.startValue.f3 = item.value.f2; //shakePeriod
-                    item.startValue.i = egret.getTimer(); //startTime
-                    fairygui.GTimers.inst.add(1, 0, this.__shake, item, this);
-                    this._totalTasks++;
-                    item.completed = false;
-                    break;
-                case TransitionActionType.ColorFilter:
-                    var arr = item.target.filters;
-                    var cf;
-                    if (!arr || !(arr[0] instanceof egret.ColorMatrixFilter)) {
-                        cf = new egret.ColorMatrixFilter();
-                        arr = [cf];
-                        item.filterCreated = true;
-                    }
-                    else
-                        cf = arr[0];
-                    var cm = new fairygui.ColorMatrix();
-                    cm.adjustBrightness(value.f1);
-                    cm.adjustContrast(value.f2);
-                    cm.adjustSaturation(value.f3);
-                    cm.adjustHue(value.f4);
-                    cf.matrix = cm.matrix;
-                    item.target.filters = arr;
-            }
-            item.target._gearLocked = false;
-        };
-        Transition.prototype.__shake = function (trans) {
-            var item = this;
-            trans.__shakeItem(item);
-        };
-        Transition.prototype.__shakeItem = function (item) {
-            var r = Math.ceil(item.value.f1 * item.startValue.f3 / item.value.f2);
-            var rx = (Math.random() * 2 - 1) * r;
-            var ry = (Math.random() * 2 - 1) * r;
-            rx = rx > 0 ? Math.ceil(rx) : Math.floor(rx);
-            ry = ry > 0 ? Math.ceil(ry) : Math.floor(ry);
-            item.target._gearLocked = true;
-            item.target.setXY(item.target.x - item.startValue.f1 + rx, item.target.y - item.startValue.f2 + ry);
-            item.target._gearLocked = false;
-            item.startValue.f1 = rx;
-            item.startValue.f2 = ry;
-            var t = egret.getTimer();
-            item.startValue.f3 -= (t - item.startValue.i) / 1000;
-            item.startValue.i = t;
-            if (item.startValue.f3 <= 0) {
-                item.target._gearLocked = true;
-                item.target.setXY(item.target.x - item.startValue.f1, item.target.y - item.startValue.f2);
-                item.target._gearLocked = false;
-                item.completed = true;
-                this._totalTasks--;
-                fairygui.GTimers.inst.remove(this.__shake, item);
-                this.checkAllComplete();
-            }
-        };
-        Transition.prototype.setup = function (xml) {
-            this.name = xml.attributes.name;
-            var str = xml.attributes.options;
-            if (str)
-                this._options = parseInt(str);
-            this._autoPlay = xml.attributes.autoPlay == "true";
-            if (this._autoPlay) {
-                str = xml.attributes.autoPlayRepeat;
-                if (str)
-                    this.autoPlayRepeat = parseInt(str);
-                str = xml.attributes.autoPlayDelay;
-                if (str)
-                    this.autoPlayDelay = parseFloat(str);
-            }
-            var col = xml.children;
-            var length1 = col.length;
-            for (var i1 = 0; i1 < length1; i1++) {
-                var cxml = col[i1];
-                if (cxml.name != "item")
-                    continue;
-                var item = new TransitionItem();
-                this._items.push(item);
-                item.time = parseInt(cxml.attributes.time) / Transition.FRAME_RATE;
-                item.targetId = cxml.attributes.target;
-                str = cxml.attributes.type;
-                switch (str) {
-                    case "XY":
-                        item.type = TransitionActionType.XY;
-                        break;
-                    case "Size":
-                        item.type = TransitionActionType.Size;
-                        break;
-                    case "Scale":
-                        item.type = TransitionActionType.Scale;
-                        break;
-                    case "Pivot":
-                        item.type = TransitionActionType.Pivot;
-                        break;
-                    case "Alpha":
-                        item.type = TransitionActionType.Alpha;
-                        break;
-                    case "Rotation":
-                        item.type = TransitionActionType.Rotation;
-                        break;
-                    case "Color":
-                        item.type = TransitionActionType.Color;
-                        break;
-                    case "Animation":
-                        item.type = TransitionActionType.Animation;
-                        break;
-                    case "Visible":
-                        item.type = TransitionActionType.Visible;
-                        break;
-                    case "Sound":
-                        item.type = TransitionActionType.Sound;
-                        break;
-                    case "Transition":
-                        item.type = TransitionActionType.Transition;
-                        break;
-                    case "Shake":
-                        item.type = TransitionActionType.Shake;
-                        break;
-                    case "ColorFilter":
-                        item.type = TransitionActionType.ColorFilter;
-                        break;
-                    case "Skew":
-                        item.type = TransitionActionType.Skew;
-                        break;
-                    default:
-                        item.type = TransitionActionType.Unknown;
-                        break;
-                }
-                item.tween = cxml.attributes.tween == "true";
-                item.label = cxml.attributes.label;
-                if (item.tween) {
-                    item.duration = parseInt(cxml.attributes.duration) / Transition.FRAME_RATE;
-                    if (item.time + item.duration > this._maxTime)
-                        this._maxTime = item.time + item.duration;
-                    str = cxml.attributes.ease;
-                    if (str)
-                        item.easeType = fairygui.ParseEaseType(str);
-                    str = cxml.attributes.repeat;
-                    if (str)
-                        item.repeat = parseInt(str);
-                    item.yoyo = cxml.attributes.yoyo == "true";
-                    item.label2 = cxml.attributes.label2;
-                    var v = cxml.attributes.endValue;
-                    if (v) {
-                        this.decodeValue(item.type, cxml.attributes.startValue, item.startValue);
-                        this.decodeValue(item.type, v, item.endValue);
-                    }
-                    else {
-                        item.tween = false;
-                        this.decodeValue(item.type, cxml.attributes.startValue, item.value);
-                    }
-                }
-                else {
-                    if (item.time > this._maxTime)
-                        this._maxTime = item.time;
-                    this.decodeValue(item.type, cxml.attributes.value, item.value);
-                }
-            }
-        };
-        Transition.prototype.decodeValue = function (type, str, value) {
-            var arr;
-            switch (type) {
-                case TransitionActionType.XY:
-                case TransitionActionType.Size:
-                case TransitionActionType.Pivot:
-                case TransitionActionType.Skew:
-                    arr = str.split(",");
-                    if (arr[0] == "-") {
-                        value.b1 = false;
-                    }
-                    else {
-                        value.f1 = parseFloat(arr[0]);
-                        value.b1 = true;
-                    }
-                    if (arr[1] == "-") {
-                        value.b2 = false;
-                    }
-                    else {
-                        value.f2 = parseFloat(arr[1]);
-                        value.b2 = true;
-                    }
-                    break;
-                case TransitionActionType.Alpha:
-                    value.f1 = parseFloat(str);
-                    break;
-                case TransitionActionType.Rotation:
-                    value.i = parseInt(str);
-                    break;
-                case TransitionActionType.Scale:
-                    arr = str.split(",");
-                    value.f1 = parseFloat(arr[0]);
-                    value.f2 = parseFloat(arr[1]);
-                    break;
-                case TransitionActionType.Color:
-                    value.c = fairygui.ToolSet.convertFromHtmlColor(str);
-                    break;
-                case TransitionActionType.Animation:
-                    arr = str.split(",");
-                    if (arr[0] == "-") {
-                        value.b1 = false;
-                    }
-                    else {
-                        value.i = parseInt(arr[0]);
-                        value.b1 = true;
-                    }
-                    value.b = arr[1] == "p";
-                    break;
-                case TransitionActionType.Visible:
-                    value.b = str == "true";
-                    break;
-                case TransitionActionType.Sound:
-                    arr = str.split(",");
-                    value.s = arr[0];
-                    if (arr.length > 1) {
-                        var intv = parseInt(arr[1]);
-                        if (intv == 0 || intv == 100)
-                            value.f1 = 1;
-                        else
-                            value.f1 = intv / 100;
-                    }
-                    else
-                        value.f1 = 1;
-                    break;
-                case TransitionActionType.Transition:
-                    arr = str.split(",");
-                    value.s = arr[0];
-                    if (arr.length > 1)
-                        value.i = parseInt(arr[1]);
-                    else
-                        value.i = 1;
-                    break;
-                case TransitionActionType.Shake:
-                    arr = str.split(",");
-                    value.f1 = parseFloat(arr[0]);
-                    value.f2 = parseFloat(arr[1]);
-                    break;
-                case TransitionActionType.ColorFilter:
-                    arr = str.split(",");
-                    value.f1 = parseFloat(arr[0]);
-                    value.f2 = parseFloat(arr[1]);
-                    value.f3 = parseFloat(arr[2]);
-                    value.f4 = parseFloat(arr[3]);
-                    break;
-            }
-        };
-        return Transition;
-    }());
-    Transition.OPTION_IGNORE_DISPLAY_CONTROLLER = 1;
-    Transition.OPTION_AUTO_STOP_DISABLED = 2;
-    Transition.OPTION_AUTO_STOP_AT_END = 4;
-    Transition.FRAME_RATE = 24;
-    fairygui.Transition = Transition;
-    var TransitionActionType = (function () {
-        function TransitionActionType() {
-        }
-        return TransitionActionType;
-    }());
-    TransitionActionType.XY = 0;
-    TransitionActionType.Size = 1;
-    TransitionActionType.Scale = 2;
-    TransitionActionType.Pivot = 3;
-    TransitionActionType.Alpha = 4;
-    TransitionActionType.Rotation = 5;
-    TransitionActionType.Color = 6;
-    TransitionActionType.Animation = 7;
-    TransitionActionType.Visible = 8;
-    TransitionActionType.Sound = 9;
-    TransitionActionType.Transition = 10;
-    TransitionActionType.Shake = 11;
-    TransitionActionType.ColorFilter = 12;
-    TransitionActionType.Skew = 13;
-    TransitionActionType.Unknown = 14;
-    var TransitionItem = (function () {
-        function TransitionItem() {
-            this.time = 0;
-            this.type = 0;
-            this.duration = 0;
-            this.repeat = 0;
-            this.yoyo = false;
-            this.tween = false;
-            this.tweenTimes = 0;
-            this.completed = false;
-            this.displayLockToken = 0;
-            this.easeType = egret.Ease.quadOut;
-            this.value = new TransitionValue();
-            this.startValue = new TransitionValue();
-            this.endValue = new TransitionValue();
-        }
-        return TransitionItem;
-    }());
-    var TransitionValue = (function () {
-        function TransitionValue() {
-            this.f1 = 0;
-            this.f2 = 0;
-            this.f3 = 0;
-            this.f4 = 0;
-            this.i = 0;
-            this.c = 0;
-            this.b = false;
-            this.b1 = true;
-            this.b2 = true;
-        }
-        return TransitionValue;
-    }());
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var UIContainer = (function (_super) {
-        __extends(UIContainer, _super);
-        function UIContainer() {
-            var _this = _super.call(this) || this;
-            _this.touchEnabled = true;
-            _this.touchChildren = true;
-            return _this;
-        }
-        Object.defineProperty(UIContainer.prototype, "hitArea", {
-            get: function () {
-                return this._hitArea;
-            },
-            set: function (value) {
-                if (this._hitArea && value) {
-                    this._hitArea.x = value.x;
-                    this._hitArea.y = value.y;
-                    this._hitArea.width = value.width;
-                    this._hitArea.height = value.height;
-                }
-                else
-                    this._hitArea = (value ? value.clone() : null);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        UIContainer.prototype.$hitTest = function (stageX, stageY) {
-            var ret = _super.prototype.$hitTest.call(this, stageX, stageY);
-            if (ret == this) {
-                if (!this.touchEnabled || this._hitArea == null)
-                    return null;
-            }
-            else if (ret == null && this.touchEnabled && this._hitArea != null) {
-                var m = this.$getInvertedConcatenatedMatrix();
-                var localX = m.a * stageX + m.c * stageY + m.tx;
-                var localY = m.b * stageX + m.d * stageY + m.ty;
-                if (this._hitArea.contains(localX, localY))
-                    ret = this;
-            }
-            return ret;
-        };
-        return UIContainer;
-    }(egret.DisplayObjectContainer));
-    fairygui.UIContainer = UIContainer;
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var DisplayListItem = (function () {
-        function DisplayListItem(packageItem, type) {
-            this.packageItem = packageItem;
-            this.type = type;
-        }
-        return DisplayListItem;
-    }());
-    fairygui.DisplayListItem = DisplayListItem;
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var PackageItem = (function () {
-        function PackageItem() {
-            this.width = 0;
-            this.height = 0;
-            this.tileGridIndice = 0;
-            //movieclip
-            this.interval = 0;
-            this.repeatDelay = 0;
-        }
-        PackageItem.prototype.load = function () {
-            return this.owner.getItemAsset(this);
-        };
-        PackageItem.prototype.toString = function () {
-            return this.name;
-        };
-        return PackageItem;
-    }());
-    fairygui.PackageItem = PackageItem;
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var UISprite = (function (_super) {
-        __extends(UISprite, _super);
-        function UISprite() {
-            var _this = _super.call(this) || this;
-            _this.touchEnabled = true;
-            _this.touchChildren = true;
-            return _this;
-        }
-        Object.defineProperty(UISprite.prototype, "hitArea", {
-            get: function () {
-                return this._hitArea;
-            },
-            set: function (value) {
-                if (this._hitArea && value) {
-                    this._hitArea.x = value.x;
-                    this._hitArea.y = value.y;
-                    this._hitArea.width = value.width;
-                    this._hitArea.height = value.height;
-                }
-                else
-                    this._hitArea = (value ? value.clone() : null);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        UISprite.prototype.$hitTest = function (stageX, stageY) {
-            var ret = _super.prototype.$hitTest.call(this, stageX, stageY);
-            if (ret == this) {
-                if (!this.touchEnabled || this._hitArea == null)
-                    return null;
-            }
-            else if (ret == null && this.touchEnabled && this._hitArea != null) {
-                var m = this.$getInvertedConcatenatedMatrix();
-                var localX = m.a * stageX + m.c * stageY + m.tx;
-                var localY = m.b * stageX + m.d * stageY + m.ty;
-                if (this._hitArea.contains(localX, localY))
-                    ret = this;
-            }
-            return ret;
-        };
-        return UISprite;
-    }(egret.Sprite));
-    fairygui.UISprite = UISprite;
-})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GButton = (function (_super) {
@@ -6371,7 +5758,17 @@ var fairygui;
     GButton.DISABLED = "disabled";
     GButton.SELECTED_DISABLED = "selectedDisabled";
     fairygui.GButton = GButton;
+    __reflect(GButton.prototype, "fairygui.GButton");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GComboBox = (function (_super) {
@@ -6715,7 +6112,17 @@ var fairygui;
         return GComboBox;
     }(fairygui.GComponent));
     fairygui.GComboBox = GComboBox;
+    __reflect(GComboBox.prototype, "fairygui.GComboBox");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GearAnimation = (function (_super) {
@@ -6762,6 +6169,7 @@ var fairygui;
         return GearAnimation;
     }(fairygui.GearBase));
     fairygui.GearAnimation = GearAnimation;
+    __reflect(GearAnimation.prototype, "fairygui.GearAnimation");
     var GearAnimationValue = (function () {
         function GearAnimationValue(playing, frame) {
             if (playing === void 0) { playing = true; }
@@ -6771,7 +6179,17 @@ var fairygui;
         }
         return GearAnimationValue;
     }());
+    __reflect(GearAnimationValue.prototype, "GearAnimationValue");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GearColor = (function (_super) {
@@ -6830,6 +6248,7 @@ var fairygui;
         return GearColor;
     }(fairygui.GearBase));
     fairygui.GearColor = GearColor;
+    __reflect(GearColor.prototype, "fairygui.GearColor");
     var GearColorValue = (function () {
         function GearColorValue(color, strokeColor) {
             if (color === void 0) { color = 0; }
@@ -6839,7 +6258,17 @@ var fairygui;
         }
         return GearColorValue;
     }());
+    __reflect(GearColorValue.prototype, "GearColorValue");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GearDisplay = (function (_super) {
@@ -6881,18 +6310,137 @@ var fairygui;
         return GearDisplay;
     }(fairygui.GearBase));
     fairygui.GearDisplay = GearDisplay;
+    __reflect(GearDisplay.prototype, "fairygui.GearDisplay");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
-    var Frame = (function () {
-        function Frame() {
-            this.addDelay = 0;
-            this.rect = new egret.Rectangle();
+    var GearLook = (function (_super) {
+        __extends(GearLook, _super);
+        function GearLook(owner) {
+            return _super.call(this, owner) || this;
         }
-        return Frame;
+        GearLook.prototype.init = function () {
+            this._default = new GearLookValue(this._owner.alpha, this._owner.rotation, this._owner.grayed);
+            this._storage = {};
+        };
+        GearLook.prototype.addStatus = function (pageId, value) {
+            if (value == "-")
+                return;
+            var arr = value.split(",");
+            var gv;
+            if (pageId == null)
+                gv = this._default;
+            else {
+                gv = new GearLookValue();
+                this._storage[pageId] = gv;
+            }
+            gv.alpha = parseFloat(arr[0]);
+            gv.rotation = parseInt(arr[1]);
+            gv.grayed = arr[2] == "1" ? true : false;
+        };
+        GearLook.prototype.apply = function () {
+            var gv = this._storage[this._controller.selectedPageId];
+            if (!gv)
+                gv = this._default;
+            if (this._tween && !fairygui.UIPackage._constructing && !fairygui.GearBase.disableAllTweenEffect) {
+                this._owner._gearLocked = true;
+                this._owner.grayed = gv.grayed;
+                this._owner._gearLocked = false;
+                if (this.tweener != null) {
+                    if (this._tweenTarget.alpha != gv.alpha || this._tweenTarget.rotation != gv.rotation) {
+                        this.tweener["tick"] ? this.tweener["tick"](100000000) : this.tweener["$tick"](100000000);
+                        this.tweener = null;
+                    }
+                    else
+                        return;
+                }
+                var a = gv.alpha != this._owner.alpha;
+                var b = gv.rotation != this._owner.rotation;
+                if (a || b) {
+                    if (this._owner.checkGearController(0, this._controller))
+                        this._displayLockToken = this._owner.addDisplayLock();
+                    this._tweenTarget = gv;
+                    var vars = {
+                        onChange: function () {
+                            this._owner._gearLocked = true;
+                            if (a)
+                                this._owner.alpha = this._tweenValue.x;
+                            if (b)
+                                this._owner.rotation = this._tweenValue.y;
+                            this._owner._gearLocked = false;
+                        },
+                        onChangeObj: this
+                    };
+                    if (this._tweenValue == null)
+                        this._tweenValue = new egret.Point();
+                    this._tweenValue.x = this._owner.alpha;
+                    this._tweenValue.y = this._owner.rotation;
+                    this.tweener = egret.Tween.get(this._tweenValue, vars)
+                        .wait(this._tweenDelay * 1000)
+                        .to({ x: gv.alpha, y: gv.rotation }, this._tweenTime * 1000, this._easeType)
+                        .call(function () {
+                        if (this._displayLockToken != 0) {
+                            this._owner.releaseDisplayLock(this._displayLockToken);
+                            this._displayLockToken = 0;
+                        }
+                        this._tweener = null;
+                        this._owner.dispatchEventWith(fairygui.GObject.GEAR_STOP, false);
+                    }, this);
+                }
+            }
+            else {
+                this._owner._gearLocked = true;
+                this._owner.grayed = gv.grayed;
+                this._owner.alpha = gv.alpha;
+                this._owner.rotation = gv.rotation;
+                this._owner._gearLocked = false;
+            }
+        };
+        GearLook.prototype.updateState = function () {
+            var gv = this._storage[this._controller.selectedPageId];
+            if (!gv) {
+                gv = new GearLookValue();
+                this._storage[this._controller.selectedPageId] = gv;
+            }
+            gv.alpha = this._owner.alpha;
+            gv.rotation = this._owner.rotation;
+            gv.grayed = this._owner.grayed;
+        };
+        return GearLook;
+    }(fairygui.GearBase));
+    fairygui.GearLook = GearLook;
+    __reflect(GearLook.prototype, "fairygui.GearLook");
+    var GearLookValue = (function () {
+        function GearLookValue(alpha, rotation, grayed) {
+            if (alpha === void 0) { alpha = 0; }
+            if (rotation === void 0) { rotation = 0; }
+            if (grayed === void 0) { grayed = false; }
+            this.alpha = alpha;
+            this.rotation = rotation;
+            this.grayed = grayed;
+        }
+        return GearLookValue;
     }());
-    fairygui.Frame = Frame;
+    __reflect(GearLookValue.prototype, "GearLookValue");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GGraph = (function (_super) {
@@ -7098,7 +6646,17 @@ var fairygui;
         return GGraph;
     }(fairygui.GObject));
     fairygui.GGraph = GGraph;
+    __reflect(GGraph.prototype, "fairygui.GGraph");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GGroup = (function (_super) {
@@ -7174,7 +6732,17 @@ var fairygui;
         return GGroup;
     }(fairygui.GObject));
     fairygui.GGroup = GGroup;
+    __reflect(GGroup.prototype, "fairygui.GGroup");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GImage = (function (_super) {
@@ -7295,7 +6863,17 @@ var fairygui;
         return GImage;
     }(fairygui.GObject));
     fairygui.GImage = GImage;
+    __reflect(GImage.prototype, "fairygui.GImage");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GLabel = (function (_super) {
@@ -7426,7 +7004,17 @@ var fairygui;
         return GLabel;
     }(fairygui.GComponent));
     fairygui.GLabel = GLabel;
+    __reflect(GLabel.prototype, "fairygui.GLabel");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GList = (function (_super) {
@@ -9130,6 +8718,7 @@ var fairygui;
     GList.itemInfoVer = 0; //用来标志item是否在本次处理中已经被重用了
     GList.enterCounter = 0; //因为HandleScroll是会重入的，这个用来避免极端情况下的死锁
     fairygui.GList = GList;
+    __reflect(GList.prototype, "fairygui.GList");
     var ItemInfo = (function () {
         function ItemInfo() {
             this.width = 0;
@@ -9137,18 +8726,76 @@ var fairygui;
         }
         return ItemInfo;
     }());
+    __reflect(ItemInfo.prototype, "ItemInfo");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
-    var BitmapFont = (function () {
-        function BitmapFont() {
-            this.size = 0;
-            this.glyphs = {};
+    var GObjectPool = (function () {
+        function GObjectPool() {
+            this._count = 0;
+            this._pool = {};
         }
-        return BitmapFont;
+        GObjectPool.prototype.clear = function () {
+            var length1 = this._pool.length;
+            for (var i1 = 0; i1 < length1; i1++) {
+                var arr = this._pool[i1];
+                var cnt = arr.length;
+                for (var i = 0; i < cnt; i++)
+                    arr[i].dispose();
+            }
+            this._pool = {};
+            this._count = 0;
+        };
+        Object.defineProperty(GObjectPool.prototype, "count", {
+            get: function () {
+                return this._count;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GObjectPool.prototype.getObject = function (url) {
+            var arr = this._pool[url];
+            if (arr == null) {
+                arr = new Array();
+                this._pool[url] = arr;
+            }
+            if (arr.length) {
+                this._count--;
+                return arr.shift();
+            }
+            var child = fairygui.UIPackage.createObjectFromURL(url);
+            return child;
+        };
+        GObjectPool.prototype.returnObject = function (obj) {
+            var url = obj.resourceURL;
+            if (!url)
+                return;
+            var arr = this._pool[url];
+            if (arr == null) {
+                arr = new Array();
+                this._pool[url] = arr;
+            }
+            this._count++;
+            arr.push(obj);
+        };
+        return GObjectPool;
     }());
-    fairygui.BitmapFont = BitmapFont;
+    fairygui.GObjectPool = GObjectPool;
+    __reflect(GObjectPool.prototype, "fairygui.GObjectPool");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GLoader = (function (_super) {
@@ -9566,7 +9213,17 @@ var fairygui;
     }(fairygui.GObject));
     GLoader._errorSignPool = new fairygui.GObjectPool();
     fairygui.GLoader = GLoader;
+    __reflect(GLoader.prototype, "fairygui.GLoader");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GMovieClip = (function (_super) {
@@ -9655,7 +9312,17 @@ var fairygui;
         return GMovieClip;
     }(fairygui.GObject));
     fairygui.GMovieClip = GMovieClip;
+    __reflect(GMovieClip.prototype, "fairygui.GMovieClip");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GProgressBar = (function (_super) {
@@ -9824,25 +9491,722 @@ var fairygui;
     }(fairygui.GComponent));
     GProgressBar.easeLinear = egret.Ease.getPowIn(1);
     fairygui.GProgressBar = GProgressBar;
+    __reflect(GProgressBar.prototype, "fairygui.GProgressBar");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
-    var BMGlyph = (function () {
-        function BMGlyph() {
-            this.x = 0;
-            this.y = 0;
-            this.offsetX = 0;
-            this.offsetY = 0;
+    var GTextField = (function (_super) {
+        __extends(GTextField, _super);
+        function GTextField() {
+            var _this = _super.call(this) || this;
+            _this._fontSize = 0;
+            _this._leading = 0;
+            _this._letterSpacing = 0;
+            _this._textWidth = 0;
+            _this._textHeight = 0;
+            _this._fontSize = 12;
+            _this._align = fairygui.AlignType.Left;
+            _this._verticalAlign = fairygui.VertAlignType.Top;
+            _this._text = "";
+            _this._leading = 3;
+            _this._color = 0;
+            _this._autoSize = fairygui.AutoSizeType.Both;
+            _this._widthAutoSize = true;
+            _this._heightAutoSize = true;
+            _this._bitmapPool = new Array();
+            return _this;
+        }
+        GTextField.prototype.createDisplayObject = function () {
+            this._textField = new egret.TextField();
+            this._textField["$owner"] = this;
+            this._textField.touchEnabled = false;
+            this.setDisplayObject(this._textField);
+        };
+        GTextField.prototype.switchBitmapMode = function (val) {
+            if (val && this.displayObject == this._textField) {
+                if (this._bitmapContainer == null) {
+                    this._bitmapContainer = new egret.Sprite();
+                    this._bitmapContainer["$owner"] = this;
+                }
+                this.switchDisplayObject(this._bitmapContainer);
+            }
+            else if (!val && this.displayObject == this._bitmapContainer)
+                this.switchDisplayObject(this._textField);
+        };
+        GTextField.prototype.dispose = function () {
+            _super.prototype.dispose.call(this);
+            this._bitmapFont = null;
+        };
+        Object.defineProperty(GTextField.prototype, "text", {
+            get: function () {
+                return this._text;
+            },
+            set: function (value) {
+                this._text = value;
+                if (this._text == null)
+                    this._text = "";
+                this.updateGear(6);
+                if (this.parent && this.parent._underConstruct)
+                    this.renderNow();
+                else
+                    this.render();
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GTextField.prototype.updateTextFieldText = function () {
+            if (this._ubbEnabled)
+                this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(fairygui.ToolSet.encodeHTML(this._text)));
+            else
+                this._textField.text = this._text;
+        };
+        Object.defineProperty(GTextField.prototype, "font", {
+            get: function () {
+                return this._font;
+            },
+            set: function (value) {
+                if (this._font != value) {
+                    this._font = value;
+                    this.updateTextFormat();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "fontSize", {
+            get: function () {
+                return this._fontSize;
+            },
+            set: function (value) {
+                if (value < 0)
+                    return;
+                if (this._fontSize != value) {
+                    this._fontSize = value;
+                    this.updateTextFormat();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "color", {
+            get: function () {
+                return this._color;
+            },
+            set: function (value) {
+                if (this._color != value) {
+                    this._color = value;
+                    this.updateGear(4);
+                    this.updateTextFormat();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "align", {
+            get: function () {
+                return this._align;
+            },
+            set: function (value) {
+                if (this._align != value) {
+                    this._align = value;
+                    this.updateTextFormat();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "verticalAlign", {
+            get: function () {
+                return this._verticalAlign;
+            },
+            set: function (value) {
+                if (this._verticalAlign != value) {
+                    this._verticalAlign = value;
+                    this.doAlign();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "leading", {
+            get: function () {
+                return this._leading;
+            },
+            set: function (value) {
+                if (this._leading != value) {
+                    this._leading = value;
+                    this.updateTextFormat();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "letterSpacing", {
+            get: function () {
+                return this._letterSpacing;
+            },
+            set: function (value) {
+                if (this._letterSpacing != value) {
+                    this._letterSpacing = value;
+                    this.updateTextFormat();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "underline", {
+            get: function () {
+                //return this._underline;
+                return false;
+            },
+            set: function (value) {
+                //not support yet
+                //this._textField.underline = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "bold", {
+            get: function () {
+                return this._textField.bold;
+            },
+            set: function (value) {
+                this._textField.bold = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "italic", {
+            get: function () {
+                return this._textField.italic;
+            },
+            set: function (value) {
+                this._textField.italic = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "singleLine", {
+            get: function () {
+                return !this._textField.multiline;
+            },
+            set: function (value) {
+                value = !value;
+                if (this._textField.multiline != value) {
+                    this._textField.multiline = value;
+                    this.render();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "stroke", {
+            get: function () {
+                return this._textField.stroke;
+            },
+            set: function (value) {
+                this._textField.stroke = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "strokeColor", {
+            get: function () {
+                return this._textField.strokeColor;
+            },
+            set: function (value) {
+                this._textField.strokeColor = value;
+                this.updateGear(4);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "ubbEnabled", {
+            get: function () {
+                return this._ubbEnabled;
+            },
+            set: function (value) {
+                if (this._ubbEnabled != value) {
+                    this._ubbEnabled = value;
+                    this.render();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "autoSize", {
+            get: function () {
+                return this._autoSize;
+            },
+            set: function (value) {
+                if (this._autoSize != value) {
+                    this._autoSize = value;
+                    this._widthAutoSize = value == fairygui.AutoSizeType.Both;
+                    this._heightAutoSize = value == fairygui.AutoSizeType.Both || value == fairygui.AutoSizeType.Height;
+                    this.render();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "textWidth", {
+            get: function () {
+                if (this._requireRender)
+                    this.renderNow();
+                return this._textWidth;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GTextField.prototype.ensureSizeCorrect = function () {
+            if (this._sizeDirty && this._requireRender)
+                this.renderNow();
+        };
+        GTextField.prototype.updateTextFormat = function () {
+            this._textField.size = this._fontSize;
+            if (fairygui.ToolSet.startsWith(this._font, "ui://"))
+                this._bitmapFont = fairygui.UIPackage.getBitmapFontByURL(this._font);
+            else {
+                this._bitmapFont = null;
+                if (this._font)
+                    this._textField.fontFamily = this._font;
+                else
+                    this._textField.fontFamily = fairygui.UIConfig.defaultFont;
+            }
+            if (this.grayed)
+                this._textField.textColor = 0xAAAAAA;
+            else
+                this._textField.textColor = this._color;
+            this._textField.textAlign = fairygui.getAlignTypeString(this._align);
+            this._textField.lineSpacing = this._leading;
+            //this._textField.letterSpacing = this._letterSpacing;
+            if (!this._underConstruct)
+                this.render();
+        };
+        GTextField.prototype.render = function () {
+            if (!this._requireRender) {
+                this._requireRender = true;
+                egret.callLater(this.__render, this);
+            }
+            if (!this._sizeDirty && (this._widthAutoSize || this._heightAutoSize)) {
+                this._sizeDirty = true;
+                this.dispatchEventWith(fairygui.GObject.SIZE_DELAY_CHANGE);
+            }
+        };
+        GTextField.prototype.__render = function () {
+            if (this._requireRender)
+                this.renderNow();
+        };
+        GTextField.prototype.renderNow = function (updateBounds) {
+            if (updateBounds === void 0) { updateBounds = true; }
+            this._requireRender = false;
+            this._sizeDirty = false;
+            if (this._bitmapFont != null) {
+                this.renderWithBitmapFont(updateBounds);
+                return;
+            }
+            this.switchBitmapMode(false);
+            this._textField.width = this._widthAutoSize ? 10000 : Math.ceil(this.width);
+            this.updateTextFieldText();
+            this._textWidth = Math.ceil(this._textField.textWidth);
+            if (this._textWidth > 0)
+                this._textWidth += 4;
+            this._textHeight = Math.ceil(this._textField.textHeight);
+            if (this._textHeight > 0)
+                this._textHeight += 4;
+            var w, h = 0;
+            if (this._widthAutoSize) {
+                w = this._textWidth;
+                this._textField.width = w;
+            }
+            else
+                w = this.width;
+            if (this._heightAutoSize) {
+                h = this._textHeight;
+                if (!this._widthAutoSize)
+                    this._textField.height = this._textHeight;
+            }
+            else {
+                h = this.height;
+                if (this._textHeight > h)
+                    this._textHeight = h;
+                this._textField.height = this._textHeight;
+            }
+            if (updateBounds) {
+                this._updatingSize = true;
+                this.setSize(w, h);
+                this._updatingSize = false;
+                this.doAlign();
+            }
+        };
+        GTextField.prototype.renderWithBitmapFont = function (updateBounds) {
+            this.switchBitmapMode(true);
+            var cnt = this._bitmapContainer.numChildren;
+            for (var i = 0; i < cnt; i++) {
+                var obj = this._bitmapContainer.getChildAt(i);
+                this._bitmapPool.push(obj);
+            }
+            this._bitmapContainer.removeChildren();
+            if (!this._lines)
+                this._lines = new Array();
+            else
+                LineInfo.returnList(this._lines);
+            var letterSpacing = this._letterSpacing;
+            var lineSpacing = this._leading - 1;
+            var rectWidth = this.width - GTextField.GUTTER_X * 2;
+            var lineWidth = 0, lineHeight = 0, lineTextHeight = 0;
+            var glyphWidth = 0, glyphHeight = 0;
+            var wordChars = 0, wordStart = 0, wordEnd = 0;
+            var lastLineHeight = 0;
+            var lineBuffer = "";
+            var lineY = GTextField.GUTTER_Y;
+            var line;
+            var wordWrap = !this._widthAutoSize && this._textField.multiline;
+            var fontScale = this._bitmapFont.resizable ? this._fontSize / this._bitmapFont.size : 1;
+            this._textWidth = 0;
+            this._textHeight = 0;
+            var textLength = this._text.length;
+            for (var offset = 0; offset < textLength; ++offset) {
+                var ch = this._text.charAt(offset);
+                var cc = ch.charCodeAt(offset);
+                if (ch == "\n") {
+                    lineBuffer += ch;
+                    line = LineInfo.borrow();
+                    line.width = lineWidth;
+                    if (lineTextHeight == 0) {
+                        if (lastLineHeight == 0)
+                            lastLineHeight = Math.ceil(this._fontSize * fontScale);
+                        if (lineHeight == 0)
+                            lineHeight = lastLineHeight;
+                        lineTextHeight = lineHeight;
+                    }
+                    line.height = lineHeight;
+                    lastLineHeight = lineHeight;
+                    line.textHeight = lineTextHeight;
+                    line.text = lineBuffer;
+                    line.y = lineY;
+                    lineY += (line.height + lineSpacing);
+                    if (line.width > this._textWidth)
+                        this._textWidth = line.width;
+                    this._lines.push(line);
+                    lineBuffer = "";
+                    lineWidth = 0;
+                    lineHeight = 0;
+                    lineTextHeight = 0;
+                    wordChars = 0;
+                    wordStart = 0;
+                    wordEnd = 0;
+                    continue;
+                }
+                if (cc > 256 || cc <= 32) {
+                    if (wordChars > 0)
+                        wordEnd = lineWidth;
+                    wordChars = 0;
+                }
+                else {
+                    if (wordChars == 0)
+                        wordStart = lineWidth;
+                    wordChars++;
+                }
+                if (ch == " ") {
+                    glyphWidth = Math.ceil(this._fontSize / 2);
+                    glyphHeight = Math.ceil(this._fontSize);
+                }
+                else {
+                    var glyph = this._bitmapFont.glyphs[ch];
+                    if (glyph) {
+                        glyphWidth = Math.ceil(glyph.advance * fontScale);
+                        glyphHeight = Math.ceil(glyph.lineHeight * fontScale);
+                    }
+                    else if (ch == " ") {
+                        glyphWidth = Math.ceil(this._bitmapFont.size * fontScale / 2);
+                        glyphHeight = Math.ceil(this._bitmapFont.size * fontScale);
+                    }
+                    else {
+                        glyphWidth = 0;
+                        glyphHeight = 0;
+                    }
+                }
+                if (glyphHeight > lineTextHeight)
+                    lineTextHeight = glyphHeight;
+                if (glyphHeight > lineHeight)
+                    lineHeight = glyphHeight;
+                if (lineWidth != 0)
+                    lineWidth += letterSpacing;
+                lineWidth += glyphWidth;
+                if (!wordWrap || lineWidth <= rectWidth) {
+                    lineBuffer += ch;
+                }
+                else {
+                    line = LineInfo.borrow();
+                    line.height = lineHeight;
+                    line.textHeight = lineTextHeight;
+                    if (lineBuffer.length == 0) {
+                        line.text = ch;
+                    }
+                    else if (wordChars > 0 && wordEnd > 0) {
+                        lineBuffer += ch;
+                        var len = lineBuffer.length - wordChars;
+                        line.text = fairygui.ToolSet.trimRight(lineBuffer.substr(0, len));
+                        line.width = wordEnd;
+                        lineBuffer = lineBuffer.substr(len + 1);
+                        lineWidth -= wordStart;
+                    }
+                    else {
+                        line.text = lineBuffer;
+                        line.width = lineWidth - (glyphWidth + letterSpacing);
+                        lineBuffer = ch;
+                        lineWidth = glyphWidth;
+                        lineHeight = glyphHeight;
+                        lineTextHeight = glyphHeight;
+                    }
+                    line.y = lineY;
+                    lineY += (line.height + lineSpacing);
+                    if (line.width > this._textWidth)
+                        this._textWidth = line.width;
+                    wordChars = 0;
+                    wordStart = 0;
+                    wordEnd = 0;
+                    this._lines.push(line);
+                }
+            }
+            if (lineBuffer.length > 0
+                || this._lines.length > 0 && fairygui.ToolSet.endsWith(this._lines[this._lines.length - 1].text, "\n")) {
+                line = LineInfo.borrow();
+                line.width = lineWidth;
+                if (lineHeight == 0)
+                    lineHeight = lastLineHeight;
+                if (lineTextHeight == 0)
+                    lineTextHeight = lineHeight;
+                line.height = lineHeight;
+                line.textHeight = lineTextHeight;
+                line.text = lineBuffer;
+                line.y = lineY;
+                if (line.width > this._textWidth)
+                    this._textWidth = line.width;
+                this._lines.push(line);
+            }
+            if (this._textWidth > 0)
+                this._textWidth += GTextField.GUTTER_X * 2;
+            var count = this._lines.length;
+            if (count == 0) {
+                this._textHeight = 0;
+            }
+            else {
+                line = this._lines[this._lines.length - 1];
+                this._textHeight = line.y + line.height + GTextField.GUTTER_Y;
+            }
+            var w, h = 0;
+            if (this._widthAutoSize) {
+                if (this._textWidth == 0)
+                    w = 0;
+                else
+                    w = this._textWidth;
+            }
+            else
+                w = this.width;
+            if (this._heightAutoSize) {
+                if (this._textHeight == 0)
+                    h = 0;
+                else
+                    h = this._textHeight;
+            }
+            else
+                h = this.height;
+            if (updateBounds) {
+                this._updatingSize = true;
+                this.setSize(w, h);
+                this._updatingSize = false;
+                this.doAlign();
+            }
+            if (w == 0 || h == 0)
+                return;
+            var charX = GTextField.GUTTER_X;
+            var lineIndent = 0;
+            var charIndent = 0;
+            rectWidth = this.width - GTextField.GUTTER_X * 2;
+            var lineCount = this._lines.length;
+            for (var i = 0; i < lineCount; i++) {
+                line = this._lines[i];
+                charX = GTextField.GUTTER_X;
+                if (this._align == fairygui.AlignType.Center)
+                    lineIndent = (rectWidth - line.width) / 2;
+                else if (this._align == fairygui.AlignType.Right)
+                    lineIndent = rectWidth - line.width;
+                else
+                    lineIndent = 0;
+                textLength = line.text.length;
+                for (var j = 0; j < textLength; j++) {
+                    ch = line.text.charAt(j);
+                    glyph = this._bitmapFont.glyphs[ch];
+                    if (glyph != null) {
+                        charIndent = (line.height + line.textHeight) / 2 - Math.ceil(glyph.lineHeight * fontScale);
+                        var bm;
+                        if (this._bitmapPool.length)
+                            bm = this._bitmapPool.pop();
+                        else {
+                            bm = new egret.Bitmap();
+                            bm.smoothing = true;
+                        }
+                        bm.x = charX + lineIndent + Math.ceil(glyph.offsetX * fontScale);
+                        bm.y = line.y + charIndent + Math.ceil(glyph.offsetY * fontScale);
+                        bm.texture = glyph.texture;
+                        bm.scaleX = fontScale;
+                        bm.scaleY = fontScale;
+                        this._bitmapContainer.addChild(bm);
+                        charX += letterSpacing + Math.ceil(glyph.advance * fontScale);
+                    }
+                    else if (ch == " ") {
+                        charX += letterSpacing + Math.ceil(this._bitmapFont.size * fontScale / 2);
+                    }
+                    else {
+                        charX += letterSpacing;
+                    }
+                } //text loop
+            } //line loop
+        };
+        GTextField.prototype.handleSizeChanged = function () {
+            if (!this._updatingSize) {
+                if (!this._widthAutoSize)
+                    this.render();
+                else
+                    this.doAlign();
+            }
+        };
+        GTextField.prototype.handleGrayedChanged = function () {
+            _super.prototype.handleGrayedChanged.call(this);
+            this.updateTextFormat();
+        };
+        GTextField.prototype.doAlign = function () {
+            if (this._verticalAlign == fairygui.VertAlignType.Top || this._textHeight == 0)
+                this._yOffset = GTextField.GUTTER_Y;
+            else {
+                var dh = this.height - this._textHeight;
+                if (dh < 0)
+                    dh = 0;
+                if (this._verticalAlign == fairygui.VertAlignType.Middle)
+                    this._yOffset = Math.floor(dh / 2);
+                else
+                    this._yOffset = Math.floor(dh);
+            }
+            this.displayObject.y = this.y + this._yOffset;
+        };
+        GTextField.prototype.setup_beforeAdd = function (xml) {
+            _super.prototype.setup_beforeAdd.call(this, xml);
+            var str;
+            str = xml.attributes.font;
+            if (str)
+                this._font = str;
+            str = xml.attributes.fontSize;
+            if (str)
+                this._fontSize = parseInt(str);
+            str = xml.attributes.color;
+            if (str)
+                this._color = fairygui.ToolSet.convertFromHtmlColor(str);
+            str = xml.attributes.align;
+            if (str)
+                this._align = fairygui.parseAlignType(str);
+            str = xml.attributes.vAlign;
+            if (str)
+                this._verticalAlign = fairygui.parseVertAlignType(str);
+            str = xml.attributes.leading;
+            if (str)
+                this._leading = parseInt(str);
+            else
+                this._leading = 3;
+            str = xml.attributes.letterSpacing;
+            if (str)
+                this._letterSpacing = parseInt(str);
+            this._ubbEnabled = xml.attributes.ubb == "true";
+            str = xml.attributes.autoSize;
+            if (str) {
+                this._autoSize = fairygui.parseAutoSizeType(str);
+                this._widthAutoSize = this._autoSize == fairygui.AutoSizeType.Both;
+                this._heightAutoSize = this._autoSize == fairygui.AutoSizeType.Both || this._autoSize == fairygui.AutoSizeType.Height;
+            }
+            //this._textField.underline = xml.attributes.underline == "true";
+            this._textField.italic = xml.attributes.italic == "true";
+            this._textField.bold = xml.attributes.bold == "true";
+            this._textField.multiline = xml.attributes.singleLine != "true";
+            str = xml.attributes.strokeColor;
+            if (str) {
+                this._textField.strokeColor = fairygui.ToolSet.convertFromHtmlColor(str);
+                str = xml.attributes.strokeSize;
+                if (str)
+                    this.stroke = parseInt(str) + 1;
+                else
+                    this.stroke = 2;
+            }
+        };
+        GTextField.prototype.setup_afterAdd = function (xml) {
+            _super.prototype.setup_afterAdd.call(this, xml);
+            this.updateTextFormat();
+            var str = xml.attributes.text;
+            if (str != null && str.length > 0)
+                this.text = str;
+            this._sizeDirty = false;
+        };
+        return GTextField;
+    }(fairygui.GObject));
+    GTextField.GUTTER_X = 2;
+    GTextField.GUTTER_Y = 2;
+    fairygui.GTextField = GTextField;
+    __reflect(GTextField.prototype, "fairygui.GTextField");
+    var LineInfo = (function () {
+        function LineInfo() {
             this.width = 0;
             this.height = 0;
-            this.advance = 0;
-            this.lineHeight = 0;
-            this.channel = 0;
+            this.textHeight = 0;
+            this.y = 0;
         }
-        return BMGlyph;
+        LineInfo.borrow = function () {
+            if (LineInfo.pool.length) {
+                var ret = LineInfo.pool.pop();
+                ret.width = 0;
+                ret.height = 0;
+                ret.textHeight = 0;
+                ret.text = null;
+                ret.y = 0;
+                return ret;
+            }
+            else
+                return new LineInfo();
+        };
+        LineInfo.returns = function (value) {
+            LineInfo.pool.push(value);
+        };
+        LineInfo.returnList = function (value) {
+            var length = value.length;
+            for (var i = 0; i < length; i++) {
+                var li = value[i];
+                LineInfo.pool.push(li);
+            }
+            value.length = 0;
+        };
+        return LineInfo;
     }());
-    fairygui.BMGlyph = BMGlyph;
+    LineInfo.pool = [];
+    fairygui.LineInfo = LineInfo;
+    __reflect(LineInfo.prototype, "fairygui.LineInfo");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GRichTextField = (function (_super) {
@@ -9878,7 +10242,17 @@ var fairygui;
         return GRichTextField;
     }(fairygui.GTextField));
     fairygui.GRichTextField = GRichTextField;
+    __reflect(GRichTextField.prototype, "fairygui.GRichTextField");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GRoot = (function (_super) {
@@ -10270,7 +10644,12 @@ var fairygui;
     GRoot.contentScaleFactor = 1;
     GRoot.FOCUS_CHANGED = "FocusChanged";
     fairygui.GRoot = GRoot;
+    __reflect(GRoot.prototype, "fairygui.GRoot");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var Margin = (function () {
@@ -10312,7 +10691,12 @@ var fairygui;
         return Margin;
     }());
     fairygui.Margin = Margin;
+    __reflect(Margin.prototype, "fairygui.Margin");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var GTimers = (function () {
@@ -10413,6 +10797,7 @@ var fairygui;
     GTimers.inst = new GTimers();
     GTimers.FPS24 = 1000 / 24;
     fairygui.GTimers = GTimers;
+    __reflect(GTimers.prototype, "fairygui.GTimers");
     var TimerItem = (function () {
         function TimerItem() {
             this.delay = 0;
@@ -10438,7 +10823,17 @@ var fairygui;
         };
         return TimerItem;
     }());
+    __reflect(TimerItem.prototype, "TimerItem");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GScrollBar = (function (_super) {
@@ -10567,7 +10962,17 @@ var fairygui;
     }(fairygui.GComponent));
     GScrollBar.sScrollbarHelperPoint = new egret.Point();
     fairygui.GScrollBar = GScrollBar;
+    __reflect(GScrollBar.prototype, "fairygui.GScrollBar");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GSlider = (function (_super) {
@@ -10728,7 +11133,17 @@ var fairygui;
     }(fairygui.GComponent));
     GSlider.sSilderHelperPoint = new egret.Point();
     fairygui.GSlider = GSlider;
+    __reflect(GSlider.prototype, "fairygui.GSlider");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GTextInput = (function (_super) {
@@ -10893,7 +11308,15 @@ var fairygui;
         return GTextInput;
     }(fairygui.GTextField));
     fairygui.GTextInput = GTextInput;
+    __reflect(GTextInput.prototype, "fairygui.GTextInput");
 })(fairygui || (fairygui = {}));
+
+
+
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var PageOption = (function () {
@@ -10948,7 +11371,12 @@ var fairygui;
         return PageOption;
     }());
     fairygui.PageOption = PageOption;
+    __reflect(PageOption.prototype, "fairygui.PageOption");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var PopupMenu = (function () {
@@ -11118,7 +11546,12 @@ var fairygui;
         return PopupMenu;
     }());
     fairygui.PopupMenu = PopupMenu;
+    __reflect(PopupMenu.prototype, "fairygui.PopupMenu");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var RelationItem = (function () {
@@ -11570,6 +12003,7 @@ var fairygui;
         return RelationItem;
     }());
     fairygui.RelationItem = RelationItem;
+    __reflect(RelationItem.prototype, "fairygui.RelationItem");
     var RelationDef = (function () {
         function RelationDef() {
         }
@@ -11580,7 +12014,12 @@ var fairygui;
         return RelationDef;
     }());
     fairygui.RelationDef = RelationDef;
+    __reflect(RelationDef.prototype, "fairygui.RelationDef");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var Relations = (function () {
@@ -11773,7 +12212,17 @@ var fairygui;
         "bottomext-bottom" //23
     ];
     fairygui.Relations = Relations;
+    __reflect(Relations.prototype, "fairygui.Relations");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var ScrollPane = (function (_super) {
@@ -12884,6 +13333,7 @@ var fairygui;
     ScrollPane.sHelperRect = new egret.Rectangle();
     ScrollPane.sHelperPoint = new egret.Point();
     fairygui.ScrollPane = ScrollPane;
+    __reflect(ScrollPane.prototype, "fairygui.ScrollPane");
     var ThrowTween = (function () {
         function ThrowTween() {
             this.start = new egret.Point();
@@ -12903,7 +13353,12 @@ var fairygui;
         return ThrowTween;
     }());
     ThrowTween.checkpoint = 0.05;
+    __reflect(ThrowTween.prototype, "ThrowTween");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var UIConfig = (function () {
@@ -12939,7 +13394,12 @@ var fairygui;
     UIConfig.bringWindowToFrontOnClick = true;
     UIConfig.frameTimeForAsyncUIConstruction = 2;
     fairygui.UIConfig = UIConfig;
+    __reflect(UIConfig.prototype, "fairygui.UIConfig");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var UIObjectFactory = (function () {
@@ -13030,7 +13490,12 @@ var fairygui;
     }());
     UIObjectFactory.packageItemExtensions = {};
     fairygui.UIObjectFactory = UIObjectFactory;
+    __reflect(UIObjectFactory.prototype, "fairygui.UIObjectFactory");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var UIPackage = (function () {
@@ -13723,13 +14188,24 @@ var fairygui;
     UIPackage.sep2 = " ";
     UIPackage.sep3 = "=";
     fairygui.UIPackage = UIPackage;
+    __reflect(UIPackage.prototype, "fairygui.UIPackage");
     var AtlasSprite = (function () {
         function AtlasSprite() {
             this.rect = new egret.Rectangle();
         }
         return AtlasSprite;
     }());
+    __reflect(AtlasSprite.prototype, "AtlasSprite");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var Window = (function (_super) {
@@ -14000,7 +14476,12 @@ var fairygui;
         return Window;
     }(fairygui.GComponent));
     fairygui.Window = Window;
+    __reflect(Window.prototype, "fairygui.Window");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var DragDropManager = (function () {
@@ -14076,7 +14557,12 @@ var fairygui;
         return DragDropManager;
     }());
     fairygui.DragDropManager = DragDropManager;
+    __reflect(DragDropManager.prototype, "fairygui.DragDropManager");
 })(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var AsyncOperation = (function () {
@@ -14205,4 +14691,6 @@ var fairygui;
         return AsyncOperation;
     }());
     fairygui.AsyncOperation = AsyncOperation;
+    __reflect(AsyncOperation.prototype, "fairygui.AsyncOperation");
 })(fairygui || (fairygui = {}));
+
