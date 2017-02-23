@@ -6752,6 +6752,25 @@ var fairygui;
             _this._color = 0xFFFFFF;
             return _this;
         }
+        GImage.prototype.getColorMatrix = function () {
+            if (this._matrix)
+                return this._matrix;
+            var filters = this.filters;
+            if (filters) {
+                for (var i = 0; i < filters.length; i++) {
+                    if (egret.is(filters[i], "egret.ColorMatrixFilter")) {
+                        this._matrix = filters[i];
+                        return this._matrix;
+                    }
+                }
+            }
+            var cmf = new egret.ColorMatrixFilter();
+            this._matrix = cmf;
+            filters = filters || [];
+            filters.push(cmf);
+            this.filters = filters;
+            return cmf;
+        };
         Object.defineProperty(GImage.prototype, "color", {
             get: function () {
                 return this._color;
@@ -6767,13 +6786,12 @@ var fairygui;
             configurable: true
         });
         GImage.prototype.applyColor = function () {
-            /*然而下面的代码egret还不支持
-            var ct:egret.ColorTransform = this._content.transform.colorTransform;
-            ct.redMultiplier = ((this._color>>16)&0xFF)/255;
-            ct.greenMultiplier =  ((this._color>>8)&0xFF)/255;
-            ct.blueMultiplier = (this._color&0xFF)/255;
-            this._content.transform.colorTransform = ct;
-            */
+            var cfm = this.getColorMatrix();
+            var matrix = cfm.matrix;
+            matrix[0] = ((this._color >> 16) & 0xFF) / 255;
+            matrix[6] = ((this._color >> 8) & 0xFF) / 255;
+            matrix[12] = (this._color & 0xFF) / 255;
+            cfm.matrix = matrix;
         };
         Object.defineProperty(GImage.prototype, "flip", {
             get: function () {
@@ -11310,8 +11328,6 @@ var fairygui;
     fairygui.GTextInput = GTextInput;
     __reflect(GTextInput.prototype, "fairygui.GTextInput");
 })(fairygui || (fairygui = {}));
-
-
 
 
 var __reflect = (this && this.__reflect) || function (p, c, t) {

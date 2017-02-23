@@ -1042,7 +1042,9 @@ declare module fairygui {
         private _content;
         private _color;
         private _flip;
+        private _matrix;
         constructor();
+        private getColorMatrix();
         color: number;
         private applyColor();
         flip: FlipType;
