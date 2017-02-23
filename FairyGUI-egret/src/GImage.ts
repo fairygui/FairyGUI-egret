@@ -5,10 +5,31 @@ module fairygui {
         private _content: egret.Bitmap;
         private _color: number;
         private _flip: FlipType;
+        private _matrix: egret.ColorMatrixFilter;
         
         public constructor() {
             super();
             this._color = 0xFFFFFF;
+        }
+        
+        private getColorMatrix(): egret.ColorMatrixFilter {
+            if (this._matrix)
+                return this._matrix;
+            var filters: egret.Filter[] = this.filters;
+            if (filters) {
+                for (var i: number = 0; i < filters.length; i++) {
+                    if (egret.is(filters[i], "egret.ColorMatrixFilter")) {
+                        this._matrix = <egret.ColorMatrixFilter>filters[i];
+                        return this._matrix;
+                    }
+                }
+            }
+            var cmf: egret.ColorMatrixFilter = new egret.ColorMatrixFilter();
+            this._matrix = cmf;
+            filters = filters || [];
+            filters.push(cmf);
+            this.filters = filters;
+            return cmf;
         }
         
         public get color(): number {
@@ -24,13 +45,12 @@ module fairygui {
         }
         
         private applyColor():void {
-            /*然而下面的代码egret还不支持
-            var ct:egret.ColorTransform = this._content.transform.colorTransform;
-            ct.redMultiplier = ((this._color>>16)&0xFF)/255;
-            ct.greenMultiplier =  ((this._color>>8)&0xFF)/255;
-            ct.blueMultiplier = (this._color&0xFF)/255;
-            this._content.transform.colorTransform = ct;
-            */
+            var cfm:egret.ColorMatrixFilter = this.getColorMatrix();
+            var matrix: number[] = cfm.matrix;
+            matrix[0] = ((this._color>>16)&0xFF)/255;
+            matrix[6] = ((this._color>>8)&0xFF)/255;
+            matrix[12] = (this._color&0xFF)/255;
+            cfm.matrix = matrix;
         }
         
         public get flip():FlipType {
