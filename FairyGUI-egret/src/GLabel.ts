@@ -70,6 +70,26 @@ module fairygui {
             this.titleColor = value;
         }
 
+        public get titleFontSize(): number {
+            if(this._titleObject instanceof GTextField)
+                return (<GTextField>this._titleObject).fontSize;
+            else if(this._titleObject instanceof GLabel)
+                return (<GLabel>this._titleObject).titleFontSize;
+            else if(this._titleObject instanceof GButton)
+                return (<GButton>this._titleObject).titleFontSize;
+            else
+                return 0;
+        }
+
+        public set titleFontSize(value: number) {
+            if(this._titleObject instanceof GTextField)
+                (<GTextField>this._titleObject).fontSize = value;
+            else if(this._titleObject instanceof GLabel)
+                (<GLabel>this._titleObject).titleFontSize = value;
+            else if(this._titleObject instanceof GButton)
+                (<GButton>this._titleObject).titleFontSize = value;
+        }
+
         public set editable(val: boolean) {
             if (this._titleObject)
                 this._titleObject.asTextInput.editable = val;
@@ -105,7 +125,10 @@ module fairygui {
                 str = xml.attributes.titleColor;
                 if (str)
                     this.titleColor = ToolSet.convertFromHtmlColor(str);
-                    
+                str = xml.attributes.titleFontSize;
+                if (str)
+                    this.titleFontSize = parseInt(str);
+
                 if(this._titleObject instanceof GTextInput)
                 {
                     str = xml.attributes.prompt;

@@ -892,6 +892,7 @@ declare module fairygui {
         text: string;
         selectedTitle: string;
         titleColor: number;
+        titleFontSize: number;
         sound: string;
         soundVolumeScale: number;
         selected: boolean;
@@ -1067,6 +1068,7 @@ declare module fairygui {
         text: string;
         titleColor: number;
         color: number;
+        titleFontSize: number;
         editable: boolean;
         protected constructFromXML(xml: any): void;
         setup_afterAdd(xml: any): void;

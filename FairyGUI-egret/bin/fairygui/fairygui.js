@@ -5435,6 +5435,28 @@ var fairygui;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(GButton.prototype, "titleFontSize", {
+            get: function () {
+                if (this._titleObject instanceof fairygui.GTextField)
+                    return this._titleObject.fontSize;
+                else if (this._titleObject instanceof fairygui.GLabel)
+                    return this._titleObject.titleFontSize;
+                else if (this._titleObject instanceof GButton)
+                    return this._titleObject.titleFontSize;
+                else
+                    return 0;
+            },
+            set: function (value) {
+                if (this._titleObject instanceof fairygui.GTextField)
+                    this._titleObject.fontSize = value;
+                else if (this._titleObject instanceof fairygui.GLabel)
+                    this._titleObject.titleFontSize = value;
+                else if (this._titleObject instanceof GButton)
+                    this._titleObject.titleFontSize = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(GButton.prototype, "sound", {
             get: function () {
                 return this._sound;
@@ -5672,6 +5694,9 @@ var fairygui;
                 str = xml.attributes.titleColor;
                 if (str)
                     this.titleColor = fairygui.ToolSet.convertFromHtmlColor(str);
+                str = xml.attributes.titleFontSize;
+                if (str)
+                    this.titleFontSize = parseInt(str);
                 str = xml.attributes.controller;
                 if (str)
                     this._relatedController = this._parent.getController(str);
@@ -6970,6 +6995,28 @@ var fairygui;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(GLabel.prototype, "titleFontSize", {
+            get: function () {
+                if (this._titleObject instanceof fairygui.GTextField)
+                    return this._titleObject.fontSize;
+                else if (this._titleObject instanceof GLabel)
+                    return this._titleObject.titleFontSize;
+                else if (this._titleObject instanceof fairygui.GButton)
+                    return this._titleObject.titleFontSize;
+                else
+                    return 0;
+            },
+            set: function (value) {
+                if (this._titleObject instanceof fairygui.GTextField)
+                    this._titleObject.fontSize = value;
+                else if (this._titleObject instanceof GLabel)
+                    this._titleObject.titleFontSize = value;
+                else if (this._titleObject instanceof fairygui.GButton)
+                    this._titleObject.titleFontSize = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(GLabel.prototype, "editable", {
             get: function () {
                 if (this._titleObject && (this._titleObject instanceof fairygui.GTextInput))
@@ -7003,6 +7050,9 @@ var fairygui;
                 str = xml.attributes.titleColor;
                 if (str)
                     this.titleColor = fairygui.ToolSet.convertFromHtmlColor(str);
+                str = xml.attributes.titleFontSize;
+                if (str)
+                    this.titleFontSize = parseInt(str);
                 if (this._titleObject instanceof fairygui.GTextInput) {
                     str = xml.attributes.prompt;
                     if (str)
