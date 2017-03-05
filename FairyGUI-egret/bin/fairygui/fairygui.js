@@ -4822,7 +4822,7 @@ var fairygui;
             var g;
             var i;
             if (child instanceof fairygui.GGroup) {
-                for (i = 0; i < length; i++) {
+                for (i = 0; i < cnt; i++) {
                     g = this._children[i];
                     if (g.group == child)
                         this.childStateChanged(g);
