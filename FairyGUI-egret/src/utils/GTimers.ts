@@ -9,6 +9,10 @@ module fairygui {
         private _enumCount: number = 0;
         private _lastTime: number = 0;
 
+		public static deltaTime:number = 0;
+		public static time:number = 0;
+		public static workCount:number= 0;
+
         public static inst: GTimers = new GTimers();
 
         private static FPS24: number = 1000 / 24;
@@ -18,6 +22,7 @@ module fairygui {
             this._itemPool = new Array<TimerItem>();
 
             this._lastTime = egret.getTimer(); 
+            GTimers.time = this._lastTime;
             egret.startTick(this.__timer, this);
         }
 
@@ -87,16 +92,20 @@ module fairygui {
         }
 
         private __timer(timeStamp: number): boolean {
+            GTimers.time = timeStamp;
+            GTimers.workCount++;
+            
+            GTimers.deltaTime = timeStamp - this._lastTime;
+            this._lastTime = timeStamp;
+
             this._enumI = 0;
             this._enumCount = this._items.length;
-            var advancedTime:number = timeStamp - this._lastTime;
-            this._lastTime = timeStamp;
 
             while (this._enumI < this._enumCount) {
                 var item: TimerItem = this._items[this._enumI];
                 this._enumI++;
 
-                if (item.advance(advancedTime)) {
+                if (item.advance(GTimers.deltaTime)) {
                     if (item.end) {
                         this._enumI--;
                         this._enumCount--;

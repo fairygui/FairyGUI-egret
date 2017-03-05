@@ -545,14 +545,19 @@ var fairygui;
         function PlayState() {
             this.repeatedCount = 0;
             this._curFrame = 0;
-            this._lastTime = 0;
             this._curFrameDelay = 0;
-            this._lastTime = egret.getTimer();
+            this._lastUpdateSeq = 0;
         }
         PlayState.prototype.update = function (mc) {
-            var t = egret.getTimer();
-            var elapsed = t - this._lastTime;
-            this._lastTime = t;
+            var elapsed;
+            var frameId = fairygui.GTimers.workCount;
+            if (frameId - this._lastUpdateSeq != 1)
+                //1、如果>1，表示不是连续帧了，说明刚启动（或者停止过），这里不能用流逝的时间了，不然会跳过很多帧
+                //2、如果==0，表示在本帧已经处理过了，这通常是因为一个PlayState用于多个MovieClip共享，目的是多个MovieClip同步播放
+                elapsed = 0;
+            else
+                elapsed = fairygui.GTimers.deltaTime;
+            this._lastUpdateSeq = frameId;
             var cur = this._curFrame;
             if (cur >= mc.frameCount)
                 cur = mc.frameCount - 1;
@@ -10775,6 +10780,7 @@ var fairygui;
             this._items = new Array();
             this._itemPool = new Array();
             this._lastTime = egret.getTimer();
+            GTimers.time = this._lastTime;
             egret.startTick(this.__timer, this);
         }
         GTimers.prototype.getItem = function () {
@@ -10838,14 +10844,16 @@ var fairygui;
             }
         };
         GTimers.prototype.__timer = function (timeStamp) {
+            GTimers.time = timeStamp;
+            GTimers.workCount++;
+            GTimers.deltaTime = timeStamp - this._lastTime;
+            this._lastTime = timeStamp;
             this._enumI = 0;
             this._enumCount = this._items.length;
-            var advancedTime = timeStamp - this._lastTime;
-            this._lastTime = timeStamp;
             while (this._enumI < this._enumCount) {
                 var item = this._items[this._enumI];
                 this._enumI++;
-                if (item.advance(advancedTime)) {
+                if (item.advance(GTimers.deltaTime)) {
                     if (item.end) {
                         this._enumI--;
                         this._enumCount--;
@@ -10862,6 +10870,9 @@ var fairygui;
         };
         return GTimers;
     }());
+    GTimers.deltaTime = 0;
+    GTimers.time = 0;
+    GTimers.workCount = 0;
     GTimers.inst = new GTimers();
     GTimers.FPS24 = 1000 / 24;
     fairygui.GTimers = GTimers;

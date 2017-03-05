@@ -848,8 +848,8 @@ declare module fairygui {
         reversed: boolean;
         repeatedCount: number;
         private _curFrame;
-        private _lastTime;
         private _curFrameDelay;
+        private _lastUpdateSeq;
         constructor();
         update(mc: MovieClip): void;
         currentFrame: number;
@@ -1374,6 +1374,9 @@ declare module fairygui {
         private _enumI;
         private _enumCount;
         private _lastTime;
+        static deltaTime: number;
+        static time: number;
+        static workCount: number;
         static inst: GTimers;
         private static FPS24;
         constructor();
