@@ -283,6 +283,8 @@ declare module fairygui {
     class GComponent extends GObject {
         private _sortingChildCount;
         private _opaque;
+        private _childrenRenderOrder;
+        private _apexIndex;
         protected _margin: Margin;
         protected _trackBounds: boolean;
         protected _boundsChanged: boolean;
@@ -323,6 +325,7 @@ declare module fairygui {
         removeController(c: Controller): void;
         controllers: Array<Controller>;
         childStateChanged(child: GObject): void;
+        private buildNativeDisplayList();
         applyController(c: Controller): void;
         applyAllControllers(): void;
         adjustRadioGroupDepth(obj: GObject, c: Controller): void;
@@ -333,6 +336,8 @@ declare module fairygui {
         scrollPane: ScrollPane;
         opaque: boolean;
         margin: Margin;
+        childrenRenderOrder: ChildrenRenderOrder;
+        apexIndex: number;
         mask: egret.DisplayObject | egret.Rectangle;
         protected updateOpaque(): void;
         protected updateScrollRect(): void;
@@ -437,6 +442,11 @@ declare module fairygui {
         Horizontal = 1,
         Vertical = 2,
         Both = 3,
+    }
+    enum ChildrenRenderOrder {
+        Ascent = 0,
+        Descent = 1,
+        Arch = 2,
     }
     enum RelationType {
         Left_Left = 0,

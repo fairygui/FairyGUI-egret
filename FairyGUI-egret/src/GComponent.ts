@@ -4,6 +4,8 @@ module fairygui {
     export class GComponent extends GObject {
         private _sortingChildCount: number = 0;
         private _opaque: boolean;
+        private _childrenRenderOrder:ChildrenRenderOrder = ChildrenRenderOrder.Ascent;
+		private _apexIndex:number = 0;
 
         protected _margin: Margin;
         protected _trackBounds: boolean;
@@ -135,8 +137,11 @@ module fairygui {
                     this._sortingChildCount--;
 
                 this._children.splice(index,1);
-                if(child.inContainer)
+                if(child.inContainer) {
                     this._container.removeChild(child.displayObject);
+                    if (this._childrenRenderOrder == ChildrenRenderOrder.Arch)
+						GTimers.inst.callLater(this.buildNativeDisplayList, this);
+                }
 
                 if(dispose)
                     child.dispose();
@@ -263,14 +268,36 @@ module fairygui {
 
             if(child.inContainer) {
                 var displayIndex: number = 0;
-                for(var i: number = 0;i < index;i++) {
-                    var g: GObject = this._children[i];
-                    if(g.inContainer)
-                        displayIndex++;
-                }
-                if(displayIndex == this._container.numChildren)
-                    displayIndex--;
-                this._container.setChildIndex(child.displayObject,displayIndex);
+                var g: GObject;
+                var i: number;
+
+                if (this._childrenRenderOrder == ChildrenRenderOrder.Ascent)	{
+					for(i=0;i<index;i++)
+					{
+						g = this._children[i];
+						if(g.inContainer)
+							displayIndex++;
+					}
+                    if(displayIndex == this._container.numChildren)
+                        displayIndex--;
+                    this._container.setChildIndex(child.displayObject, displayIndex);
+				}
+				else if (this._childrenRenderOrder == ChildrenRenderOrder.Descent)
+				{
+					for (i = cnt - 1; i > index; i--)
+					{
+						g = this._children[i];
+						if (g.inContainer)
+							displayIndex++;
+					}
+					if(displayIndex == this._container.numChildren)
+						displayIndex--;
+					this._container.setChildIndex(child.displayObject, displayIndex);
+				}
+				else
+				{
+                    GTimers.inst.callLater(this.buildNativeDisplayList, this);
+				}
 
                 this.setBoundsChangedFlag();
             }
@@ -358,10 +385,13 @@ module fairygui {
             if(this._buildingDisplayList)
                 return;
 
+			var cnt:number = this._children.length;
+			var g:GObject;
+			var i:number;
+
             if(child instanceof GGroup) {
-                var length: number = this._children.length;
-                for(var i: number = 0;i < length;i++) {
-                    var g: GObject = this._children[i];
+                for(i = 0;i < length;i++) {
+                    g = this._children[i];
                     if(g.group == child)
                         this.childStateChanged(g);
                 }
@@ -373,17 +403,34 @@ module fairygui {
 
             if(child.finalVisible) {
                 if(!child.displayObject.parent) {
-                    var index: number = 0;
-                    var length1: number = this._children.length;
-                    for(var i1: number = 0;i1 < length1;i1++) {
-                        g = this._children[i1];
-                        if(g == child)
-                            break;
-
-                        if(g.displayObject && g.displayObject.parent)
-                            index++;
-                    }
-                    this._container.addChildAt(child.displayObject,index);
+                    var index:number = 0;		
+					if (this._childrenRenderOrder == ChildrenRenderOrder.Ascent) {
+						for (i = 0; i < cnt; i++) {
+							g = this._children[i];
+							if (g == child)
+								break;
+							
+							if (g.displayObject != null && g.displayObject.parent != null)
+								index++;
+						}
+						this._container.addChildAt(child.displayObject, index);
+					}
+					else if (this._childrenRenderOrder == ChildrenRenderOrder.Descent)	{
+						for (i = cnt - 1; i >= 0; i--)	{
+							g = this._children[i];
+							if (g == child)
+								break;
+							
+							if (g.displayObject != null && g.displayObject.parent != null)
+								index++;
+						}
+						this._container.addChildAt(child.displayObject, index);
+					}
+					else {
+						this._container.addChild(child.displayObject);
+						
+						GTimers.inst.callLater(this.buildNativeDisplayList, this);
+					}
                 }
             }
             else {
@@ -391,6 +438,56 @@ module fairygui {
                     this._container.removeChild(child.displayObject);
             }
         }
+
+        private buildNativeDisplayList():void
+		{
+			var cnt:number = this._children.length;
+			if (cnt == 0)
+				return;
+			
+			var i:number;
+			var child:GObject;
+			switch (this._childrenRenderOrder)
+			{
+				case ChildrenRenderOrder.Ascent:
+					{
+						for (i = 0; i < cnt; i++)
+						{
+							child = this._children[i];
+							if (child.displayObject != null && child.finalVisible)
+								this._container.addChild(child.displayObject);
+						}
+					}
+					break;
+				case ChildrenRenderOrder.Descent:
+					{
+						for (i = cnt - 1; i >= 0; i--)
+						{
+							child = this._children[i];
+							if (child.displayObject != null && child.finalVisible)
+								this._container.addChild(child.displayObject);
+						}
+					}
+					break;
+				
+				case ChildrenRenderOrder.Arch:
+					{
+						for (i = 0; i < this._apexIndex; i++)
+						{
+							child = this._children[i];
+							if (child.displayObject != null && child.finalVisible)
+								this._container.addChild(child.displayObject);
+						}
+						for (i = cnt - 1; i >= this._apexIndex; i--)
+						{
+							child = this._children[i];
+							if (child.displayObject != null && child.finalVisible)
+								this._container.addChild(child.displayObject);
+						}
+					}
+					break;
+			}
+		}
 
         public applyController(c: Controller): void {
             var child: GObject;
@@ -495,6 +592,36 @@ module fairygui {
             }
             this.handleSizeChanged();
         }
+
+        public get childrenRenderOrder():ChildrenRenderOrder
+		{
+			return this._childrenRenderOrder;
+		}
+		
+		public set childrenRenderOrder(value:ChildrenRenderOrder)
+		{
+			if (this._childrenRenderOrder != value)
+			{
+				this._childrenRenderOrder = value;
+				this.buildNativeDisplayList();
+			}
+		}
+		
+		public get apexIndex():number
+		{
+			return this._apexIndex;
+		}
+		
+		public set apexIndex(value:number)
+		{
+			if (this._apexIndex != value)
+			{
+				this._apexIndex = value;
+				
+				if (this._childrenRenderOrder == ChildrenRenderOrder.Arch)
+					this.buildNativeDisplayList();
+			}
+		}
 
         public get mask():egret.DisplayObject | egret.Rectangle
 		{
@@ -931,14 +1058,9 @@ module fairygui {
             this._buildingDisplayList = false;
             this._underConstruct = false;
             
-            length1 = this._children.length;
-            for (i = 0; i < length1; i++) {
-                var child: GObject = this._children[i];
-                if (child.displayObject != null && child.finalVisible)
-                    this._container.addChild(child.displayObject);
-            }
-
+            this.buildNativeDisplayList();
             this.setBoundsChangedFlag();
+            
             this.constructFromXML(xml);
         }
 

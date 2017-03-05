@@ -12,6 +12,7 @@ module fairygui {
     export enum ScrollBarDisplayType { Default, Visible, Auto, Hidden };
     export enum ScrollType { Horizontal, Vertical, Both };
     export enum FlipType { None,  Horizontal, Vertical, Both };
+    export enum ChildrenRenderOrder { Ascent, Descent, Arch };
 
     export enum RelationType {
         Left_Left = 0,

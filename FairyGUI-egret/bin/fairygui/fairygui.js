@@ -1432,6 +1432,13 @@ var fairygui;
         FlipType[FlipType["Both"] = 3] = "Both";
     })(FlipType = fairygui.FlipType || (fairygui.FlipType = {}));
     ;
+    var ChildrenRenderOrder;
+    (function (ChildrenRenderOrder) {
+        ChildrenRenderOrder[ChildrenRenderOrder["Ascent"] = 0] = "Ascent";
+        ChildrenRenderOrder[ChildrenRenderOrder["Descent"] = 1] = "Descent";
+        ChildrenRenderOrder[ChildrenRenderOrder["Arch"] = 2] = "Arch";
+    })(ChildrenRenderOrder = fairygui.ChildrenRenderOrder || (fairygui.ChildrenRenderOrder = {}));
+    ;
     var RelationType;
     (function (RelationType) {
         RelationType[RelationType["Left_Left"] = 0] = "Left_Left";
@@ -4499,6 +4506,8 @@ var fairygui;
         function GComponent() {
             var _this = _super.call(this) || this;
             _this._sortingChildCount = 0;
+            _this._childrenRenderOrder = fairygui.ChildrenRenderOrder.Ascent;
+            _this._apexIndex = 0;
             _this._children = new Array();
             _this._controllers = new Array();
             _this._transitions = new Array();
@@ -4601,8 +4610,11 @@ var fairygui;
                 if (child.sortingOrder != 0)
                     this._sortingChildCount--;
                 this._children.splice(index, 1);
-                if (child.inContainer)
+                if (child.inContainer) {
                     this._container.removeChild(child.displayObject);
+                    if (this._childrenRenderOrder == fairygui.ChildrenRenderOrder.Arch)
+                        fairygui.GTimers.inst.callLater(this.buildNativeDisplayList, this);
+                }
                 if (dispose)
                     child.dispose();
                 this.setBoundsChangedFlag();
@@ -4706,14 +4718,31 @@ var fairygui;
             this._children.splice(index, 0, child);
             if (child.inContainer) {
                 var displayIndex = 0;
-                for (var i = 0; i < index; i++) {
-                    var g = this._children[i];
-                    if (g.inContainer)
-                        displayIndex++;
+                var g;
+                var i;
+                if (this._childrenRenderOrder == fairygui.ChildrenRenderOrder.Ascent) {
+                    for (i = 0; i < index; i++) {
+                        g = this._children[i];
+                        if (g.inContainer)
+                            displayIndex++;
+                    }
+                    if (displayIndex == this._container.numChildren)
+                        displayIndex--;
+                    this._container.setChildIndex(child.displayObject, displayIndex);
                 }
-                if (displayIndex == this._container.numChildren)
-                    displayIndex--;
-                this._container.setChildIndex(child.displayObject, displayIndex);
+                else if (this._childrenRenderOrder == fairygui.ChildrenRenderOrder.Descent) {
+                    for (i = cnt - 1; i > index; i--) {
+                        g = this._children[i];
+                        if (g.inContainer)
+                            displayIndex++;
+                    }
+                    if (displayIndex == this._container.numChildren)
+                        displayIndex--;
+                    this._container.setChildIndex(child.displayObject, displayIndex);
+                }
+                else {
+                    fairygui.GTimers.inst.callLater(this.buildNativeDisplayList, this);
+                }
                 this.setBoundsChangedFlag();
             }
             return index;
@@ -4789,10 +4818,12 @@ var fairygui;
         GComponent.prototype.childStateChanged = function (child) {
             if (this._buildingDisplayList)
                 return;
+            var cnt = this._children.length;
+            var g;
+            var i;
             if (child instanceof fairygui.GGroup) {
-                var length = this._children.length;
-                for (var i = 0; i < length; i++) {
-                    var g = this._children[i];
+                for (i = 0; i < length; i++) {
+                    g = this._children[i];
                     if (g.group == child)
                         this.childStateChanged(g);
                 }
@@ -4803,20 +4834,76 @@ var fairygui;
             if (child.finalVisible) {
                 if (!child.displayObject.parent) {
                     var index = 0;
-                    var length1 = this._children.length;
-                    for (var i1 = 0; i1 < length1; i1++) {
-                        g = this._children[i1];
-                        if (g == child)
-                            break;
-                        if (g.displayObject && g.displayObject.parent)
-                            index++;
+                    if (this._childrenRenderOrder == fairygui.ChildrenRenderOrder.Ascent) {
+                        for (i = 0; i < cnt; i++) {
+                            g = this._children[i];
+                            if (g == child)
+                                break;
+                            if (g.displayObject != null && g.displayObject.parent != null)
+                                index++;
+                        }
+                        this._container.addChildAt(child.displayObject, index);
                     }
-                    this._container.addChildAt(child.displayObject, index);
+                    else if (this._childrenRenderOrder == fairygui.ChildrenRenderOrder.Descent) {
+                        for (i = cnt - 1; i >= 0; i--) {
+                            g = this._children[i];
+                            if (g == child)
+                                break;
+                            if (g.displayObject != null && g.displayObject.parent != null)
+                                index++;
+                        }
+                        this._container.addChildAt(child.displayObject, index);
+                    }
+                    else {
+                        this._container.addChild(child.displayObject);
+                        fairygui.GTimers.inst.callLater(this.buildNativeDisplayList, this);
+                    }
                 }
             }
             else {
                 if (child.displayObject.parent)
                     this._container.removeChild(child.displayObject);
+            }
+        };
+        GComponent.prototype.buildNativeDisplayList = function () {
+            var cnt = this._children.length;
+            if (cnt == 0)
+                return;
+            var i;
+            var child;
+            switch (this._childrenRenderOrder) {
+                case fairygui.ChildrenRenderOrder.Ascent:
+                    {
+                        for (i = 0; i < cnt; i++) {
+                            child = this._children[i];
+                            if (child.displayObject != null && child.finalVisible)
+                                this._container.addChild(child.displayObject);
+                        }
+                    }
+                    break;
+                case fairygui.ChildrenRenderOrder.Descent:
+                    {
+                        for (i = cnt - 1; i >= 0; i--) {
+                            child = this._children[i];
+                            if (child.displayObject != null && child.finalVisible)
+                                this._container.addChild(child.displayObject);
+                        }
+                    }
+                    break;
+                case fairygui.ChildrenRenderOrder.Arch:
+                    {
+                        for (i = 0; i < this._apexIndex; i++) {
+                            child = this._children[i];
+                            if (child.displayObject != null && child.finalVisible)
+                                this._container.addChild(child.displayObject);
+                        }
+                        for (i = cnt - 1; i >= this._apexIndex; i--) {
+                            child = this._children[i];
+                            if (child.displayObject != null && child.finalVisible)
+                                this._container.addChild(child.displayObject);
+                        }
+                    }
+                    break;
             }
         };
         GComponent.prototype.applyController = function (c) {
@@ -4918,6 +5005,33 @@ var fairygui;
                     this._container.y = this._margin.top + this._alignOffset.y;
                 }
                 this.handleSizeChanged();
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GComponent.prototype, "childrenRenderOrder", {
+            get: function () {
+                return this._childrenRenderOrder;
+            },
+            set: function (value) {
+                if (this._childrenRenderOrder != value) {
+                    this._childrenRenderOrder = value;
+                    this.buildNativeDisplayList();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GComponent.prototype, "apexIndex", {
+            get: function () {
+                return this._apexIndex;
+            },
+            set: function (value) {
+                if (this._apexIndex != value) {
+                    this._apexIndex = value;
+                    if (this._childrenRenderOrder == fairygui.ChildrenRenderOrder.Arch)
+                        this.buildNativeDisplayList();
+                }
             },
             enumerable: true,
             configurable: true
@@ -5288,12 +5402,7 @@ var fairygui;
             this.applyAllControllers();
             this._buildingDisplayList = false;
             this._underConstruct = false;
-            length1 = this._children.length;
-            for (i = 0; i < length1; i++) {
-                var child = this._children[i];
-                if (child.displayObject != null && child.finalVisible)
-                    this._container.addChild(child.displayObject);
-            }
+            this.buildNativeDisplayList();
             this.setBoundsChangedFlag();
             this.constructFromXML(xml);
         };
