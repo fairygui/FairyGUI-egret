@@ -26,13 +26,10 @@ module fairygui {
         }
 
         public getObject(url: string): GObject {
+            url = UIPackage.normalizeURL(url);
+            
             var arr: Array<GObject> = this._pool[url];
-            if (arr == null) {
-                arr = new Array<GObject>();
-                this._pool[url] = arr;
-            }
-
-            if (arr.length) {
+            if (arr != null && arr.length) {
                 this._count--;
                 return arr.shift();
             }
