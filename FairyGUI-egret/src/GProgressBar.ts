@@ -78,7 +78,7 @@ module fairygui {
                 this._tweenValue = this._value;
                 this._value = value;
                 this._tweener = egret.Tween.get(this,{ onChange: this.onUpdateTween,onChangeObj: this })
-                    .to({ _tweenValue: value },duration * 1000, GProgressBar.easeLinear);
+                    .to({ _tweenValue: value },duration * 1000, GProgressBar.easeLinear).call(()=>{ this._tweener=null; }, this);
                 return this._tweener;
             }
             else
