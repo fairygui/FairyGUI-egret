@@ -5345,14 +5345,14 @@ var fairygui;
                     var color = (r << 16) + (r << 8) + r;
                     for (var i = 0; i < cnt; i++) {
                         var obj = this.getChildAt(i);
-                        if (obj["color"] != undefined)
+                        if (obj["color"] != undefined && !(obj instanceof fairygui.GTextField))
                             obj.color = color;
                     }
                 }
                 else {
                     for (var i = 0; i < cnt; i++) {
                         var obj = this.getChildAt(i);
-                        if (obj["color"] != undefined)
+                        if (obj["color"] != undefined && !(obj instanceof fairygui.GTextField))
                             obj.color = 0xFFFFFF;
                     }
                 }

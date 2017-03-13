@@ -269,14 +269,14 @@ module fairygui {
                     var color: number = (r << 16) + (r << 8) + r;
                     for(var i: number = 0;i < cnt;i++) {
                         var obj: GObject = this.getChildAt(i);
-                        if(obj["color"]!=undefined)
+                        if(obj["color"]!=undefined && !(obj instanceof GTextField))
                             (<any>obj).color = color;
                     }
                 }
                 else {
                     for(var i:number = 0;i < cnt;i++) {
                         var obj:GObject = this.getChildAt(i);
-                        if(obj["color"]!=undefined)
+                        if(obj["color"]!=undefined && !(obj instanceof GTextField))
                             (<any>obj).color = 0xFFFFFF;
                     }
                 }
