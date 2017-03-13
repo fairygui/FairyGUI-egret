@@ -246,7 +246,6 @@ module fairygui {
                     mc.swing = this._contentItem.swing;
                     mc.repeatDelay = this._contentItem.repeatDelay;
                     mc.frames = this._contentItem.frames;
-                    mc.boundsRect = new egret.Rectangle(0,0,this._contentSourceWidth,this._contentSourceHeight);
                     this.updateLayout();
                 }
                 else

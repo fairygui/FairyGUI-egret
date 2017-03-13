@@ -66,7 +66,6 @@ module fairygui {
             this._movieClip.swing = this.packageItem.swing;
             this._movieClip.repeatDelay = this.packageItem.repeatDelay;
             this._movieClip.frames = this.packageItem.frames;
-            this._movieClip.boundsRect = new egret.Rectangle(0, 0, this.sourceWidth, this.sourceHeight);
         }
 
         public setup_beforeAdd(xml: any): void {

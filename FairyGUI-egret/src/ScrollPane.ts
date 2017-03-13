@@ -1278,6 +1278,9 @@ module fairygui {
         }
 
         private __tweenUpdate(): void {
+            if(this._tweening==0)
+                return;
+
             this.syncScrollBar();
             this.dispatchEventWith(ScrollPane.SCROLL,false);
         }
@@ -1292,6 +1295,9 @@ module fairygui {
         }
 
         private __tweenUpdate2(): void {
+            if(this._tweening==0)
+                return;
+
             this._throwTween.update(this._container);
 
            	this.syncPos();

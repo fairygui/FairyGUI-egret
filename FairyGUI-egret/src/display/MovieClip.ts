@@ -15,7 +15,6 @@ module fairygui {
         private _frameCount: number = 0;
         private _frames: Array<Frame>;
         private _currentFrame: number = 0;
-        private _boundsRect: egret.Rectangle;
         private _start: number = 0;
         private _end: number = 0;
         private _times: number = 0;
@@ -63,14 +62,6 @@ module fairygui {
 
         public get frameCount(): number {
             return this._frameCount;
-        }
-
-        public get boundsRect(): egret.Rectangle {
-            return this._boundsRect;
-        }
-
-        public set boundsRect(value: egret.Rectangle) {
-            this._boundsRect = value;
         }
 
         public get currentFrame(): number {
