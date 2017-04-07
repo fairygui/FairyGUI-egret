@@ -751,7 +751,7 @@ module fairygui {
 					this._scrollPane.scrollToView(rect, ani, setFirst);
 			}
             else {
-                var obj: GButton = this.getChildAt(index).asButton;
+                var obj: GObject = this.getChildAt(index);
                 if(obj != null) {
                     if(this._scrollPane != null)
                         this._scrollPane.scrollToView(obj,ani,setFirst);
