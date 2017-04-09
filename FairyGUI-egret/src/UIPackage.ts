@@ -594,6 +594,9 @@ module fairygui {
                         value = strings[elementId];
                         if(value!=undefined)
                             dxml.attributes.title = value;
+                        value = strings[elementId+"-prompt"];
+						if(value!=undefined)
+							dxml.attributes.prompt = value;
                         continue;
                     }
 						
