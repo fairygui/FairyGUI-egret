@@ -118,10 +118,6 @@ module fairygui {
             }
         }
         
-        protected doAlign(): void {
-            //nothing here
-        }
-        
         public setup_beforeAdd(xml: any): void {
             super.setup_beforeAdd(xml);
 

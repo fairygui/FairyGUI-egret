@@ -90,6 +90,11 @@ module fairygui {
             (type == AlignType.Center ? egret.HorizontalAlign.CENTER : egret.HorizontalAlign.RIGHT);
     }
 
+    export function getVertAlignTypeString(type: VertAlignType): string {
+        return type == VertAlignType.Top ? egret.VerticalAlign.TOP :
+            (type == VertAlignType.Middle ? egret.VerticalAlign.MIDDLE : egret.VerticalAlign.BOTTOM);
+    }
+
     export function parseVertAlignType(value: string): VertAlignType {
         switch (value) {
             case "top":

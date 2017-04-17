@@ -141,7 +141,9 @@ module fairygui {
         public set align(value: AlignType) {
             if (this._align != value) {
                 this._align = value;
-                this.updateTextFormat();
+                this._textField.textAlign = getAlignTypeString(this._align);
+                if(this._bitmapFont && !this._underConstruct)
+                    this.render();
             }
         }
 
@@ -152,7 +154,9 @@ module fairygui {
         public set verticalAlign(value: VertAlignType) {
             if (this._verticalAlign != value) {
                 this._verticalAlign = value;
-                this.doAlign();
+                this._textField.verticalAlign = getVertAlignTypeString(this._verticalAlign);
+                if(this._bitmapFont && !this._underConstruct)
+                    this.render();
             }
         }
 
@@ -284,7 +288,6 @@ module fairygui {
                 this._textField.textColor = 0xAAAAAA;
             else
                 this._textField.textColor = this._color;
-            this._textField.textAlign = getAlignTypeString(this._align);
             this._textField.lineSpacing = this._leading;
             //this._textField.letterSpacing = this._letterSpacing;
 
@@ -340,22 +343,19 @@ module fairygui {
 
             if(this._heightAutoSize) {
                 h = this._textHeight;
-                if(!this._widthAutoSize)
+                if(this._textField.height!=this._textHeight)
                     this._textField.height = this._textHeight;
             }
             else {
                 h = this.height;
                 if(this._textHeight > h)
                     this._textHeight = h;
-                this._textField.height = this._textHeight;
             }
 
             if(updateBounds) {
                 this._updatingSize = true;
                 this.setSize(w,h);
                 this._updatingSize = false;
-
-                this.doAlign();
             }
         }
 
@@ -612,11 +612,31 @@ module fairygui {
         }
 
         protected handleSizeChanged(): void {
-            if(!this._updatingSize) {
-                if(!this._widthAutoSize)
-                    this.render();
-                else
-                    this.doAlign();
+            if(this._updatingSize)
+                return;
+
+            if(this._bitmapFont != null) {
+                 if(!this._widthAutoSize)
+                this.render();
+            else
+                this.doAlign();
+            }
+            else {
+                if(this._underConstruct) {
+                    this._textField.width = this.width;
+                    this._textField.height = this.height;
+                }
+                else {
+                    if(!this._widthAutoSize) {
+                        if(!this._heightAutoSize)
+                        {
+                            this._textField.width = this.width;
+                            this._textField.height = this.height;
+                        }
+                        else
+                            this._textField.width = this.width;
+                    }
+                }
             }
         }
 
@@ -625,7 +645,7 @@ module fairygui {
             this.updateTextFormat();
         }
 
-        protected doAlign(): void {
+        private doAlign(): void {
             if(this._verticalAlign == VertAlignType.Top || this._textHeight == 0)
                 this._yOffset = GTextField.GUTTER_Y;
             else {
@@ -659,11 +679,11 @@ module fairygui {
 
             str = xml.attributes.align;
             if (str)
-                this._align = parseAlignType(str);
+                this.align = parseAlignType(str);
 
             str = xml.attributes.vAlign;
             if (str)
-                this._verticalAlign = parseVertAlignType(str);
+                this.verticalAlign = parseVertAlignType(str);
 
             str = xml.attributes.leading;
             if (str)
