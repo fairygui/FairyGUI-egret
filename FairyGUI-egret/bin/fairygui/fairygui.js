@@ -5446,6 +5446,12 @@ var fairygui;
                 str = xml.attributes.titleFontSize;
                 if (str)
                     this.titleFontSize = parseInt(str);
+                str = xml.attributes.sound;
+                if (str != null)
+                    this._sound = str;
+                str = xml.attributes.volume;
+                if (str)
+                    this._soundVolumeScale = parseInt(str) / 100;
                 str = xml.attributes.controller;
                 if (str)
                     this._relatedController = this._parent.getController(str);
@@ -8653,6 +8659,8 @@ var fairygui;
             this._contentItem = fairygui.UIPackage.getItemByURL(itemURL);
             if (this._contentItem != null) {
                 this._contentItem.load();
+                if (this._autoSize)
+                    this.setSize(this._contentItem.width, this._contentItem.height);
                 if (this._contentItem.type == fairygui.PackageItemType.Image) {
                     if (this._contentItem.texture == null) {
                         this.setErrorState();
@@ -8736,8 +8744,7 @@ var fairygui;
                 }
             }
             if (this._errorSign != null) {
-                this._errorSign.width = this.width;
-                this._errorSign.height = this.height;
+                this._errorSign.setSize(this.width, this.height);
                 this._container.addChild(this._errorSign.displayObject);
             }
         };
