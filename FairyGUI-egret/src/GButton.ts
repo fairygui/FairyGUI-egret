@@ -381,6 +381,14 @@ module fairygui {
                 if (str)
                     this.titleFontSize = parseInt(str);
 
+                str = xml.attributes.sound;
+				if (str!=null)
+					this._sound = str;
+
+				str = xml.attributes.volume;
+				if(str)
+					this._soundVolumeScale = parseInt(str)/100;
+
                 str = xml.attributes.controller;
                 if (str)
                     this._relatedController = this._parent.getController(str);
