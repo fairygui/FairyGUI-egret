@@ -1781,7 +1781,7 @@ module fairygui {
             var maxHeight: number = 0;
             var cw: number, ch: number = 0;
             var sw:number, sh:number;
-			var p:number;
+			var p:number = 0;
 			var cnt:number = this._children.length;
 			var viewWidth:number = this.viewWidth;
 			var viewHeight:number = this.viewHeight;
