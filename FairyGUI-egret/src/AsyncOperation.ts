@@ -81,7 +81,7 @@ module fairygui {
 					var defaultItem:string = null;
 					di.listItemCount = 0;
 
-					var col: any = di.desc.childNodes;
+					var col: any = di.desc.children;
 					var length: number = col.length;
 					for (var j: number = 0; j < length; j++) {
 						var cxml: any = col[j];

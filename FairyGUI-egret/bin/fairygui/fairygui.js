@@ -516,8 +516,8 @@ var fairygui;
             if (mc.swing) {
                 if (this.reversed) {
                     this._curFrame--;
-                    if (this._curFrame < 0) {
-                        this._curFrame = Math.min(1, mc.frameCount - 1);
+                    if (this._curFrame <= 0) {
+                        this._curFrame = 0;
                         this.repeatedCount++;
                         this.reversed = !this.reversed;
                     }
@@ -14022,7 +14022,7 @@ var fairygui;
                 else if (di.type == "list") {
                     var defaultItem = null;
                     di.listItemCount = 0;
-                    var col = di.desc.childNodes;
+                    var col = di.desc.children;
                     var length = col.length;
                     for (var j = 0; j < length; j++) {
                         var cxml = col[j];
