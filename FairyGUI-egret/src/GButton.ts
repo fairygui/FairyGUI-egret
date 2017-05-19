@@ -356,7 +356,7 @@ module fairygui {
             super.setup_afterAdd(xml);
             
             if(this._downEffect==2)
-                this.setPivot(0.5,0.5);
+                this.setPivot(0.5,0.5,xml.attributes.anchor);
 
             xml = ToolSet.findChildNode(xml, "Button");
             if (xml) {
