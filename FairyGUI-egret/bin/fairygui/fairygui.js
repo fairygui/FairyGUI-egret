@@ -1,35 +1,47 @@
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var Controller = (function (_super) {
         __extends(Controller, _super);
         function Controller() {
-            _super.call(this);
-            this._selectedIndex = 0;
-            this._previousIndex = 0;
-            this._pageIds = [];
-            this._pageNames = [];
-            this._selectedIndex = -1;
-            this._previousIndex = -1;
+            var _this = _super.call(this) || this;
+            _this._selectedIndex = 0;
+            _this._previousIndex = 0;
+            _this._pageIds = [];
+            _this._pageNames = [];
+            _this._selectedIndex = -1;
+            _this._previousIndex = -1;
+            return _this;
         }
-        var d = __define,c=Controller,p=c.prototype;
-        d(p, "name"
-            ,function () {
+        Object.defineProperty(Controller.prototype, "name", {
+            get: function () {
                 return this._name;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._name = value;
-            }
-        );
-        d(p, "parent"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "parent", {
+            get: function () {
                 return this._parent;
-            }
-        );
-        d(p, "selectedIndex"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "selectedIndex", {
+            get: function () {
                 return this._selectedIndex;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._selectedIndex != value) {
                     if (value > this._pageIds.length - 1)
                         throw "index out of bounds: " + value;
@@ -54,10 +66,12 @@ var fairygui;
                             this._playingTransition.play(function () { this._playingTransition = null; }, this);
                     }
                 }
-            }
-        );
+            },
+            enumerable: true,
+            configurable: true
+        });
         //功能和设置selectedIndex一样，但不会触发事件
-        p.setSelectedIndex = function (value) {
+        Controller.prototype.setSelectedIndex = function (value) {
             if (value === void 0) { value = 0; }
             if (this._selectedIndex != value) {
                 if (value > this._pageIds.length - 1)
@@ -71,54 +85,62 @@ var fairygui;
                 }
             }
         };
-        d(p, "previsousIndex"
-            ,function () {
+        Object.defineProperty(Controller.prototype, "previsousIndex", {
+            get: function () {
                 return this._previousIndex;
-            }
-        );
-        d(p, "selectedPage"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "selectedPage", {
+            get: function () {
                 if (this._selectedIndex == -1)
                     return null;
                 else
                     return this._pageNames[this._selectedIndex];
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 var i = this._pageNames.indexOf(val);
                 if (i == -1)
                     i = 0;
                 this.selectedIndex = i;
-            }
-        );
+            },
+            enumerable: true,
+            configurable: true
+        });
         //功能和设置selectedPage一样，但不会触发事件
-        p.setSelectedPage = function (value) {
+        Controller.prototype.setSelectedPage = function (value) {
             var i = this._pageNames.indexOf(value);
             if (i == -1)
                 i = 0;
             this.setSelectedIndex(i);
         };
-        d(p, "previousPage"
-            ,function () {
+        Object.defineProperty(Controller.prototype, "previousPage", {
+            get: function () {
                 if (this._previousIndex == -1)
                     return null;
                 else
                     return this._pageNames[this._previousIndex];
-            }
-        );
-        d(p, "pageCount"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "pageCount", {
+            get: function () {
                 return this._pageIds.length;
-            }
-        );
-        p.getPageName = function (index) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Controller.prototype.getPageName = function (index) {
             if (index === void 0) { index = 0; }
             return this._pageNames[index];
         };
-        p.addPage = function (name) {
+        Controller.prototype.addPage = function (name) {
             if (name === void 0) { name = ""; }
             this.addPageAt(name, this._pageIds.length);
         };
-        p.addPageAt = function (name, index) {
+        Controller.prototype.addPageAt = function (name, index) {
             if (index === void 0) { index = 0; }
             var nid = "" + (Controller._nextPageId++);
             if (index == this._pageIds.length) {
@@ -130,7 +152,7 @@ var fairygui;
                 this._pageNames.splice(index, 0, name);
             }
         };
-        p.removePage = function (name) {
+        Controller.prototype.removePage = function (name) {
             var i = this._pageNames.indexOf(name);
             if (i != -1) {
                 this._pageIds.splice(i, 1);
@@ -141,7 +163,7 @@ var fairygui;
                     this._parent.applyController(this);
             }
         };
-        p.removePageAt = function (index) {
+        Controller.prototype.removePageAt = function (index) {
             if (index === void 0) { index = 0; }
             this._pageIds.splice(index, 1);
             this._pageNames.splice(index, 1);
@@ -150,7 +172,7 @@ var fairygui;
             else
                 this._parent.applyController(this);
         };
-        p.clearPages = function () {
+        Controller.prototype.clearPages = function () {
             this._pageIds.length = 0;
             this._pageNames.length = 0;
             if (this._selectedIndex != -1)
@@ -158,60 +180,66 @@ var fairygui;
             else
                 this._parent.applyController(this);
         };
-        p.hasPage = function (aName) {
+        Controller.prototype.hasPage = function (aName) {
             return this._pageNames.indexOf(aName) != -1;
         };
-        p.getPageIndexById = function (aId) {
+        Controller.prototype.getPageIndexById = function (aId) {
             return this._pageIds.indexOf(aId);
         };
-        p.getPageIdByName = function (aName) {
+        Controller.prototype.getPageIdByName = function (aName) {
             var i = this._pageNames.indexOf(aName);
             if (i != -1)
                 return this._pageIds[i];
             else
                 return null;
         };
-        p.getPageNameById = function (aId) {
+        Controller.prototype.getPageNameById = function (aId) {
             var i = this._pageIds.indexOf(aId);
             if (i != -1)
                 return this._pageNames[i];
             else
                 return null;
         };
-        p.getPageId = function (index) {
+        Controller.prototype.getPageId = function (index) {
             if (index === void 0) { index = 0; }
             return this._pageIds[index];
         };
-        d(p, "selectedPageId"
-            ,function () {
+        Object.defineProperty(Controller.prototype, "selectedPageId", {
+            get: function () {
                 if (this._selectedIndex == -1)
                     return null;
                 else
                     return this._pageIds[this._selectedIndex];
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 var i = this._pageIds.indexOf(val);
                 this.selectedIndex = i;
-            }
-        );
-        d(p, "oppositePageId",undefined
-            ,function (val) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "oppositePageId", {
+            set: function (val) {
                 var i = this._pageIds.indexOf(val);
                 if (i > 0)
                     this.selectedIndex = 0;
                 else if (this._pageIds.length > 1)
                     this.selectedIndex = 1;
-            }
-        );
-        d(p, "previousPageId"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "previousPageId", {
+            get: function () {
                 if (this._previousIndex == -1)
                     return null;
                 else
                     return this._pageIds[this._previousIndex];
-            }
-        );
-        p.setup = function (xml) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Controller.prototype.setup = function (xml) {
             this._name = xml.attributes.name;
             this._autoRadioGroupDepth = xml.attributes.autoRadioGroupDepth == "true";
             var i = 0;
@@ -253,22 +281,24 @@ var fairygui;
             else
                 this._selectedIndex = -1;
         };
-        Controller._nextPageId = 0;
         return Controller;
     }(egret.EventDispatcher));
+    Controller._nextPageId = 0;
     fairygui.Controller = Controller;
-    egret.registerClass(Controller,'fairygui.Controller');
+    __reflect(Controller.prototype, "fairygui.Controller");
     var PageTransition = (function () {
         function PageTransition() {
             this.fromIndex = 0;
             this.toIndex = 0;
         }
-        var d = __define,c=PageTransition,p=c.prototype;
         return PageTransition;
     }());
-    egret.registerClass(PageTransition,'PageTransition');
+    __reflect(PageTransition.prototype, "PageTransition");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var Frame = (function () {
@@ -276,40 +306,47 @@ var fairygui;
             this.addDelay = 0;
             this.rect = new egret.Rectangle();
         }
-        var d = __define,c=Frame,p=c.prototype;
         return Frame;
     }());
     fairygui.Frame = Frame;
-    egret.registerClass(Frame,'fairygui.Frame');
+    __reflect(Frame.prototype, "fairygui.Frame");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var MovieClip = (function (_super) {
         __extends(MovieClip, _super);
         function MovieClip() {
-            _super.call(this);
-            this.interval = 0;
-            this.repeatDelay = 0;
-            this._frameCount = 0;
-            this._currentFrame = 0;
-            this._start = 0;
-            this._end = 0;
-            this._times = 0;
-            this._endAt = 0;
-            this._status = 0; //0-none, 1-next loop, 2-ending, 3-ended
-            this.$renderNode = new egret.sys.BitmapNode();
-            this.playState = new fairygui.PlayState();
-            this._playing = true;
-            this.touchEnabled = false;
-            this.setPlaySettings();
+            var _this = _super.call(this) || this;
+            _this.interval = 0;
+            _this.repeatDelay = 0;
+            _this._frameCount = 0;
+            _this._currentFrame = 0;
+            _this._start = 0;
+            _this._end = 0;
+            _this._times = 0;
+            _this._endAt = 0;
+            _this._status = 0; //0-none, 1-next loop, 2-ending, 3-ended
+            _this.$renderNode = new egret.sys.BitmapNode();
+            _this.playState = new fairygui.PlayState();
+            _this._playing = true;
+            _this.touchEnabled = false;
+            _this.setPlaySettings();
+            return _this;
         }
-        var d = __define,c=MovieClip,p=c.prototype;
-        d(p, "frames"
-            ,function () {
+        Object.defineProperty(MovieClip.prototype, "frames", {
+            get: function () {
                 return this._frames;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._frames = value;
                 if (this._frames != null)
                     this._frameCount = this._frames.length;
@@ -326,30 +363,36 @@ var fairygui;
                 else
                     this.setFrame(null);
                 this.playState.rewind();
-            }
-        );
-        d(p, "frameCount"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(MovieClip.prototype, "frameCount", {
+            get: function () {
                 return this._frameCount;
-            }
-        );
-        d(p, "currentFrame"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(MovieClip.prototype, "currentFrame", {
+            get: function () {
                 return this._currentFrame;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._currentFrame != value) {
                     this._currentFrame = value;
                     this.playState.currentFrame = value;
                     this.setFrame(this._currentFrame < this._frameCount ? this._frames[this._currentFrame] : null);
                 }
-            }
-        );
-        d(p, "playing"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(MovieClip.prototype, "playing", {
+            get: function () {
                 return this._playing;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._playing = value;
                 if (value && this.stage != null) {
                     fairygui.GTimers.inst.add(0, 0, this.update, this);
@@ -357,10 +400,12 @@ var fairygui;
                 else {
                     fairygui.GTimers.inst.remove(this.update, this);
                 }
-            }
-        );
+            },
+            enumerable: true,
+            configurable: true
+        });
         //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
-        p.setPlaySettings = function (start, end, times, endAt, endCallback, callbackObj) {
+        MovieClip.prototype.setPlaySettings = function (start, end, times, endAt, endCallback, callbackObj) {
             if (start === void 0) { start = 0; }
             if (end === void 0) { end = -1; }
             if (times === void 0) { times = 0; }
@@ -380,7 +425,7 @@ var fairygui;
             this._callbackObj = callbackObj;
             this.currentFrame = start;
         };
-        p.update = function () {
+        MovieClip.prototype.update = function () {
             if (this._playing && this._frameCount != 0 && this._status != 3) {
                 this.playState.update(this);
                 if (this._currentFrame != this.playState.currentFrame) {
@@ -415,7 +460,7 @@ var fairygui;
                 }
             }
         };
-        p.__playEnd = function () {
+        MovieClip.prototype.__playEnd = function () {
             if (this._callback != null) {
                 var f = this._callback;
                 var fObj = this._callbackObj;
@@ -427,7 +472,7 @@ var fairygui;
                     f.call(fObj);
             }
         };
-        p.setFrame = function (frame) {
+        MovieClip.prototype.setFrame = function (frame) {
             if (frame == null) {
                 this._texture = null;
             }
@@ -437,7 +482,7 @@ var fairygui;
             }
             this.$invalidateContentBounds();
         };
-        p.$render = function () {
+        MovieClip.prototype.$render = function () {
             var texture = this._texture;
             if (texture) {
                 var offsetX = Math.round(texture._offsetX) + this._frameRect.x;
@@ -453,7 +498,7 @@ var fairygui;
                 egret.sys.BitmapNode.$updateTextureData(this.$renderNode, texture._bitmapData, texture._bitmapX, texture._bitmapY, bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight, destW, destH, sourceWidth, sourceHeight, null, egret.BitmapFillMode.SCALE, true);
             }
         };
-        p.$measureContentBounds = function (bounds) {
+        MovieClip.prototype.$measureContentBounds = function (bounds) {
             if (this._texture) {
                 var x = Math.round(this._texture._offsetX) + this._frameRect.x;
                 var y = Math.round(this._texture._offsetY) + this._frameRect.y;
@@ -465,12 +510,12 @@ var fairygui;
                 bounds.setEmpty();
             }
         };
-        p.$onAddToStage = function (stage, nestLevel) {
+        MovieClip.prototype.$onAddToStage = function (stage, nestLevel) {
             _super.prototype.$onAddToStage.call(this, stage, nestLevel);
             if (this._playing)
                 fairygui.GTimers.inst.add(0, 0, this.update, this);
         };
-        p.$onRemoveFromStage = function () {
+        MovieClip.prototype.$onRemoveFromStage = function () {
             _super.prototype.$onRemoveFromStage.call(this);
             if (this._playing)
                 fairygui.GTimers.inst.remove(this.update, this);
@@ -478,9 +523,12 @@ var fairygui;
         return MovieClip;
     }(egret.DisplayObject));
     fairygui.MovieClip = MovieClip;
-    egret.registerClass(MovieClip,'fairygui.MovieClip');
+    __reflect(MovieClip.prototype, "fairygui.MovieClip");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var PlayState = (function () {
@@ -490,8 +538,7 @@ var fairygui;
             this._curFrameDelay = 0;
             this._lastUpdateSeq = 0;
         }
-        var d = __define,c=PlayState,p=c.prototype;
-        p.update = function (mc) {
+        PlayState.prototype.update = function (mc) {
             var elapsed;
             var frameId = fairygui.GTimers.workCount;
             if (frameId - this._lastUpdateSeq != 1)
@@ -541,29 +588,31 @@ var fairygui;
                 }
             }
         };
-        d(p, "currentFrame"
-            ,function () {
+        Object.defineProperty(PlayState.prototype, "currentFrame", {
+            get: function () {
                 return this._curFrame;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._curFrame = value;
                 this._curFrameDelay = 0;
-            }
-        );
-        p.rewind = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        PlayState.prototype.rewind = function () {
             this._curFrame = 0;
             this._curFrameDelay = 0;
             this.reversed = false;
             this.reachEnding = false;
         };
-        p.reset = function () {
+        PlayState.prototype.reset = function () {
             this._curFrame = 0;
             this._curFrameDelay = 0;
             this.repeatedCount = 0;
             this.reachEnding = false;
             this.reversed = false;
         };
-        p.copy = function (src) {
+        PlayState.prototype.copy = function (src) {
             this._curFrame = src._curFrame;
             this._curFrameDelay = src._curFrameDelay;
             this.repeatedCount = src.repeatedCount;
@@ -573,24 +622,32 @@ var fairygui;
         return PlayState;
     }());
     fairygui.PlayState = PlayState;
-    egret.registerClass(PlayState,'fairygui.PlayState');
+    __reflect(PlayState.prototype, "fairygui.PlayState");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var UIContainer = (function (_super) {
         __extends(UIContainer, _super);
         function UIContainer() {
-            _super.call(this);
-            this.touchEnabled = true;
-            this.touchChildren = true;
+            var _this = _super.call(this) || this;
+            _this.touchEnabled = true;
+            _this.touchChildren = true;
+            return _this;
         }
-        var d = __define,c=UIContainer,p=c.prototype;
-        d(p, "hitArea"
-            ,function () {
+        Object.defineProperty(UIContainer.prototype, "hitArea", {
+            get: function () {
                 return this._hitArea;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._hitArea && value) {
                     this._hitArea.x = value.x;
                     this._hitArea.y = value.y;
@@ -599,9 +656,11 @@ var fairygui;
                 }
                 else
                     this._hitArea = (value ? value.clone() : null);
-            }
-        );
-        p.$hitTest = function (stageX, stageY) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        UIContainer.prototype.$hitTest = function (stageX, stageY) {
             var ret = _super.prototype.$hitTest.call(this, stageX, stageY);
             if (ret == this) {
                 if (!this.touchEnabled || this._hitArea == null)
@@ -619,24 +678,32 @@ var fairygui;
         return UIContainer;
     }(egret.DisplayObjectContainer));
     fairygui.UIContainer = UIContainer;
-    egret.registerClass(UIContainer,'fairygui.UIContainer');
+    __reflect(UIContainer.prototype, "fairygui.UIContainer");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var UISprite = (function (_super) {
         __extends(UISprite, _super);
         function UISprite() {
-            _super.call(this);
-            this.touchEnabled = true;
-            this.touchChildren = true;
+            var _this = _super.call(this) || this;
+            _this.touchEnabled = true;
+            _this.touchChildren = true;
+            return _this;
         }
-        var d = __define,c=UISprite,p=c.prototype;
-        d(p, "hitArea"
-            ,function () {
+        Object.defineProperty(UISprite.prototype, "hitArea", {
+            get: function () {
                 return this._hitArea;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._hitArea && value) {
                     this._hitArea.x = value.x;
                     this._hitArea.y = value.y;
@@ -645,9 +712,11 @@ var fairygui;
                 }
                 else
                     this._hitArea = (value ? value.clone() : null);
-            }
-        );
-        p.$hitTest = function (stageX, stageY) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        UISprite.prototype.$hitTest = function (stageX, stageY) {
             var ret = _super.prototype.$hitTest.call(this, stageX, stageY);
             if (ret == this) {
                 if (!this.touchEnabled || this._hitArea == null)
@@ -665,9 +734,12 @@ var fairygui;
         return UISprite;
     }(egret.Sprite));
     fairygui.UISprite = UISprite;
-    egret.registerClass(UISprite,'fairygui.UISprite');
+    __reflect(UISprite.prototype, "fairygui.UISprite");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var BitmapFont = (function () {
@@ -675,13 +747,15 @@ var fairygui;
             this.size = 0;
             this.glyphs = {};
         }
-        var d = __define,c=BitmapFont,p=c.prototype;
         return BitmapFont;
     }());
     fairygui.BitmapFont = BitmapFont;
-    egret.registerClass(BitmapFont,'fairygui.BitmapFont');
+    __reflect(BitmapFont.prototype, "fairygui.BitmapFont");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var BMGlyph = (function () {
@@ -696,13 +770,20 @@ var fairygui;
             this.lineHeight = 0;
             this.channel = 0;
         }
-        var d = __define,c=BMGlyph,p=c.prototype;
         return BMGlyph;
     }());
     fairygui.BMGlyph = BMGlyph;
-    egret.registerClass(BMGlyph,'fairygui.BMGlyph');
+    __reflect(BMGlyph.prototype, "fairygui.BMGlyph");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var DragEvent = (function (_super) {
@@ -711,45 +792,61 @@ var fairygui;
             if (stageX === void 0) { stageX = 0; }
             if (stageY === void 0) { stageY = 0; }
             if (touchPointID === void 0) { touchPointID = -1; }
-            _super.call(this, type, false);
-            this.touchPointID = 0;
-            this.stageX = stageX;
-            this.stageY = stageY;
-            this.touchPointID = touchPointID;
+            var _this = _super.call(this, type, false) || this;
+            _this.touchPointID = 0;
+            _this.stageX = stageX;
+            _this.stageY = stageY;
+            _this.touchPointID = touchPointID;
+            return _this;
         }
-        var d = __define,c=DragEvent,p=c.prototype;
-        p.preventDefault = function () {
+        DragEvent.prototype.preventDefault = function () {
             this._prevented = true;
         };
-        p.isDefaultPrevented = function () {
+        DragEvent.prototype.isDefaultPrevented = function () {
             return this._prevented;
         };
-        DragEvent.DRAG_START = "__dragStart";
-        DragEvent.DRAG_END = "__dragEnd";
-        DragEvent.DRAG_MOVING = "__dragMoving";
         return DragEvent;
     }(egret.Event));
+    DragEvent.DRAG_START = "__dragStart";
+    DragEvent.DRAG_END = "__dragEnd";
+    DragEvent.DRAG_MOVING = "__dragMoving";
     fairygui.DragEvent = DragEvent;
-    egret.registerClass(DragEvent,'fairygui.DragEvent');
+    __reflect(DragEvent.prototype, "fairygui.DragEvent");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var DropEvent = (function (_super) {
         __extends(DropEvent, _super);
         function DropEvent(type, source) {
             if (source === void 0) { source = null; }
-            _super.call(this, type, false);
-            this.source = source;
+            var _this = _super.call(this, type, false) || this;
+            _this.source = source;
+            return _this;
         }
-        var d = __define,c=DropEvent,p=c.prototype;
-        DropEvent.DROP = "__drop";
         return DropEvent;
     }(egret.Event));
+    DropEvent.DROP = "__drop";
     fairygui.DropEvent = DropEvent;
-    egret.registerClass(DropEvent,'fairygui.DropEvent');
+    __reflect(DropEvent.prototype, "fairygui.DropEvent");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var ItemEvent = (function (_super) {
@@ -758,34 +855,44 @@ var fairygui;
             if (itemObject === void 0) { itemObject = null; }
             if (stageX === void 0) { stageX = 0; }
             if (stageY === void 0) { stageY = 0; }
-            _super.call(this, type, false);
-            this.itemObject = itemObject;
-            this.stageX = stageX;
-            this.stageY = stageY;
+            var _this = _super.call(this, type, false) || this;
+            _this.itemObject = itemObject;
+            _this.stageX = stageX;
+            _this.stageY = stageY;
+            return _this;
         }
-        var d = __define,c=ItemEvent,p=c.prototype;
-        ItemEvent.CLICK = "___itemClick";
         return ItemEvent;
     }(egret.Event));
+    ItemEvent.CLICK = "___itemClick";
     fairygui.ItemEvent = ItemEvent;
-    egret.registerClass(ItemEvent,'fairygui.ItemEvent');
+    __reflect(ItemEvent.prototype, "fairygui.ItemEvent");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var StateChangeEvent = (function (_super) {
         __extends(StateChangeEvent, _super);
         function StateChangeEvent(type) {
-            _super.call(this, type, false);
+            return _super.call(this, type, false) || this;
         }
-        var d = __define,c=StateChangeEvent,p=c.prototype;
-        StateChangeEvent.CHANGED = "___stateChanged";
         return StateChangeEvent;
     }(egret.Event));
+    StateChangeEvent.CHANGED = "___stateChanged";
     fairygui.StateChangeEvent = StateChangeEvent;
-    egret.registerClass(StateChangeEvent,'fairygui.StateChangeEvent');
+    __reflect(StateChangeEvent.prototype, "fairygui.StateChangeEvent");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var UBBParser = (function () {
@@ -808,8 +915,7 @@ var fairygui;
             this._handlers["font"] = this.onTag_FONT;
             this._handlers["size"] = this.onTag_SIZE;
         }
-        var d = __define,c=UBBParser,p=c.prototype;
-        p.onTag_URL = function (tagName, end, attr) {
+        UBBParser.prototype.onTag_URL = function (tagName, end, attr) {
             if (!end) {
                 if (attr != null)
                     return "<a href=\"" + attr + "\" target=\"_blank\">";
@@ -821,7 +927,7 @@ var fairygui;
             else
                 return "</a>";
         };
-        p.onTag_IMG = function (tagName, end, attr) {
+        UBBParser.prototype.onTag_IMG = function (tagName, end, attr) {
             if (!end) {
                 var src = this.getTagText(true);
                 if (!src)
@@ -834,22 +940,22 @@ var fairygui;
             else
                 return null;
         };
-        p.onTag_Simple = function (tagName, end, attr) {
+        UBBParser.prototype.onTag_Simple = function (tagName, end, attr) {
             return end ? ("</" + tagName + ">") : ("<" + tagName + ">");
         };
-        p.onTag_COLOR = function (tagName, end, attr) {
+        UBBParser.prototype.onTag_COLOR = function (tagName, end, attr) {
             if (!end)
                 return "<font color=\"" + attr + "\">";
             else
                 return "</font>";
         };
-        p.onTag_FONT = function (tagName, end, attr) {
+        UBBParser.prototype.onTag_FONT = function (tagName, end, attr) {
             if (!end)
                 return "<font face=\"" + attr + "\">";
             else
                 return "</font>";
         };
-        p.onTag_SIZE = function (tagName, end, attr) {
+        UBBParser.prototype.onTag_SIZE = function (tagName, end, attr) {
             if (!end) {
                 if (attr == "normal")
                     attr = "" + this.normalFontSize;
@@ -866,7 +972,7 @@ var fairygui;
             else
                 return "</font>";
         };
-        p.getTagText = function (remove) {
+        UBBParser.prototype.getTagText = function (remove) {
             if (remove === void 0) { remove = false; }
             var pos = this._text.indexOf("[", this._readPos);
             if (pos == -1)
@@ -876,7 +982,7 @@ var fairygui;
                 this._readPos = pos;
             return ret;
         };
-        p.parse = function (text) {
+        UBBParser.prototype.parse = function (text) {
             this._text = text;
             var pos1 = 0, pos2, pos3 = 0;
             var end;
@@ -914,19 +1020,21 @@ var fairygui;
             }
             return this._text;
         };
-        UBBParser.inst = new UBBParser();
         return UBBParser;
     }());
+    UBBParser.inst = new UBBParser();
     fairygui.UBBParser = UBBParser;
-    egret.registerClass(UBBParser,'fairygui.UBBParser');
+    __reflect(UBBParser.prototype, "fairygui.UBBParser");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var ToolSet = (function () {
         function ToolSet() {
         }
-        var d = __define,c=ToolSet,p=c.prototype;
         ToolSet.getFileName = function (source) {
             var i = source.lastIndexOf("/");
             if (i != -1)
@@ -1068,13 +1176,16 @@ var fairygui;
                 value = 0;
             return value;
         };
-        ToolSet.defaultUBBParser = new fairygui.UBBParser();
         return ToolSet;
     }());
+    ToolSet.defaultUBBParser = new fairygui.UBBParser();
     fairygui.ToolSet = ToolSet;
-    egret.registerClass(ToolSet,'fairygui.ToolSet');
+    __reflect(ToolSet.prototype, "fairygui.ToolSet");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var ColorMatrix = (function () {
@@ -1082,31 +1193,30 @@ var fairygui;
             this.matrix = new Array(ColorMatrix.LENGTH);
             this.reset();
         }
-        var d = __define,c=ColorMatrix,p=c.prototype;
         ColorMatrix.create = function (p_brightness, p_contrast, p_saturation, p_hue) {
             var ret = new ColorMatrix();
             ret.adjustColor(p_brightness, p_contrast, p_saturation, p_hue);
             return ret;
         };
         // public methods:
-        p.reset = function () {
+        ColorMatrix.prototype.reset = function () {
             for (var i = 0; i < ColorMatrix.LENGTH; i++) {
                 this.matrix[i] = ColorMatrix.IDENTITY_MATRIX[i];
             }
         };
-        p.invert = function () {
+        ColorMatrix.prototype.invert = function () {
             this.multiplyMatrix([-1, 0, 0, 0, 255,
                 0, -1, 0, 0, 255,
                 0, 0, -1, 0, 255,
                 0, 0, 0, 1, 0]);
         };
-        p.adjustColor = function (p_brightness, p_contrast, p_saturation, p_hue) {
+        ColorMatrix.prototype.adjustColor = function (p_brightness, p_contrast, p_saturation, p_hue) {
             this.adjustHue(p_hue);
             this.adjustContrast(p_contrast);
             this.adjustBrightness(p_brightness);
             this.adjustSaturation(p_saturation);
         };
-        p.adjustBrightness = function (p_val) {
+        ColorMatrix.prototype.adjustBrightness = function (p_val) {
             p_val = this.cleanValue(p_val, 1) * 255;
             this.multiplyMatrix([
                 1, 0, 0, 0, p_val,
@@ -1115,7 +1225,7 @@ var fairygui;
                 0, 0, 0, 1, 0
             ]);
         };
-        p.adjustContrast = function (p_val) {
+        ColorMatrix.prototype.adjustContrast = function (p_val) {
             p_val = this.cleanValue(p_val, 1);
             var s = p_val + 1;
             var o = 128 * (1 - s);
@@ -1126,7 +1236,7 @@ var fairygui;
                 0, 0, 0, 1, 0
             ]);
         };
-        p.adjustSaturation = function (p_val) {
+        ColorMatrix.prototype.adjustSaturation = function (p_val) {
             p_val = this.cleanValue(p_val, 1);
             p_val += 1;
             var invSat = 1 - p_val;
@@ -1140,7 +1250,7 @@ var fairygui;
                 0, 0, 0, 1, 0
             ]);
         };
-        p.adjustHue = function (p_val) {
+        ColorMatrix.prototype.adjustHue = function (p_val) {
             p_val = this.cleanValue(p_val, 1);
             p_val *= Math.PI;
             var cos = Math.cos(p_val);
@@ -1152,24 +1262,24 @@ var fairygui;
                 0, 0, 0, 1, 0
             ]);
         };
-        p.concat = function (p_matrix) {
+        ColorMatrix.prototype.concat = function (p_matrix) {
             if (p_matrix.length != ColorMatrix.LENGTH) {
                 return;
             }
             this.multiplyMatrix(p_matrix);
         };
-        p.clone = function () {
+        ColorMatrix.prototype.clone = function () {
             var result = new ColorMatrix();
             result.copyMatrix(this.matrix);
             return result;
         };
-        p.copyMatrix = function (p_matrix) {
+        ColorMatrix.prototype.copyMatrix = function (p_matrix) {
             var l = ColorMatrix.LENGTH;
             for (var i = 0; i < l; i++) {
                 this.matrix[i] = p_matrix[i];
             }
         };
-        p.multiplyMatrix = function (p_matrix) {
+        ColorMatrix.prototype.multiplyMatrix = function (p_matrix) {
             var col = [];
             var i = 0;
             for (var y = 0; y < 4; ++y) {
@@ -1184,91 +1294,92 @@ var fairygui;
             }
             this.copyMatrix(col);
         };
-        p.cleanValue = function (p_val, p_limit) {
+        ColorMatrix.prototype.cleanValue = function (p_val, p_limit) {
             return Math.min(p_limit, Math.max(-p_limit, p_val));
         };
-        // identity matrix constant:
-        ColorMatrix.IDENTITY_MATRIX = [
-            1, 0, 0, 0, 0,
-            0, 1, 0, 0, 0,
-            0, 0, 1, 0, 0,
-            0, 0, 0, 1, 0
-        ];
-        ColorMatrix.LENGTH = ColorMatrix.IDENTITY_MATRIX.length;
-        ColorMatrix.LUMA_R = 0.299;
-        ColorMatrix.LUMA_G = 0.587;
-        ColorMatrix.LUMA_B = 0.114;
         return ColorMatrix;
     }());
+    // identity matrix constant:
+    ColorMatrix.IDENTITY_MATRIX = [
+        1, 0, 0, 0, 0,
+        0, 1, 0, 0, 0,
+        0, 0, 1, 0, 0,
+        0, 0, 0, 1, 0
+    ];
+    ColorMatrix.LENGTH = ColorMatrix.IDENTITY_MATRIX.length;
+    ColorMatrix.LUMA_R = 0.299;
+    ColorMatrix.LUMA_G = 0.587;
+    ColorMatrix.LUMA_B = 0.114;
     fairygui.ColorMatrix = ColorMatrix;
-    egret.registerClass(ColorMatrix,'fairygui.ColorMatrix');
+    __reflect(ColorMatrix.prototype, "fairygui.ColorMatrix");
 })(fairygui || (fairygui = {}));
 
 var fairygui;
 (function (fairygui) {
+    var ButtonMode;
     (function (ButtonMode) {
         ButtonMode[ButtonMode["Common"] = 0] = "Common";
         ButtonMode[ButtonMode["Check"] = 1] = "Check";
         ButtonMode[ButtonMode["Radio"] = 2] = "Radio";
-    })(fairygui.ButtonMode || (fairygui.ButtonMode = {}));
-    var ButtonMode = fairygui.ButtonMode;
+    })(ButtonMode = fairygui.ButtonMode || (fairygui.ButtonMode = {}));
     ;
+    var AutoSizeType;
     (function (AutoSizeType) {
         AutoSizeType[AutoSizeType["None"] = 0] = "None";
         AutoSizeType[AutoSizeType["Both"] = 1] = "Both";
         AutoSizeType[AutoSizeType["Height"] = 2] = "Height";
-    })(fairygui.AutoSizeType || (fairygui.AutoSizeType = {}));
-    var AutoSizeType = fairygui.AutoSizeType;
+    })(AutoSizeType = fairygui.AutoSizeType || (fairygui.AutoSizeType = {}));
     ;
+    var AlignType;
     (function (AlignType) {
         AlignType[AlignType["Left"] = 0] = "Left";
         AlignType[AlignType["Center"] = 1] = "Center";
         AlignType[AlignType["Right"] = 2] = "Right";
-    })(fairygui.AlignType || (fairygui.AlignType = {}));
-    var AlignType = fairygui.AlignType;
+    })(AlignType = fairygui.AlignType || (fairygui.AlignType = {}));
     ;
+    var VertAlignType;
     (function (VertAlignType) {
         VertAlignType[VertAlignType["Top"] = 0] = "Top";
         VertAlignType[VertAlignType["Middle"] = 1] = "Middle";
         VertAlignType[VertAlignType["Bottom"] = 2] = "Bottom";
-    })(fairygui.VertAlignType || (fairygui.VertAlignType = {}));
-    var VertAlignType = fairygui.VertAlignType;
+    })(VertAlignType = fairygui.VertAlignType || (fairygui.VertAlignType = {}));
     ;
+    var LoaderFillType;
     (function (LoaderFillType) {
         LoaderFillType[LoaderFillType["None"] = 0] = "None";
         LoaderFillType[LoaderFillType["Scale"] = 1] = "Scale";
         LoaderFillType[LoaderFillType["ScaleMatchHeight"] = 2] = "ScaleMatchHeight";
         LoaderFillType[LoaderFillType["ScaleMatchWidth"] = 3] = "ScaleMatchWidth";
         LoaderFillType[LoaderFillType["ScaleFree"] = 4] = "ScaleFree";
-    })(fairygui.LoaderFillType || (fairygui.LoaderFillType = {}));
-    var LoaderFillType = fairygui.LoaderFillType;
+    })(LoaderFillType = fairygui.LoaderFillType || (fairygui.LoaderFillType = {}));
     ;
+    var ListLayoutType;
     (function (ListLayoutType) {
         ListLayoutType[ListLayoutType["SingleColumn"] = 0] = "SingleColumn";
         ListLayoutType[ListLayoutType["SingleRow"] = 1] = "SingleRow";
         ListLayoutType[ListLayoutType["FlowHorizontal"] = 2] = "FlowHorizontal";
         ListLayoutType[ListLayoutType["FlowVertical"] = 3] = "FlowVertical";
         ListLayoutType[ListLayoutType["Pagination"] = 4] = "Pagination";
-    })(fairygui.ListLayoutType || (fairygui.ListLayoutType = {}));
-    var ListLayoutType = fairygui.ListLayoutType;
+    })(ListLayoutType = fairygui.ListLayoutType || (fairygui.ListLayoutType = {}));
     ;
+    var ListSelectionMode;
     (function (ListSelectionMode) {
         ListSelectionMode[ListSelectionMode["Single"] = 0] = "Single";
         ListSelectionMode[ListSelectionMode["Multiple"] = 1] = "Multiple";
         ListSelectionMode[ListSelectionMode["Multiple_SingleClick"] = 2] = "Multiple_SingleClick";
         ListSelectionMode[ListSelectionMode["None"] = 3] = "None";
-    })(fairygui.ListSelectionMode || (fairygui.ListSelectionMode = {}));
-    var ListSelectionMode = fairygui.ListSelectionMode;
+    })(ListSelectionMode = fairygui.ListSelectionMode || (fairygui.ListSelectionMode = {}));
     ;
+    var OverflowType;
     (function (OverflowType) {
         OverflowType[OverflowType["Visible"] = 0] = "Visible";
         OverflowType[OverflowType["Hidden"] = 1] = "Hidden";
         OverflowType[OverflowType["Scroll"] = 2] = "Scroll";
         OverflowType[OverflowType["Scale"] = 3] = "Scale";
         OverflowType[OverflowType["ScaleFree"] = 4] = "ScaleFree";
-    })(fairygui.OverflowType || (fairygui.OverflowType = {}));
-    var OverflowType = fairygui.OverflowType;
+    })(OverflowType = fairygui.OverflowType || (fairygui.OverflowType = {}));
     ;
+    var PackageItemType;
     (function (PackageItemType) {
         PackageItemType[PackageItemType["Image"] = 0] = "Image";
         PackageItemType[PackageItemType["Swf"] = 1] = "Swf";
@@ -1278,47 +1389,47 @@ var fairygui;
         PackageItemType[PackageItemType["Misc"] = 5] = "Misc";
         PackageItemType[PackageItemType["Font"] = 6] = "Font";
         PackageItemType[PackageItemType["Atlas"] = 7] = "Atlas";
-    })(fairygui.PackageItemType || (fairygui.PackageItemType = {}));
-    var PackageItemType = fairygui.PackageItemType;
+    })(PackageItemType = fairygui.PackageItemType || (fairygui.PackageItemType = {}));
     ;
+    var ProgressTitleType;
     (function (ProgressTitleType) {
         ProgressTitleType[ProgressTitleType["Percent"] = 0] = "Percent";
         ProgressTitleType[ProgressTitleType["ValueAndMax"] = 1] = "ValueAndMax";
         ProgressTitleType[ProgressTitleType["Value"] = 2] = "Value";
         ProgressTitleType[ProgressTitleType["Max"] = 3] = "Max";
-    })(fairygui.ProgressTitleType || (fairygui.ProgressTitleType = {}));
-    var ProgressTitleType = fairygui.ProgressTitleType;
+    })(ProgressTitleType = fairygui.ProgressTitleType || (fairygui.ProgressTitleType = {}));
     ;
+    var ScrollBarDisplayType;
     (function (ScrollBarDisplayType) {
         ScrollBarDisplayType[ScrollBarDisplayType["Default"] = 0] = "Default";
         ScrollBarDisplayType[ScrollBarDisplayType["Visible"] = 1] = "Visible";
         ScrollBarDisplayType[ScrollBarDisplayType["Auto"] = 2] = "Auto";
         ScrollBarDisplayType[ScrollBarDisplayType["Hidden"] = 3] = "Hidden";
-    })(fairygui.ScrollBarDisplayType || (fairygui.ScrollBarDisplayType = {}));
-    var ScrollBarDisplayType = fairygui.ScrollBarDisplayType;
+    })(ScrollBarDisplayType = fairygui.ScrollBarDisplayType || (fairygui.ScrollBarDisplayType = {}));
     ;
+    var ScrollType;
     (function (ScrollType) {
         ScrollType[ScrollType["Horizontal"] = 0] = "Horizontal";
         ScrollType[ScrollType["Vertical"] = 1] = "Vertical";
         ScrollType[ScrollType["Both"] = 2] = "Both";
-    })(fairygui.ScrollType || (fairygui.ScrollType = {}));
-    var ScrollType = fairygui.ScrollType;
+    })(ScrollType = fairygui.ScrollType || (fairygui.ScrollType = {}));
     ;
+    var FlipType;
     (function (FlipType) {
         FlipType[FlipType["None"] = 0] = "None";
         FlipType[FlipType["Horizontal"] = 1] = "Horizontal";
         FlipType[FlipType["Vertical"] = 2] = "Vertical";
         FlipType[FlipType["Both"] = 3] = "Both";
-    })(fairygui.FlipType || (fairygui.FlipType = {}));
-    var FlipType = fairygui.FlipType;
+    })(FlipType = fairygui.FlipType || (fairygui.FlipType = {}));
     ;
+    var ChildrenRenderOrder;
     (function (ChildrenRenderOrder) {
         ChildrenRenderOrder[ChildrenRenderOrder["Ascent"] = 0] = "Ascent";
         ChildrenRenderOrder[ChildrenRenderOrder["Descent"] = 1] = "Descent";
         ChildrenRenderOrder[ChildrenRenderOrder["Arch"] = 2] = "Arch";
-    })(fairygui.ChildrenRenderOrder || (fairygui.ChildrenRenderOrder = {}));
-    var ChildrenRenderOrder = fairygui.ChildrenRenderOrder;
+    })(ChildrenRenderOrder = fairygui.ChildrenRenderOrder || (fairygui.ChildrenRenderOrder = {}));
     ;
+    var RelationType;
     (function (RelationType) {
         RelationType[RelationType["Left_Left"] = 0] = "Left_Left";
         RelationType[RelationType["Left_Center"] = 1] = "Left_Center";
@@ -1345,8 +1456,7 @@ var fairygui;
         RelationType[RelationType["BottomExt_Top"] = 22] = "BottomExt_Top";
         RelationType[RelationType["BottomExt_Bottom"] = 23] = "BottomExt_Bottom";
         RelationType[RelationType["Size"] = 24] = "Size";
-    })(fairygui.RelationType || (fairygui.RelationType = {}));
-    var RelationType = fairygui.RelationType;
+    })(RelationType = fairygui.RelationType || (fairygui.RelationType = {}));
     ;
     function parseButtonMode(value) {
         switch (value) {
@@ -1595,6 +1705,9 @@ var fairygui;
     fairygui.ParseEaseType = ParseEaseType;
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var GearBase = (function () {
@@ -1605,52 +1718,61 @@ var fairygui;
             this._tweenDelay = 0;
             this._displayLockToken = 0;
         }
-        var d = __define,c=GearBase,p=c.prototype;
-        d(p, "controller"
-            ,function () {
+        Object.defineProperty(GearBase.prototype, "controller", {
+            get: function () {
                 return this._controller;
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 if (val != this._controller) {
                     this._controller = val;
                     if (this._controller)
                         this.init();
                 }
-            }
-        );
-        d(p, "tween"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GearBase.prototype, "tween", {
+            get: function () {
                 return this._tween;
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 this._tween = val;
-            }
-        );
-        d(p, "tweenDelay"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GearBase.prototype, "tweenDelay", {
+            get: function () {
                 return this._tweenDelay;
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 this._tweenDelay = val;
-            }
-        );
-        d(p, "tweenTime"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GearBase.prototype, "tweenTime", {
+            get: function () {
                 return this._tweenTime;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._tweenTime = value;
-            }
-        );
-        d(p, "easeType"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GearBase.prototype, "easeType", {
+            get: function () {
                 return this._easeType;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._easeType = value;
-            }
-        );
-        p.setup = function (xml) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GearBase.prototype.setup = function (xml) {
             this._controller = this._owner.parent.getController(xml.attributes.controller);
             if (this._controller == null)
                 return;
@@ -1691,36 +1813,43 @@ var fairygui;
                     this.addStatus(null, str);
             }
         };
-        p.updateFromRelations = function (dx, dy) {
+        GearBase.prototype.updateFromRelations = function (dx, dy) {
         };
-        p.addStatus = function (pageId, value) {
+        GearBase.prototype.addStatus = function (pageId, value) {
         };
-        p.init = function () {
+        GearBase.prototype.init = function () {
         };
-        p.apply = function () {
+        GearBase.prototype.apply = function () {
         };
-        p.updateState = function () {
+        GearBase.prototype.updateState = function () {
         };
-        GearBase.disableAllTweenEffect = false;
         return GearBase;
     }());
+    GearBase.disableAllTweenEffect = false;
     fairygui.GearBase = GearBase;
-    egret.registerClass(GearBase,'fairygui.GearBase');
+    __reflect(GearBase.prototype, "fairygui.GearBase");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GearSize = (function (_super) {
         __extends(GearSize, _super);
         function GearSize(owner) {
-            _super.call(this, owner);
+            return _super.call(this, owner) || this;
         }
-        var d = __define,c=GearSize,p=c.prototype;
-        p.init = function () {
+        GearSize.prototype.init = function () {
             this._default = new GearSizeValue(this._owner.width, this._owner.height, this._owner.scaleX, this._owner.scaleY);
             this._storage = {};
         };
-        p.addStatus = function (pageId, value) {
+        GearSize.prototype.addStatus = function (pageId, value) {
             if (value == "-")
                 return;
             var arr = value.split(",");
@@ -1738,7 +1867,7 @@ var fairygui;
                 gv.scaleY = parseFloat(arr[3]);
             }
         };
-        p.apply = function () {
+        GearSize.prototype.apply = function () {
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv)
                 gv = this._default;
@@ -1795,7 +1924,7 @@ var fairygui;
                 this._owner._gearLocked = false;
             }
         };
-        p.updateState = function () {
+        GearSize.prototype.updateState = function () {
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv) {
                 gv = new GearSizeValue();
@@ -1806,7 +1935,7 @@ var fairygui;
             gv.scaleX = this._owner.scaleX;
             gv.scaleY = this._owner.scaleY;
         };
-        p.updateFromRelations = function (dx, dy) {
+        GearSize.prototype.updateFromRelations = function (dx, dy) {
             if (this._controller == null || this._storage == null)
                 return;
             for (var key in this._storage) {
@@ -1821,7 +1950,7 @@ var fairygui;
         return GearSize;
     }(fairygui.GearBase));
     fairygui.GearSize = GearSize;
-    egret.registerClass(GearSize,'fairygui.GearSize');
+    __reflect(GearSize.prototype, "fairygui.GearSize");
     var GearSizeValue = (function () {
         function GearSizeValue(width, height, scaleX, scaleY) {
             if (width === void 0) { width = 0; }
@@ -1833,25 +1962,31 @@ var fairygui;
             this.scaleX = scaleX;
             this.scaleY = scaleY;
         }
-        var d = __define,c=GearSizeValue,p=c.prototype;
         return GearSizeValue;
     }());
-    egret.registerClass(GearSizeValue,'GearSizeValue');
+    __reflect(GearSizeValue.prototype, "GearSizeValue");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GearXY = (function (_super) {
         __extends(GearXY, _super);
         function GearXY(owner) {
-            _super.call(this, owner);
+            return _super.call(this, owner) || this;
         }
-        var d = __define,c=GearXY,p=c.prototype;
-        p.init = function () {
+        GearXY.prototype.init = function () {
             this._default = new egret.Point(this._owner.x, this._owner.y);
             this._storage = {};
         };
-        p.addStatus = function (pageId, value) {
+        GearXY.prototype.addStatus = function (pageId, value) {
             if (value == "-")
                 return;
             var arr = value.split(",");
@@ -1865,7 +2000,7 @@ var fairygui;
             pt.x = parseInt(arr[0]);
             pt.y = parseInt(arr[1]);
         };
-        p.apply = function () {
+        GearXY.prototype.apply = function () {
             var pt = this._storage[this._controller.selectedPageId];
             if (!pt)
                 pt = this._default;
@@ -1913,7 +2048,7 @@ var fairygui;
                 this._owner._gearLocked = false;
             }
         };
-        p.updateState = function () {
+        GearXY.prototype.updateState = function () {
             var pt = this._storage[this._controller.selectedPageId];
             if (!pt) {
                 pt = new egret.Point();
@@ -1922,7 +2057,7 @@ var fairygui;
             pt.x = this._owner.x;
             pt.y = this._owner.y;
         };
-        p.updateFromRelations = function (dx, dy) {
+        GearXY.prototype.updateFromRelations = function (dx, dy) {
             if (this._controller == null || this._storage == null)
                 return;
             for (var key in this._storage) {
@@ -1937,28 +2072,35 @@ var fairygui;
         return GearXY;
     }(fairygui.GearBase));
     fairygui.GearXY = GearXY;
-    egret.registerClass(GearXY,'fairygui.GearXY');
+    __reflect(GearXY.prototype, "fairygui.GearXY");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GearText = (function (_super) {
         __extends(GearText, _super);
         function GearText(owner) {
-            _super.call(this, owner);
+            return _super.call(this, owner) || this;
         }
-        var d = __define,c=GearText,p=c.prototype;
-        p.init = function () {
+        GearText.prototype.init = function () {
             this._default = this._owner.text;
             this._storage = {};
         };
-        p.addStatus = function (pageId, value) {
+        GearText.prototype.addStatus = function (pageId, value) {
             if (pageId == null)
                 this._default = value;
             else
                 this._storage[pageId] = value;
         };
-        p.apply = function () {
+        GearText.prototype.apply = function () {
             this._owner._gearLocked = true;
             var data = this._storage[this._controller.selectedPageId];
             if (data != undefined)
@@ -1967,34 +2109,41 @@ var fairygui;
                 this._owner.text = this._default;
             this._owner._gearLocked = false;
         };
-        p.updateState = function () {
+        GearText.prototype.updateState = function () {
             this._storage[this._controller.selectedPageId] = this._owner.text;
         };
         return GearText;
     }(fairygui.GearBase));
     fairygui.GearText = GearText;
-    egret.registerClass(GearText,'fairygui.GearText');
+    __reflect(GearText.prototype, "fairygui.GearText");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GearIcon = (function (_super) {
         __extends(GearIcon, _super);
         function GearIcon(owner) {
-            _super.call(this, owner);
+            return _super.call(this, owner) || this;
         }
-        var d = __define,c=GearIcon,p=c.prototype;
-        p.init = function () {
+        GearIcon.prototype.init = function () {
             this._default = this._owner.icon;
             this._storage = {};
         };
-        p.addStatus = function (pageId, value) {
+        GearIcon.prototype.addStatus = function (pageId, value) {
             if (pageId == null)
                 this._default = value;
             else
                 this._storage[pageId] = value;
         };
-        p.apply = function () {
+        GearIcon.prototype.apply = function () {
             this._owner._gearLocked = true;
             var data = this._storage[this._controller.selectedPageId];
             if (data != undefined)
@@ -2003,15 +2152,18 @@ var fairygui;
                 this._owner.icon = this._default;
             this._owner._gearLocked = false;
         };
-        p.updateState = function () {
+        GearIcon.prototype.updateState = function () {
             this._storage[this._controller.selectedPageId] = this._owner.icon;
         };
         return GearIcon;
     }(fairygui.GearBase));
     fairygui.GearIcon = GearIcon;
-    egret.registerClass(GearIcon,'fairygui.GearIcon');
+    __reflect(GearIcon.prototype, "fairygui.GearIcon");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var Transition = (function () {
@@ -2028,12 +2180,11 @@ var fairygui;
             this._owner = owner;
             this._items = new Array();
         }
-        var d = __define,c=Transition,p=c.prototype;
-        d(p, "autoPlay"
-            ,function () {
+        Object.defineProperty(Transition.prototype, "autoPlay", {
+            get: function () {
                 return this._autoPlay;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._autoPlay != value) {
                     this._autoPlay = value;
                     if (this._autoPlay) {
@@ -2045,9 +2196,11 @@ var fairygui;
                             this.stop(false, true);
                     }
                 }
-            }
-        );
-        p.play = function (onComplete, onCompleteObj, onCompleteParam, times, delay) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Transition.prototype.play = function (onComplete, onCompleteObj, onCompleteParam, times, delay) {
             if (onComplete === void 0) { onComplete = null; }
             if (onCompleteObj === void 0) { onCompleteObj = null; }
             if (onCompleteParam === void 0) { onCompleteParam = null; }
@@ -2055,7 +2208,7 @@ var fairygui;
             if (delay === void 0) { delay = 0; }
             this._play(onComplete, onCompleteObj, onCompleteParam, times, delay, false);
         };
-        p.playReverse = function (onComplete, onCompleteObj, onCompleteParam, times, delay) {
+        Transition.prototype.playReverse = function (onComplete, onCompleteObj, onCompleteParam, times, delay) {
             if (onComplete === void 0) { onComplete = null; }
             if (onCompleteObj === void 0) { onCompleteObj = null; }
             if (onCompleteParam === void 0) { onCompleteParam = null; }
@@ -2063,7 +2216,7 @@ var fairygui;
             if (delay === void 0) { delay = 0; }
             this._play(onComplete, onCompleteObj, onCompleteParam, times, delay, true);
         };
-        p._play = function (onComplete, onCompleteObj, onCompleteParam, times, delay, reversed) {
+        Transition.prototype._play = function (onComplete, onCompleteObj, onCompleteParam, times, delay, reversed) {
             if (onComplete === void 0) { onComplete = null; }
             if (onCompleteObj === void 0) { onCompleteObj = null; }
             if (onCompleteParam === void 0) { onCompleteParam = null; }
@@ -2099,7 +2252,7 @@ var fairygui;
                     onComplete(this._onCompleteObj);
             }
         };
-        p.stop = function (setToComplete, processCallback) {
+        Transition.prototype.stop = function (setToComplete, processCallback) {
             if (setToComplete === void 0) { setToComplete = true; }
             if (processCallback === void 0) { processCallback = false; }
             if (this._playing) {
@@ -2139,7 +2292,7 @@ var fairygui;
                 }
             }
         };
-        p.stopItem = function (item, setToComplete) {
+        Transition.prototype.stopItem = function (item, setToComplete) {
             if (item.displayLockToken != 0) {
                 item.target.releaseDisplayLock(item.displayLockToken);
                 item.displayLockToken = 0;
@@ -2178,7 +2331,7 @@ var fairygui;
                 }
             }
         };
-        p.dispose = function () {
+        Transition.prototype.dispose = function () {
             if (!this._playing)
                 return;
             this._playing = false;
@@ -2201,12 +2354,14 @@ var fairygui;
                 }
             }
         };
-        d(p, "playing"
-            ,function () {
+        Object.defineProperty(Transition.prototype, "playing", {
+            get: function () {
                 return this._playing;
-            }
-        );
-        p.setValue = function (label) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Transition.prototype.setValue = function (label) {
             var args = [];
             for (var _i = 1; _i < arguments.length; _i++) {
                 args[_i - 1] = arguments[_i];
@@ -2280,7 +2435,7 @@ var fairygui;
                 }
             }
         };
-        p.setHook = function (label, callback, thisObj) {
+        Transition.prototype.setHook = function (label, callback, thisObj) {
             var cnt = this._items.length;
             for (var i = 0; i < cnt; i++) {
                 var item = this._items[i];
@@ -2296,7 +2451,7 @@ var fairygui;
                 }
             }
         };
-        p.clearHooks = function () {
+        Transition.prototype.clearHooks = function () {
             var cnt = this._items.length;
             for (var i = 0; i < cnt; i++) {
                 var item = this._items[i];
@@ -2306,7 +2461,7 @@ var fairygui;
                 item.hook2Obj = null;
             }
         };
-        p.setTarget = function (label, newTarget) {
+        Transition.prototype.setTarget = function (label, newTarget) {
             var cnt = this._items.length;
             var value;
             for (var i = 0; i < cnt; i++) {
@@ -2316,7 +2471,7 @@ var fairygui;
                 item.targetId = newTarget.id;
             }
         };
-        p.setDuration = function (label, value) {
+        Transition.prototype.setDuration = function (label, value) {
             var cnt = this._items.length;
             for (var i = 0; i < cnt; i++) {
                 var item = this._items[i];
@@ -2324,7 +2479,7 @@ var fairygui;
                     item.duration = value;
             }
         };
-        p.updateFromRelations = function (targetId, dx, dy) {
+        Transition.prototype.updateFromRelations = function (targetId, dx, dy) {
             var cnt = this._items.length;
             if (cnt == 0)
                 return;
@@ -2344,11 +2499,11 @@ var fairygui;
                 }
             }
         };
-        p.OnOwnerRemovedFromStage = function () {
+        Transition.prototype.OnOwnerRemovedFromStage = function () {
             if ((this._options & Transition.OPTION_AUTO_STOP_DISABLED) == 0)
                 this.stop((this._options & Transition.OPTION_AUTO_STOP_AT_END) != 0 ? true : false, false);
         };
-        p.internalPlay = function (delay) {
+        Transition.prototype.internalPlay = function (delay) {
             if (delay === void 0) { delay = 0; }
             this._ownerBaseX = this._owner.x;
             this._ownerBaseY = this._owner.y;
@@ -2392,7 +2547,7 @@ var fairygui;
                 }
             }
         };
-        p.prepareValue = function (item, toProps, reversed) {
+        Transition.prototype.prepareValue = function (item, toProps, reversed) {
             if (reversed === void 0) { reversed = false; }
             var startValue;
             var endValue;
@@ -2465,7 +2620,7 @@ var fairygui;
                     break;
             }
         };
-        p.startTween = function (item, delay) {
+        Transition.prototype.startTween = function (item, delay) {
             var initProps, toProps;
             initProps = {};
             toProps = {};
@@ -2486,12 +2641,12 @@ var fairygui;
             else
                 item.tweener.call(this.__tweenComplete, this, [item]);
         };
-        p.__delayCall = function (item) {
+        Transition.prototype.__delayCall = function (item) {
             item.tweener = null;
             this._totalTasks--;
             this.startTween(item, 0);
         };
-        p.__delayCall2 = function (item) {
+        Transition.prototype.__delayCall2 = function (item) {
             item.tweener = null;
             this._totalTasks--;
             item.completed = true;
@@ -2500,7 +2655,7 @@ var fairygui;
                 item.hook.call(item.hookObj);
             this.checkAllComplete();
         };
-        p.__tweenStart = function (item) {
+        Transition.prototype.__tweenStart = function (item) {
             if (item.tweener != null) {
                 if (item.hook != null)
                     item.hook.call(item.hookObj);
@@ -2508,13 +2663,13 @@ var fairygui;
                 item.tweener.addEventListener("change", this.__tweenUpdate, [this, item]);
             }
         };
-        p.__tweenUpdate = function () {
+        Transition.prototype.__tweenUpdate = function () {
             var args = this;
             var trans = args[0];
             var item = args[1];
             trans.applyValue(item, item.value);
         };
-        p.__tweenComplete = function (item) {
+        Transition.prototype.__tweenComplete = function (item) {
             item.tweener = null;
             this._totalTasks--;
             item.completed = true;
@@ -2522,7 +2677,7 @@ var fairygui;
                 item.hook2.call(item.hook2Obj);
             this.checkAllComplete();
         };
-        p.__tweenRepeatComplete = function (item) {
+        Transition.prototype.__tweenRepeatComplete = function (item) {
             item.tweenTimes++;
             if (item.repeat == -1 || item.tweenTimes < item.repeat + 1) {
                 var initProps, toProps;
@@ -2547,12 +2702,12 @@ var fairygui;
             else
                 this.__tweenComplete(item);
         };
-        p.__playTransComplete = function (item) {
+        Transition.prototype.__playTransComplete = function (item) {
             this._totalTasks--;
             item.completed = true;
             this.checkAllComplete();
         };
-        p.checkAllComplete = function () {
+        Transition.prototype.checkAllComplete = function () {
             if (this._playing && this._totalTasks == 0) {
                 if (this._totalTimes < 0) {
                     //不立刻调用的原因是egret.Tween在onComplete之后，还会调用onChange
@@ -2594,7 +2749,7 @@ var fairygui;
                 }
             }
         };
-        p.applyValue = function (item, value) {
+        Transition.prototype.applyValue = function (item, value) {
             item.target._gearLocked = true;
             switch (item.type) {
                 case TransitionActionType.XY:
@@ -2706,11 +2861,11 @@ var fairygui;
             }
             item.target._gearLocked = false;
         };
-        p.__shake = function (trans) {
+        Transition.prototype.__shake = function (trans) {
             var item = this;
             trans.__shakeItem(item);
         };
-        p.__shakeItem = function (item) {
+        Transition.prototype.__shakeItem = function (item) {
             var r = Math.ceil(item.value.f1 * item.startValue.f3 / item.value.f2);
             var rx = (Math.random() * 2 - 1) * r;
             var ry = (Math.random() * 2 - 1) * r;
@@ -2734,7 +2889,7 @@ var fairygui;
                 this.checkAllComplete();
             }
         };
-        p.setup = function (xml) {
+        Transition.prototype.setup = function (xml) {
             this.name = xml.attributes.name;
             var str = xml.attributes.options;
             if (str)
@@ -2837,7 +2992,7 @@ var fairygui;
                 }
             }
         };
-        p.decodeValue = function (type, str, value) {
+        Transition.prototype.decodeValue = function (type, str, value) {
             var arr;
             switch (type) {
                 case TransitionActionType.XY:
@@ -2923,36 +3078,35 @@ var fairygui;
                     break;
             }
         };
-        Transition.OPTION_IGNORE_DISPLAY_CONTROLLER = 1;
-        Transition.OPTION_AUTO_STOP_DISABLED = 2;
-        Transition.OPTION_AUTO_STOP_AT_END = 4;
-        Transition.FRAME_RATE = 24;
         return Transition;
     }());
+    Transition.OPTION_IGNORE_DISPLAY_CONTROLLER = 1;
+    Transition.OPTION_AUTO_STOP_DISABLED = 2;
+    Transition.OPTION_AUTO_STOP_AT_END = 4;
+    Transition.FRAME_RATE = 24;
     fairygui.Transition = Transition;
-    egret.registerClass(Transition,'fairygui.Transition');
+    __reflect(Transition.prototype, "fairygui.Transition");
     var TransitionActionType = (function () {
         function TransitionActionType() {
         }
-        var d = __define,c=TransitionActionType,p=c.prototype;
-        TransitionActionType.XY = 0;
-        TransitionActionType.Size = 1;
-        TransitionActionType.Scale = 2;
-        TransitionActionType.Pivot = 3;
-        TransitionActionType.Alpha = 4;
-        TransitionActionType.Rotation = 5;
-        TransitionActionType.Color = 6;
-        TransitionActionType.Animation = 7;
-        TransitionActionType.Visible = 8;
-        TransitionActionType.Sound = 9;
-        TransitionActionType.Transition = 10;
-        TransitionActionType.Shake = 11;
-        TransitionActionType.ColorFilter = 12;
-        TransitionActionType.Skew = 13;
-        TransitionActionType.Unknown = 14;
         return TransitionActionType;
     }());
-    egret.registerClass(TransitionActionType,'TransitionActionType');
+    TransitionActionType.XY = 0;
+    TransitionActionType.Size = 1;
+    TransitionActionType.Scale = 2;
+    TransitionActionType.Pivot = 3;
+    TransitionActionType.Alpha = 4;
+    TransitionActionType.Rotation = 5;
+    TransitionActionType.Color = 6;
+    TransitionActionType.Animation = 7;
+    TransitionActionType.Visible = 8;
+    TransitionActionType.Sound = 9;
+    TransitionActionType.Transition = 10;
+    TransitionActionType.Shake = 11;
+    TransitionActionType.ColorFilter = 12;
+    TransitionActionType.Skew = 13;
+    TransitionActionType.Unknown = 14;
+    __reflect(TransitionActionType.prototype, "TransitionActionType");
     var TransitionItem = (function () {
         function TransitionItem() {
             this.time = 0;
@@ -2969,10 +3123,9 @@ var fairygui;
             this.startValue = new TransitionValue();
             this.endValue = new TransitionValue();
         }
-        var d = __define,c=TransitionItem,p=c.prototype;
         return TransitionItem;
     }());
-    egret.registerClass(TransitionItem,'TransitionItem');
+    __reflect(TransitionItem.prototype, "TransitionItem");
     var TransitionValue = (function () {
         function TransitionValue() {
             this.f1 = 0;
@@ -2985,88 +3138,103 @@ var fairygui;
             this.b1 = true;
             this.b2 = true;
         }
-        var d = __define,c=TransitionValue,p=c.prototype;
         return TransitionValue;
     }());
-    egret.registerClass(TransitionValue,'TransitionValue');
+    __reflect(TransitionValue.prototype, "TransitionValue");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GObject = (function (_super) {
         __extends(GObject, _super);
         function GObject() {
-            _super.call(this);
-            this._x = 0;
-            this._y = 0;
-            this._width = 0;
-            this._height = 0;
-            this._alpha = 1;
-            this._rotation = 0;
-            this._visible = true;
-            this._touchable = true;
-            this._grayed = false;
-            this._draggable = false;
-            this._scaleX = 1;
-            this._scaleY = 1;
-            this._skewX = 0;
-            this._skewY = 0;
-            this._pivotX = 0;
-            this._pivotY = 0;
-            this._pivotAsAnchor = false;
-            this._pivotOffsetX = 0;
-            this._pivotOffsetY = 0;
-            this._sortingOrder = 0;
-            this._internalVisible = true;
-            this._handlingController = false;
-            this._focusable = false;
-            this._pixelSnapping = false;
-            this._rawWidth = 0;
-            this._rawHeight = 0;
-            this._sourceWidth = 0;
-            this._sourceHeight = 0;
-            this._initWidth = 0;
-            this._initHeight = 0;
-            this._yOffset = 0;
+            var _this = _super.call(this) || this;
+            _this._x = 0;
+            _this._y = 0;
+            _this._width = 0;
+            _this._height = 0;
+            _this._alpha = 1;
+            _this._rotation = 0;
+            _this._visible = true;
+            _this._touchable = true;
+            _this._grayed = false;
+            _this._draggable = false;
+            _this._scaleX = 1;
+            _this._scaleY = 1;
+            _this._skewX = 0;
+            _this._skewY = 0;
+            _this._pivotX = 0;
+            _this._pivotY = 0;
+            _this._pivotAsAnchor = false;
+            _this._pivotOffsetX = 0;
+            _this._pivotOffsetY = 0;
+            _this._sortingOrder = 0;
+            _this._internalVisible = true;
+            _this._handlingController = false;
+            _this._focusable = false;
+            _this._pixelSnapping = false;
+            _this._rawWidth = 0;
+            _this._rawHeight = 0;
+            _this._sourceWidth = 0;
+            _this._sourceHeight = 0;
+            _this._initWidth = 0;
+            _this._initHeight = 0;
+            _this._yOffset = 0;
             //Size的实现方式，有两种，0-GObject的w/h等于DisplayObject的w/h。1-GObject的sourceWidth/sourceHeight等于DisplayObject的w/h，剩余部分由scale实现
-            this._sizeImplType = 0;
-            this._id = "" + GObject._gInstanceCounter++;
-            this._name = "";
-            this.createDisplayObject();
-            this._relations = new fairygui.Relations(this);
-            this._gears = [];
+            _this._sizeImplType = 0;
+            _this._id = "" + GObject._gInstanceCounter++;
+            _this._name = "";
+            _this.createDisplayObject();
+            _this._relations = new fairygui.Relations(_this);
+            _this._gears = [];
+            return _this;
         }
-        var d = __define,c=GObject,p=c.prototype;
-        d(p, "id"
-            ,function () {
+        Object.defineProperty(GObject.prototype, "id", {
+            get: function () {
                 return this._id;
-            }
-        );
-        d(p, "name"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "name", {
+            get: function () {
                 return this._name;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._name = value;
-            }
-        );
-        d(p, "x"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "x", {
+            get: function () {
                 return this._x;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.setXY(value, this._y);
-            }
-        );
-        d(p, "y"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "y", {
+            get: function () {
                 return this._y;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.setXY(this._x, value);
-            }
-        );
-        p.setXY = function (xv, yv) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GObject.prototype.setXY = function (xv, yv) {
             if (this._x != xv || this._y != yv) {
                 var dx = xv - this._x;
                 var dy = yv - this._y;
@@ -3084,18 +3252,20 @@ var fairygui;
                     this.localToGlobalRect(0, 0, this.width, this.height, GObject.sGlobalRect);
             }
         };
-        d(p, "pixelSnapping"
-            ,function () {
+        Object.defineProperty(GObject.prototype, "pixelSnapping", {
+            get: function () {
                 return this._pixelSnapping;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._pixelSnapping != value) {
                     this._pixelSnapping = value;
                     this.handleXYChanged();
                 }
-            }
-        );
-        p.center = function (restraint) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GObject.prototype.center = function (restraint) {
             if (restraint === void 0) { restraint = false; }
             var r;
             if (this._parent != null)
@@ -3108,29 +3278,33 @@ var fairygui;
                 this.addRelation(r, fairygui.RelationType.Middle_Middle);
             }
         };
-        d(p, "width"
-            ,function () {
+        Object.defineProperty(GObject.prototype, "width", {
+            get: function () {
                 this.ensureSizeCorrect();
                 if (this._relations.sizeDirty)
                     this._relations.ensureRelationsSizeCorrect();
                 return this._width;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.setSize(value, this._rawHeight);
-            }
-        );
-        d(p, "height"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "height", {
+            get: function () {
                 this.ensureSizeCorrect();
                 if (this._relations.sizeDirty)
                     this._relations.ensureRelationsSizeCorrect();
                 return this._height;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.setSize(this._rawWidth, value);
-            }
-        );
-        p.setSize = function (wv, hv, ignorePivot) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GObject.prototype.setSize = function (wv, hv, ignorePivot) {
             if (ignorePivot === void 0) { ignorePivot = false; }
             if (this._rawWidth != wv || this._rawHeight != hv) {
                 this._rawWidth = wv;
@@ -3162,55 +3336,71 @@ var fairygui;
                 this.dispatchEventWith(GObject.SIZE_CHANGED);
             }
         };
-        p.ensureSizeCorrect = function () {
+        GObject.prototype.ensureSizeCorrect = function () {
         };
-        d(p, "sourceHeight"
-            ,function () {
+        Object.defineProperty(GObject.prototype, "sourceHeight", {
+            get: function () {
                 return this._sourceHeight;
-            }
-        );
-        d(p, "sourceWidth"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "sourceWidth", {
+            get: function () {
                 return this._sourceWidth;
-            }
-        );
-        d(p, "initHeight"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "initHeight", {
+            get: function () {
                 return this._initHeight;
-            }
-        );
-        d(p, "initWidth"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "initWidth", {
+            get: function () {
                 return this._initWidth;
-            }
-        );
-        d(p, "actualWidth"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "actualWidth", {
+            get: function () {
                 return this.width * Math.abs(this._scaleX);
-            }
-        );
-        d(p, "actualHeight"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "actualHeight", {
+            get: function () {
                 return this.height * Math.abs(this._scaleY);
-            }
-        );
-        d(p, "scaleX"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "scaleX", {
+            get: function () {
                 return this._scaleX;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.setScale(value, this._scaleY);
-            }
-        );
-        d(p, "scaleY"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "scaleY", {
+            get: function () {
                 return this._scaleY;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.setScale(this._scaleX, value);
-            }
-        );
-        p.setScale = function (sx, sy) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GObject.prototype.setScale = function (sx, sy) {
             if (this._scaleX != sx || this._scaleY != sy) {
                 this._scaleX = sx;
                 this._scaleY = sy;
@@ -3219,23 +3409,27 @@ var fairygui;
                 this.updateGear(2);
             }
         };
-        d(p, "skewX"
-            ,function () {
+        Object.defineProperty(GObject.prototype, "skewX", {
+            get: function () {
                 return this._skewX;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.setSkew(value, this._skewY);
-            }
-        );
-        d(p, "skewY"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "skewY", {
+            get: function () {
                 return this._skewY;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.setSkew(this._skewX, value);
-            }
-        );
-        p.setSkew = function (xv, yv) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GObject.prototype.setSkew = function (xv, yv) {
             if (this._skewX != xv || this._skewY != yv) {
                 this._skewX = xv;
                 this._skewY = yv;
@@ -3246,23 +3440,27 @@ var fairygui;
                 this.applyPivot();
             }
         };
-        d(p, "pivotX"
-            ,function () {
+        Object.defineProperty(GObject.prototype, "pivotX", {
+            get: function () {
                 return this._pivotX;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.setPivot(value, this._pivotY);
-            }
-        );
-        d(p, "pivotY"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "pivotY", {
+            get: function () {
                 return this._pivotY;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.setPivot(this._pivotX, value);
-            }
-        );
-        p.setPivot = function (xv, yv, asAnchor) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GObject.prototype.setPivot = function (xv, yv, asAnchor) {
             if (yv === void 0) { yv = 0; }
             if (asAnchor === void 0) { asAnchor = false; }
             if (this._pivotX != xv || this._pivotY != yv || this._pivotAsAnchor != asAnchor) {
@@ -3273,7 +3471,7 @@ var fairygui;
                 this.handleXYChanged();
             }
         };
-        p.internalSetPivot = function (xv, yv, asAnchor) {
+        GObject.prototype.internalSetPivot = function (xv, yv, asAnchor) {
             if (yv === void 0) { yv = 0; }
             this._pivotX = xv;
             this._pivotY = yv;
@@ -3281,7 +3479,7 @@ var fairygui;
             if (asAnchor)
                 this.handleXYChanged();
         };
-        p.updatePivotOffset = function () {
+        GObject.prototype.updatePivotOffset = function () {
             if (this._displayObject != null) {
                 if (this._pivotX != 0 || this._pivotY != 0) {
                     var px;
@@ -3304,17 +3502,17 @@ var fairygui;
                 }
             }
         };
-        p.applyPivot = function () {
+        GObject.prototype.applyPivot = function () {
             if (this._pivotX != 0 || this._pivotY != 0) {
                 this.updatePivotOffset();
                 this.handleXYChanged();
             }
         };
-        d(p, "touchable"
-            ,function () {
+        Object.defineProperty(GObject.prototype, "touchable", {
+            get: function () {
                 return this._touchable;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._touchable = value;
                 if ((this instanceof fairygui.GImage) || (this instanceof fairygui.GMovieClip)
                     || (this instanceof fairygui.GTextField) && !(this instanceof fairygui.GTextInput) && !(this instanceof fairygui.GRichTextField))
@@ -3325,34 +3523,40 @@ var fairygui;
                     if (this._displayObject instanceof egret.DisplayObjectContainer)
                         this._displayObject.touchChildren = this._touchable;
                 }
-            }
-        );
-        d(p, "grayed"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "grayed", {
+            get: function () {
                 return this._grayed;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._grayed != value) {
                     this._grayed = value;
                     this.handleGrayedChanged();
                     this.updateGear(3);
                 }
-            }
-        );
-        d(p, "enabled"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "enabled", {
+            get: function () {
                 return !this._grayed && this._touchable;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.grayed = !value;
                 this.touchable = value;
-            }
-        );
-        d(p, "rotation"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "rotation", {
+            get: function () {
                 return this._rotation;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._rotation != value) {
                     this._rotation = value;
                     if (this._displayObject)
@@ -3360,39 +3564,45 @@ var fairygui;
                     this.applyPivot();
                     this.updateGear(3);
                 }
-            }
-        );
-        d(p, "normalizeRotation"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "normalizeRotation", {
+            get: function () {
                 var rot = this._rotation % 360;
                 if (rot > 180)
                     rot -= 360;
                 else if (rot < -180)
                     rot += 360;
                 return rot;
-            }
-        );
-        d(p, "alpha"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "alpha", {
+            get: function () {
                 return this._alpha;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._alpha != value) {
                     this._alpha = value;
                     this.updateAlpha();
                 }
-            }
-        );
-        p.updateAlpha = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GObject.prototype.updateAlpha = function () {
             if (this._displayObject)
                 this._displayObject.alpha = this._alpha;
             this.updateGear(3);
         };
-        d(p, "visible"
-            ,function () {
+        Object.defineProperty(GObject.prototype, "visible", {
+            get: function () {
                 return this._visible;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._visible != value) {
                     this._visible = value;
                     if (this._displayObject)
@@ -3402,18 +3612,22 @@ var fairygui;
                         this._parent.setBoundsChangedFlag();
                     }
                 }
-            }
-        );
-        d(p, "finalVisible"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "finalVisible", {
+            get: function () {
                 return this._visible && this._internalVisible && (!this._group || this._group.finalVisible);
-            }
-        );
-        d(p, "sortingOrder"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "sortingOrder", {
+            get: function () {
                 return this._sortingOrder;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (value < 0)
                     value = 0;
                 if (this._sortingOrder != value) {
@@ -3422,79 +3636,99 @@ var fairygui;
                     if (this._parent != null)
                         this._parent.childSortingOrderChanged(this, old, this._sortingOrder);
                 }
-            }
-        );
-        d(p, "focusable"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "focusable", {
+            get: function () {
                 return this._focusable;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._focusable = value;
-            }
-        );
-        d(p, "focused"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "focused", {
+            get: function () {
                 return this.root.focus == this;
-            }
-        );
-        p.requestFocus = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GObject.prototype.requestFocus = function () {
             var p = this;
             while (p && !p._focusable)
                 p = p.parent;
             if (p != null)
                 this.root.focus = p;
         };
-        d(p, "tooltips"
-            ,function () {
+        Object.defineProperty(GObject.prototype, "tooltips", {
+            get: function () {
                 return this._tooltips;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._tooltips = value;
-            }
-        );
-        d(p, "blendMode"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "blendMode", {
+            get: function () {
                 return this._displayObject.blendMode;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._displayObject.blendMode = value;
-            }
-        );
-        d(p, "filters"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "filters", {
+            get: function () {
                 return this._displayObject.filters;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._displayObject.filters = value;
-            }
-        );
-        d(p, "inContainer"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "inContainer", {
+            get: function () {
                 return this._displayObject != null && this._displayObject.parent != null;
-            }
-        );
-        d(p, "onStage"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "onStage", {
+            get: function () {
                 return this._displayObject != null && this._displayObject.stage != null;
-            }
-        );
-        d(p, "resourceURL"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "resourceURL", {
+            get: function () {
                 if (this.packageItem != null)
                     return "ui://" + this.packageItem.owner.id + this.packageItem.id;
                 else
                     return null;
-            }
-        );
-        d(p, "group"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "group", {
+            get: function () {
                 return this._group;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._group = value;
-            }
-        );
-        p.getGear = function (index) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GObject.prototype.getGear = function (index) {
             var gear = this._gears[index];
             if (gear == null) {
                 switch (index) {
@@ -3529,21 +3763,21 @@ var fairygui;
             }
             return gear;
         };
-        p.updateGear = function (index) {
+        GObject.prototype.updateGear = function (index) {
             if (this._underConstruct || this._gearLocked)
                 return;
             var gear = this._gears[index];
             if (gear != null && gear.controller != null)
                 gear.updateState();
         };
-        p.checkGearController = function (index, c) {
+        GObject.prototype.checkGearController = function (index, c) {
             return this._gears[index] != null && this._gears[index].controller == c;
         };
-        p.updateGearFromRelations = function (index, dx, dy) {
+        GObject.prototype.updateGearFromRelations = function (index, dx, dy) {
             if (this._gears[index] != null)
                 this._gears[index].updateFromRelations(dx, dy);
         };
-        p.addDisplayLock = function () {
+        GObject.prototype.addDisplayLock = function () {
             var gearDisplay = this._gears[0];
             if (gearDisplay && gearDisplay.controller) {
                 var ret = gearDisplay.addLock();
@@ -3553,14 +3787,14 @@ var fairygui;
             else
                 return 0;
         };
-        p.releaseDisplayLock = function (token) {
+        GObject.prototype.releaseDisplayLock = function (token) {
             var gearDisplay = this._gears[0];
             if (gearDisplay && gearDisplay.controller) {
                 gearDisplay.releaseLock(token);
                 this.checkGearDisplay();
             }
         };
-        p.checkGearDisplay = function () {
+        GObject.prototype.checkGearDisplay = function () {
             if (this._handlingController)
                 return;
             var connected = this._gears[0] == null || this._gears[0].connected;
@@ -3570,56 +3804,68 @@ var fairygui;
                     this._parent.childStateChanged(this);
             }
         };
-        d(p, "gearXY"
-            ,function () {
+        Object.defineProperty(GObject.prototype, "gearXY", {
+            get: function () {
                 return this.getGear(1);
-            }
-        );
-        d(p, "gearSize"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "gearSize", {
+            get: function () {
                 return this.getGear(2);
-            }
-        );
-        d(p, "gearLook"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "gearLook", {
+            get: function () {
                 return this.getGear(3);
-            }
-        );
-        d(p, "relations"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "relations", {
+            get: function () {
                 return this._relations;
-            }
-        );
-        p.addRelation = function (target, relationType, usePercent) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GObject.prototype.addRelation = function (target, relationType, usePercent) {
             if (usePercent === void 0) { usePercent = false; }
             this._relations.add(target, relationType, usePercent);
         };
-        p.removeRelation = function (target, relationType) {
+        GObject.prototype.removeRelation = function (target, relationType) {
             if (relationType === void 0) { relationType = 0; }
             this._relations.remove(target, relationType);
         };
-        d(p, "displayObject"
-            ,function () {
+        Object.defineProperty(GObject.prototype, "displayObject", {
+            get: function () {
                 return this._displayObject;
-            }
-        );
-        p.setDisplayObject = function (value) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GObject.prototype.setDisplayObject = function (value) {
             this._displayObject = value;
         };
-        d(p, "parent"
-            ,function () {
+        Object.defineProperty(GObject.prototype, "parent", {
+            get: function () {
                 return this._parent;
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 this._parent = val;
-            }
-        );
-        p.removeFromParent = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GObject.prototype.removeFromParent = function () {
             if (this._parent)
                 this._parent.removeChild(this);
         };
-        d(p, "root"
-            ,function () {
+        Object.defineProperty(GObject.prototype, "root", {
+            get: function () {
                 if (this instanceof fairygui.GRoot)
                     return this;
                 var p = this._parent;
@@ -3629,162 +3875,204 @@ var fairygui;
                     p = p.parent;
                 }
                 return fairygui.GRoot.inst;
-            }
-        );
-        d(p, "asCom"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asCom", {
+            get: function () {
                 return (this instanceof fairygui.GComponent) ? this : null;
-            }
-        );
-        d(p, "asButton"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asButton", {
+            get: function () {
                 return (this instanceof fairygui.GButton) ? this : null;
-            }
-        );
-        d(p, "asLabel"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asLabel", {
+            get: function () {
                 return (this instanceof fairygui.GLabel) ? this : null;
-            }
-        );
-        d(p, "asProgress"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asProgress", {
+            get: function () {
                 return (this instanceof fairygui.GProgressBar) ? this : null;
-            }
-        );
-        d(p, "asTextField"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asTextField", {
+            get: function () {
                 return (this instanceof fairygui.GTextField) ? this : null;
-            }
-        );
-        d(p, "asRichTextField"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asRichTextField", {
+            get: function () {
                 return (this instanceof fairygui.GRichTextField) ? this : null;
-            }
-        );
-        d(p, "asTextInput"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asTextInput", {
+            get: function () {
                 return (this instanceof fairygui.GTextInput) ? this : null;
-            }
-        );
-        d(p, "asLoader"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asLoader", {
+            get: function () {
                 return (this instanceof fairygui.GLoader) ? this : null;
-            }
-        );
-        d(p, "asList"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asList", {
+            get: function () {
                 return (this instanceof fairygui.GList) ? this : null;
-            }
-        );
-        d(p, "asGraph"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asGraph", {
+            get: function () {
                 return (this instanceof fairygui.GGraph) ? this : null;
-            }
-        );
-        d(p, "asGroup"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asGroup", {
+            get: function () {
                 return (this instanceof fairygui.GGroup) ? this : null;
-            }
-        );
-        d(p, "asSlider"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asSlider", {
+            get: function () {
                 return (this instanceof fairygui.GSlider) ? this : null;
-            }
-        );
-        d(p, "asComboBox"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asComboBox", {
+            get: function () {
                 return (this instanceof fairygui.GComboBox) ? this : null;
-            }
-        );
-        d(p, "asImage"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asImage", {
+            get: function () {
                 return (this instanceof fairygui.GImage) ? this : null;
-            }
-        );
-        d(p, "asMovieClip"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "asMovieClip", {
+            get: function () {
                 return (this instanceof fairygui.GMovieClip) ? this : null;
-            }
-        );
+            },
+            enumerable: true,
+            configurable: true
+        });
         GObject.cast = function (obj) {
             return obj["$owner"];
         };
-        d(p, "text"
-            ,function () {
+        Object.defineProperty(GObject.prototype, "text", {
+            get: function () {
                 return null;
-            }
-            ,function (value) {
-            }
-        );
-        d(p, "icon"
-            ,function () {
+            },
+            set: function (value) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "icon", {
+            get: function () {
                 return null;
-            }
-            ,function (value) {
-            }
-        );
-        p.dispose = function () {
+            },
+            set: function (value) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GObject.prototype.dispose = function () {
             this.removeFromParent();
             this._relations.dispose();
         };
-        p.addClickListener = function (listener, thisObj) {
+        GObject.prototype.addClickListener = function (listener, thisObj) {
             this.addEventListener(egret.TouchEvent.TOUCH_TAP, listener, thisObj);
         };
-        p.removeClickListener = function (listener, thisObj) {
+        GObject.prototype.removeClickListener = function (listener, thisObj) {
             this.removeEventListener(egret.TouchEvent.TOUCH_TAP, listener, thisObj);
         };
-        p.hasClickListener = function () {
+        GObject.prototype.hasClickListener = function () {
             return this.hasEventListener(egret.TouchEvent.TOUCH_TAP);
         };
-        p.addEventListener = function (type, listener, thisObject) {
+        GObject.prototype.addEventListener = function (type, listener, thisObject) {
             _super.prototype.addEventListener.call(this, type, listener, thisObject);
             if (this._displayObject != null) {
                 this._displayObject.addEventListener(type, this._reDispatch, this);
             }
         };
-        p.removeEventListener = function (type, listener, thisObject) {
+        GObject.prototype.removeEventListener = function (type, listener, thisObject) {
             _super.prototype.removeEventListener.call(this, type, listener, thisObject);
             if (this._displayObject != null && !this.hasEventListener(type)) {
                 this._displayObject.removeEventListener(type, this._reDispatch, this);
             }
         };
-        p._reDispatch = function (evt) {
+        GObject.prototype._reDispatch = function (evt) {
             this.dispatchEvent(evt);
         };
-        d(p, "draggable"
-            ,function () {
+        Object.defineProperty(GObject.prototype, "draggable", {
+            get: function () {
                 return this._draggable;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._draggable != value) {
                     this._draggable = value;
                     this.initDrag();
                 }
-            }
-        );
-        d(p, "dragBounds"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "dragBounds", {
+            get: function () {
                 return this._dragBounds;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._dragBounds = value;
-            }
-        );
-        p.startDrag = function (touchPointID) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GObject.prototype.startDrag = function (touchPointID) {
             if (touchPointID === void 0) { touchPointID = -1; }
             if (this._displayObject.stage == null)
                 return;
             this.dragBegin(null);
         };
-        p.stopDrag = function () {
+        GObject.prototype.stopDrag = function () {
             this.dragEnd();
         };
-        d(p, "dragging"
-            ,function () {
+        Object.defineProperty(GObject.prototype, "dragging", {
+            get: function () {
                 return GObject.draggingObject == this;
-            }
-        );
-        p.localToGlobal = function (ax, ay, resultPoint) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GObject.prototype.localToGlobal = function (ax, ay, resultPoint) {
             if (ax === void 0) { ax = 0; }
             if (ay === void 0) { ay = 0; }
             if (this._pivotAsAnchor) {
@@ -3793,7 +4081,7 @@ var fairygui;
             }
             return this._displayObject.localToGlobal(ax, ay, resultPoint);
         };
-        p.globalToLocal = function (ax, ay, resultPoint) {
+        GObject.prototype.globalToLocal = function (ax, ay, resultPoint) {
             if (ax === void 0) { ax = 0; }
             if (ay === void 0) { ay = 0; }
             var pt = this._displayObject.globalToLocal(ax, ay, resultPoint);
@@ -3803,7 +4091,7 @@ var fairygui;
             }
             return pt;
         };
-        p.localToRoot = function (ax, ay, resultPoint) {
+        GObject.prototype.localToRoot = function (ax, ay, resultPoint) {
             if (ax === void 0) { ax = 0; }
             if (ay === void 0) { ay = 0; }
             var pt = this._displayObject.localToGlobal(ax, ay, resultPoint);
@@ -3811,14 +4099,14 @@ var fairygui;
             pt.y /= fairygui.GRoot.contentScaleFactor;
             return pt;
         };
-        p.rootToLocal = function (ax, ay, resultPoint) {
+        GObject.prototype.rootToLocal = function (ax, ay, resultPoint) {
             if (ax === void 0) { ax = 0; }
             if (ay === void 0) { ay = 0; }
             ax *= fairygui.GRoot.contentScaleFactor;
             ay *= fairygui.GRoot.contentScaleFactor;
             return this._displayObject.globalToLocal(ax, ay, resultPoint);
         };
-        p.localToGlobalRect = function (ax, ay, aWidth, aHeight, resultRect) {
+        GObject.prototype.localToGlobalRect = function (ax, ay, aWidth, aHeight, resultRect) {
             if (ax === void 0) { ax = 0; }
             if (ay === void 0) { ay = 0; }
             if (aWidth === void 0) { aWidth = 0; }
@@ -3833,7 +4121,7 @@ var fairygui;
             resultRect.bottom = pt.y;
             return resultRect;
         };
-        p.globalToLocalRect = function (ax, ay, aWidth, aHeight, resultRect) {
+        GObject.prototype.globalToLocalRect = function (ax, ay, aWidth, aHeight, resultRect) {
             if (ax === void 0) { ax = 0; }
             if (ay === void 0) { ay = 0; }
             if (aWidth === void 0) { aWidth = 0; }
@@ -3848,7 +4136,7 @@ var fairygui;
             resultRect.bottom = pt.y;
             return resultRect;
         };
-        p.handleControllerChanged = function (c) {
+        GObject.prototype.handleControllerChanged = function (c) {
             this._handlingController = true;
             for (var i = 0; i < 8; i++) {
                 var gear = this._gears[i];
@@ -3858,9 +4146,9 @@ var fairygui;
             this._handlingController = false;
             this.checkGearDisplay();
         };
-        p.createDisplayObject = function () {
+        GObject.prototype.createDisplayObject = function () {
         };
-        p.switchDisplayObject = function (newObj) {
+        GObject.prototype.switchDisplayObject = function (newObj) {
             if (newObj == this._displayObject)
                 return;
             var old = this._displayObject;
@@ -3881,7 +4169,7 @@ var fairygui;
             if (this._displayObject instanceof egret.DisplayObjectContainer)
                 this._displayObject.touchChildren = this._touchable;
         };
-        p.handleXYChanged = function () {
+        GObject.prototype.handleXYChanged = function () {
             if (this._displayObject) {
                 var xv = this._x;
                 var yv = this._y + this._yOffset;
@@ -3897,13 +4185,13 @@ var fairygui;
                 this._displayObject.y = yv + this._pivotOffsetY;
             }
         };
-        p.handleSizeChanged = function () {
+        GObject.prototype.handleSizeChanged = function () {
             if (this._displayObject != null && this._sizeImplType == 1 && this._sourceWidth != 0 && this._sourceHeight != 0) {
                 this._displayObject.scaleX = this._width / this._sourceWidth * this._scaleX;
                 this._displayObject.scaleY = this._height / this._sourceHeight * this._scaleY;
             }
         };
-        p.handleScaleChanged = function () {
+        GObject.prototype.handleScaleChanged = function () {
             if (this._displayObject != null) {
                 if (this._sizeImplType == 0 || this._sourceWidth == 0 || this._sourceHeight == 0) {
                     this._displayObject.scaleX = this._scaleX;
@@ -3915,7 +4203,7 @@ var fairygui;
                 }
             }
         };
-        p.handleGrayedChanged = function () {
+        GObject.prototype.handleGrayedChanged = function () {
             if (this._displayObject) {
                 if (this._grayed) {
                     var colorFlilter = new egret.ColorMatrixFilter(GObject.colorMatrix);
@@ -3925,9 +4213,9 @@ var fairygui;
                     this._displayObject.filters = null;
             }
         };
-        p.constructFromResource = function () {
+        GObject.prototype.constructFromResource = function () {
         };
-        p.setup_beforeAdd = function (xml) {
+        GObject.prototype.setup_beforeAdd = function (xml) {
             var str;
             var arr;
             this._id = xml.attributes.id;
@@ -4008,7 +4296,7 @@ var fairygui;
                 }
             }
         };
-        p.setup_afterAdd = function (xml) {
+        GObject.prototype.setup_afterAdd = function (xml) {
             var cxml;
             var str = xml.attributes.group;
             if (str)
@@ -4024,13 +4312,13 @@ var fairygui;
                 }
             }
         };
-        p.initDrag = function () {
+        GObject.prototype.initDrag = function () {
             if (this._draggable)
                 this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__begin, this);
             else
                 this.removeEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__begin, this);
         };
-        p.dragBegin = function (evt) {
+        GObject.prototype.dragBegin = function (evt) {
             if (GObject.draggingObject != null)
                 GObject.draggingObject.stopDrag();
             if (evt != null) {
@@ -4046,18 +4334,18 @@ var fairygui;
             fairygui.GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__moving2, this);
             fairygui.GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__end2, this);
         };
-        p.dragEnd = function () {
+        GObject.prototype.dragEnd = function () {
             if (GObject.draggingObject == this) {
                 fairygui.GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.__moving2, this);
                 fairygui.GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__end2, this);
                 GObject.draggingObject = null;
             }
         };
-        p.reset = function () {
+        GObject.prototype.reset = function () {
             fairygui.GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.__moving, this);
             fairygui.GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__end, this);
         };
-        p.__begin = function (evt) {
+        GObject.prototype.__begin = function (evt) {
             if (this._touchDownPoint == null)
                 this._touchDownPoint = new egret.Point();
             this._touchDownPoint.x = evt.stageX;
@@ -4065,10 +4353,10 @@ var fairygui;
             fairygui.GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__moving, this);
             fairygui.GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__end, this);
         };
-        p.__end = function (evt) {
+        GObject.prototype.__end = function (evt) {
             this.reset();
         };
-        p.__moving = function (evt) {
+        GObject.prototype.__moving = function (evt) {
             var sensitivity = fairygui.UIConfig.touchDragSensitivity;
             if (this._touchDownPoint != null
                 && Math.abs(this._touchDownPoint.x - evt.stageX) < sensitivity
@@ -4083,7 +4371,7 @@ var fairygui;
             if (!dragEvent.isDefaultPrevented())
                 this.dragBegin(evt);
         };
-        p.__moving2 = function (evt) {
+        GObject.prototype.__moving2 = function (evt) {
             var xx = evt.stageX - GObject.sGlobalDragStart.x + GObject.sGlobalRect.x;
             var yy = evt.stageY - GObject.sGlobalDragStart.y + GObject.sGlobalRect.y;
             if (this._dragBounds != null) {
@@ -4113,7 +4401,7 @@ var fairygui;
             dragEvent.touchPointID = evt.touchPointID;
             this.dispatchEvent(dragEvent);
         };
-        p.__end2 = function (evt) {
+        GObject.prototype.__end2 = function (evt) {
             if (GObject.draggingObject == this) {
                 this.stopDrag();
                 var dragEvent = new fairygui.DragEvent(fairygui.DragEvent.DRAG_END);
@@ -4123,39 +4411,42 @@ var fairygui;
                 this.dispatchEvent(dragEvent);
             }
         };
-        GObject._gInstanceCounter = 0;
-        GObject.XY_CHANGED = "__xyChanged";
-        GObject.SIZE_CHANGED = "__sizeChanged";
-        GObject.SIZE_DELAY_CHANGE = "__sizeDelayChange";
-        GObject.GEAR_STOP = "gearStop";
-        GObject.colorMatrix = [
-            0.3, 0.6, 0, 0, 0,
-            0.3, 0.6, 0, 0, 0,
-            0.3, 0.6, 0, 0, 0,
-            0, 0, 0, 1, 0
-        ];
-        GObject.GearXMLKeys = {
-            "gearDisplay": 0,
-            "gearXY": 1,
-            "gearSize": 2,
-            "gearLook": 3,
-            "gearColor": 4,
-            "gearAni": 5,
-            "gearText": 6,
-            "gearIcon": 7
-        };
-        //drag support
-        //-------------------------------------------------------------------
-        GObject.sGlobalDragStart = new egret.Point();
-        GObject.sGlobalRect = new egret.Rectangle();
-        GObject.sHelperPoint = new egret.Point();
-        GObject.sDragHelperRect = new egret.Rectangle();
         return GObject;
     }(egret.EventDispatcher));
+    GObject._gInstanceCounter = 0;
+    GObject.XY_CHANGED = "__xyChanged";
+    GObject.SIZE_CHANGED = "__sizeChanged";
+    GObject.SIZE_DELAY_CHANGE = "__sizeDelayChange";
+    GObject.GEAR_STOP = "gearStop";
+    GObject.colorMatrix = [
+        0.3, 0.6, 0, 0, 0,
+        0.3, 0.6, 0, 0, 0,
+        0.3, 0.6, 0, 0, 0,
+        0, 0, 0, 1, 0
+    ];
+    GObject.GearXMLKeys = {
+        "gearDisplay": 0,
+        "gearXY": 1,
+        "gearSize": 2,
+        "gearLook": 3,
+        "gearColor": 4,
+        "gearAni": 5,
+        "gearText": 6,
+        "gearIcon": 7
+    };
+    //drag support
+    //-------------------------------------------------------------------
+    GObject.sGlobalDragStart = new egret.Point();
+    GObject.sGlobalRect = new egret.Rectangle();
+    GObject.sHelperPoint = new egret.Point();
+    GObject.sDragHelperRect = new egret.Rectangle();
     fairygui.GObject = GObject;
-    egret.registerClass(GObject,'fairygui.GObject');
+    __reflect(GObject.prototype, "fairygui.GObject");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var DisplayListItem = (function () {
@@ -4163,13 +4454,15 @@ var fairygui;
             this.packageItem = packageItem;
             this.type = type;
         }
-        var d = __define,c=DisplayListItem,p=c.prototype;
         return DisplayListItem;
     }());
     fairygui.DisplayListItem = DisplayListItem;
-    egret.registerClass(DisplayListItem,'fairygui.DisplayListItem');
+    __reflect(DisplayListItem.prototype, "fairygui.DisplayListItem");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var PackageItem = (function () {
@@ -4181,42 +4474,49 @@ var fairygui;
             this.interval = 0;
             this.repeatDelay = 0;
         }
-        var d = __define,c=PackageItem,p=c.prototype;
-        p.load = function () {
+        PackageItem.prototype.load = function () {
             return this.owner.getItemAsset(this);
         };
-        p.toString = function () {
+        PackageItem.prototype.toString = function () {
             return this.name;
         };
         return PackageItem;
     }());
     fairygui.PackageItem = PackageItem;
-    egret.registerClass(PackageItem,'fairygui.PackageItem');
+    __reflect(PackageItem.prototype, "fairygui.PackageItem");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GComponent = (function (_super) {
         __extends(GComponent, _super);
         function GComponent() {
-            _super.call(this);
-            this._sortingChildCount = 0;
-            this._childrenRenderOrder = fairygui.ChildrenRenderOrder.Ascent;
-            this._apexIndex = 0;
-            this._children = new Array();
-            this._controllers = new Array();
-            this._transitions = new Array();
-            this._margin = new fairygui.Margin();
-            this._alignOffset = new egret.Point();
+            var _this = _super.call(this) || this;
+            _this._sortingChildCount = 0;
+            _this._childrenRenderOrder = fairygui.ChildrenRenderOrder.Ascent;
+            _this._apexIndex = 0;
+            _this._children = new Array();
+            _this._controllers = new Array();
+            _this._transitions = new Array();
+            _this._margin = new fairygui.Margin();
+            _this._alignOffset = new egret.Point();
+            return _this;
         }
-        var d = __define,c=GComponent,p=c.prototype;
-        p.createDisplayObject = function () {
+        GComponent.prototype.createDisplayObject = function () {
             this._rootContainer = new fairygui.UIContainer();
             this._rootContainer["$owner"] = this;
             this.setDisplayObject(this._rootContainer);
             this._container = this._rootContainer;
         };
-        p.dispose = function () {
+        GComponent.prototype.dispose = function () {
             var i;
             var transCnt = this._transitions.length;
             for (i = 0; i < transCnt; ++i) {
@@ -4232,16 +4532,18 @@ var fairygui;
             this._boundsChanged = false;
             _super.prototype.dispose.call(this);
         };
-        d(p, "displayListContainer"
-            ,function () {
+        Object.defineProperty(GComponent.prototype, "displayListContainer", {
+            get: function () {
                 return this._container;
-            }
-        );
-        p.addChild = function (child) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GComponent.prototype.addChild = function (child) {
             this.addChildAt(child, this._children.length);
             return child;
         };
-        p.addChildAt = function (child, index) {
+        GComponent.prototype.addChildAt = function (child, index) {
             if (index === void 0) { index = 0; }
             if (!child)
                 throw "child is null";
@@ -4275,7 +4577,7 @@ var fairygui;
                 throw "Invalid child index";
             }
         };
-        p.getInsertPosForSortingChild = function (target) {
+        GComponent.prototype.getInsertPosForSortingChild = function (target) {
             var cnt = this._children.length;
             var i = 0;
             for (i = 0; i < cnt; i++) {
@@ -4287,7 +4589,7 @@ var fairygui;
             }
             return i;
         };
-        p.removeChild = function (child, dispose) {
+        GComponent.prototype.removeChild = function (child, dispose) {
             if (dispose === void 0) { dispose = false; }
             var childIndex = this._children.indexOf(child);
             if (childIndex != -1) {
@@ -4295,7 +4597,7 @@ var fairygui;
             }
             return child;
         };
-        p.removeChildAt = function (index, dispose) {
+        GComponent.prototype.removeChildAt = function (index, dispose) {
             if (dispose === void 0) { dispose = false; }
             if (index >= 0 && index < this.numChildren) {
                 var child = this._children[index];
@@ -4317,7 +4619,7 @@ var fairygui;
                 throw "Invalid child index";
             }
         };
-        p.removeChildren = function (beginIndex, endIndex, dispose) {
+        GComponent.prototype.removeChildren = function (beginIndex, endIndex, dispose) {
             if (beginIndex === void 0) { beginIndex = 0; }
             if (endIndex === void 0) { endIndex = -1; }
             if (dispose === void 0) { dispose = false; }
@@ -4326,14 +4628,14 @@ var fairygui;
             for (var i = beginIndex; i <= endIndex; ++i)
                 this.removeChildAt(beginIndex, dispose);
         };
-        p.getChildAt = function (index) {
+        GComponent.prototype.getChildAt = function (index) {
             if (index === void 0) { index = 0; }
             if (index >= 0 && index < this.numChildren)
                 return this._children[index];
             else
                 throw "Invalid child index";
         };
-        p.getChild = function (name) {
+        GComponent.prototype.getChild = function (name) {
             var cnt = this._children.length;
             for (var i = 0; i < cnt; ++i) {
                 if (this._children[i].name == name)
@@ -4341,7 +4643,7 @@ var fairygui;
             }
             return null;
         };
-        p.getVisibleChild = function (name) {
+        GComponent.prototype.getVisibleChild = function (name) {
             var cnt = this._children.length;
             for (var i = 0; i < cnt; ++i) {
                 var child = this._children[i];
@@ -4350,7 +4652,7 @@ var fairygui;
             }
             return null;
         };
-        p.getChildInGroup = function (name, group) {
+        GComponent.prototype.getChildInGroup = function (name, group) {
             var cnt = this._children.length;
             for (var i = 0; i < cnt; ++i) {
                 var child = this._children[i];
@@ -4359,7 +4661,7 @@ var fairygui;
             }
             return null;
         };
-        p.getChildById = function (id) {
+        GComponent.prototype.getChildById = function (id) {
             var cnt = this._children.length;
             for (var i = 0; i < cnt; ++i) {
                 if (this._children[i]._id == id)
@@ -4367,10 +4669,10 @@ var fairygui;
             }
             return null;
         };
-        p.getChildIndex = function (child) {
+        GComponent.prototype.getChildIndex = function (child) {
             return this._children.indexOf(child);
         };
-        p.setChildIndex = function (child, index) {
+        GComponent.prototype.setChildIndex = function (child, index) {
             if (index === void 0) { index = 0; }
             var oldIndex = this._children.indexOf(child);
             if (oldIndex == -1)
@@ -4384,7 +4686,7 @@ var fairygui;
             }
             this._setChildIndex(child, oldIndex, index);
         };
-        p.setChildIndexBefore = function (child, index) {
+        GComponent.prototype.setChildIndexBefore = function (child, index) {
             var oldIndex = this._children.indexOf(child);
             if (oldIndex == -1)
                 throw "Not a child of this container";
@@ -4400,7 +4702,7 @@ var fairygui;
             else
                 return this._setChildIndex(child, oldIndex, index);
         };
-        p._setChildIndex = function (child, oldIndex, index) {
+        GComponent.prototype._setChildIndex = function (child, oldIndex, index) {
             if (index === void 0) { index = 0; }
             var cnt = this._children.length;
             if (index > cnt)
@@ -4440,26 +4742,28 @@ var fairygui;
             }
             return index;
         };
-        p.swapChildren = function (child1, child2) {
+        GComponent.prototype.swapChildren = function (child1, child2) {
             var index1 = this._children.indexOf(child1);
             var index2 = this._children.indexOf(child2);
             if (index1 == -1 || index2 == -1)
                 throw "Not a child of this container";
             this.swapChildrenAt(index1, index2);
         };
-        p.swapChildrenAt = function (index1, index2) {
+        GComponent.prototype.swapChildrenAt = function (index1, index2) {
             if (index2 === void 0) { index2 = 0; }
             var child1 = this._children[index1];
             var child2 = this._children[index2];
             this.setChildIndex(child1, index2);
             this.setChildIndex(child2, index1);
         };
-        d(p, "numChildren"
-            ,function () {
+        Object.defineProperty(GComponent.prototype, "numChildren", {
+            get: function () {
                 return this._children.length;
-            }
-        );
-        p.isAncestorOf = function (child) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GComponent.prototype.isAncestorOf = function (child) {
             if (child == null)
                 return false;
             var p = child.parent;
@@ -4470,15 +4774,15 @@ var fairygui;
             }
             return false;
         };
-        p.addController = function (controller) {
+        GComponent.prototype.addController = function (controller) {
             this._controllers.push(controller);
             controller._parent = this;
             this.applyController(controller);
         };
-        p.getControllerAt = function (index) {
+        GComponent.prototype.getControllerAt = function (index) {
             return this._controllers[index];
         };
-        p.getController = function (name) {
+        GComponent.prototype.getController = function (name) {
             var cnt = this._controllers.length;
             for (var i = 0; i < cnt; ++i) {
                 var c = this._controllers[i];
@@ -4487,7 +4791,7 @@ var fairygui;
             }
             return null;
         };
-        p.removeController = function (c) {
+        GComponent.prototype.removeController = function (c) {
             var index = this._controllers.indexOf(c);
             if (index == -1)
                 throw "controller not exists";
@@ -4499,12 +4803,14 @@ var fairygui;
                 child.handleControllerChanged(c);
             }
         };
-        d(p, "controllers"
-            ,function () {
+        Object.defineProperty(GComponent.prototype, "controllers", {
+            get: function () {
                 return this._controllers;
-            }
-        );
-        p.childStateChanged = function (child) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GComponent.prototype.childStateChanged = function (child) {
             if (this._buildingDisplayList)
                 return;
             var cnt = this._children.length;
@@ -4554,7 +4860,7 @@ var fairygui;
                     this._container.removeChild(child.displayObject);
             }
         };
-        p.buildNativeDisplayList = function () {
+        GComponent.prototype.buildNativeDisplayList = function () {
             var cnt = this._children.length;
             if (cnt == 0)
                 return;
@@ -4595,7 +4901,7 @@ var fairygui;
                     break;
             }
         };
-        p.applyController = function (c) {
+        GComponent.prototype.applyController = function (c) {
             var child;
             var length = this._children.length;
             for (var i = 0; i < length; i++) {
@@ -4603,13 +4909,13 @@ var fairygui;
                 child.handleControllerChanged(c);
             }
         };
-        p.applyAllControllers = function () {
+        GComponent.prototype.applyAllControllers = function () {
             var cnt = this._controllers.length;
             for (var i = 0; i < cnt; ++i) {
                 this.applyController(this._controllers[i]);
             }
         };
-        p.adjustRadioGroupDepth = function (obj, c) {
+        GComponent.prototype.adjustRadioGroupDepth = function (obj, c) {
             var cnt = this._children.length;
             var i;
             var child;
@@ -4628,10 +4934,10 @@ var fairygui;
             if (myIndex < maxIndex)
                 this.swapChildrenAt(myIndex, maxIndex);
         };
-        p.getTransitionAt = function (index) {
+        GComponent.prototype.getTransitionAt = function (index) {
             return this._transitions[index];
         };
-        p.getTransition = function (transName) {
+        GComponent.prototype.getTransition = function (transName) {
             var cnt = this._transitions.length;
             for (var i = 0; i < cnt; ++i) {
                 var trans = this._transitions[i];
@@ -4640,7 +4946,7 @@ var fairygui;
             }
             return null;
         };
-        p.isChildInView = function (child) {
+        GComponent.prototype.isChildInView = function (child) {
             if (this._rootContainer.scrollRect != null) {
                 return child.x + child.width >= 0 && child.x <= this.width
                     && child.y + child.height >= 0 && child.y <= this.height;
@@ -4651,7 +4957,7 @@ var fairygui;
             else
                 return true;
         };
-        p.getFirstChildInView = function () {
+        GComponent.prototype.getFirstChildInView = function () {
             var cnt = this._children.length;
             for (var i = 0; i < cnt; ++i) {
                 var child = this._children[i];
@@ -4660,16 +4966,18 @@ var fairygui;
             }
             return -1;
         };
-        d(p, "scrollPane"
-            ,function () {
+        Object.defineProperty(GComponent.prototype, "scrollPane", {
+            get: function () {
                 return this._scrollPane;
-            }
-        );
-        d(p, "opaque"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GComponent.prototype, "opaque", {
+            get: function () {
                 return this._opaque;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._opaque != value) {
                     this._opaque = value;
                     if (this._opaque)
@@ -4677,58 +4985,68 @@ var fairygui;
                     else
                         this._rootContainer.hitArea = null;
                 }
-            }
-        );
-        d(p, "margin"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GComponent.prototype, "margin", {
+            get: function () {
                 return this._margin;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._margin.copy(value);
                 if (this._rootContainer.scrollRect != null) {
                     this._container.x = this._margin.left + this._alignOffset.x;
                     this._container.y = this._margin.top + this._alignOffset.y;
                 }
                 this.handleSizeChanged();
-            }
-        );
-        d(p, "childrenRenderOrder"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GComponent.prototype, "childrenRenderOrder", {
+            get: function () {
                 return this._childrenRenderOrder;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._childrenRenderOrder != value) {
                     this._childrenRenderOrder = value;
                     this.buildNativeDisplayList();
                 }
-            }
-        );
-        d(p, "apexIndex"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GComponent.prototype, "apexIndex", {
+            get: function () {
                 return this._apexIndex;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._apexIndex != value) {
                     this._apexIndex = value;
                     if (this._childrenRenderOrder == fairygui.ChildrenRenderOrder.Arch)
                         this.buildNativeDisplayList();
                 }
-            }
-        );
-        d(p, "mask"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GComponent.prototype, "mask", {
+            get: function () {
                 return this._rootContainer.mask;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._rootContainer.mask = value;
-            }
-        );
-        p.updateOpaque = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GComponent.prototype.updateOpaque = function () {
             if (!this._rootContainer.hitArea)
                 this._rootContainer.hitArea = new egret.Rectangle();
             this._rootContainer.hitArea.setTo(0, 0, this.width, this.height);
         };
-        p.updateScrollRect = function () {
+        GComponent.prototype.updateScrollRect = function () {
             var rect = this._rootContainer.scrollRect;
             if (rect == null)
                 rect = new egret.Rectangle();
@@ -4737,7 +5055,7 @@ var fairygui;
             rect.setTo(0, 0, w, h);
             this._rootContainer.scrollRect = rect;
         };
-        p.setupScroll = function (scrollBarMargin, scroll, scrollBarDisplay, flags, vtScrollBarRes, hzScrollBarRes) {
+        GComponent.prototype.setupScroll = function (scrollBarMargin, scroll, scrollBarDisplay, flags, vtScrollBarRes, hzScrollBarRes) {
             if (this._rootContainer == this._container) {
                 this._container = new egret.DisplayObjectContainer();
                 this._rootContainer.addChild(this._container);
@@ -4745,7 +5063,7 @@ var fairygui;
             this._scrollPane = new fairygui.ScrollPane(this, scroll, scrollBarMargin, scrollBarDisplay, flags, vtScrollBarRes, hzScrollBarRes);
             this.setBoundsChangedFlag();
         };
-        p.setupOverflow = function (overflow) {
+        GComponent.prototype.setupOverflow = function (overflow) {
             if (overflow == fairygui.OverflowType.Hidden) {
                 if (this._rootContainer == this._container) {
                     this._container = new egret.DisplayObjectContainer();
@@ -4765,7 +5083,7 @@ var fairygui;
             }
             this.setBoundsChangedFlag();
         };
-        p.handleSizeChanged = function () {
+        GComponent.prototype.handleSizeChanged = function () {
             if (this._scrollPane)
                 this._scrollPane.onOwnerSizeChanged();
             else if (this._rootContainer.scrollRect != null)
@@ -4773,7 +5091,7 @@ var fairygui;
             if (this._opaque)
                 this.updateOpaque();
         };
-        p.handleGrayedChanged = function () {
+        GComponent.prototype.handleGrayedChanged = function () {
             var c = this.getController("grayed");
             if (c != null) {
                 c.selectedIndex = this.grayed ? 1 : 0;
@@ -4785,7 +5103,7 @@ var fairygui;
                 this._children[i].grayed = v;
             }
         };
-        p.setBoundsChangedFlag = function () {
+        GComponent.prototype.setBoundsChangedFlag = function () {
             if (!this._scrollPane && !this._trackBounds)
                 return;
             if (!this._boundsChanged) {
@@ -4793,15 +5111,30 @@ var fairygui;
                 egret.callLater(this.__render, this);
             }
         };
-        p.__render = function () {
+        GComponent.prototype.__render = function () {
+            if (this._boundsChanged) {
+                var len = this._children.length;
+                if (len > 0) {
+                    for (var i = 0; i < len; i++) {
+                        var child = this._children[i];
+                        child.ensureSizeCorrect();
+                    }
+                }
+                this.updateBounds();
+            }
+        };
+        GComponent.prototype.ensureBoundsCorrect = function () {
+            var len = this._children.length;
+            if (len > 0) {
+                for (var i = 0; i < len; i++) {
+                    var child = this._children[i];
+                    child.ensureSizeCorrect();
+                }
+            }
             if (this._boundsChanged)
                 this.updateBounds();
         };
-        p.ensureBoundsCorrect = function () {
-            if (this._boundsChanged)
-                this.updateBounds();
-        };
-        p.updateBounds = function () {
+        GComponent.prototype.updateBounds = function () {
             var ax = 0, ay = 0, aw = 0, ah = 0;
             var len = this._children.length;
             if (len > 0) {
@@ -4809,10 +5142,6 @@ var fairygui;
                 var ar = Number.NEGATIVE_INFINITY, ab = Number.NEGATIVE_INFINITY;
                 var tmp = 0;
                 var i = 0;
-                for (i = 0; i < len; i++) {
-                    child = this._children[i];
-                    child.ensureSizeCorrect();
-                }
                 for (var i = 0; i < len; i++) {
                     var child = this._children[i];
                     tmp = child.x;
@@ -4833,41 +5162,45 @@ var fairygui;
             }
             this.setBounds(ax, ay, aw, ah);
         };
-        p.setBounds = function (ax, ay, aw, ah) {
+        GComponent.prototype.setBounds = function (ax, ay, aw, ah) {
             if (ah === void 0) { ah = 0; }
             this._boundsChanged = false;
             if (this._scrollPane)
                 this._scrollPane.setContentSize(Math.round(ax + aw), Math.round(ay + ah));
         };
-        d(p, "viewWidth"
-            ,function () {
+        Object.defineProperty(GComponent.prototype, "viewWidth", {
+            get: function () {
                 if (this._scrollPane != null)
                     return this._scrollPane.viewWidth;
                 else
                     return this.width - this._margin.left - this._margin.right;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._scrollPane != null)
                     this._scrollPane.viewWidth = value;
                 else
                     this.width = value + this._margin.left + this._margin.right;
-            }
-        );
-        d(p, "viewHeight"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GComponent.prototype, "viewHeight", {
+            get: function () {
                 if (this._scrollPane != null)
                     return this._scrollPane.viewHeight;
                 else
                     return this.height - this._margin.top - this._margin.bottom;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._scrollPane != null)
                     this._scrollPane.viewHeight = value;
                 else
                     this.height = value + this._margin.top + this._margin.bottom;
-            }
-        );
-        p.getSnappingPosition = function (xValue, yValue, resultPoint) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GComponent.prototype.getSnappingPosition = function (xValue, yValue, resultPoint) {
             if (!resultPoint)
                 resultPoint = new egret.Point();
             var cnt = this._children.length;
@@ -4928,7 +5261,7 @@ var fairygui;
             resultPoint.y = yValue;
             return resultPoint;
         };
-        p.childSortingOrderChanged = function (child, oldValue, newValue) {
+        GComponent.prototype.childSortingOrderChanged = function (child, oldValue, newValue) {
             if (newValue === void 0) { newValue = 0; }
             if (newValue == 0) {
                 this._sortingChildCount--;
@@ -4945,10 +5278,10 @@ var fairygui;
                     this._setChildIndex(child, oldIndex, index);
             }
         };
-        p.constructFromResource = function () {
+        GComponent.prototype.constructFromResource = function () {
             this.constructFromResource2(null, 0);
         };
-        p.constructFromResource2 = function (objectPool, poolIndex) {
+        GComponent.prototype.constructFromResource2 = function (objectPool, poolIndex) {
             var xml = this.packageItem.owner.getItemAsset(this.packageItem);
             this._underConstruct = true;
             var str;
@@ -5079,9 +5412,9 @@ var fairygui;
             this.setBoundsChangedFlag();
             this.constructFromXML(xml);
         };
-        p.constructFromXML = function (xml) {
+        GComponent.prototype.constructFromXML = function (xml) {
         };
-        p.setup_afterAdd = function (xml) {
+        GComponent.prototype.setup_afterAdd = function (xml) {
             _super.prototype.setup_afterAdd.call(this, xml);
             var str = xml.attributes.controller;
             if (str) {
@@ -5093,7 +5426,7 @@ var fairygui;
                 }
             }
         };
-        p.___added = function (evt) {
+        GComponent.prototype.___added = function (evt) {
             var cnt = this._transitions.length;
             for (var i = 0; i < cnt; ++i) {
                 var trans = this._transitions[i];
@@ -5101,7 +5434,7 @@ var fairygui;
                     trans.play(null, null, null, trans.autoPlayRepeat, trans.autoPlayDelay);
             }
         };
-        p.___removed = function (evt) {
+        GComponent.prototype.___removed = function (evt) {
             var cnt = this._transitions.length;
             for (var i = 0; i < cnt; ++i) {
                 this._transitions[i].OnOwnerRemovedFromStage();
@@ -5110,80 +5443,98 @@ var fairygui;
         return GComponent;
     }(fairygui.GObject));
     fairygui.GComponent = GComponent;
-    egret.registerClass(GComponent,'fairygui.GComponent');
+    __reflect(GComponent.prototype, "fairygui.GComponent");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GButton = (function (_super) {
         __extends(GButton, _super);
         function GButton() {
-            _super.call(this);
-            this._mode = fairygui.ButtonMode.Common;
-            this._title = "";
-            this._icon = "";
-            this._sound = fairygui.UIConfig.buttonSound;
-            this._soundVolumeScale = fairygui.UIConfig.buttonSoundVolumeScale;
-            this._pageOption = new fairygui.PageOption();
-            this._changeStateOnClick = true;
-            this._downEffect = 0;
-            this._downEffectValue = 0.8;
+            var _this = _super.call(this) || this;
+            _this._mode = fairygui.ButtonMode.Common;
+            _this._title = "";
+            _this._icon = "";
+            _this._sound = fairygui.UIConfig.buttonSound;
+            _this._soundVolumeScale = fairygui.UIConfig.buttonSoundVolumeScale;
+            _this._pageOption = new fairygui.PageOption();
+            _this._changeStateOnClick = true;
+            _this._downEffect = 0;
+            _this._downEffectValue = 0.8;
+            return _this;
         }
-        var d = __define,c=GButton,p=c.prototype;
-        d(p, "icon"
-            ,function () {
+        Object.defineProperty(GButton.prototype, "icon", {
+            get: function () {
                 return this._icon;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._icon = value;
                 value = (this._selected && this._selectedIcon) ? this._selectedIcon : this._icon;
                 if (this._iconObject != null)
                     this._iconObject.icon = value;
                 this.updateGear(7);
-            }
-        );
-        d(p, "selectedIcon"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "selectedIcon", {
+            get: function () {
                 return this._selectedIcon;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._selectedIcon = value;
                 value = (this._selected && this._selectedIcon) ? this._selectedIcon : this._icon;
                 if (this._iconObject != null)
                     this._iconObject.icon = value;
-            }
-        );
-        d(p, "title"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "title", {
+            get: function () {
                 return this._title;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._title = value;
                 if (this._titleObject)
                     this._titleObject.text = (this._selected && this._selectedTitle) ? this._selectedTitle : this._title;
                 this.updateGear(6);
-            }
-        );
-        d(p, "text"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "text", {
+            get: function () {
                 return this.title;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.title = value;
-            }
-        );
-        d(p, "selectedTitle"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "selectedTitle", {
+            get: function () {
                 return this._selectedTitle;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._selectedTitle = value;
                 if (this._titleObject)
                     this._titleObject.text = (this._selected && this._selectedTitle) ? this._selectedTitle : this._title;
-            }
-        );
-        d(p, "titleColor"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "titleColor", {
+            get: function () {
                 if (this._titleObject instanceof fairygui.GTextField)
                     return this._titleObject.color;
                 else if (this._titleObject instanceof fairygui.GLabel)
@@ -5192,18 +5543,20 @@ var fairygui;
                     return this._titleObject.titleColor;
                 else
                     return 0;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._titleObject instanceof fairygui.GTextField)
                     this._titleObject.color = value;
                 else if (this._titleObject instanceof fairygui.GLabel)
                     this._titleObject.titleColor = value;
                 else if (this._titleObject instanceof GButton)
                     this._titleObject.titleColor = value;
-            }
-        );
-        d(p, "titleFontSize"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "titleFontSize", {
+            get: function () {
                 if (this._titleObject instanceof fairygui.GTextField)
                     return this._titleObject.fontSize;
                 else if (this._titleObject instanceof fairygui.GLabel)
@@ -5212,37 +5565,43 @@ var fairygui;
                     return this._titleObject.titleFontSize;
                 else
                     return 0;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._titleObject instanceof fairygui.GTextField)
                     this._titleObject.fontSize = value;
                 else if (this._titleObject instanceof fairygui.GLabel)
                     this._titleObject.titleFontSize = value;
                 else if (this._titleObject instanceof GButton)
                     this._titleObject.titleFontSize = value;
-            }
-        );
-        d(p, "sound"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "sound", {
+            get: function () {
                 return this._sound;
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 this._sound = val;
-            }
-        );
-        d(p, "soundVolumeScale"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "soundVolumeScale", {
+            get: function () {
                 return this._soundVolumeScale;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._soundVolumeScale = value;
-            }
-        );
-        d(p, "selected"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "selected", {
+            get: function () {
                 return this._selected;
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 if (this._mode == fairygui.ButtonMode.Common)
                     return;
                 if (this._selected != val) {
@@ -5278,60 +5637,72 @@ var fairygui;
                             this._relatedController.oppositePageId = this._pageOption.id;
                     }
                 }
-            }
-        );
-        d(p, "mode"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "mode", {
+            get: function () {
                 return this._mode;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._mode != value) {
                     if (value == fairygui.ButtonMode.Common)
                         this.selected = false;
                     this._mode = value;
                 }
-            }
-        );
-        d(p, "relatedController"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "relatedController", {
+            get: function () {
                 return this._relatedController;
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 if (val != this._relatedController) {
                     this._relatedController = val;
                     this._pageOption.controller = val;
                     this._pageOption.clear();
                 }
-            }
-        );
-        d(p, "pageOption"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "pageOption", {
+            get: function () {
                 return this._pageOption;
-            }
-        );
-        d(p, "changeStateOnClick"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "changeStateOnClick", {
+            get: function () {
                 return this._changeStateOnClick;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._changeStateOnClick = value;
-            }
-        );
-        d(p, "linkedPopup"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "linkedPopup", {
+            get: function () {
                 return this._linkedPopup;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._linkedPopup = value;
-            }
-        );
-        p.addStateListener = function (listener, thisObj) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GButton.prototype.addStateListener = function (listener, thisObj) {
             this.addEventListener(fairygui.StateChangeEvent.CHANGED, listener, thisObj);
         };
-        p.removeStateListener = function (listener, thisObj) {
+        GButton.prototype.removeStateListener = function (listener, thisObj) {
             this.removeEventListener(fairygui.StateChangeEvent.CHANGED, listener, thisObj);
         };
-        p.fireClick = function (downEffect) {
+        GButton.prototype.fireClick = function (downEffect) {
             if (downEffect === void 0) { downEffect = true; }
             if (downEffect && this._mode == fairygui.ButtonMode.Common) {
                 this.setState(GButton.OVER);
@@ -5340,7 +5711,7 @@ var fairygui;
             }
             this.__click(null);
         };
-        p.setState = function (val) {
+        GButton.prototype.setState = function (val) {
             if (this._buttonController)
                 this._buttonController.selectedPage = val;
             if (this._downEffect == 1) {
@@ -5369,12 +5740,12 @@ var fairygui;
                     this.setScale(1, 1);
             }
         };
-        p.handleControllerChanged = function (c) {
+        GButton.prototype.handleControllerChanged = function (c) {
             _super.prototype.handleControllerChanged.call(this, c);
             if (this._relatedController == c)
                 this.selected = this._pageOption.id == c.selectedPageId;
         };
-        p.handleGrayedChanged = function () {
+        GButton.prototype.handleGrayedChanged = function () {
             if (this._buttonController && this._buttonController.hasPage(GButton.DISABLED)) {
                 if (this.grayed) {
                     if (this._selected && this._buttonController.hasPage(GButton.SELECTED_DISABLED))
@@ -5390,7 +5761,7 @@ var fairygui;
             else
                 _super.prototype.handleGrayedChanged.call(this);
         };
-        p.constructFromXML = function (xml) {
+        GButton.prototype.constructFromXML = function (xml) {
             _super.prototype.constructFromXML.call(this, xml);
             xml = fairygui.ToolSet.findChildNode(xml, "Button");
             var str;
@@ -5421,7 +5792,7 @@ var fairygui;
             this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__mousedown, this);
             this.addEventListener(egret.TouchEvent.TOUCH_TAP, this.__click, this);
         };
-        p.setup_afterAdd = function (xml) {
+        GButton.prototype.setup_afterAdd = function (xml) {
             _super.prototype.setup_afterAdd.call(this, xml);
             if (this._downEffect == 2)
                 this.setPivot(0.5, 0.5);
@@ -5461,7 +5832,7 @@ var fairygui;
                 this.selected = xml.attributes.checked == "true";
             }
         };
-        p.__rollover = function (evt) {
+        GButton.prototype.__rollover = function (evt) {
             if (!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
                 return;
             this._over = true;
@@ -5469,7 +5840,7 @@ var fairygui;
                 return;
             this.setState(this._selected ? GButton.SELECTED_OVER : GButton.OVER);
         };
-        p.__rollout = function (evt) {
+        GButton.prototype.__rollout = function (evt) {
             if (!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
                 return;
             this._over = false;
@@ -5477,7 +5848,7 @@ var fairygui;
                 return;
             this.setState(this._selected ? GButton.DOWN : GButton.UP);
         };
-        p.__mousedown = function (evt) {
+        GButton.prototype.__mousedown = function (evt) {
             this._down = true;
             fairygui.GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
             if (this._mode == fairygui.ButtonMode.Common) {
@@ -5493,7 +5864,7 @@ var fairygui;
                     this.root.togglePopup(this._linkedPopup, this);
             }
         };
-        p.__mouseup = function (evt) {
+        GButton.prototype.__mouseup = function (evt) {
             if (this._down) {
                 fairygui.GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
                 this._down = false;
@@ -5507,7 +5878,7 @@ var fairygui;
                 }
             }
         };
-        p.__click = function (evt) {
+        GButton.prototype.__click = function (evt) {
             if (this._sound) {
                 var pi = fairygui.UIPackage.getItemByURL(this._sound);
                 if (pi) {
@@ -5529,62 +5900,74 @@ var fairygui;
                 }
             }
         };
-        GButton.UP = "up";
-        GButton.DOWN = "down";
-        GButton.OVER = "over";
-        GButton.SELECTED_OVER = "selectedOver";
-        GButton.DISABLED = "disabled";
-        GButton.SELECTED_DISABLED = "selectedDisabled";
         return GButton;
     }(fairygui.GComponent));
+    GButton.UP = "up";
+    GButton.DOWN = "down";
+    GButton.OVER = "over";
+    GButton.SELECTED_OVER = "selectedOver";
+    GButton.DISABLED = "disabled";
+    GButton.SELECTED_DISABLED = "selectedDisabled";
     fairygui.GButton = GButton;
-    egret.registerClass(GButton,'fairygui.GButton');
+    __reflect(GButton.prototype, "fairygui.GButton");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GComboBox = (function (_super) {
         __extends(GComboBox, _super);
         function GComboBox() {
-            _super.call(this);
-            this._visibleItemCount = 0;
-            this._selectedIndex = 0;
-            this._popupDownward = true;
-            this._visibleItemCount = fairygui.UIConfig.defaultComboBoxVisibleItemCount;
-            this._itemsUpdated = true;
-            this._selectedIndex = -1;
-            this._items = [];
-            this._values = [];
+            var _this = _super.call(this) || this;
+            _this._visibleItemCount = 0;
+            _this._selectedIndex = 0;
+            _this._popupDownward = true;
+            _this._visibleItemCount = fairygui.UIConfig.defaultComboBoxVisibleItemCount;
+            _this._itemsUpdated = true;
+            _this._selectedIndex = -1;
+            _this._items = [];
+            _this._values = [];
+            return _this;
         }
-        var d = __define,c=GComboBox,p=c.prototype;
-        d(p, "text"
-            ,function () {
+        Object.defineProperty(GComboBox.prototype, "text", {
+            get: function () {
                 if (this._titleObject)
                     return this._titleObject.text;
                 else
                     return null;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._titleObject)
                     this._titleObject.text = value;
                 this.updateGear(6);
-            }
-        );
-        d(p, "icon"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "icon", {
+            get: function () {
                 if (this._iconObject)
                     return this._iconObject.icon;
                 else
                     return null;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._iconObject)
                     this._iconObject.icon = value;
                 this.updateGear(7);
-            }
-        );
-        d(p, "titleColor"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "titleColor", {
+            get: function () {
                 if (this._titleObject instanceof fairygui.GTextField)
                     return this._titleObject.color;
                 else if (this._titleObject instanceof fairygui.GLabel)
@@ -5593,37 +5976,43 @@ var fairygui;
                     return this._titleObject.titleColor;
                 else
                     return 0;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._titleObject instanceof fairygui.GTextField)
                     this._titleObject.color = value;
                 else if (this._titleObject instanceof fairygui.GLabel)
                     this._titleObject.titleColor = value;
                 else if (this._titleObject instanceof fairygui.GButton)
                     this._titleObject.titleColor = value;
-            }
-        );
-        d(p, "visibleItemCount"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "visibleItemCount", {
+            get: function () {
                 return this._visibleItemCount;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._visibleItemCount = value;
-            }
-        );
-        d(p, "popupDownward"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "popupDownward", {
+            get: function () {
                 return this._popupDownward;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._popupDownward = value;
-            }
-        );
-        d(p, "items"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "items", {
+            get: function () {
                 return this._items;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (!value)
                     this._items.length = 0;
                 else
@@ -5644,34 +6033,40 @@ var fairygui;
                     this._selectedIndex = -1;
                 }
                 this._itemsUpdated = true;
-            }
-        );
-        d(p, "icons"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "icons", {
+            get: function () {
                 return this._icons;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._icons = value;
                 if (this._icons != null && this._selectedIndex != -1 && this._selectedIndex < this._icons.length)
                     this.icon = this._icons[this._selectedIndex];
-            }
-        );
-        d(p, "values"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "values", {
+            get: function () {
                 return this._values;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (!value)
                     this._values.length = 0;
                 else
                     this._values = value.concat();
-            }
-        );
-        d(p, "selectedIndex"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "selectedIndex", {
+            get: function () {
                 return this._selectedIndex;
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 if (this._selectedIndex == val)
                     return;
                 this._selectedIndex = val;
@@ -5685,21 +6080,25 @@ var fairygui;
                     if (this._icons != null)
                         this.icon = null;
                 }
-            }
-        );
-        d(p, "value"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GComboBox.prototype, "value", {
+            get: function () {
                 return this._values[this._selectedIndex];
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 this.selectedIndex = this._values.indexOf(val);
-            }
-        );
-        p.setState = function (val) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GComboBox.prototype.setState = function (val) {
             if (this._buttonController)
                 this._buttonController.selectedPage = val;
         };
-        p.constructFromXML = function (xml) {
+        GComboBox.prototype.constructFromXML = function (xml) {
             _super.prototype.constructFromXML.call(this, xml);
             xml = fairygui.ToolSet.findChildNode(xml, "ComboBox");
             var str;
@@ -5733,14 +6132,14 @@ var fairygui;
             }*/
             this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__mousedown, this);
         };
-        p.dispose = function () {
+        GComboBox.prototype.dispose = function () {
             if (this.dropdown) {
                 this.dropdown.dispose();
                 this.dropdown = null;
             }
             _super.prototype.dispose.call(this);
         };
-        p.setup_afterAdd = function (xml) {
+        GComboBox.prototype.setup_afterAdd = function (xml) {
             _super.prototype.setup_afterAdd.call(this, xml);
             xml = fairygui.ToolSet.findChildNode(xml, "ComboBox");
             if (xml) {
@@ -5791,7 +6190,7 @@ var fairygui;
                 }
             }
         };
-        p.showDropdown = function () {
+        GComboBox.prototype.showDropdown = function () {
             if (this._itemsUpdated) {
                 this._itemsUpdated = false;
                 this._list.removeChildrenToPool();
@@ -5810,16 +6209,16 @@ var fairygui;
             if (this.dropdown.parent)
                 this.setState(fairygui.GButton.DOWN);
         };
-        p.__popupWinClosed = function (evt) {
+        GComboBox.prototype.__popupWinClosed = function (evt) {
             if (this._over)
                 this.setState(fairygui.GButton.OVER);
             else
                 this.setState(fairygui.GButton.UP);
         };
-        p.__clickItem = function (evt) {
+        GComboBox.prototype.__clickItem = function (evt) {
             fairygui.GTimers.inst.add(100, 1, this.__clickItem2, this, this._list.getChildIndex(evt.itemObject));
         };
-        p.__clickItem2 = function (index) {
+        GComboBox.prototype.__clickItem2 = function (index) {
             if (this.dropdown.parent instanceof fairygui.GRoot)
                 (this.dropdown.parent).hidePopup();
             this._selectedIndex = index;
@@ -5829,19 +6228,19 @@ var fairygui;
                 this.text = "";
             this.dispatchEvent(new fairygui.StateChangeEvent(fairygui.StateChangeEvent.CHANGED));
         };
-        p.__rollover = function (evt) {
+        GComboBox.prototype.__rollover = function (evt) {
             this._over = true;
             if (this._down || this.dropdown && this.dropdown.parent)
                 return;
             this.setState(fairygui.GButton.OVER);
         };
-        p.__rollout = function (evt) {
+        GComboBox.prototype.__rollout = function (evt) {
             this._over = false;
             if (this._down || this.dropdown && this.dropdown.parent)
                 return;
             this.setState(fairygui.GButton.UP);
         };
-        p.__mousedown = function (evt) {
+        GComboBox.prototype.__mousedown = function (evt) {
             if ((evt.target instanceof egret.TextField) && evt.target.type == egret.TextFieldType.INPUT)
                 return;
             this._down = true;
@@ -5849,7 +6248,7 @@ var fairygui;
             if (this.dropdown)
                 this.showDropdown();
         };
-        p.__mouseup = function (evt) {
+        GComboBox.prototype.__mouseup = function (evt) {
             if (this._down) {
                 this._down = false;
                 fairygui.GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
@@ -5864,22 +6263,29 @@ var fairygui;
         return GComboBox;
     }(fairygui.GComponent));
     fairygui.GComboBox = GComboBox;
-    egret.registerClass(GComboBox,'fairygui.GComboBox');
+    __reflect(GComboBox.prototype, "fairygui.GComboBox");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GearAnimation = (function (_super) {
         __extends(GearAnimation, _super);
         function GearAnimation(owner) {
-            _super.call(this, owner);
+            return _super.call(this, owner) || this;
         }
-        var d = __define,c=GearAnimation,p=c.prototype;
-        p.init = function () {
+        GearAnimation.prototype.init = function () {
             this._default = new GearAnimationValue(this._owner.playing, this._owner.frame);
             this._storage = {};
         };
-        p.addStatus = function (pageId, value) {
+        GearAnimation.prototype.addStatus = function (pageId, value) {
             if (value == "-")
                 return;
             var gv;
@@ -5893,7 +6299,7 @@ var fairygui;
             gv.frame = parseInt(arr[0]);
             gv.playing = arr[1] == "p";
         };
-        p.apply = function () {
+        GearAnimation.prototype.apply = function () {
             this._owner._gearLocked = true;
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv)
@@ -5902,7 +6308,7 @@ var fairygui;
             this._owner.playing = gv.playing;
             this._owner._gearLocked = false;
         };
-        p.updateState = function () {
+        GearAnimation.prototype.updateState = function () {
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv) {
                 gv = new GearAnimationValue();
@@ -5914,7 +6320,7 @@ var fairygui;
         return GearAnimation;
     }(fairygui.GearBase));
     fairygui.GearAnimation = GearAnimation;
-    egret.registerClass(GearAnimation,'fairygui.GearAnimation');
+    __reflect(GearAnimation.prototype, "fairygui.GearAnimation");
     var GearAnimationValue = (function () {
         function GearAnimationValue(playing, frame) {
             if (playing === void 0) { playing = true; }
@@ -5922,28 +6328,34 @@ var fairygui;
             this.playing = playing;
             this.frame = frame;
         }
-        var d = __define,c=GearAnimationValue,p=c.prototype;
         return GearAnimationValue;
     }());
-    egret.registerClass(GearAnimationValue,'GearAnimationValue');
+    __reflect(GearAnimationValue.prototype, "GearAnimationValue");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GearColor = (function (_super) {
         __extends(GearColor, _super);
         function GearColor(owner) {
-            _super.call(this, owner);
+            return _super.call(this, owner) || this;
         }
-        var d = __define,c=GearColor,p=c.prototype;
-        p.init = function () {
+        GearColor.prototype.init = function () {
             if (this._owner["strokeColor"] != undefined)
                 this._default = new GearColorValue(this._owner.color, this._owner.strokeColor);
             else
                 this._default = new GearColorValue(this._owner.color);
             this._storage = {};
         };
-        p.addStatus = function (pageId, value) {
+        GearColor.prototype.addStatus = function (pageId, value) {
             if (value == "-")
                 return;
             var pos = value.indexOf(",");
@@ -5964,7 +6376,7 @@ var fairygui;
             else
                 this._storage[pageId] = new GearColorValue(col1, col2);
         };
-        p.apply = function () {
+        GearColor.prototype.apply = function () {
             this._owner._gearLocked = true;
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv)
@@ -5974,7 +6386,7 @@ var fairygui;
                 this._owner.strokeColor = gv.strokeColor;
             this._owner._gearLocked = false;
         };
-        p.updateState = function () {
+        GearColor.prototype.updateState = function () {
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv) {
                 gv = new GearColorValue(null, null);
@@ -5987,7 +6399,7 @@ var fairygui;
         return GearColor;
     }(fairygui.GearBase));
     fairygui.GearColor = GearColor;
-    egret.registerClass(GearColor,'fairygui.GearColor');
+    __reflect(GearColor.prototype, "fairygui.GearColor");
     var GearColorValue = (function () {
         function GearColorValue(color, strokeColor) {
             if (color === void 0) { color = 0; }
@@ -5995,26 +6407,33 @@ var fairygui;
             this.color = color;
             this.strokeColor = strokeColor;
         }
-        var d = __define,c=GearColorValue,p=c.prototype;
         return GearColorValue;
     }());
-    egret.registerClass(GearColorValue,'GearColorValue');
+    __reflect(GearColorValue.prototype, "GearColorValue");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GearDisplay = (function (_super) {
         __extends(GearDisplay, _super);
         function GearDisplay(owner) {
-            _super.call(this, owner);
-            this._displayLockToken = 1;
-            this._visible = 0;
+            var _this = _super.call(this, owner) || this;
+            _this._displayLockToken = 1;
+            _this._visible = 0;
+            return _this;
         }
-        var d = __define,c=GearDisplay,p=c.prototype;
-        p.init = function () {
+        GearDisplay.prototype.init = function () {
             this.pages = null;
         };
-        p.apply = function () {
+        GearDisplay.prototype.apply = function () {
             this._displayLockToken++;
             if (this._displayLockToken == 0)
                 this._displayLockToken = 1;
@@ -6024,38 +6443,47 @@ var fairygui;
             else
                 this._visible = 0;
         };
-        p.addLock = function () {
+        GearDisplay.prototype.addLock = function () {
             this._visible++;
             return this._displayLockToken;
         };
-        p.releaseLock = function (token) {
+        GearDisplay.prototype.releaseLock = function (token) {
             if (token == this._displayLockToken)
                 this._visible--;
         };
-        d(p, "connected"
-            ,function () {
+        Object.defineProperty(GearDisplay.prototype, "connected", {
+            get: function () {
                 return this._controller == null || this._visible > 0;
-            }
-        );
+            },
+            enumerable: true,
+            configurable: true
+        });
         return GearDisplay;
     }(fairygui.GearBase));
     fairygui.GearDisplay = GearDisplay;
-    egret.registerClass(GearDisplay,'fairygui.GearDisplay');
+    __reflect(GearDisplay.prototype, "fairygui.GearDisplay");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GearLook = (function (_super) {
         __extends(GearLook, _super);
         function GearLook(owner) {
-            _super.call(this, owner);
+            return _super.call(this, owner) || this;
         }
-        var d = __define,c=GearLook,p=c.prototype;
-        p.init = function () {
+        GearLook.prototype.init = function () {
             this._default = new GearLookValue(this._owner.alpha, this._owner.rotation, this._owner.grayed);
             this._storage = {};
         };
-        p.addStatus = function (pageId, value) {
+        GearLook.prototype.addStatus = function (pageId, value) {
             if (value == "-")
                 return;
             var arr = value.split(",");
@@ -6070,7 +6498,7 @@ var fairygui;
             gv.rotation = parseInt(arr[1]);
             gv.grayed = arr[2] == "1" ? true : false;
         };
-        p.apply = function () {
+        GearLook.prototype.apply = function () {
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv)
                 gv = this._default;
@@ -6128,7 +6556,7 @@ var fairygui;
                 this._owner._gearLocked = false;
             }
         };
-        p.updateState = function () {
+        GearLook.prototype.updateState = function () {
             var gv = this._storage[this._controller.selectedPageId];
             if (!gv) {
                 gv = new GearLookValue();
@@ -6141,7 +6569,7 @@ var fairygui;
         return GearLook;
     }(fairygui.GearBase));
     fairygui.GearLook = GearLook;
-    egret.registerClass(GearLook,'fairygui.GearLook');
+    __reflect(GearLook.prototype, "fairygui.GearLook");
     var GearLookValue = (function () {
         function GearLookValue(alpha, rotation, grayed) {
             if (alpha === void 0) { alpha = 0; }
@@ -6151,38 +6579,47 @@ var fairygui;
             this.rotation = rotation;
             this.grayed = grayed;
         }
-        var d = __define,c=GearLookValue,p=c.prototype;
         return GearLookValue;
     }());
-    egret.registerClass(GearLookValue,'GearLookValue');
+    __reflect(GearLookValue.prototype, "GearLookValue");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GGraph = (function (_super) {
         __extends(GGraph, _super);
         function GGraph() {
-            _super.call(this);
-            this._type = 0;
-            this._lineSize = 0;
-            this._lineColor = 0;
-            this._fillColor = 0;
-            this._lineSize = 1;
-            this._lineAlpha = 1;
-            this._fillAlpha = 1;
-            this._fillColor = 0xFFFFFF;
+            var _this = _super.call(this) || this;
+            _this._type = 0;
+            _this._lineSize = 0;
+            _this._lineColor = 0;
+            _this._fillColor = 0;
+            _this._lineSize = 1;
+            _this._lineAlpha = 1;
+            _this._fillAlpha = 1;
+            _this._fillColor = 0xFFFFFF;
+            return _this;
         }
-        var d = __define,c=GGraph,p=c.prototype;
-        d(p, "graphics"
-            ,function () {
+        Object.defineProperty(GGraph.prototype, "graphics", {
+            get: function () {
                 if (this._graphics)
                     return this._graphics;
                 this.delayCreateDisplayObject();
                 this._graphics = (this.displayObject).graphics;
                 return this._graphics;
-            }
-        );
-        p.drawRect = function (lineSize, lineColor, lineAlpha, fillColor, fillAlpha, corner) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GGraph.prototype.drawRect = function (lineSize, lineColor, lineAlpha, fillColor, fillAlpha, corner) {
             if (corner === void 0) { corner = null; }
             this._type = 1;
             this._lineSize = lineSize;
@@ -6193,7 +6630,7 @@ var fairygui;
             this._corner = corner;
             this.drawCommon();
         };
-        p.drawEllipse = function (lineSize, lineColor, lineAlpha, fillColor, fillAlpha) {
+        GGraph.prototype.drawEllipse = function (lineSize, lineColor, lineAlpha, fillColor, fillAlpha) {
             this._type = 2;
             this._lineSize = lineSize;
             this._lineColor = lineColor;
@@ -6203,23 +6640,25 @@ var fairygui;
             this._corner = null;
             this.drawCommon();
         };
-        p.clearGraphics = function () {
+        GGraph.prototype.clearGraphics = function () {
             if (this._graphics) {
                 this._type = 0;
                 this._graphics.clear();
             }
         };
-        d(p, "color"
-            ,function () {
+        Object.defineProperty(GGraph.prototype, "color", {
+            get: function () {
                 return this._fillColor;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._fillColor = value;
                 if (this._type != 0)
                     this.drawCommon();
-            }
-        );
-        p.drawCommon = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GGraph.prototype.drawCommon = function () {
             this.graphics;
             this._graphics.clear();
             var w = this.width;
@@ -6245,7 +6684,7 @@ var fairygui;
                 this._graphics.drawEllipse(0, 0, w, h);
             this._graphics.endFill();
         };
-        p.replaceMe = function (target) {
+        GGraph.prototype.replaceMe = function (target) {
             if (!this._parent)
                 throw "parent not set";
             target.name = this.name;
@@ -6261,24 +6700,24 @@ var fairygui;
             target.relations.copyFrom(this.relations);
             this._parent.removeChild(this, true);
         };
-        p.addBeforeMe = function (target) {
+        GGraph.prototype.addBeforeMe = function (target) {
             if (this._parent == null)
                 throw "parent not set";
             var index = this._parent.getChildIndex(this);
             this._parent.addChildAt(target, index);
         };
-        p.addAfterMe = function (target) {
+        GGraph.prototype.addAfterMe = function (target) {
             if (this._parent == null)
                 throw "parent not set";
             var index = this._parent.getChildIndex(this);
             index++;
             this._parent.addChildAt(target, index);
         };
-        p.setNativeObject = function (obj) {
+        GGraph.prototype.setNativeObject = function (obj) {
             this.delayCreateDisplayObject();
             (this.displayObject).addChild(obj);
         };
-        p.delayCreateDisplayObject = function () {
+        GGraph.prototype.delayCreateDisplayObject = function () {
             if (!this.displayObject) {
                 var sprite = new fairygui.UISprite();
                 sprite["$owner"] = this;
@@ -6299,7 +6738,7 @@ var fairygui;
                 this._graphics = null;
             }
         };
-        p.handleSizeChanged = function () {
+        GGraph.prototype.handleSizeChanged = function () {
             if (this._graphics) {
                 if (this._type != 0)
                     this.drawCommon();
@@ -6313,7 +6752,7 @@ var fairygui;
                 }
             }
         };
-        p.setup_beforeAdd = function (xml) {
+        GGraph.prototype.setup_beforeAdd = function (xml) {
             var str;
             var type = xml.attributes.type;
             if (type && type != "empty") {
@@ -6358,18 +6797,25 @@ var fairygui;
         return GGraph;
     }(fairygui.GObject));
     fairygui.GGraph = GGraph;
-    egret.registerClass(GGraph,'fairygui.GGraph');
+    __reflect(GGraph.prototype, "fairygui.GGraph");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GGroup = (function (_super) {
         __extends(GGroup, _super);
         function GGroup() {
-            _super.call(this);
+            return _super.call(this) || this;
         }
-        var d = __define,c=GGroup,p=c.prototype;
-        p.updateBounds = function () {
+        GGroup.prototype.updateBounds = function () {
             if (this._updating || !this.parent)
                 return;
             var cnt = this._parent.numChildren;
@@ -6406,7 +6852,7 @@ var fairygui;
                 this.setSize(0, 0);
             this._updating = false;
         };
-        p.moveChildren = function (dx, dy) {
+        GGroup.prototype.moveChildren = function (dx, dy) {
             if (this._updating || !this.parent)
                 return;
             this._updating = true;
@@ -6421,7 +6867,7 @@ var fairygui;
             }
             this._updating = false;
         };
-        p.updateAlpha = function () {
+        GGroup.prototype.updateAlpha = function () {
             _super.prototype.updateAlpha.call(this);
             if (this._underConstruct)
                 return;
@@ -6437,19 +6883,27 @@ var fairygui;
         return GGroup;
     }(fairygui.GObject));
     fairygui.GGroup = GGroup;
-    egret.registerClass(GGroup,'fairygui.GGroup');
+    __reflect(GGroup.prototype, "fairygui.GGroup");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GImage = (function (_super) {
         __extends(GImage, _super);
         function GImage() {
-            _super.call(this);
-            this._color = 0xFFFFFF;
+            var _this = _super.call(this) || this;
+            _this._color = 0xFFFFFF;
+            return _this;
         }
-        var d = __define,c=GImage,p=c.prototype;
-        p.getColorMatrix = function () {
+        GImage.prototype.getColorMatrix = function () {
             if (this._matrix)
                 return this._matrix;
             var filters = this.filters;
@@ -6468,19 +6922,21 @@ var fairygui;
             this.filters = filters;
             return cmf;
         };
-        d(p, "color"
-            ,function () {
+        Object.defineProperty(GImage.prototype, "color", {
+            get: function () {
                 return this._color;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._color != value) {
                     this._color = value;
                     this.updateGear(4);
                     this.applyColor();
                 }
-            }
-        );
-        p.applyColor = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GImage.prototype.applyColor = function () {
             var cfm = this.getColorMatrix();
             var matrix = cfm.matrix;
             matrix[0] = ((this._color >> 16) & 0xFF) / 255;
@@ -6488,11 +6944,11 @@ var fairygui;
             matrix[12] = (this._color & 0xFF) / 255;
             cfm.matrix = matrix;
         };
-        d(p, "flip"
-            ,function () {
+        Object.defineProperty(GImage.prototype, "flip", {
+            get: function () {
                 return this._flip;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._flip != value) {
                     this._flip = value;
                     this._content.scaleX = this._content.scaleY = 1;
@@ -6502,13 +6958,15 @@ var fairygui;
                         this._content.scaleY = -1;
                     this.handleXYChanged();
                 }
-            }
-        );
-        d(p, "texture"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GImage.prototype, "texture", {
+            get: function () {
                 return this._content.texture;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (value != null) {
                     this._sourceWidth = value.textureWidth;
                     this._sourceHeight = value.textureHeight;
@@ -6522,18 +6980,20 @@ var fairygui;
                 this._content.scale9Grid = null;
                 this._content.fillMode = egret.BitmapFillMode.SCALE;
                 this._content.texture = value;
-            }
-        );
-        p.createDisplayObject = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GImage.prototype.createDisplayObject = function () {
             this._content = new egret.Bitmap();
             this._content["$owner"] = this;
             this._content.touchEnabled = false;
             this.setDisplayObject(this._content);
         };
-        p.dispose = function () {
+        GImage.prototype.dispose = function () {
             _super.prototype.dispose.call(this);
         };
-        p.constructFromResource = function () {
+        GImage.prototype.constructFromResource = function () {
             this._sourceWidth = this.packageItem.width;
             this._sourceHeight = this.packageItem.height;
             this._initWidth = this._sourceWidth;
@@ -6546,7 +7006,7 @@ var fairygui;
             this.packageItem.load();
             this._content.texture = this.packageItem.texture;
         };
-        p.handleXYChanged = function () {
+        GImage.prototype.handleXYChanged = function () {
             _super.prototype.handleXYChanged.call(this);
             if (this._flip != fairygui.FlipType.None) {
                 if (this._content.scaleX == -1)
@@ -6555,11 +7015,11 @@ var fairygui;
                     this._content.y += this.height;
             }
         };
-        p.handleSizeChanged = function () {
+        GImage.prototype.handleSizeChanged = function () {
             this._content.width = this.width;
             this._content.height = this.height;
         };
-        p.setup_beforeAdd = function (xml) {
+        GImage.prototype.setup_beforeAdd = function (xml) {
             _super.prototype.setup_beforeAdd.call(this, xml);
             var str;
             str = xml.attributes.color;
@@ -6572,51 +7032,64 @@ var fairygui;
         return GImage;
     }(fairygui.GObject));
     fairygui.GImage = GImage;
-    egret.registerClass(GImage,'fairygui.GImage');
+    __reflect(GImage.prototype, "fairygui.GImage");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GLabel = (function (_super) {
         __extends(GLabel, _super);
         function GLabel() {
-            _super.call(this);
+            return _super.call(this) || this;
         }
-        var d = __define,c=GLabel,p=c.prototype;
-        d(p, "icon"
-            ,function () {
+        Object.defineProperty(GLabel.prototype, "icon", {
+            get: function () {
                 if (this._iconObject != null)
                     return this._iconObject.icon;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._iconObject != null)
                     this._iconObject.icon = value;
                 this.updateGear(7);
-            }
-        );
-        d(p, "title"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GLabel.prototype, "title", {
+            get: function () {
                 if (this._titleObject)
                     return this._titleObject.text;
                 else
                     return null;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._titleObject)
                     this._titleObject.text = value;
                 this.updateGear(6);
-            }
-        );
-        d(p, "text"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GLabel.prototype, "text", {
+            get: function () {
                 return this.title;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.title = value;
-            }
-        );
-        d(p, "titleColor"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GLabel.prototype, "titleColor", {
+            get: function () {
                 if (this._titleObject instanceof fairygui.GTextField)
                     return this._titleObject.color;
                 else if (this._titleObject instanceof GLabel)
@@ -6625,8 +7098,8 @@ var fairygui;
                     return this._titleObject.titleColor;
                 else
                     return 0;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._titleObject instanceof fairygui.GTextField)
                     this._titleObject.color = value;
                 else if (this._titleObject instanceof GLabel)
@@ -6634,18 +7107,22 @@ var fairygui;
                 else if (this._titleObject instanceof fairygui.GButton)
                     this._titleObject.titleColor = value;
                 this.updateGear(4);
-            }
-        );
-        d(p, "color"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GLabel.prototype, "color", {
+            get: function () {
                 return this.titleColor;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.titleColor = value;
-            }
-        );
-        d(p, "titleFontSize"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GLabel.prototype, "titleFontSize", {
+            get: function () {
                 if (this._titleObject instanceof fairygui.GTextField)
                     return this._titleObject.fontSize;
                 else if (this._titleObject instanceof GLabel)
@@ -6654,34 +7131,38 @@ var fairygui;
                     return this._titleObject.titleFontSize;
                 else
                     return 0;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._titleObject instanceof fairygui.GTextField)
                     this._titleObject.fontSize = value;
                 else if (this._titleObject instanceof GLabel)
                     this._titleObject.titleFontSize = value;
                 else if (this._titleObject instanceof fairygui.GButton)
                     this._titleObject.titleFontSize = value;
-            }
-        );
-        d(p, "editable"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GLabel.prototype, "editable", {
+            get: function () {
                 if (this._titleObject && (this._titleObject instanceof fairygui.GTextInput))
                     return this._titleObject.asTextInput.editable;
                 else
                     return false;
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 if (this._titleObject)
                     this._titleObject.asTextInput.editable = val;
-            }
-        );
-        p.constructFromXML = function (xml) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GLabel.prototype.constructFromXML = function (xml) {
             _super.prototype.constructFromXML.call(this, xml);
             this._titleObject = this.getChild("title");
             this._iconObject = this.getChild("icon");
         };
-        p.setup_afterAdd = function (xml) {
+        GLabel.prototype.setup_afterAdd = function (xml) {
             _super.prototype.setup_afterAdd.call(this, xml);
             xml = fairygui.ToolSet.findChildNode(xml, "Label");
             if (xml) {
@@ -6717,165 +7198,195 @@ var fairygui;
         return GLabel;
     }(fairygui.GComponent));
     fairygui.GLabel = GLabel;
-    egret.registerClass(GLabel,'fairygui.GLabel');
+    __reflect(GLabel.prototype, "fairygui.GLabel");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GList = (function (_super) {
         __extends(GList, _super);
         function GList() {
-            _super.call(this);
-            this.scrollItemToViewOnClick = true;
-            this.foldInvisibleItems = false;
-            this._lineItemCount = 0;
-            this._lineGap = 0;
-            this._columnGap = 0;
-            this._lastSelectedIndex = 0;
-            this._numItems = 0;
-            this._realNumItems = 0;
-            this._firstIndex = 0; //the top left index
-            this._curLineItemCount = 0; //item count in one line
-            this._curLineItemCount2 = 0; //只用在页面模式，表示垂直方向的项目数
-            this._virtualListChanged = 0; //1-content changed, 2-size changed
-            this._trackBounds = true;
-            this._pool = new fairygui.GObjectPool();
-            this._layout = fairygui.ListLayoutType.SingleColumn;
-            this._autoResizeItem = true;
-            this._lastSelectedIndex = -1;
-            this._selectionMode = fairygui.ListSelectionMode.Single;
-            this.opaque = true;
-            this._align = fairygui.AlignType.Left;
-            this._verticalAlign = fairygui.VertAlignType.Top;
-            this._container = new egret.DisplayObjectContainer();
-            this._rootContainer.addChild(this._container);
+            var _this = _super.call(this) || this;
+            _this.scrollItemToViewOnClick = true;
+            _this.foldInvisibleItems = false;
+            _this._lineItemCount = 0;
+            _this._lineGap = 0;
+            _this._columnGap = 0;
+            _this._lastSelectedIndex = 0;
+            _this._numItems = 0;
+            _this._realNumItems = 0;
+            _this._firstIndex = 0; //the top left index
+            _this._curLineItemCount = 0; //item count in one line
+            _this._curLineItemCount2 = 0; //只用在页面模式，表示垂直方向的项目数
+            _this._virtualListChanged = 0; //1-content changed, 2-size changed
+            _this._trackBounds = true;
+            _this._pool = new fairygui.GObjectPool();
+            _this._layout = fairygui.ListLayoutType.SingleColumn;
+            _this._autoResizeItem = true;
+            _this._lastSelectedIndex = -1;
+            _this._selectionMode = fairygui.ListSelectionMode.Single;
+            _this.opaque = true;
+            _this._align = fairygui.AlignType.Left;
+            _this._verticalAlign = fairygui.VertAlignType.Top;
+            _this._container = new egret.DisplayObjectContainer();
+            _this._rootContainer.addChild(_this._container);
+            return _this;
         }
-        var d = __define,c=GList,p=c.prototype;
-        p.dispose = function () {
+        GList.prototype.dispose = function () {
             this._pool.clear();
             _super.prototype.dispose.call(this);
         };
-        d(p, "layout"
-            ,function () {
+        Object.defineProperty(GList.prototype, "layout", {
+            get: function () {
                 return this._layout;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._layout != value) {
                     this._layout = value;
                     this.setBoundsChangedFlag();
                     if (this._virtual)
                         this.setVirtualListChangedFlag(true);
                 }
-            }
-        );
-        d(p, "lineGap"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "lineGap", {
+            get: function () {
                 return this._lineGap;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._lineGap != value) {
                     this._lineGap = value;
                     this.setBoundsChangedFlag();
                     if (this._virtual)
                         this.setVirtualListChangedFlag(true);
                 }
-            }
-        );
-        d(p, "lineItemCount"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "lineItemCount", {
+            get: function () {
                 return this._lineItemCount;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._lineItemCount != value) {
                     this._lineItemCount = value;
                     this.setBoundsChangedFlag();
                     if (this._virtual)
                         this.setVirtualListChangedFlag(true);
                 }
-            }
-        );
-        d(p, "columnGap"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "columnGap", {
+            get: function () {
                 return this._columnGap;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._columnGap != value) {
                     this._columnGap = value;
                     this.setBoundsChangedFlag();
                     if (this._virtual)
                         this.setVirtualListChangedFlag(true);
                 }
-            }
-        );
-        d(p, "align"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "align", {
+            get: function () {
                 return this._align;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._align != value) {
                     this._align = value;
                     this.setBoundsChangedFlag();
                     if (this._virtual)
                         this.setVirtualListChangedFlag(true);
                 }
-            }
-        );
-        d(p, "verticalAlign"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "verticalAlign", {
+            get: function () {
                 return this._verticalAlign;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._verticalAlign != value) {
                     this._verticalAlign = value;
                     this.setBoundsChangedFlag();
                     if (this._virtual)
                         this.setVirtualListChangedFlag(true);
                 }
-            }
-        );
-        d(p, "virtualItemSize"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "virtualItemSize", {
+            get: function () {
                 return this._itemSize;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._virtual) {
                     if (this._itemSize == null)
                         this._itemSize = new egret.Point();
                     this._itemSize.copyFrom(value);
                     this.setVirtualListChangedFlag(true);
                 }
-            }
-        );
-        d(p, "defaultItem"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "defaultItem", {
+            get: function () {
                 return this._defaultItem;
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 this._defaultItem = val;
-            }
-        );
-        d(p, "autoResizeItem"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "autoResizeItem", {
+            get: function () {
                 return this._autoResizeItem;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._autoResizeItem = value;
-            }
-        );
-        d(p, "selectionMode"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "selectionMode", {
+            get: function () {
                 return this._selectionMode;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._selectionMode = value;
-            }
-        );
-        d(p, "itemPool"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GList.prototype, "itemPool", {
+            get: function () {
                 return this._pool;
-            }
-        );
-        p.getFromPool = function (url) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GList.prototype.getFromPool = function (url) {
             if (url === void 0) { url = null; }
             if (!url)
                 url = this._defaultItem;
@@ -6884,11 +7395,11 @@ var fairygui;
                 obj.visible = true;
             return obj;
         };
-        p.returnToPool = function (obj) {
+        GList.prototype.returnToPool = function (obj) {
             obj.displayObject.cacheAsBitmap = false;
             this._pool.returnObject(obj);
         };
-        p.addChildAt = function (child, index) {
+        GList.prototype.addChildAt = function (child, index) {
             if (index === void 0) { index = 0; }
             if (this._autoResizeItem) {
                 if (this._layout == fairygui.ListLayoutType.SingleColumn)
@@ -6905,32 +7416,32 @@ var fairygui;
             child.addEventListener(egret.TouchEvent.TOUCH_TAP, this.__clickItem, this);
             return child;
         };
-        p.addItem = function (url) {
+        GList.prototype.addItem = function (url) {
             if (url === void 0) { url = null; }
             if (!url)
                 url = this._defaultItem;
             return this.addChild(fairygui.UIPackage.createObjectFromURL(url));
         };
-        p.addItemFromPool = function (url) {
+        GList.prototype.addItemFromPool = function (url) {
             if (url === void 0) { url = null; }
             return this.addChild(this.getFromPool(url));
         };
-        p.removeChildAt = function (index, dispose) {
+        GList.prototype.removeChildAt = function (index, dispose) {
             if (dispose === void 0) { dispose = false; }
             var child = _super.prototype.removeChildAt.call(this, index, dispose);
             child.removeEventListener(egret.TouchEvent.TOUCH_TAP, this.__clickItem, this);
             return child;
         };
-        p.removeChildToPoolAt = function (index) {
+        GList.prototype.removeChildToPoolAt = function (index) {
             if (index === void 0) { index = 0; }
             var child = _super.prototype.removeChildAt.call(this, index);
             this.returnToPool(child);
         };
-        p.removeChildToPool = function (child) {
+        GList.prototype.removeChildToPool = function (child) {
             _super.prototype.removeChild.call(this, child);
             this.returnToPool(child);
         };
-        p.removeChildrenToPool = function (beginIndex, endIndex) {
+        GList.prototype.removeChildrenToPool = function (beginIndex, endIndex) {
             if (beginIndex === void 0) { beginIndex = 0; }
             if (endIndex === void 0) { endIndex = -1; }
             if (endIndex < 0 || endIndex >= this._children.length)
@@ -6938,8 +7449,8 @@ var fairygui;
             for (var i = beginIndex; i <= endIndex; ++i)
                 this.removeChildToPoolAt(beginIndex);
         };
-        d(p, "selectedIndex"
-            ,function () {
+        Object.defineProperty(GList.prototype, "selectedIndex", {
+            get: function () {
                 var cnt = this._children.length;
                 for (var i = 0; i < cnt; i++) {
                     var obj = this._children[i].asButton;
@@ -6947,14 +7458,16 @@ var fairygui;
                         return this.childIndexToItemIndex(i);
                 }
                 return -1;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.clearSelection();
                 if (value >= 0 && value < this.numItems)
                     this.addSelection(value);
-            }
-        );
-        p.getSelection = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GList.prototype.getSelection = function () {
             var ret = new Array();
             var cnt = this._children.length;
             for (var i = 0; i < cnt; i++) {
@@ -6964,7 +7477,7 @@ var fairygui;
             }
             return ret;
         };
-        p.addSelection = function (index, scrollItToView) {
+        GList.prototype.addSelection = function (index, scrollItToView) {
             if (scrollItToView === void 0) { scrollItToView = false; }
             if (this._selectionMode == fairygui.ListSelectionMode.None)
                 return;
@@ -6980,7 +7493,7 @@ var fairygui;
             if (obj != null && !obj.selected)
                 obj.selected = true;
         };
-        p.removeSelection = function (index) {
+        GList.prototype.removeSelection = function (index) {
             if (index === void 0) { index = 0; }
             if (this._selectionMode == fairygui.ListSelectionMode.None)
                 return;
@@ -6991,7 +7504,7 @@ var fairygui;
             if (obj != null && obj.selected)
                 obj.selected = false;
         };
-        p.clearSelection = function () {
+        GList.prototype.clearSelection = function () {
             var cnt = this._children.length;
             for (var i = 0; i < cnt; i++) {
                 var obj = this._children[i].asButton;
@@ -6999,7 +7512,7 @@ var fairygui;
                     obj.selected = false;
             }
         };
-        p.selectAll = function () {
+        GList.prototype.selectAll = function () {
             this.checkVirtualList();
             var cnt = this._children.length;
             for (var i = 0; i < cnt; i++) {
@@ -7008,7 +7521,7 @@ var fairygui;
                     obj.selected = true;
             }
         };
-        p.selectNone = function () {
+        GList.prototype.selectNone = function () {
             var cnt = this._children.length;
             for (var i = 0; i < cnt; i++) {
                 var obj = this._children[i].asButton;
@@ -7016,7 +7529,7 @@ var fairygui;
                     obj.selected = false;
             }
         };
-        p.selectReverse = function () {
+        GList.prototype.selectReverse = function () {
             this.checkVirtualList();
             var cnt = this._children.length;
             for (var i = 0; i < cnt; i++) {
@@ -7025,7 +7538,7 @@ var fairygui;
                     obj.selected = !obj.selected;
             }
         };
-        p.handleArrowKey = function (dir) {
+        GList.prototype.handleArrowKey = function (dir) {
             if (dir === void 0) { dir = 0; }
             var index = this.selectedIndex;
             if (index == -1)
@@ -7151,7 +7664,7 @@ var fairygui;
                     break;
             }
         };
-        p.__clickItem = function (evt) {
+        GList.prototype.__clickItem = function (evt) {
             if (this._scrollPane != null && this._scrollPane.isDragged)
                 return;
             var item = (evt.currentTarget);
@@ -7163,7 +7676,7 @@ var fairygui;
             ie.stageY = evt.stageY;
             this.dispatchEvent(ie);
         };
-        p.setSelectionOnEvent = function (item) {
+        GList.prototype.setSelectionOnEvent = function (item) {
             if (!(item instanceof fairygui.GButton) || this._selectionMode == fairygui.ListSelectionMode.None)
                 return;
             var dontChangeLastIndex = false;
@@ -7210,7 +7723,7 @@ var fairygui;
                 this._lastSelectedIndex = index;
             return;
         };
-        p.clearSelectionExcept = function (obj) {
+        GList.prototype.clearSelectionExcept = function (obj) {
             var cnt = this._children.length;
             for (var i = 0; i < cnt; i++) {
                 var button = this._children[i].asButton;
@@ -7218,7 +7731,7 @@ var fairygui;
                     button.selected = false;
             }
         };
-        p.resizeToFit = function (itemCount, minSize) {
+        GList.prototype.resizeToFit = function (itemCount, minSize) {
             if (itemCount === void 0) { itemCount = Number.POSITIVE_INFINITY; }
             if (minSize === void 0) { minSize = 0; }
             this.ensureBoundsCorrect();
@@ -7270,7 +7783,7 @@ var fairygui;
                 }
             }
         };
-        p.getMaxItemWidth = function () {
+        GList.prototype.getMaxItemWidth = function () {
             var cnt = this._children.length;
             var max = 0;
             for (var i = 0; i < cnt; i++) {
@@ -7280,7 +7793,7 @@ var fairygui;
             }
             return max;
         };
-        p.handleSizeChanged = function () {
+        GList.prototype.handleSizeChanged = function () {
             _super.prototype.handleSizeChanged.call(this);
             if (this._autoResizeItem)
                 this.adjustItemsSize();
@@ -7290,7 +7803,7 @@ var fairygui;
                     this.setVirtualListChangedFlag(true);
             }
         };
-        p.adjustItemsSize = function () {
+        GList.prototype.adjustItemsSize = function () {
             if (this._layout == fairygui.ListLayoutType.SingleColumn) {
                 var cnt = this._children.length;
                 var cw = this.viewWidth;
@@ -7308,7 +7821,7 @@ var fairygui;
                 }
             }
         };
-        p.getSnappingPosition = function (xValue, yValue, resultPoint) {
+        GList.prototype.getSnappingPosition = function (xValue, yValue, resultPoint) {
             if (this._virtual) {
                 if (!resultPoint)
                     resultPoint = new egret.Point();
@@ -7346,7 +7859,7 @@ var fairygui;
                 return _super.prototype.getSnappingPosition.call(this, xValue, yValue, resultPoint);
             }
         };
-        p.scrollToView = function (index, ani, setFirst) {
+        GList.prototype.scrollToView = function (index, ani, setFirst) {
             if (ani === void 0) { ani = false; }
             if (setFirst === void 0) { setFirst = false; }
             if (this._virtual) {
@@ -7389,10 +7902,10 @@ var fairygui;
                 }
             }
         };
-        p.getFirstChildInView = function () {
+        GList.prototype.getFirstChildInView = function () {
             return this.childIndexToItemIndex(_super.prototype.getFirstChildInView.call(this));
         };
-        p.childIndexToItemIndex = function (index) {
+        GList.prototype.childIndexToItemIndex = function (index) {
             if (!this._virtual)
                 return index;
             if (this._layout == fairygui.ListLayoutType.Pagination) {
@@ -7412,7 +7925,7 @@ var fairygui;
                 return index;
             }
         };
-        p.itemIndexToChildIndex = function (index) {
+        GList.prototype.itemIndexToChildIndex = function (index) {
             if (!this._virtual)
                 return index;
             if (this._layout == fairygui.ListLayoutType.Pagination) {
@@ -7431,19 +7944,19 @@ var fairygui;
                 return index;
             }
         };
-        p.setVirtual = function () {
+        GList.prototype.setVirtual = function () {
             this._setVirtual(false);
         };
         /// <summary>
         /// Set the list to be virtual list, and has loop behavior.
         /// </summary>
-        p.setVirtualAndLoop = function () {
+        GList.prototype.setVirtualAndLoop = function () {
             this._setVirtual(true);
         };
         /// <summary>
         /// Set the list to be virtual list.
         /// </summary>
-        p._setVirtual = function (loop) {
+        GList.prototype._setVirtual = function (loop) {
             if (!this._virtual) {
                 if (this._scrollPane == null)
                     throw "Virtual list must be scrollable!";
@@ -7476,19 +7989,19 @@ var fairygui;
                 this.setVirtualListChangedFlag(true);
             }
         };
-        d(p, "numItems"
+        Object.defineProperty(GList.prototype, "numItems", {
             /// <summary>
             /// Set the list item count. 
             /// If the list is not virtual, specified number of items will be created. 
             /// If the list is virtual, only items in view will be created.
             /// </summary>
-            ,function () {
+            get: function () {
                 if (this._virtual)
                     return this._numItems;
                 else
                     return this._children.length;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._virtual) {
                     if (this.itemRenderer == null)
                         throw "Set itemRenderer first!";
@@ -7530,18 +8043,20 @@ var fairygui;
                             this.itemRenderer.call(this.callbackThisObj, i, this.getChildAt(i));
                     }
                 }
-            }
-        );
-        p.refreshVirtualList = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GList.prototype.refreshVirtualList = function () {
             this.setVirtualListChangedFlag(false);
         };
-        p.checkVirtualList = function () {
+        GList.prototype.checkVirtualList = function () {
             if (this._virtualListChanged != 0) {
                 this._refreshVirtualList();
                 fairygui.GTimers.inst.remove(this._refreshVirtualList, this);
             }
         };
-        p.setVirtualListChangedFlag = function (layoutChanged) {
+        GList.prototype.setVirtualListChangedFlag = function (layoutChanged) {
             if (layoutChanged === void 0) { layoutChanged = false; }
             if (layoutChanged)
                 this._virtualListChanged = 2;
@@ -7549,7 +8064,7 @@ var fairygui;
                 this._virtualListChanged = 1;
             fairygui.GTimers.inst.callLater(this._refreshVirtualList, this);
         };
-        p._refreshVirtualList = function () {
+        GList.prototype._refreshVirtualList = function () {
             var layoutChanged = this._virtualListChanged == 2;
             this._virtualListChanged = 0;
             this._eventLocked = true;
@@ -7608,10 +8123,10 @@ var fairygui;
             this._eventLocked = false;
             this.handleScroll(true);
         };
-        p.__scrolled = function (evt) {
+        GList.prototype.__scrolled = function (evt) {
             this.handleScroll(false);
         };
-        p.getIndexOnPos1 = function (forceUpdate) {
+        GList.prototype.getIndexOnPos1 = function (forceUpdate) {
             if (this._realNumItems < this._curLineItemCount) {
                 GList.pos_param = 0;
                 return 0;
@@ -7659,7 +8174,7 @@ var fairygui;
                 return this._realNumItems - this._curLineItemCount;
             }
         };
-        p.getIndexOnPos2 = function (forceUpdate) {
+        GList.prototype.getIndexOnPos2 = function (forceUpdate) {
             if (this._realNumItems < this._curLineItemCount) {
                 GList.pos_param = 0;
                 return 0;
@@ -7707,7 +8222,7 @@ var fairygui;
                 return this._realNumItems - this._curLineItemCount;
             }
         };
-        p.getIndexOnPos3 = function (forceUpdate) {
+        GList.prototype.getIndexOnPos3 = function (forceUpdate) {
             if (this._realNumItems < this._curLineItemCount) {
                 GList.pos_param = 0;
                 return 0;
@@ -7729,7 +8244,7 @@ var fairygui;
             GList.pos_param = pos2;
             return startIndex + this._curLineItemCount - 1;
         };
-        p.handleScroll = function (forceUpdate) {
+        GList.prototype.handleScroll = function (forceUpdate) {
             if (this._eventLocked)
                 return;
             var pos;
@@ -7772,7 +8287,7 @@ var fairygui;
             }
             this._boundsChanged = false;
         };
-        p.handleScroll1 = function (forceUpdate) {
+        GList.prototype.handleScroll1 = function (forceUpdate) {
             GList.enterCounter++;
             if (GList.enterCounter > 3)
                 return;
@@ -7894,7 +8409,7 @@ var fairygui;
                 this.handleScroll1(false);
             GList.enterCounter--;
         };
-        p.handleScroll2 = function (forceUpdate) {
+        GList.prototype.handleScroll2 = function (forceUpdate) {
             GList.enterCounter++;
             if (GList.enterCounter > 3)
                 return;
@@ -8015,7 +8530,7 @@ var fairygui;
                 this.handleScroll2(false);
             GList.enterCounter--;
         };
-        p.handleScroll3 = function (forceUpdate) {
+        GList.prototype.handleScroll3 = function (forceUpdate) {
             var pos = this._scrollPane.scrollingPosX;
             //寻找当前位置的第一条项目
             GList.pos_param = pos;
@@ -8120,7 +8635,7 @@ var fairygui;
                 }
             }
         };
-        p.handleAlign = function (contentWidth, contentHeight) {
+        GList.prototype.handleAlign = function (contentWidth, contentHeight) {
             var newOffsetX = 0;
             var newOffsetY = 0;
             if (this._layout == fairygui.ListLayoutType.SingleColumn || this._layout == fairygui.ListLayoutType.FlowHorizontal || this._layout == fairygui.ListLayoutType.Pagination) {
@@ -8149,7 +8664,7 @@ var fairygui;
                 }
             }
         };
-        p.updateBounds = function () {
+        GList.prototype.updateBounds = function () {
             if (this._virtual)
                 return;
             var cnt = this._children.length;
@@ -8162,14 +8677,10 @@ var fairygui;
             var maxHeight = 0;
             var cw, ch = 0;
             var sw, sh;
-            var p;
+            var p = 0;
             var cnt = this._children.length;
             var viewWidth = this.viewWidth;
             var viewHeight = this.viewHeight;
-            for (i = 0; i < cnt; i++) {
-                child = this.getChildAt(i);
-                child.ensureSizeCorrect();
-            }
             if (this._layout == fairygui.ListLayoutType.SingleColumn) {
                 for (i = 0; i < cnt; i++) {
                     child = this.getChildAt(i);
@@ -8299,7 +8810,7 @@ var fairygui;
             this.handleAlign(cw, ch);
             this.setBounds(0, 0, cw, ch);
         };
-        p.setup_beforeAdd = function (xml) {
+        GList.prototype.setup_beforeAdd = function (xml) {
             _super.prototype.setup_beforeAdd.call(this, xml);
             var str;
             var arr;
@@ -8401,23 +8912,25 @@ var fairygui;
                 }
             }
         };
-        GList.itemInfoVer = 0; //用来标志item是否在本次处理中已经被重用了
-        GList.enterCounter = 0; //因为HandleScroll是会重入的，这个用来避免极端情况下的死锁
         return GList;
     }(fairygui.GComponent));
+    GList.itemInfoVer = 0; //用来标志item是否在本次处理中已经被重用了
+    GList.enterCounter = 0; //因为HandleScroll是会重入的，这个用来避免极端情况下的死锁
     fairygui.GList = GList;
-    egret.registerClass(GList,'fairygui.GList');
+    __reflect(GList.prototype, "fairygui.GList");
     var ItemInfo = (function () {
         function ItemInfo() {
             this.width = 0;
             this.height = 0;
         }
-        var d = __define,c=ItemInfo,p=c.prototype;
         return ItemInfo;
     }());
-    egret.registerClass(ItemInfo,'ItemInfo');
+    __reflect(ItemInfo.prototype, "ItemInfo");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var GObjectPool = (function () {
@@ -8425,8 +8938,7 @@ var fairygui;
             this._count = 0;
             this._pool = {};
         }
-        var d = __define,c=GObjectPool,p=c.prototype;
-        p.clear = function () {
+        GObjectPool.prototype.clear = function () {
             var length1 = this._pool.length;
             for (var i1 = 0; i1 < length1; i1++) {
                 var arr = this._pool[i1];
@@ -8437,13 +8949,17 @@ var fairygui;
             this._pool = {};
             this._count = 0;
         };
-        d(p, "count"
-            ,function () {
+        Object.defineProperty(GObjectPool.prototype, "count", {
+            get: function () {
                 return this._count;
-            }
-        );
-        p.getObject = function (url) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GObjectPool.prototype.getObject = function (url) {
             url = fairygui.UIPackage.normalizeURL(url);
+            if (url == null)
+                return null;
             var arr = this._pool[url];
             if (arr != null && arr.length) {
                 this._count--;
@@ -8452,7 +8968,7 @@ var fairygui;
             var child = fairygui.UIPackage.createObjectFromURL(url);
             return child;
         };
-        p.returnObject = function (obj) {
+        GObjectPool.prototype.returnObject = function (obj) {
             var url = obj.resourceURL;
             if (!url)
                 return;
@@ -8467,39 +8983,47 @@ var fairygui;
         return GObjectPool;
     }());
     fairygui.GObjectPool = GObjectPool;
-    egret.registerClass(GObjectPool,'fairygui.GObjectPool');
+    __reflect(GObjectPool.prototype, "fairygui.GObjectPool");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GLoader = (function (_super) {
         __extends(GLoader, _super);
         function GLoader() {
-            _super.call(this);
-            this._frame = 0;
-            this._color = 0;
-            this._contentSourceWidth = 0;
-            this._contentSourceHeight = 0;
-            this._contentWidth = 0;
-            this._contentHeight = 0;
-            this._playing = true;
-            this._url = "";
-            this._fill = fairygui.LoaderFillType.None;
-            this._align = fairygui.AlignType.Left;
-            this._verticalAlign = fairygui.VertAlignType.Top;
-            this._showErrorSign = true;
-            this._color = 0xFFFFFF;
-            this._gearAnimation = new fairygui.GearAnimation(this);
-            this._gearColor = new fairygui.GearColor(this);
+            var _this = _super.call(this) || this;
+            _this._frame = 0;
+            _this._color = 0;
+            _this._contentSourceWidth = 0;
+            _this._contentSourceHeight = 0;
+            _this._contentWidth = 0;
+            _this._contentHeight = 0;
+            _this._playing = true;
+            _this._url = "";
+            _this._fill = fairygui.LoaderFillType.None;
+            _this._align = fairygui.AlignType.Left;
+            _this._verticalAlign = fairygui.VertAlignType.Top;
+            _this._showErrorSign = true;
+            _this._color = 0xFFFFFF;
+            _this._gearAnimation = new fairygui.GearAnimation(_this);
+            _this._gearColor = new fairygui.GearColor(_this);
+            return _this;
         }
-        var d = __define,c=GLoader,p=c.prototype;
-        p.createDisplayObject = function () {
+        GLoader.prototype.createDisplayObject = function () {
             this._container = new fairygui.UIContainer();
             this._container["$owner"] = this;
             this._container.hitArea = new egret.Rectangle();
             this.setDisplayObject(this._container);
         };
-        p.dispose = function () {
+        GLoader.prototype.dispose = function () {
             if (this._contentItem == null && (this._content instanceof egret.Bitmap)) {
                 var texture = this._content.texture;
                 if (texture != null)
@@ -8507,132 +9031,154 @@ var fairygui;
             }
             _super.prototype.dispose.call(this);
         };
-        d(p, "url"
-            ,function () {
+        Object.defineProperty(GLoader.prototype, "url", {
+            get: function () {
                 return this._url;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._url == value)
                     return;
                 this._url = value;
                 this.loadContent();
                 this.updateGear(7);
-            }
-        );
-        d(p, "icon"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "icon", {
+            get: function () {
                 return this._url;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.url = value;
-            }
-        );
-        d(p, "align"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "align", {
+            get: function () {
                 return this._align;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._align != value) {
                     this._align = value;
                     this.updateLayout();
                 }
-            }
-        );
-        d(p, "verticalAlign"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "verticalAlign", {
+            get: function () {
                 return this._verticalAlign;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._verticalAlign != value) {
                     this._verticalAlign = value;
                     this.updateLayout();
                 }
-            }
-        );
-        d(p, "fill"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "fill", {
+            get: function () {
                 return this._fill;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._fill != value) {
                     this._fill = value;
                     this.updateLayout();
                 }
-            }
-        );
-        d(p, "autoSize"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "autoSize", {
+            get: function () {
                 return this._autoSize;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._autoSize != value) {
                     this._autoSize = value;
                     this.updateLayout();
                 }
-            }
-        );
-        d(p, "playing"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "playing", {
+            get: function () {
                 return this._playing;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._playing != value) {
                     this._playing = value;
                     if (this._content instanceof fairygui.MovieClip)
                         this._content.playing = value;
                     this.updateGear(5);
                 }
-            }
-        );
-        d(p, "frame"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "frame", {
+            get: function () {
                 return this._frame;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._frame != value) {
                     this._frame = value;
                     if (this._content instanceof fairygui.MovieClip)
                         this._content.currentFrame = value;
                     this.updateGear(5);
                 }
-            }
-        );
-        d(p, "color"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "color", {
+            get: function () {
                 return this._color;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._color != value) {
                     this._color = value;
                     this.updateGear(4);
                     this.applyColor();
                 }
-            }
-        );
-        p.applyColor = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GLoader.prototype.applyColor = function () {
             //todo:
         };
-        d(p, "showErrorSign"
-            ,function () {
+        Object.defineProperty(GLoader.prototype, "showErrorSign", {
+            get: function () {
                 return this._showErrorSign;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._showErrorSign = value;
-            }
-        );
-        d(p, "content"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "content", {
+            get: function () {
                 return this._content;
-            }
-        );
-        d(p, "texture"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "texture", {
+            get: function () {
                 if (this._content instanceof egret.Bitmap)
                     return this._content.texture;
                 else
                     return null;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.url = null;
                 this.switchToMovieMode(false);
                 this._content.texture = value;
@@ -8644,9 +9190,11 @@ var fairygui;
                     this._contentSourceWidth = this._contentHeight = 0;
                 }
                 this.updateLayout();
-            }
-        );
-        p.loadContent = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GLoader.prototype.loadContent = function () {
             this.clearContent();
             if (!this._url)
                 return;
@@ -8655,7 +9203,7 @@ var fairygui;
             else
                 this.loadExternal();
         };
-        p.loadFromPackage = function (itemURL) {
+        GLoader.prototype.loadFromPackage = function (itemURL) {
             this._contentItem = fairygui.UIPackage.getItemByURL(itemURL);
             if (this._contentItem != null) {
                 this._contentItem.load();
@@ -8696,7 +9244,7 @@ var fairygui;
             else
                 this.setErrorState();
         };
-        p.switchToMovieMode = function (value) {
+        GLoader.prototype.switchToMovieMode = function (value) {
             if (value) {
                 if (!(this._content instanceof fairygui.MovieClip))
                     this._content = new fairygui.MovieClip();
@@ -8707,12 +9255,12 @@ var fairygui;
             }
             this._container.addChild(this._content);
         };
-        p.loadExternal = function () {
+        GLoader.prototype.loadExternal = function () {
             RES.getResAsync(this._url, this.__getResCompleted, this);
         };
-        p.freeExternal = function (texture) {
+        GLoader.prototype.freeExternal = function (texture) {
         };
-        p.onExternalLoadSuccess = function (texture) {
+        GLoader.prototype.onExternalLoadSuccess = function (texture) {
             if (!(this._content instanceof egret.Bitmap)) {
                 this._content = new egret.Bitmap();
                 this._container.addChild(this._content);
@@ -8726,16 +9274,16 @@ var fairygui;
             this._contentSourceHeight = texture.textureHeight;
             this.updateLayout();
         };
-        p.onExternalLoadFailed = function () {
+        GLoader.prototype.onExternalLoadFailed = function () {
             this.setErrorState();
         };
-        p.__getResCompleted = function (res, key) {
+        GLoader.prototype.__getResCompleted = function (res, key) {
             if (res instanceof egret.Texture)
                 this.onExternalLoadSuccess(res);
             else
                 this.onExternalLoadFailed();
         };
-        p.setErrorState = function () {
+        GLoader.prototype.setErrorState = function () {
             if (!this._showErrorSign)
                 return;
             if (this._errorSign == null) {
@@ -8748,14 +9296,14 @@ var fairygui;
                 this._container.addChild(this._errorSign.displayObject);
             }
         };
-        p.clearErrorState = function () {
+        GLoader.prototype.clearErrorState = function () {
             if (this._errorSign != null) {
                 this._container.removeChild(this._errorSign.displayObject);
                 GLoader._errorSignPool.returnObject(this._errorSign);
                 this._errorSign = null;
             }
         };
-        p.updateLayout = function () {
+        GLoader.prototype.updateLayout = function () {
             if (this._content == null) {
                 if (this._autoSize) {
                     this._updatingLayout = true;
@@ -8817,7 +9365,7 @@ var fairygui;
                     this._content.y = this.height - this._contentHeight;
             }
         };
-        p.clearContent = function () {
+        GLoader.prototype.clearContent = function () {
             this.clearErrorState();
             if (this._content != null && this._content.parent != null)
                 this._container.removeChild(this._content);
@@ -8828,12 +9376,12 @@ var fairygui;
             }
             this._contentItem = null;
         };
-        p.handleSizeChanged = function () {
+        GLoader.prototype.handleSizeChanged = function () {
             if (!this._updatingLayout)
                 this.updateLayout();
             this._container.hitArea.setTo(0, 0, this.width, this.height);
         };
-        p.setup_beforeAdd = function (xml) {
+        GLoader.prototype.setup_beforeAdd = function (xml) {
             _super.prototype.setup_beforeAdd.call(this, xml);
             var str;
             str = xml.attributes.url;
@@ -8859,59 +9407,73 @@ var fairygui;
             if (this._url)
                 this.loadContent();
         };
-        GLoader._errorSignPool = new fairygui.GObjectPool();
         return GLoader;
     }(fairygui.GObject));
+    GLoader._errorSignPool = new fairygui.GObjectPool();
     fairygui.GLoader = GLoader;
-    egret.registerClass(GLoader,'fairygui.GLoader');
+    __reflect(GLoader.prototype, "fairygui.GLoader");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GMovieClip = (function (_super) {
         __extends(GMovieClip, _super);
         function GMovieClip() {
-            _super.call(this);
-            this._sizeImplType = 1;
+            var _this = _super.call(this) || this;
+            _this._sizeImplType = 1;
+            return _this;
         }
-        var d = __define,c=GMovieClip,p=c.prototype;
-        d(p, "color"
-            ,function () {
+        Object.defineProperty(GMovieClip.prototype, "color", {
+            get: function () {
                 return 0;
-            }
-            ,function (value) {
-            }
-        );
-        p.createDisplayObject = function () {
+            },
+            set: function (value) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GMovieClip.prototype.createDisplayObject = function () {
             this._movieClip = new fairygui.MovieClip();
             this._movieClip["$owner"] = this;
             this._movieClip.touchEnabled = false;
             this.setDisplayObject(this._movieClip);
         };
-        d(p, "playing"
-            ,function () {
+        Object.defineProperty(GMovieClip.prototype, "playing", {
+            get: function () {
                 return this._movieClip.playing;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._movieClip.playing != value) {
                     this._movieClip.playing = value;
                     this.updateGear(5);
                 }
-            }
-        );
-        d(p, "frame"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GMovieClip.prototype, "frame", {
+            get: function () {
                 return this._movieClip.currentFrame;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._movieClip.currentFrame != value) {
                     this._movieClip.currentFrame = value;
                     this.updateGear(5);
                 }
-            }
-        );
+            },
+            enumerable: true,
+            configurable: true
+        });
         //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
-        p.setPlaySettings = function (start, end, times, endAt, endCallback, callbackObj) {
+        GMovieClip.prototype.setPlaySettings = function (start, end, times, endAt, endCallback, callbackObj) {
             if (start === void 0) { start = 0; }
             if (end === void 0) { end = -1; }
             if (times === void 0) { times = 0; }
@@ -8920,7 +9482,7 @@ var fairygui;
             if (callbackObj === void 0) { callbackObj = null; }
             this._movieClip.setPlaySettings(start, end, times, endAt, endCallback, callbackObj);
         };
-        p.constructFromResource = function () {
+        GMovieClip.prototype.constructFromResource = function () {
             this._sourceWidth = this.packageItem.width;
             this._sourceHeight = this.packageItem.height;
             this._initWidth = this._sourceWidth;
@@ -8932,7 +9494,7 @@ var fairygui;
             this._movieClip.repeatDelay = this.packageItem.repeatDelay;
             this._movieClip.frames = this.packageItem.frames;
         };
-        p.setup_beforeAdd = function (xml) {
+        GMovieClip.prototype.setup_beforeAdd = function (xml) {
             _super.prototype.setup_beforeAdd.call(this, xml);
             var str;
             str = xml.attributes.frame;
@@ -8947,56 +9509,68 @@ var fairygui;
         return GMovieClip;
     }(fairygui.GObject));
     fairygui.GMovieClip = GMovieClip;
-    egret.registerClass(GMovieClip,'fairygui.GMovieClip');
+    __reflect(GMovieClip.prototype, "fairygui.GMovieClip");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GProgressBar = (function (_super) {
         __extends(GProgressBar, _super);
         function GProgressBar() {
-            _super.call(this);
-            this._max = 0;
-            this._value = 0;
-            this._barMaxWidth = 0;
-            this._barMaxHeight = 0;
-            this._barMaxWidthDelta = 0;
-            this._barMaxHeightDelta = 0;
-            this._barStartX = 0;
-            this._barStartY = 0;
-            this._tweenValue = 0;
-            this._titleType = fairygui.ProgressTitleType.Percent;
-            this._value = 50;
-            this._max = 100;
+            var _this = _super.call(this) || this;
+            _this._max = 0;
+            _this._value = 0;
+            _this._barMaxWidth = 0;
+            _this._barMaxHeight = 0;
+            _this._barMaxWidthDelta = 0;
+            _this._barMaxHeightDelta = 0;
+            _this._barStartX = 0;
+            _this._barStartY = 0;
+            _this._tweenValue = 0;
+            _this._titleType = fairygui.ProgressTitleType.Percent;
+            _this._value = 50;
+            _this._max = 100;
+            return _this;
         }
-        var d = __define,c=GProgressBar,p=c.prototype;
-        d(p, "titleType"
-            ,function () {
+        Object.defineProperty(GProgressBar.prototype, "titleType", {
+            get: function () {
                 return this._titleType;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._titleType != value) {
                     this._titleType = value;
                     this.update(this._value);
                 }
-            }
-        );
-        d(p, "max"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GProgressBar.prototype, "max", {
+            get: function () {
                 return this._max;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._max != value) {
                     this._max = value;
                     this.update(this._value);
                 }
-            }
-        );
-        d(p, "value"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GProgressBar.prototype, "value", {
+            get: function () {
                 return this._value;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._tweener != null) {
                     this._tweener.setPaused(true);
                     this._tweener = null;
@@ -9005,9 +9579,11 @@ var fairygui;
                     this._value = value;
                     this.update(this._value);
                 }
-            }
-        );
-        p.tweenValue = function (value, duration) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GProgressBar.prototype.tweenValue = function (value, duration) {
             var _this = this;
             if (this._value != value) {
                 if (this._tweener)
@@ -9021,10 +9597,10 @@ var fairygui;
             else
                 return null;
         };
-        p.onUpdateTween = function () {
+        GProgressBar.prototype.onUpdateTween = function () {
             this.update(this._tweenValue);
         };
-        p.update = function (newValue) {
+        GProgressBar.prototype.update = function (newValue) {
             var percent = Math.min(newValue / this._max, 1);
             if (this._titleObject) {
                 switch (this._titleType) {
@@ -9063,7 +9639,7 @@ var fairygui;
             if (this._aniObject instanceof fairygui.GMovieClip)
                 (this._aniObject).frame = Math.round(percent * 100);
         };
-        p.constructFromXML = function (xml) {
+        GProgressBar.prototype.constructFromXML = function (xml) {
             _super.prototype.constructFromXML.call(this, xml);
             xml = fairygui.ToolSet.findChildNode(xml, "ProgressBar");
             var str;
@@ -9086,7 +9662,7 @@ var fairygui;
                 this._barStartY = this._barObjectV.y;
             }
         };
-        p.handleSizeChanged = function () {
+        GProgressBar.prototype.handleSizeChanged = function () {
             _super.prototype.handleSizeChanged.call(this);
             if (this._barObjectH)
                 this._barMaxWidth = this.width - this._barMaxWidthDelta;
@@ -9095,7 +9671,7 @@ var fairygui;
             if (!this._underConstruct)
                 this.update(this._value);
         };
-        p.setup_afterAdd = function (xml) {
+        GProgressBar.prototype.setup_afterAdd = function (xml) {
             _super.prototype.setup_afterAdd.call(this, xml);
             xml = fairygui.ToolSet.findChildNode(xml, "ProgressBar");
             if (xml) {
@@ -9104,48 +9680,56 @@ var fairygui;
             }
             this.update(this._value);
         };
-        p.dispose = function () {
+        GProgressBar.prototype.dispose = function () {
             if (this._tweener)
                 this._tweener.setPaused(true);
             _super.prototype.dispose.call(this);
         };
-        GProgressBar.easeLinear = egret.Ease.getPowIn(1);
         return GProgressBar;
     }(fairygui.GComponent));
+    GProgressBar.easeLinear = egret.Ease.getPowIn(1);
     fairygui.GProgressBar = GProgressBar;
-    egret.registerClass(GProgressBar,'fairygui.GProgressBar');
+    __reflect(GProgressBar.prototype, "fairygui.GProgressBar");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GTextField = (function (_super) {
         __extends(GTextField, _super);
         function GTextField() {
-            _super.call(this);
-            this._fontSize = 0;
-            this._leading = 0;
-            this._letterSpacing = 0;
-            this._textWidth = 0;
-            this._textHeight = 0;
-            this._fontSize = 12;
-            this._align = fairygui.AlignType.Left;
-            this._verticalAlign = fairygui.VertAlignType.Top;
-            this._text = "";
-            this._leading = 3;
-            this._color = 0;
-            this._autoSize = fairygui.AutoSizeType.Both;
-            this._widthAutoSize = true;
-            this._heightAutoSize = true;
-            this._bitmapPool = new Array();
+            var _this = _super.call(this) || this;
+            _this._fontSize = 0;
+            _this._leading = 0;
+            _this._letterSpacing = 0;
+            _this._textWidth = 0;
+            _this._textHeight = 0;
+            _this._fontSize = 12;
+            _this._align = fairygui.AlignType.Left;
+            _this._verticalAlign = fairygui.VertAlignType.Top;
+            _this._text = "";
+            _this._leading = 3;
+            _this._color = 0;
+            _this._autoSize = fairygui.AutoSizeType.Both;
+            _this._widthAutoSize = true;
+            _this._heightAutoSize = true;
+            _this._bitmapPool = new Array();
+            return _this;
         }
-        var d = __define,c=GTextField,p=c.prototype;
-        p.createDisplayObject = function () {
+        GTextField.prototype.createDisplayObject = function () {
             this._textField = new egret.TextField();
             this._textField["$owner"] = this;
             this._textField.touchEnabled = false;
             this.setDisplayObject(this._textField);
         };
-        p.switchBitmapMode = function (val) {
+        GTextField.prototype.switchBitmapMode = function (val) {
             if (val && this.displayObject == this._textField) {
                 if (this._bitmapContainer == null) {
                     this._bitmapContainer = new egret.Sprite();
@@ -9156,15 +9740,15 @@ var fairygui;
             else if (!val && this.displayObject == this._bitmapContainer)
                 this.switchDisplayObject(this._textField);
         };
-        p.dispose = function () {
+        GTextField.prototype.dispose = function () {
             _super.prototype.dispose.call(this);
             this._bitmapFont = null;
         };
-        d(p, "text"
-            ,function () {
+        Object.defineProperty(GTextField.prototype, "text", {
+            get: function () {
                 return this._text;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._text = value;
                 if (this._text == null)
                     this._text = "";
@@ -9173,189 +9757,223 @@ var fairygui;
                     this.renderNow();
                 else
                     this.render();
-            }
-        );
-        p.updateTextFieldText = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GTextField.prototype.updateTextFieldText = function () {
             if (this._ubbEnabled)
                 this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(fairygui.ToolSet.encodeHTML(this._text)));
             else
                 this._textField.text = this._text;
         };
-        d(p, "font"
-            ,function () {
+        Object.defineProperty(GTextField.prototype, "font", {
+            get: function () {
                 return this._font;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._font != value) {
                     this._font = value;
                     this.updateTextFormat();
                 }
-            }
-        );
-        d(p, "fontSize"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "fontSize", {
+            get: function () {
                 return this._fontSize;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (value < 0)
                     return;
                 if (this._fontSize != value) {
                     this._fontSize = value;
                     this.updateTextFormat();
                 }
-            }
-        );
-        d(p, "color"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "color", {
+            get: function () {
                 return this._color;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._color != value) {
                     this._color = value;
                     this.updateGear(4);
                     this.updateTextFormat();
                 }
-            }
-        );
-        d(p, "align"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "align", {
+            get: function () {
                 return this._align;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._align != value) {
                     this._align = value;
                     this._textField.textAlign = fairygui.getAlignTypeString(this._align);
                     if (this._bitmapFont && !this._underConstruct)
                         this.render();
                 }
-            }
-        );
-        d(p, "verticalAlign"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "verticalAlign", {
+            get: function () {
                 return this._verticalAlign;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._verticalAlign != value) {
                     this._verticalAlign = value;
                     this._textField.verticalAlign = fairygui.getVertAlignTypeString(this._verticalAlign);
                     if (this._bitmapFont && !this._underConstruct)
                         this.render();
                 }
-            }
-        );
-        d(p, "leading"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "leading", {
+            get: function () {
                 return this._leading;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._leading != value) {
                     this._leading = value;
                     this.updateTextFormat();
                 }
-            }
-        );
-        d(p, "letterSpacing"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "letterSpacing", {
+            get: function () {
                 return this._letterSpacing;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._letterSpacing != value) {
                     this._letterSpacing = value;
                     this.updateTextFormat();
                 }
-            }
-        );
-        d(p, "underline"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "underline", {
+            get: function () {
                 //return this._underline;
                 return false;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 //not support yet
                 //this._textField.underline = value;
-            }
-        );
-        d(p, "bold"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "bold", {
+            get: function () {
                 return this._textField.bold;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._textField.bold = value;
-            }
-        );
-        d(p, "italic"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "italic", {
+            get: function () {
                 return this._textField.italic;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._textField.italic = value;
-            }
-        );
-        d(p, "singleLine"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "singleLine", {
+            get: function () {
                 return !this._textField.multiline;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 value = !value;
                 if (this._textField.multiline != value) {
                     this._textField.multiline = value;
                     this.render();
                 }
-            }
-        );
-        d(p, "stroke"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "stroke", {
+            get: function () {
                 return this._textField.stroke;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._textField.stroke = value;
-            }
-        );
-        d(p, "strokeColor"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "strokeColor", {
+            get: function () {
                 return this._textField.strokeColor;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._textField.strokeColor = value;
                 this.updateGear(4);
-            }
-        );
-        d(p, "ubbEnabled"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "ubbEnabled", {
+            get: function () {
                 return this._ubbEnabled;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._ubbEnabled != value) {
                     this._ubbEnabled = value;
                     this.render();
                 }
-            }
-        );
-        d(p, "autoSize"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "autoSize", {
+            get: function () {
                 return this._autoSize;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._autoSize != value) {
                     this._autoSize = value;
                     this._widthAutoSize = value == fairygui.AutoSizeType.Both;
                     this._heightAutoSize = value == fairygui.AutoSizeType.Both || value == fairygui.AutoSizeType.Height;
                     this.render();
                 }
-            }
-        );
-        d(p, "textWidth"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextField.prototype, "textWidth", {
+            get: function () {
                 if (this._requireRender)
                     this.renderNow();
                 return this._textWidth;
-            }
-        );
-        p.ensureSizeCorrect = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GTextField.prototype.ensureSizeCorrect = function () {
             if (this._sizeDirty && this._requireRender)
                 this.renderNow();
         };
-        p.updateTextFormat = function () {
+        GTextField.prototype.updateTextFormat = function () {
             this._textField.size = this._fontSize;
             if (fairygui.ToolSet.startsWith(this._font, "ui://"))
                 this._bitmapFont = fairygui.UIPackage.getBitmapFontByURL(this._font);
@@ -9375,7 +9993,7 @@ var fairygui;
             if (!this._underConstruct)
                 this.render();
         };
-        p.render = function () {
+        GTextField.prototype.render = function () {
             if (!this._requireRender) {
                 this._requireRender = true;
                 egret.callLater(this.__render, this);
@@ -9385,11 +10003,11 @@ var fairygui;
                 this.dispatchEventWith(fairygui.GObject.SIZE_DELAY_CHANGE);
             }
         };
-        p.__render = function () {
+        GTextField.prototype.__render = function () {
             if (this._requireRender)
                 this.renderNow();
         };
-        p.renderNow = function (updateBounds) {
+        GTextField.prototype.renderNow = function (updateBounds) {
             if (updateBounds === void 0) { updateBounds = true; }
             this._requireRender = false;
             this._sizeDirty = false;
@@ -9429,7 +10047,7 @@ var fairygui;
                 this._updatingSize = false;
             }
         };
-        p.renderWithBitmapFont = function (updateBounds) {
+        GTextField.prototype.renderWithBitmapFont = function (updateBounds) {
             this.switchBitmapMode(true);
             var cnt = this._bitmapContainer.numChildren;
             for (var i = 0; i < cnt; i++) {
@@ -9655,7 +10273,7 @@ var fairygui;
                 } //text loop
             } //line loop
         };
-        p.handleSizeChanged = function () {
+        GTextField.prototype.handleSizeChanged = function () {
             if (this._updatingSize)
                 return;
             if (this._bitmapFont != null) {
@@ -9681,11 +10299,11 @@ var fairygui;
                 }
             }
         };
-        p.handleGrayedChanged = function () {
+        GTextField.prototype.handleGrayedChanged = function () {
             _super.prototype.handleGrayedChanged.call(this);
             this.updateTextFormat();
         };
-        p.doAlign = function () {
+        GTextField.prototype.doAlign = function () {
             if (this._verticalAlign == fairygui.VertAlignType.Top || this._textHeight == 0)
                 this._yOffset = GTextField.GUTTER_Y;
             else {
@@ -9699,7 +10317,7 @@ var fairygui;
             }
             this.displayObject.y = this.y + this._yOffset;
         };
-        p.setup_beforeAdd = function (xml) {
+        GTextField.prototype.setup_beforeAdd = function (xml) {
             _super.prototype.setup_beforeAdd.call(this, xml);
             var str;
             str = xml.attributes.font;
@@ -9746,7 +10364,7 @@ var fairygui;
                     this.stroke = 2;
             }
         };
-        p.setup_afterAdd = function (xml) {
+        GTextField.prototype.setup_afterAdd = function (xml) {
             _super.prototype.setup_afterAdd.call(this, xml);
             this.updateTextFormat();
             var str = xml.attributes.text;
@@ -9754,12 +10372,12 @@ var fairygui;
                 this.text = str;
             this._sizeDirty = false;
         };
-        GTextField.GUTTER_X = 2;
-        GTextField.GUTTER_Y = 2;
         return GTextField;
     }(fairygui.GObject));
+    GTextField.GUTTER_X = 2;
+    GTextField.GUTTER_Y = 2;
     fairygui.GTextField = GTextField;
-    egret.registerClass(GTextField,'fairygui.GTextField');
+    __reflect(GTextField.prototype, "fairygui.GTextField");
     var LineInfo = (function () {
         function LineInfo() {
             this.width = 0;
@@ -9767,7 +10385,6 @@ var fairygui;
             this.textHeight = 0;
             this.y = 0;
         }
-        var d = __define,c=LineInfo,p=c.prototype;
         LineInfo.borrow = function () {
             if (LineInfo.pool.length) {
                 var ret = LineInfo.pool.pop();
@@ -9792,66 +10409,86 @@ var fairygui;
             }
             value.length = 0;
         };
-        LineInfo.pool = [];
         return LineInfo;
     }());
+    LineInfo.pool = [];
     fairygui.LineInfo = LineInfo;
-    egret.registerClass(LineInfo,'fairygui.LineInfo');
+    __reflect(LineInfo.prototype, "fairygui.LineInfo");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GRichTextField = (function (_super) {
         __extends(GRichTextField, _super);
         function GRichTextField() {
-            _super.call(this);
-            this._textField.touchEnabled = true;
-            this._textField.addEventListener(egret.TextEvent.LINK, this.__clickLink, this);
+            var _this = _super.call(this) || this;
+            _this._textField.touchEnabled = true;
+            _this._textField.addEventListener(egret.TextEvent.LINK, _this.__clickLink, _this);
+            return _this;
         }
-        var d = __define,c=GRichTextField,p=c.prototype;
-        p.updateTextFieldText = function () {
+        GRichTextField.prototype.updateTextFieldText = function () {
             if (this._ubbEnabled)
                 this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(this._text));
             else
                 this._textField.textFlow = (new egret.HtmlTextParser).parser(this._text);
         };
-        p.__clickLink = function (evt) {
+        GRichTextField.prototype.__clickLink = function (evt) {
             this.dispatchEvent(new egret.TextEvent(egret.TextEvent.LINK, false, false, evt.text));
         };
         return GRichTextField;
     }(fairygui.GTextField));
     fairygui.GRichTextField = GRichTextField;
-    egret.registerClass(GRichTextField,'fairygui.GRichTextField');
+    __reflect(GRichTextField.prototype, "fairygui.GRichTextField");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GRoot = (function (_super) {
         __extends(GRoot, _super);
         function GRoot() {
-            _super.call(this);
+            var _this = _super.call(this) || this;
             if (GRoot._inst == null)
-                GRoot._inst = this;
-            this.opaque = false;
-            this._volumeScale = 1;
-            this._popupStack = new Array();
-            this._justClosedPopups = new Array();
-            this.displayObject.addEventListener(egret.Event.ADDED_TO_STAGE, this.__addedToStage, this);
+                GRoot._inst = _this;
+            _this.opaque = false;
+            _this._volumeScale = 1;
+            _this._popupStack = new Array();
+            _this._justClosedPopups = new Array();
+            _this.displayObject.addEventListener(egret.Event.ADDED_TO_STAGE, _this.__addedToStage, _this);
+            return _this;
         }
-        var d = __define,c=GRoot,p=c.prototype;
-        d(GRoot, "inst"
-            ,function () {
+        Object.defineProperty(GRoot, "inst", {
+            get: function () {
                 if (GRoot._inst == null)
                     new GRoot();
                 return GRoot._inst;
-            }
-        );
-        d(p, "nativeStage"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GRoot.prototype, "nativeStage", {
+            get: function () {
                 return this._nativeStage;
-            }
-        );
-        p.showWindow = function (win) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GRoot.prototype.showWindow = function (win) {
             this.addChild(win);
             win.requestFocus();
             if (win.x > this.width)
@@ -9864,15 +10501,15 @@ var fairygui;
                 win.y = 0;
             this.adjustModalLayer();
         };
-        p.hideWindow = function (win) {
+        GRoot.prototype.hideWindow = function (win) {
             win.hide();
         };
-        p.hideWindowImmediately = function (win) {
+        GRoot.prototype.hideWindowImmediately = function (win) {
             if (win.parent == this)
                 this.removeChild(win);
             this.adjustModalLayer();
         };
-        p.bringToFront = function (win) {
+        GRoot.prototype.bringToFront = function (win) {
             var cnt = this.numChildren;
             var i;
             if (this._modalLayer.parent != null && !win.modal)
@@ -9889,7 +10526,7 @@ var fairygui;
             if (i >= 0)
                 this.setChildIndex(win, i);
         };
-        p.showModalWait = function (msg) {
+        GRoot.prototype.showModalWait = function (msg) {
             if (msg === void 0) { msg = null; }
             if (fairygui.UIConfig.globalModalWaiting != null) {
                 if (this._modalWaitPane == null)
@@ -9900,11 +10537,11 @@ var fairygui;
                 this._modalWaitPane.text = msg;
             }
         };
-        p.closeModalWait = function () {
+        GRoot.prototype.closeModalWait = function () {
             if (this._modalWaitPane != null && this._modalWaitPane.parent != null)
                 this.removeChild(this._modalWaitPane);
         };
-        p.closeAllExceptModals = function () {
+        GRoot.prototype.closeAllExceptModals = function () {
             var arr = this._children.slice();
             var cnt = arr.length;
             for (var i = 0; i < cnt; i++) {
@@ -9913,7 +10550,7 @@ var fairygui;
                     g.hide();
             }
         };
-        p.closeAllWindows = function () {
+        GRoot.prototype.closeAllWindows = function () {
             var arr = this._children.slice();
             var cnt = arr.length;
             for (var i = 0; i < cnt; i++) {
@@ -9922,7 +10559,7 @@ var fairygui;
                     g.hide();
             }
         };
-        p.getTopWindow = function () {
+        GRoot.prototype.getTopWindow = function () {
             var cnt = this.numChildren;
             for (var i = cnt - 1; i >= 0; i--) {
                 var g = this.getChildAt(i);
@@ -9932,17 +10569,21 @@ var fairygui;
             }
             return null;
         };
-        d(p, "hasModalWindow"
-            ,function () {
+        Object.defineProperty(GRoot.prototype, "hasModalWindow", {
+            get: function () {
                 return this._modalLayer.parent != null;
-            }
-        );
-        d(p, "modalWaiting"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GRoot.prototype, "modalWaiting", {
+            get: function () {
                 return this._modalWaitPane && this._modalWaitPane.inContainer;
-            }
-        );
-        p.showPopup = function (popup, target, downward) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GRoot.prototype.showPopup = function (popup, target, downward) {
             if (target === void 0) { target = null; }
             if (downward === void 0) { downward = null; }
             if (this._popupStack.length > 0) {
@@ -9981,14 +10622,14 @@ var fairygui;
             popup.x = xx;
             popup.y = yy;
         };
-        p.togglePopup = function (popup, target, downward) {
+        GRoot.prototype.togglePopup = function (popup, target, downward) {
             if (target === void 0) { target = null; }
             if (downward === void 0) { downward = null; }
             if (this._justClosedPopups.indexOf(popup) != -1)
                 return;
             this.showPopup(popup, target, downward);
         };
-        p.hidePopup = function (popup) {
+        GRoot.prototype.hidePopup = function (popup) {
             if (popup === void 0) { popup = null; }
             if (popup != null) {
                 var k = this._popupStack.indexOf(popup);
@@ -10004,12 +10645,14 @@ var fairygui;
                 this._popupStack.length = 0;
             }
         };
-        d(p, "hasAnyPopup"
-            ,function () {
+        Object.defineProperty(GRoot.prototype, "hasAnyPopup", {
+            get: function () {
                 return this._popupStack.length != 0;
-            }
-        );
-        p.closePopup = function (target) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GRoot.prototype.closePopup = function (target) {
             if (target.parent != null) {
                 if (target instanceof fairygui.Window)
                     target.hide();
@@ -10017,7 +10660,7 @@ var fairygui;
                     this.removeChild(target);
             }
         };
-        p.showTooltips = function (msg) {
+        GRoot.prototype.showTooltips = function (msg) {
             if (this._defaultTooltipWin == null) {
                 var resourceURL = fairygui.UIConfig.tooltipsWin;
                 if (!resourceURL) {
@@ -10029,7 +10672,7 @@ var fairygui;
             this._defaultTooltipWin.text = msg;
             this.showTooltipsWin(this._defaultTooltipWin);
         };
-        p.showTooltipsWin = function (tooltipWin, position) {
+        GRoot.prototype.showTooltipsWin = function (tooltipWin, position) {
             if (position === void 0) { position = null; }
             this.hideTooltips();
             this._tooltipWin = tooltipWin;
@@ -10062,53 +10705,57 @@ var fairygui;
             this._tooltipWin.y = yy;
             this.addChild(this._tooltipWin);
         };
-        p.hideTooltips = function () {
+        GRoot.prototype.hideTooltips = function () {
             if (this._tooltipWin != null) {
                 if (this._tooltipWin.parent)
                     this.removeChild(this._tooltipWin);
                 this._tooltipWin = null;
             }
         };
-        p.getObjectUnderPoint = function (globalX, globalY) {
+        GRoot.prototype.getObjectUnderPoint = function (globalX, globalY) {
             var ret = this._nativeStage.$hitTest(globalX, globalY);
             if (ret)
                 return fairygui.ToolSet.displayObjectToGObject(ret);
             else
                 return null;
         };
-        d(p, "focus"
-            ,function () {
+        Object.defineProperty(GRoot.prototype, "focus", {
+            get: function () {
                 if (this._focusedObject && !this._focusedObject.onStage)
                     this._focusedObject = null;
                 return this._focusedObject;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (value && (!value.focusable || !value.onStage))
                     throw "invalid focus target";
                 this.setFocus(value);
-            }
-        );
-        p.setFocus = function (value) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GRoot.prototype.setFocus = function (value) {
             if (this._focusedObject != value) {
                 this._focusedObject = value;
                 this.dispatchEventWith(GRoot.FOCUS_CHANGED);
             }
         };
-        d(p, "volumeScale"
-            ,function () {
+        Object.defineProperty(GRoot.prototype, "volumeScale", {
+            get: function () {
                 return this._volumeScale;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._volumeScale = value;
-            }
-        );
-        p.playOneShotSound = function (sound, volumeScale) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GRoot.prototype.playOneShotSound = function (sound, volumeScale) {
             if (volumeScale === void 0) { volumeScale = 1; }
             var vs = this._volumeScale * volumeScale;
             var channel = sound.play(0, 1);
             channel.volume = vs;
         };
-        p.adjustModalLayer = function () {
+        GRoot.prototype.adjustModalLayer = function () {
             var cnt = this.numChildren;
             if (this._modalWaitPane != null && this._modalWaitPane.parent != null)
                 this.setChildIndex(this._modalWaitPane, cnt - 1);
@@ -10125,7 +10772,7 @@ var fairygui;
             if (this._modalLayer.parent != null)
                 this.removeChild(this._modalLayer);
         };
-        p.__addedToStage = function (evt) {
+        GRoot.prototype.__addedToStage = function (evt) {
             this.displayObject.removeEventListener(egret.Event.ADDED_TO_STAGE, this.__addedToStage, this);
             this._nativeStage = this.displayObject.stage;
             this._nativeStage.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__stageMouseDownCapture, this, true);
@@ -10138,7 +10785,7 @@ var fairygui;
             this.displayObject.stage.addEventListener(egret.Event.RESIZE, this.__winResize, this);
             this.__winResize(null);
         };
-        p.__stageMouseDownCapture = function (evt) {
+        GRoot.prototype.__stageMouseDownCapture = function (evt) {
             //GRoot.ctrlKeyDown = evt.ctrlKey;
             //GRoot.shiftKeyDown = evt.shiftKey;
             GRoot.mouseX = evt.stageX;
@@ -10183,27 +10830,30 @@ var fairygui;
                 this._popupStack.length = 0;
             }
         };
-        p.__stageMouseMoveCapture = function (evt) {
+        GRoot.prototype.__stageMouseMoveCapture = function (evt) {
             //GRoot.ctrlKeyDown = evt.ctrlKey;
             //GRoot.shiftKeyDown = evt.shiftKey;
             GRoot.mouseX = evt.stageX;
             GRoot.mouseY = evt.stageY;
         };
-        p.__stageMouseUpCapture = function (evt) {
+        GRoot.prototype.__stageMouseUpCapture = function (evt) {
             GRoot.touchDown = false;
         };
-        p.__winResize = function (evt) {
+        GRoot.prototype.__winResize = function (evt) {
             this.setSize(this._nativeStage.stageWidth, this._nativeStage.stageHeight);
             //console.info("screen size=" + w + "x" + h + "/" + this.width + "x" + this.height);
         };
-        GRoot.contentScaleFactor = 1;
-        GRoot.FOCUS_CHANGED = "FocusChanged";
         return GRoot;
     }(fairygui.GComponent));
+    GRoot.contentScaleFactor = 1;
+    GRoot.FOCUS_CHANGED = "FocusChanged";
     fairygui.GRoot = GRoot;
-    egret.registerClass(GRoot,'fairygui.GRoot');
+    __reflect(GRoot.prototype, "fairygui.GRoot");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var Margin = (function () {
@@ -10213,8 +10863,7 @@ var fairygui;
             this.top = 0;
             this.bottom = 0;
         }
-        var d = __define,c=Margin,p=c.prototype;
-        p.parse = function (str) {
+        Margin.prototype.parse = function (str) {
             if (!str) {
                 this.left = 0;
                 this.right = 0;
@@ -10237,7 +10886,7 @@ var fairygui;
                 this.right = parseInt(arr[3]);
             }
         };
-        p.copy = function (source) {
+        Margin.prototype.copy = function (source) {
             this.top = source.top;
             this.bottom = source.bottom;
             this.left = source.left;
@@ -10246,9 +10895,12 @@ var fairygui;
         return Margin;
     }());
     fairygui.Margin = Margin;
-    egret.registerClass(Margin,'fairygui.Margin');
+    __reflect(Margin.prototype, "fairygui.Margin");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var GTimers = (function () {
@@ -10262,14 +10914,13 @@ var fairygui;
             GTimers.time = this._lastTime;
             egret.startTick(this.__timer, this);
         }
-        var d = __define,c=GTimers,p=c.prototype;
-        p.getItem = function () {
+        GTimers.prototype.getItem = function () {
             if (this._itemPool.length)
                 return this._itemPool.pop();
             else
                 return new TimerItem();
         };
-        p.findItem = function (callback, thisObj) {
+        GTimers.prototype.findItem = function (callback, thisObj) {
             var len = this._items.length;
             for (var i = 0; i < len; i++) {
                 var item = this._items[i];
@@ -10278,7 +10929,7 @@ var fairygui;
             }
             return null;
         };
-        p.add = function (delayInMiniseconds, repeat, callback, thisObj, callbackParam) {
+        GTimers.prototype.add = function (delayInMiniseconds, repeat, callback, thisObj, callbackParam) {
             if (callbackParam === void 0) { callbackParam = null; }
             var item = this.findItem(callback, thisObj);
             if (!item) {
@@ -10294,23 +10945,23 @@ var fairygui;
             item.param = callbackParam;
             item.end = false;
         };
-        p.callLater = function (callback, thisObj, callbackParam) {
+        GTimers.prototype.callLater = function (callback, thisObj, callbackParam) {
             if (callbackParam === void 0) { callbackParam = null; }
             this.add(1, 1, callback, thisObj, callbackParam);
         };
-        p.callDelay = function (delay, callback, thisObj, callbackParam) {
+        GTimers.prototype.callDelay = function (delay, callback, thisObj, callbackParam) {
             if (callbackParam === void 0) { callbackParam = null; }
             this.add(delay, 1, callback, thisObj, callbackParam);
         };
-        p.callBy24Fps = function (callback, thisObj, callbackParam) {
+        GTimers.prototype.callBy24Fps = function (callback, thisObj, callbackParam) {
             if (callbackParam === void 0) { callbackParam = null; }
             this.add(GTimers.FPS24, 0, callback, thisObj, callbackParam);
         };
-        p.exists = function (callback, thisObj) {
+        GTimers.prototype.exists = function (callback, thisObj) {
             var item = this.findItem(callback, thisObj);
             return item != null;
         };
-        p.remove = function (callback, thisObj) {
+        GTimers.prototype.remove = function (callback, thisObj) {
             var item = this.findItem(callback, thisObj);
             if (item) {
                 var i = this._items.indexOf(item);
@@ -10323,7 +10974,7 @@ var fairygui;
                 this._itemPool.push(item);
             }
         };
-        p.__timer = function (timeStamp) {
+        GTimers.prototype.__timer = function (timeStamp) {
             GTimers.time = timeStamp;
             GTimers.workCount++;
             GTimers.deltaTime = timeStamp - this._lastTime;
@@ -10348,23 +10999,22 @@ var fairygui;
             }
             return false;
         };
-        GTimers.deltaTime = 0;
-        GTimers.time = 0;
-        GTimers.workCount = 0;
-        GTimers.inst = new GTimers();
-        GTimers.FPS24 = 1000 / 24;
         return GTimers;
     }());
+    GTimers.deltaTime = 0;
+    GTimers.time = 0;
+    GTimers.workCount = 0;
+    GTimers.inst = new GTimers();
+    GTimers.FPS24 = 1000 / 24;
     fairygui.GTimers = GTimers;
-    egret.registerClass(GTimers,'fairygui.GTimers');
+    __reflect(GTimers.prototype, "fairygui.GTimers");
     var TimerItem = (function () {
         function TimerItem() {
             this.delay = 0;
             this.counter = 0;
             this.repeat = 0;
         }
-        var d = __define,c=TimerItem,p=c.prototype;
-        p.advance = function (elapsed) {
+        TimerItem.prototype.advance = function (elapsed) {
             if (elapsed === void 0) { elapsed = 0; }
             this.counter += elapsed;
             if (this.counter >= this.delay) {
@@ -10383,25 +11033,33 @@ var fairygui;
         };
         return TimerItem;
     }());
-    egret.registerClass(TimerItem,'TimerItem');
+    __reflect(TimerItem.prototype, "TimerItem");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GScrollBar = (function (_super) {
         __extends(GScrollBar, _super);
         function GScrollBar() {
-            _super.call(this);
-            this._dragOffset = new egret.Point();
-            this._scrollPerc = 0;
+            var _this = _super.call(this) || this;
+            _this._dragOffset = new egret.Point();
+            _this._scrollPerc = 0;
+            return _this;
         }
-        var d = __define,c=GScrollBar,p=c.prototype;
-        p.setScrollPane = function (target, vertical) {
+        GScrollBar.prototype.setScrollPane = function (target, vertical) {
             this._target = target;
             this._vertical = vertical;
         };
-        d(p, "displayPerc",undefined
-            ,function (val) {
+        Object.defineProperty(GScrollBar.prototype, "displayPerc", {
+            set: function (val) {
                 if (this._vertical) {
                     if (!this._fixedGripSize)
                         this._grip.height = val * this._bar.height;
@@ -10412,26 +11070,32 @@ var fairygui;
                         this._grip.width = val * this._bar.width;
                     this._grip.x = this._bar.x + (this._bar.width - this._grip.width) * this._scrollPerc;
                 }
-            }
-        );
-        d(p, "scrollPerc",undefined
-            ,function (val) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GScrollBar.prototype, "scrollPerc", {
+            set: function (val) {
                 this._scrollPerc = val;
                 if (this._vertical)
                     this._grip.y = this._bar.y + (this._bar.height - this._grip.height) * this._scrollPerc;
                 else
                     this._grip.x = this._bar.x + (this._bar.width - this._grip.width) * this._scrollPerc;
-            }
-        );
-        d(p, "minSize"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GScrollBar.prototype, "minSize", {
+            get: function () {
                 if (this._vertical)
                     return (this._arrowButton1 != null ? this._arrowButton1.height : 0) + (this._arrowButton2 != null ? this._arrowButton2.height : 0);
                 else
                     return (this._arrowButton1 != null ? this._arrowButton1.width : 0) + (this._arrowButton2 != null ? this._arrowButton2.width : 0);
-            }
-        );
-        p.constructFromXML = function (xml) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GScrollBar.prototype.constructFromXML = function (xml) {
             _super.prototype.constructFromXML.call(this, xml);
             xml = fairygui.ToolSet.findChildNode(xml, "ScrollBar");
             if (xml != null)
@@ -10456,7 +11120,7 @@ var fairygui;
                 this._arrowButton2.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__arrowButton2Click, this);
             this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__barMouseDown, this);
         };
-        p.__gripMouseDown = function (evt) {
+        GScrollBar.prototype.__gripMouseDown = function (evt) {
             if (!this._bar)
                 return;
             evt.stopPropagation();
@@ -10464,7 +11128,7 @@ var fairygui;
             this._dragOffset.x -= this._grip.x;
             this._dragOffset.y -= this._grip.y;
         };
-        p.__gripDragging = function (evt) {
+        GScrollBar.prototype.__gripDragging = function (evt) {
             var pt = this.globalToLocal(evt.stageX, evt.stageY, GScrollBar.sScrollbarHelperPoint);
             if (this._vertical) {
                 var curY = pt.y - this._dragOffset.y;
@@ -10475,21 +11139,21 @@ var fairygui;
                 this._target.setPercX((curX - this._bar.x) / (this._bar.width - this._grip.width), false);
             }
         };
-        p.__arrowButton1Click = function (evt) {
+        GScrollBar.prototype.__arrowButton1Click = function (evt) {
             evt.stopPropagation();
             if (this._vertical)
                 this._target.scrollUp();
             else
                 this._target.scrollLeft();
         };
-        p.__arrowButton2Click = function (evt) {
+        GScrollBar.prototype.__arrowButton2Click = function (evt) {
             evt.stopPropagation();
             if (this._vertical)
                 this._target.scrollDown();
             else
                 this._target.scrollRight();
         };
-        p.__barMouseDown = function (evt) {
+        GScrollBar.prototype.__barMouseDown = function (evt) {
             var pt = this._grip.globalToLocal(evt.stageX, evt.stageY, GScrollBar.sScrollbarHelperPoint);
             if (this._vertical) {
                 if (pt.y < 0)
@@ -10504,66 +11168,80 @@ var fairygui;
                     this._target.scrollRight(4);
             }
         };
-        GScrollBar.sScrollbarHelperPoint = new egret.Point();
         return GScrollBar;
     }(fairygui.GComponent));
+    GScrollBar.sScrollbarHelperPoint = new egret.Point();
     fairygui.GScrollBar = GScrollBar;
-    egret.registerClass(GScrollBar,'fairygui.GScrollBar');
+    __reflect(GScrollBar.prototype, "fairygui.GScrollBar");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GSlider = (function (_super) {
         __extends(GSlider, _super);
         function GSlider() {
-            _super.call(this);
-            this._max = 0;
-            this._value = 0;
-            this._barMaxWidth = 0;
-            this._barMaxHeight = 0;
-            this._barMaxWidthDelta = 0;
-            this._barMaxHeightDelta = 0;
-            this._titleType = fairygui.ProgressTitleType.Percent;
-            this._value = 50;
-            this._max = 100;
-            this._clickPos = new egret.Point();
+            var _this = _super.call(this) || this;
+            _this._max = 0;
+            _this._value = 0;
+            _this._barMaxWidth = 0;
+            _this._barMaxHeight = 0;
+            _this._barMaxWidthDelta = 0;
+            _this._barMaxHeightDelta = 0;
+            _this._titleType = fairygui.ProgressTitleType.Percent;
+            _this._value = 50;
+            _this._max = 100;
+            _this._clickPos = new egret.Point();
+            return _this;
         }
-        var d = __define,c=GSlider,p=c.prototype;
-        d(p, "titleType"
-            ,function () {
+        Object.defineProperty(GSlider.prototype, "titleType", {
+            get: function () {
                 return this._titleType;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._titleType = value;
-            }
-        );
-        d(p, "max"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GSlider.prototype, "max", {
+            get: function () {
                 return this._max;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._max != value) {
                     this._max = value;
                     this.update();
                 }
-            }
-        );
-        d(p, "value"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GSlider.prototype, "value", {
+            get: function () {
                 return this._value;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._value != value) {
                     this._value = value;
                     this.update();
                 }
-            }
-        );
-        p.update = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GSlider.prototype.update = function () {
             var percent = Math.min(this._value / this._max, 1);
             this.updateWidthPercent(percent);
         };
-        p.updateWidthPercent = function (percent) {
+        GSlider.prototype.updateWidthPercent = function (percent) {
             if (this._titleObject) {
                 switch (this._titleType) {
                     case fairygui.ProgressTitleType.Percent:
@@ -10587,7 +11265,7 @@ var fairygui;
             if (this._aniObject instanceof fairygui.GMovieClip)
                 (this._aniObject).frame = Math.round(percent * 100);
         };
-        p.constructFromXML = function (xml) {
+        GSlider.prototype.constructFromXML = function (xml) {
             _super.prototype.constructFromXML.call(this, xml);
             xml = fairygui.ToolSet.findChildNode(xml, "Slider");
             var str;
@@ -10611,7 +11289,7 @@ var fairygui;
                 this._gripObject.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__gripMouseDown, this);
             }
         };
-        p.handleSizeChanged = function () {
+        GSlider.prototype.handleSizeChanged = function () {
             _super.prototype.handleSizeChanged.call(this);
             if (this._barObjectH)
                 this._barMaxWidth = this.width - this._barMaxWidthDelta;
@@ -10620,7 +11298,7 @@ var fairygui;
             if (!this._underConstruct)
                 this.update();
         };
-        p.setup_afterAdd = function (xml) {
+        GSlider.prototype.setup_afterAdd = function (xml) {
             _super.prototype.setup_afterAdd.call(this, xml);
             xml = fairygui.ToolSet.findChildNode(xml, "Slider");
             if (xml) {
@@ -10629,13 +11307,13 @@ var fairygui;
             }
             this.update();
         };
-        p.__gripMouseDown = function (evt) {
+        GSlider.prototype.__gripMouseDown = function (evt) {
             this._clickPos = this.globalToLocal(evt.stageX, evt.stageY);
             this._clickPercent = this._value / this._max;
             this._gripObject.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__gripMouseMove, this);
             this._gripObject.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_END, this.__gripMouseUp, this);
         };
-        p.__gripMouseMove = function (evt) {
+        GSlider.prototype.__gripMouseMove = function (evt) {
             var pt = this.globalToLocal(evt.stageX, evt.stageY, GSlider.sSilderHelperPoint);
             var deltaX = pt.x - this._clickPos.x;
             var deltaY = pt.y - this._clickPos.y;
@@ -10655,97 +11333,117 @@ var fairygui;
             }
             this.updateWidthPercent(percent);
         };
-        p.__gripMouseUp = function (evt) {
+        GSlider.prototype.__gripMouseUp = function (evt) {
             var percent = this._value / this._max;
             this.updateWidthPercent(percent);
             this._gripObject.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.__gripMouseMove, this);
             this._gripObject.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__gripMouseUp, this);
         };
-        GSlider.sSilderHelperPoint = new egret.Point();
         return GSlider;
     }(fairygui.GComponent));
+    GSlider.sSilderHelperPoint = new egret.Point();
     fairygui.GSlider = GSlider;
-    egret.registerClass(GSlider,'fairygui.GSlider');
+    __reflect(GSlider.prototype, "fairygui.GSlider");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var GTextInput = (function (_super) {
         __extends(GTextInput, _super);
         function GTextInput() {
-            _super.call(this);
-            this._widthAutoSize = false;
-            this._heightAutoSize = false;
-            this.displayObject.touchChildren = true;
-            this._textField.type = egret.TextFieldType.INPUT;
-            this._textField.addEventListener(egret.Event.CHANGE, this.__textChanged, this);
-            this._textField.addEventListener(egret.FocusEvent.FOCUS_IN, this.__focusIn, this);
-            this._textField.addEventListener(egret.FocusEvent.FOCUS_OUT, this.__focusOut, this);
+            var _this = _super.call(this) || this;
+            _this._widthAutoSize = false;
+            _this._heightAutoSize = false;
+            _this.displayObject.touchChildren = true;
+            _this._textField.type = egret.TextFieldType.INPUT;
+            _this._textField.addEventListener(egret.Event.CHANGE, _this.__textChanged, _this);
+            _this._textField.addEventListener(egret.FocusEvent.FOCUS_IN, _this.__focusIn, _this);
+            _this._textField.addEventListener(egret.FocusEvent.FOCUS_OUT, _this.__focusOut, _this);
+            return _this;
         }
-        var d = __define,c=GTextInput,p=c.prototype;
-        p.dispose = function () {
+        GTextInput.prototype.dispose = function () {
             _super.prototype.dispose.call(this);
         };
-        d(p, "editable"
-            ,function () {
+        Object.defineProperty(GTextInput.prototype, "editable", {
+            get: function () {
                 return this._textField.type == egret.TextFieldType.INPUT;
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 if (val)
                     this._textField.type == egret.TextFieldType.INPUT;
                 else
                     this._textField.type == egret.TextFieldType.DYNAMIC;
-            }
-        );
-        d(p, "maxLength"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextInput.prototype, "maxLength", {
+            get: function () {
                 return this._textField.maxChars;
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 this._textField.maxChars = val;
-            }
-        );
-        d(p, "promptText"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextInput.prototype, "promptText", {
+            get: function () {
                 return this._promptText;
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 this._promptText = val;
                 this.updateTextFieldText();
-            }
-        );
-        d(p, "restrict"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextInput.prototype, "restrict", {
+            get: function () {
                 return this._textField.restrict;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._textField.restrict = value;
-            }
-        );
-        d(p, "password"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextInput.prototype, "password", {
+            get: function () {
                 return this._password;
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 if (this._password != val) {
                     this._password = val;
                     this._textField.displayAsPassword = this._password;
                     this.render();
                 }
-            }
-        );
-        d(p, "verticalAlign"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTextInput.prototype, "verticalAlign", {
+            get: function () {
                 return this._verticalAlign;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._verticalAlign != value) {
                     this._verticalAlign = value;
                     this.updateVertAlign();
                 }
-            }
-        );
-        p.updateVertAlign = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GTextInput.prototype.updateVertAlign = function () {
             switch (this._verticalAlign) {
                 case fairygui.VertAlignType.Top:
                     this._textField.verticalAlign = egret.VerticalAlign.TOP;
@@ -10758,7 +11456,7 @@ var fairygui;
                     break;
             }
         };
-        p.updateTextFieldText = function () {
+        GTextInput.prototype.updateTextFieldText = function () {
             if (!this._text && this._promptText) {
                 this._textField.displayAsPassword = false;
                 this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(this._promptText));
@@ -10771,13 +11469,13 @@ var fairygui;
                     this._textField.text = this._text;
             }
         };
-        p.handleSizeChanged = function () {
+        GTextInput.prototype.handleSizeChanged = function () {
             if (!this._updatingSize) {
                 this._textField.width = Math.ceil(this.width);
                 this._textField.height = Math.ceil(this.height);
             }
         };
-        p.setup_beforeAdd = function (xml) {
+        GTextInput.prototype.setup_beforeAdd = function (xml) {
             _super.prototype.setup_beforeAdd.call(this, xml);
             this._promptText = xml.attributes.prompt;
             var str = xml.attributes.maxLength;
@@ -10791,23 +11489,23 @@ var fairygui;
                 this.password = true;
             this.updateVertAlign();
         };
-        p.setup_afterAdd = function (xml) {
+        GTextInput.prototype.setup_afterAdd = function (xml) {
             _super.prototype.setup_afterAdd.call(this, xml);
             if (!this._text && this._promptText) {
                 this._textField.displayAsPassword = false;
                 this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(fairygui.ToolSet.encodeHTML(this._promptText)));
             }
         };
-        p.__textChanged = function (evt) {
+        GTextInput.prototype.__textChanged = function (evt) {
             this._text = this._textField.text;
         };
-        p.__focusIn = function (evt) {
+        GTextInput.prototype.__focusIn = function (evt) {
             if (!this._text && this._promptText) {
                 this._textField.displayAsPassword = this._password;
                 this._textField.text = "";
             }
         };
-        p.__focusOut = function (evt) {
+        GTextInput.prototype.__focusOut = function (evt) {
             this._text = this._textField.text;
             if (!this._text && this._promptText) {
                 this._textField.displayAsPassword = false;
@@ -10817,60 +11515,73 @@ var fairygui;
         return GTextInput;
     }(fairygui.GTextField));
     fairygui.GTextInput = GTextInput;
-    egret.registerClass(GTextInput,'fairygui.GTextInput');
+    __reflect(GTextInput.prototype, "fairygui.GTextInput");
 })(fairygui || (fairygui = {}));
 
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var PageOption = (function () {
         function PageOption() {
         }
-        var d = __define,c=PageOption,p=c.prototype;
-        d(p, "controller",undefined
-            ,function (val) {
+        Object.defineProperty(PageOption.prototype, "controller", {
+            set: function (val) {
                 this._controller = val;
-            }
-        );
-        d(p, "index"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(PageOption.prototype, "index", {
+            get: function () {
                 if (this._id)
                     return this._controller.getPageIndexById(this._id);
                 else
                     return -1;
-            }
-            ,function (pageIndex) {
+            },
+            set: function (pageIndex) {
                 this._id = this._controller.getPageId(pageIndex);
-            }
-        );
-        d(p, "name"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(PageOption.prototype, "name", {
+            get: function () {
                 if (this._id)
                     return this._controller.getPageNameById(this._id);
                 else
                     return null;
-            }
-            ,function (pageName) {
+            },
+            set: function (pageName) {
                 this._id = this._controller.getPageIdByName(pageName);
-            }
-        );
-        p.clear = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        PageOption.prototype.clear = function () {
             this._id = null;
         };
-        d(p, "id"
-            ,function () {
+        Object.defineProperty(PageOption.prototype, "id", {
+            get: function () {
                 return this._id;
-            }
-            ,function (id) {
+            },
+            set: function (id) {
                 this._id = id;
-            }
-        );
+            },
+            enumerable: true,
+            configurable: true
+        });
         return PageOption;
     }());
     fairygui.PageOption = PageOption;
-    egret.registerClass(PageOption,'fairygui.PageOption');
+    __reflect(PageOption.prototype, "fairygui.PageOption");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var PopupMenu = (function () {
@@ -10890,11 +11601,10 @@ var fairygui;
             this._contentPane.addRelation(this._list, fairygui.RelationType.Height);
             this._list.addEventListener(fairygui.ItemEvent.CLICK, this.__clickItem, this);
         }
-        var d = __define,c=PopupMenu,p=c.prototype;
-        p.dispose = function () {
+        PopupMenu.prototype.dispose = function () {
             this._contentPane.dispose();
         };
-        p.addItem = function (caption, callback) {
+        PopupMenu.prototype.addItem = function (caption, callback) {
             if (callback === void 0) { callback = null; }
             var item = this._list.addItemFromPool().asButton;
             item.title = caption;
@@ -10905,7 +11615,7 @@ var fairygui;
                 c.selectedIndex = 0;
             return item;
         };
-        p.addItemAt = function (caption, index, callback) {
+        PopupMenu.prototype.addItemAt = function (caption, index, callback) {
             if (callback === void 0) { callback = null; }
             var item = this._list.getFromPool().asButton;
             this._list.addChildAt(item, index);
@@ -10917,31 +11627,31 @@ var fairygui;
                 c.selectedIndex = 0;
             return item;
         };
-        p.addSeperator = function () {
+        PopupMenu.prototype.addSeperator = function () {
             if (fairygui.UIConfig.popupMenu_seperator == null)
                 throw "UIConfig.popupMenu_seperator not defined";
             this.list.addItemFromPool(fairygui.UIConfig.popupMenu_seperator);
         };
-        p.getItemName = function (index) {
+        PopupMenu.prototype.getItemName = function (index) {
             var item = this._list.getChildAt(index);
             return item.name;
         };
-        p.setItemText = function (name, caption) {
+        PopupMenu.prototype.setItemText = function (name, caption) {
             var item = this._list.getChild(name).asButton;
             item.title = caption;
         };
-        p.setItemVisible = function (name, visible) {
+        PopupMenu.prototype.setItemVisible = function (name, visible) {
             var item = this._list.getChild(name).asButton;
             if (item.visible != visible) {
                 item.visible = visible;
                 this._list.setBoundsChangedFlag();
             }
         };
-        p.setItemGrayed = function (name, grayed) {
+        PopupMenu.prototype.setItemGrayed = function (name, grayed) {
             var item = this._list.getChild(name).asButton;
             item.grayed = grayed;
         };
-        p.setItemCheckable = function (name, checkable) {
+        PopupMenu.prototype.setItemCheckable = function (name, checkable) {
             var item = this._list.getChild(name).asButton;
             var c = item.getController("checked");
             if (c != null) {
@@ -10953,13 +11663,13 @@ var fairygui;
                     c.selectedIndex = 0;
             }
         };
-        p.setItemChecked = function (name, checked) {
+        PopupMenu.prototype.setItemChecked = function (name, checked) {
             var item = this._list.getChild(name).asButton;
             var c = item.getController("checked");
             if (c != null)
                 c.selectedIndex = checked ? 2 : 1;
         };
-        p.isItemChecked = function (name) {
+        PopupMenu.prototype.isItemChecked = function (name) {
             var item = this._list.getChild(name).asButton;
             var c = item.getController("checked");
             if (c != null)
@@ -10967,7 +11677,7 @@ var fairygui;
             else
                 return false;
         };
-        p.removeItem = function (name) {
+        PopupMenu.prototype.removeItem = function (name) {
             var item = this._list.getChild(name);
             if (item != null) {
                 var index = this._list.getChildIndex(item);
@@ -10977,34 +11687,40 @@ var fairygui;
             else
                 return false;
         };
-        p.clearItems = function () {
+        PopupMenu.prototype.clearItems = function () {
             this._list.removeChildrenToPool();
         };
-        d(p, "itemCount"
-            ,function () {
+        Object.defineProperty(PopupMenu.prototype, "itemCount", {
+            get: function () {
                 return this._list.numChildren;
-            }
-        );
-        d(p, "contentPane"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(PopupMenu.prototype, "contentPane", {
+            get: function () {
                 return this._contentPane;
-            }
-        );
-        d(p, "list"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(PopupMenu.prototype, "list", {
+            get: function () {
                 return this._list;
-            }
-        );
-        p.show = function (target, downward) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        PopupMenu.prototype.show = function (target, downward) {
             if (target === void 0) { target = null; }
             if (downward === void 0) { downward = null; }
             var r = target != null ? target.root : fairygui.GRoot.inst;
             r.showPopup(this.contentPane, (target instanceof fairygui.GRoot) ? null : target, downward);
         };
-        p.__clickItem = function (evt) {
+        PopupMenu.prototype.__clickItem = function (evt) {
             fairygui.GTimers.inst.add(100, 1, this.__clickItem2, this, evt);
         };
-        p.__clickItem2 = function (evt) {
+        PopupMenu.prototype.__clickItem2 = function (evt) {
             var item = evt.itemObject.asButton;
             if (item == null)
                 return;
@@ -11028,16 +11744,19 @@ var fairygui;
                     item.data();
             }
         };
-        p.__addedToStage = function (evt) {
+        PopupMenu.prototype.__addedToStage = function (evt) {
             this._list.selectedIndex = -1;
             this._list.resizeToFit(100000, 10);
         };
         return PopupMenu;
     }());
     fairygui.PopupMenu = PopupMenu;
-    egret.registerClass(PopupMenu,'fairygui.PopupMenu');
+    __reflect(PopupMenu.prototype, "fairygui.PopupMenu");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var RelationItem = (function () {
@@ -11045,17 +11764,18 @@ var fairygui;
             this._owner = owner;
             this._defs = new Array();
         }
-        var d = __define,c=RelationItem,p=c.prototype;
-        d(p, "owner"
-            ,function () {
+        Object.defineProperty(RelationItem.prototype, "owner", {
+            get: function () {
                 return this._owner;
-            }
-        );
-        d(p, "target"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(RelationItem.prototype, "target", {
+            get: function () {
                 return this._target;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._target != value) {
                     if (this._target)
                         this.releaseRefTarget(this._target);
@@ -11063,9 +11783,11 @@ var fairygui;
                     if (this._target)
                         this.addRefTarget(this._target);
                 }
-            }
-        );
-        p.add = function (relationType, usePercent) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        RelationItem.prototype.add = function (relationType, usePercent) {
             if (relationType == fairygui.RelationType.Size) {
                 this.add(fairygui.RelationType.Width, usePercent);
                 this.add(fairygui.RelationType.Height, usePercent);
@@ -11079,7 +11801,7 @@ var fairygui;
             }
             this.internalAdd(relationType, usePercent);
         };
-        p.internalAdd = function (relationType, usePercent) {
+        RelationItem.prototype.internalAdd = function (relationType, usePercent) {
             if (relationType == fairygui.RelationType.Size) {
                 this.internalAdd(fairygui.RelationType.Width, usePercent);
                 this.internalAdd(fairygui.RelationType.Height, usePercent);
@@ -11095,7 +11817,7 @@ var fairygui;
                 || relationType == fairygui.RelationType.Top_Middle || relationType == fairygui.RelationType.Middle_Middle || relationType == fairygui.RelationType.Bottom_Middle)
                 this._owner.pixelSnapping = true;
         };
-        p.remove = function (relationType) {
+        RelationItem.prototype.remove = function (relationType) {
             if (relationType === void 0) { relationType = 0; }
             if (relationType == fairygui.RelationType.Size) {
                 this.remove(fairygui.RelationType.Width);
@@ -11110,7 +11832,7 @@ var fairygui;
                 }
             }
         };
-        p.copyFrom = function (source) {
+        RelationItem.prototype.copyFrom = function (source) {
             this.target = source.target;
             this._defs.length = 0;
             var length = source._defs.length;
@@ -11121,18 +11843,20 @@ var fairygui;
                 this._defs.push(info2);
             }
         };
-        p.dispose = function () {
+        RelationItem.prototype.dispose = function () {
             if (this._target != null) {
                 this.releaseRefTarget(this._target);
                 this._target = null;
             }
         };
-        d(p, "isEmpty"
-            ,function () {
+        Object.defineProperty(RelationItem.prototype, "isEmpty", {
+            get: function () {
                 return this._defs.length == 0;
-            }
-        );
-        p.applyOnSelfResized = function (dWidth, dHeight) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        RelationItem.prototype.applyOnSelfResized = function (dWidth, dHeight) {
             var ox = this._owner.x;
             var oy = this._owner.y;
             var length = this._defs.length;
@@ -11171,7 +11895,7 @@ var fairygui;
                 }
             }
         };
-        p.applyOnXYChanged = function (info, dx, dy) {
+        RelationItem.prototype.applyOnXYChanged = function (info, dx, dy) {
             var tmp;
             switch (info.type) {
                 case fairygui.RelationType.Left_Left:
@@ -11217,7 +11941,7 @@ var fairygui;
                     break;
             }
         };
-        p.applyOnSizeChanged = function (info) {
+        RelationItem.prototype.applyOnSizeChanged = function (info) {
             var targetX, targetY;
             if (this._target != this._owner.parent) {
                 targetX = this._target.x;
@@ -11395,7 +12119,7 @@ var fairygui;
                     break;
             }
         };
-        p.addRefTarget = function (target) {
+        RelationItem.prototype.addRefTarget = function (target) {
             if (target != this._owner.parent)
                 target.addEventListener(fairygui.GObject.XY_CHANGED, this.__targetXYChanged, this);
             target.addEventListener(fairygui.GObject.SIZE_CHANGED, this.__targetSizeChanged, this);
@@ -11405,12 +12129,12 @@ var fairygui;
             this._targetWidth = this._target._rawWidth;
             this._targetHeight = this._target._rawHeight;
         };
-        p.releaseRefTarget = function (target) {
+        RelationItem.prototype.releaseRefTarget = function (target) {
             target.removeEventListener(fairygui.GObject.XY_CHANGED, this.__targetXYChanged, this);
             target.removeEventListener(fairygui.GObject.SIZE_CHANGED, this.__targetSizeChanged, this);
             target.removeEventListener(fairygui.GObject.SIZE_DELAY_CHANGE, this.__targetSizeWillChange, this);
         };
-        p.__targetXYChanged = function (evt) {
+        RelationItem.prototype.__targetXYChanged = function (evt) {
             if (this._owner.relations.handling != null || this._owner.group != null && this._owner.group._updating) {
                 this._targetX = this._target.x;
                 this._targetY = this._target.y;
@@ -11443,7 +12167,7 @@ var fairygui;
             }
             this._owner.relations.handling = null;
         };
-        p.__targetSizeChanged = function (evt) {
+        RelationItem.prototype.__targetSizeChanged = function (evt) {
             if (this._owner.relations.handling != null)
                 return;
             this._owner.relations.handling = this._target;
@@ -11478,27 +12202,29 @@ var fairygui;
             }
             this._owner.relations.handling = null;
         };
-        p.__targetSizeWillChange = function (evt) {
+        RelationItem.prototype.__targetSizeWillChange = function (evt) {
             this._owner.relations.sizeDirty = true;
         };
         return RelationItem;
     }());
     fairygui.RelationItem = RelationItem;
-    egret.registerClass(RelationItem,'fairygui.RelationItem');
+    __reflect(RelationItem.prototype, "fairygui.RelationItem");
     var RelationDef = (function () {
         function RelationDef() {
         }
-        var d = __define,c=RelationDef,p=c.prototype;
-        p.copyFrom = function (source) {
+        RelationDef.prototype.copyFrom = function (source) {
             this.percent = source.percent;
             this.type = source.type;
         };
         return RelationDef;
     }());
     fairygui.RelationDef = RelationDef;
-    egret.registerClass(RelationDef,'fairygui.RelationDef');
+    __reflect(RelationDef.prototype, "fairygui.RelationDef");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var Relations = (function () {
@@ -11506,8 +12232,7 @@ var fairygui;
             this._owner = owner;
             this._items = new Array();
         }
-        var d = __define,c=Relations,p=c.prototype;
-        p.add = function (target, relationType, usePercent) {
+        Relations.prototype.add = function (target, relationType, usePercent) {
             if (usePercent === void 0) { usePercent = false; }
             var length = this._items.length;
             for (var i = 0; i < length; i++) {
@@ -11522,7 +12247,7 @@ var fairygui;
             newItem.add(relationType, usePercent);
             this._items.push(newItem);
         };
-        p.addItems = function (target, sidePairs) {
+        Relations.prototype.addItems = function (target, sidePairs) {
             var arr = sidePairs.split(",");
             var s;
             var usePercent;
@@ -11546,7 +12271,7 @@ var fairygui;
                 this.add(target, t, usePercent);
             }
         };
-        p.remove = function (target, relationType) {
+        Relations.prototype.remove = function (target, relationType) {
             if (relationType === void 0) { relationType = 0; }
             var cnt = this._items.length;
             var i = 0;
@@ -11566,7 +12291,7 @@ var fairygui;
                     i++;
             }
         };
-        p.contains = function (target) {
+        Relations.prototype.contains = function (target) {
             var length = this._items.length;
             for (var i = 0; i < length; i++) {
                 var item = this._items[i];
@@ -11575,7 +12300,7 @@ var fairygui;
             }
             return false;
         };
-        p.clearFor = function (target) {
+        Relations.prototype.clearFor = function (target) {
             var cnt = this._items.length;
             var i = 0;
             while (i < cnt) {
@@ -11589,7 +12314,7 @@ var fairygui;
                     i++;
             }
         };
-        p.clearAll = function () {
+        Relations.prototype.clearAll = function () {
             var length = this._items.length;
             for (var i = 0; i < length; i++) {
                 var item = this._items[i];
@@ -11597,7 +12322,7 @@ var fairygui;
             }
             this._items.length = 0;
         };
-        p.copyFrom = function (source) {
+        Relations.prototype.copyFrom = function (source) {
             this.clearAll();
             var arr = source._items;
             var length = arr.length;
@@ -11608,10 +12333,10 @@ var fairygui;
                 this._items.push(item);
             }
         };
-        p.dispose = function () {
+        Relations.prototype.dispose = function () {
             this.clearAll();
         };
-        p.onOwnerSizeChanged = function (dWidth, dHeight) {
+        Relations.prototype.onOwnerSizeChanged = function (dWidth, dHeight) {
             if (this._items.length == 0)
                 return;
             var length = this._items.length;
@@ -11620,7 +12345,7 @@ var fairygui;
                 item.applyOnSelfResized(dWidth, dHeight);
             }
         };
-        p.ensureRelationsSizeCorrect = function () {
+        Relations.prototype.ensureRelationsSizeCorrect = function () {
             if (this._items.length == 0)
                 return;
             this.sizeDirty = false;
@@ -11630,12 +12355,14 @@ var fairygui;
                 item.target.ensureSizeCorrect();
             }
         };
-        d(p, "empty"
-            ,function () {
+        Object.defineProperty(Relations.prototype, "empty", {
+            get: function () {
                 return this._items.length == 0;
-            }
-        );
-        p.setup = function (xml) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Relations.prototype.setup = function (xml) {
             var col = xml.children;
             if (col) {
                 var targetId;
@@ -11661,183 +12388,203 @@ var fairygui;
                 }
             }
         };
-        Relations.RELATION_NAMES = [
-            "left-left",
-            "left-center",
-            "left-right",
-            "center-center",
-            "right-left",
-            "right-center",
-            "right-right",
-            "top-top",
-            "top-middle",
-            "top-bottom",
-            "middle-middle",
-            "bottom-top",
-            "bottom-middle",
-            "bottom-bottom",
-            "width-width",
-            "height-height",
-            "leftext-left",
-            "leftext-right",
-            "rightext-left",
-            "rightext-right",
-            "topext-top",
-            "topext-bottom",
-            "bottomext-top",
-            "bottomext-bottom" //23
-        ];
         return Relations;
     }());
+    Relations.RELATION_NAMES = [
+        "left-left",
+        "left-center",
+        "left-right",
+        "center-center",
+        "right-left",
+        "right-center",
+        "right-right",
+        "top-top",
+        "top-middle",
+        "top-bottom",
+        "middle-middle",
+        "bottom-top",
+        "bottom-middle",
+        "bottom-bottom",
+        "width-width",
+        "height-height",
+        "leftext-left",
+        "leftext-right",
+        "rightext-left",
+        "rightext-right",
+        "topext-top",
+        "topext-bottom",
+        "bottomext-top",
+        "bottomext-bottom" //23
+    ];
     fairygui.Relations = Relations;
-    egret.registerClass(Relations,'fairygui.Relations');
+    __reflect(Relations.prototype, "fairygui.Relations");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var ScrollPane = (function (_super) {
         __extends(ScrollPane, _super);
         function ScrollPane(owner, scrollType, scrollBarMargin, scrollBarDisplay, flags, vtScrollBarRes, hzScrollBarRes) {
-            _super.call(this);
-            this._viewWidth = 0;
-            this._viewHeight = 0;
-            this._contentWidth = 0;
-            this._contentHeight = 0;
-            this._scrollType = 0;
-            this._scrollSpeed = 0;
-            this._mouseWheelSpeed = 0;
+            var _this = _super.call(this) || this;
+            _this._viewWidth = 0;
+            _this._viewHeight = 0;
+            _this._contentWidth = 0;
+            _this._contentHeight = 0;
+            _this._scrollType = 0;
+            _this._scrollSpeed = 0;
+            _this._mouseWheelSpeed = 0;
             if (ScrollPane._easeTypeFunc == null)
                 ScrollPane._easeTypeFunc = egret.Ease.cubicOut;
-            this._throwTween = new ThrowTween();
-            this._owner = owner;
-            this._maskContainer = new egret.DisplayObjectContainer();
-            this._owner._rootContainer.addChild(this._maskContainer);
-            this._container = this._owner._container;
-            this._container.x = 0;
-            this._container.y = 0;
-            this._maskContainer.addChild(this._container);
-            this._scrollType = scrollType;
-            this._scrollBarMargin = scrollBarMargin;
-            this._bouncebackEffect = fairygui.UIConfig.defaultScrollBounceEffect;
-            this._touchEffect = fairygui.UIConfig.defaultScrollTouchEffect;
-            this._scrollSpeed = fairygui.UIConfig.defaultScrollSpeed;
-            this._mouseWheelSpeed = this._scrollSpeed * 2;
-            this._displayOnLeft = (flags & 1) != 0;
-            this._snapToItem = (flags & 2) != 0;
-            this._displayInDemand = (flags & 4) != 0;
-            this._pageMode = (flags & 8) != 0;
+            _this._throwTween = new ThrowTween();
+            _this._owner = owner;
+            _this._maskContainer = new egret.DisplayObjectContainer();
+            _this._owner._rootContainer.addChild(_this._maskContainer);
+            _this._container = _this._owner._container;
+            _this._container.x = 0;
+            _this._container.y = 0;
+            _this._maskContainer.addChild(_this._container);
+            _this._scrollType = scrollType;
+            _this._scrollBarMargin = scrollBarMargin;
+            _this._bouncebackEffect = fairygui.UIConfig.defaultScrollBounceEffect;
+            _this._touchEffect = fairygui.UIConfig.defaultScrollTouchEffect;
+            _this._scrollSpeed = fairygui.UIConfig.defaultScrollSpeed;
+            _this._mouseWheelSpeed = _this._scrollSpeed * 2;
+            _this._displayOnLeft = (flags & 1) != 0;
+            _this._snapToItem = (flags & 2) != 0;
+            _this._displayInDemand = (flags & 4) != 0;
+            _this._pageMode = (flags & 8) != 0;
             if (flags & 16)
-                this._touchEffect = true;
+                _this._touchEffect = true;
             else if (flags & 32)
-                this._touchEffect = false;
+                _this._touchEffect = false;
             else
-                this._touchEffect = fairygui.UIConfig.defaultScrollTouchEffect;
+                _this._touchEffect = fairygui.UIConfig.defaultScrollTouchEffect;
             if (flags & 64)
-                this._bouncebackEffect = true;
+                _this._bouncebackEffect = true;
             else if (flags & 128)
-                this._bouncebackEffect = false;
+                _this._bouncebackEffect = false;
             else
-                this._bouncebackEffect = fairygui.UIConfig.defaultScrollBounceEffect;
-            this._inertiaDisabled = (flags & 256) != 0;
+                _this._bouncebackEffect = fairygui.UIConfig.defaultScrollBounceEffect;
+            _this._inertiaDisabled = (flags & 256) != 0;
             if ((flags & 512) == 0)
-                this._maskContainer.scrollRect = new egret.Rectangle();
-            this._xPerc = 0;
-            this._yPerc = 0;
-            this._xPos = 0;
-            this._yPos = 0;
-            this._xOverlap = 0;
-            this._yOverlap = 0;
-            this._aniFlag = 0;
-            this._scrollBarVisible = true;
-            this._mouseWheelEnabled = false;
-            this._holdAreaPoint = new egret.Point();
+                _this._maskContainer.scrollRect = new egret.Rectangle();
+            _this._xPerc = 0;
+            _this._yPerc = 0;
+            _this._xPos = 0;
+            _this._yPos = 0;
+            _this._xOverlap = 0;
+            _this._yOverlap = 0;
+            _this._aniFlag = 0;
+            _this._scrollBarVisible = true;
+            _this._mouseWheelEnabled = false;
+            _this._holdAreaPoint = new egret.Point();
             if (scrollBarDisplay == fairygui.ScrollBarDisplayType.Default)
                 scrollBarDisplay = fairygui.UIConfig.defaultScrollBarDisplay;
             if (scrollBarDisplay != fairygui.ScrollBarDisplayType.Hidden) {
-                if (this._scrollType == fairygui.ScrollType.Both || this._scrollType == fairygui.ScrollType.Vertical) {
+                if (_this._scrollType == fairygui.ScrollType.Both || _this._scrollType == fairygui.ScrollType.Vertical) {
                     var res = vtScrollBarRes ? vtScrollBarRes : fairygui.UIConfig.verticalScrollBar;
                     if (res) {
-                        this._vtScrollBar = (fairygui.UIPackage.createObjectFromURL(res));
-                        if (!this._vtScrollBar)
+                        _this._vtScrollBar = (fairygui.UIPackage.createObjectFromURL(res));
+                        if (!_this._vtScrollBar)
                             throw "cannot create scrollbar from " + res;
-                        this._vtScrollBar.setScrollPane(this, true);
-                        this._owner._rootContainer.addChild(this._vtScrollBar.displayObject);
+                        _this._vtScrollBar.setScrollPane(_this, true);
+                        _this._owner._rootContainer.addChild(_this._vtScrollBar.displayObject);
                     }
                 }
-                if (this._scrollType == fairygui.ScrollType.Both || this._scrollType == fairygui.ScrollType.Horizontal) {
+                if (_this._scrollType == fairygui.ScrollType.Both || _this._scrollType == fairygui.ScrollType.Horizontal) {
                     var res = hzScrollBarRes ? hzScrollBarRes : fairygui.UIConfig.horizontalScrollBar;
                     if (res) {
-                        this._hzScrollBar = (fairygui.UIPackage.createObjectFromURL(res));
-                        if (!this._hzScrollBar)
+                        _this._hzScrollBar = (fairygui.UIPackage.createObjectFromURL(res));
+                        if (!_this._hzScrollBar)
                             throw "cannot create scrollbar from " + res;
-                        this._hzScrollBar.setScrollPane(this, false);
-                        this._owner._rootContainer.addChild(this._hzScrollBar.displayObject);
+                        _this._hzScrollBar.setScrollPane(_this, false);
+                        _this._owner._rootContainer.addChild(_this._hzScrollBar.displayObject);
                     }
                 }
-                this._scrollBarDisplayAuto = scrollBarDisplay == fairygui.ScrollBarDisplayType.Auto;
-                if (this._scrollBarDisplayAuto) {
-                    this._scrollBarVisible = false;
-                    if (this._vtScrollBar)
-                        this._vtScrollBar.displayObject.visible = false;
-                    if (this._hzScrollBar)
-                        this._hzScrollBar.displayObject.visible = false;
+                _this._scrollBarDisplayAuto = scrollBarDisplay == fairygui.ScrollBarDisplayType.Auto;
+                if (_this._scrollBarDisplayAuto) {
+                    _this._scrollBarVisible = false;
+                    if (_this._vtScrollBar)
+                        _this._vtScrollBar.displayObject.visible = false;
+                    if (_this._hzScrollBar)
+                        _this._hzScrollBar.displayObject.visible = false;
                 }
             }
-            this._contentWidth = 0;
-            this._contentHeight = 0;
-            this.setSize(owner.width, owner.height);
-            this._owner.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__mouseDown, this);
+            _this._contentWidth = 0;
+            _this._contentHeight = 0;
+            _this.setSize(owner.width, owner.height);
+            _this._owner.addEventListener(egret.TouchEvent.TOUCH_BEGIN, _this.__mouseDown, _this);
+            return _this;
         }
-        var d = __define,c=ScrollPane,p=c.prototype;
-        d(p, "owner"
-            ,function () {
+        Object.defineProperty(ScrollPane.prototype, "owner", {
+            get: function () {
                 return this._owner;
-            }
-        );
-        d(p, "bouncebackEffect"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "bouncebackEffect", {
+            get: function () {
                 return this._bouncebackEffect;
-            }
-            ,function (sc) {
+            },
+            set: function (sc) {
                 this._bouncebackEffect = sc;
-            }
-        );
-        d(p, "touchEffect"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "touchEffect", {
+            get: function () {
                 return this._touchEffect;
-            }
-            ,function (sc) {
+            },
+            set: function (sc) {
                 this._touchEffect = sc;
-            }
-        );
-        d(p, "scrollSpeed"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "scrollSpeed", {
+            get: function () {
                 return this._scrollSpeed;
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 this._scrollSpeed = this.scrollSpeed;
                 if (this._scrollSpeed == 0)
                     this._scrollSpeed = fairygui.UIConfig.defaultScrollSpeed;
                 this._mouseWheelSpeed = this._scrollSpeed * 2;
-            }
-        );
-        d(p, "snapToItem"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "snapToItem", {
+            get: function () {
                 return this._snapToItem;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._snapToItem = value;
-            }
-        );
-        d(p, "percX"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "percX", {
+            get: function () {
                 return this._xPerc;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.setPercX(value, false);
-            }
-        );
-        p.setPercX = function (value, ani) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        ScrollPane.prototype.setPercX = function (value, ani) {
             if (ani === void 0) { ani = false; }
             this._owner.ensureBoundsCorrect();
             value = fairygui.ToolSet.clamp01(value);
@@ -11847,15 +12594,17 @@ var fairygui;
                 this.posChanged(ani);
             }
         };
-        d(p, "percY"
-            ,function () {
+        Object.defineProperty(ScrollPane.prototype, "percY", {
+            get: function () {
                 return this._yPerc;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.setPercY(value, false);
-            }
-        );
-        p.setPercY = function (value, ani) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        ScrollPane.prototype.setPercY = function (value, ani) {
             if (ani === void 0) { ani = false; }
             this._owner.ensureBoundsCorrect();
             value = fairygui.ToolSet.clamp01(value);
@@ -11865,15 +12614,17 @@ var fairygui;
                 this.posChanged(ani);
             }
         };
-        d(p, "posX"
-            ,function () {
+        Object.defineProperty(ScrollPane.prototype, "posX", {
+            get: function () {
                 return this._xPos;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.setPosX(value, false);
-            }
-        );
-        p.setPosX = function (value, ani) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        ScrollPane.prototype.setPosX = function (value, ani) {
             if (ani === void 0) { ani = false; }
             this._owner.ensureBoundsCorrect();
             value = fairygui.ToolSet.clamp(value, 0, this._xOverlap);
@@ -11883,15 +12634,17 @@ var fairygui;
                 this.posChanged(ani);
             }
         };
-        d(p, "posY"
-            ,function () {
+        Object.defineProperty(ScrollPane.prototype, "posY", {
+            get: function () {
                 return this._yPos;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this.setPosY(value, false);
-            }
-        );
-        p.setPosY = function (value, ani) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        ScrollPane.prototype.setPosY = function (value, ani) {
             if (ani === void 0) { ani = false; }
             this._owner.ensureBoundsCorrect();
             value = fairygui.ToolSet.clamp(value, 0, this._yOverlap);
@@ -11901,111 +12654,131 @@ var fairygui;
                 this.posChanged(ani);
             }
         };
-        d(p, "isBottomMost"
-            ,function () {
+        Object.defineProperty(ScrollPane.prototype, "isBottomMost", {
+            get: function () {
                 return this._yPerc == 1 || this._yOverlap == 0;
-            }
-        );
-        d(p, "isRightMost"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "isRightMost", {
+            get: function () {
                 return this._xPerc == 1 || this._xOverlap == 0;
-            }
-        );
-        d(p, "currentPageX"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "currentPageX", {
+            get: function () {
                 return this._pageMode ? Math.floor(this.posX / this._pageSizeH) : 0;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._pageMode && this._xOverlap > 0)
                     this.setPosX(value * this._pageSizeH, false);
-            }
-        );
-        d(p, "currentPageY"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "currentPageY", {
+            get: function () {
                 return this._pageMode ? Math.floor(this.posY / this._pageSizeV) : 0;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._pageMode && this._yOverlap > 0)
                     this.setPosY(value * this._pageSizeV, false);
-            }
-        );
-        d(p, "scrollingPosX"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "scrollingPosX", {
+            get: function () {
                 return fairygui.ToolSet.clamp(-this._container.x, 0, this._xOverlap);
-            }
-        );
-        d(p, "scrollingPosY"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "scrollingPosY", {
+            get: function () {
                 return fairygui.ToolSet.clamp(-this._container.y, 0, this._yOverlap);
-            }
-        );
-        d(p, "contentWidth"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "contentWidth", {
+            get: function () {
                 return this._contentWidth;
-            }
-        );
-        d(p, "contentHeight"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "contentHeight", {
+            get: function () {
                 return this._contentHeight;
-            }
-        );
-        d(p, "viewWidth"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "viewWidth", {
+            get: function () {
                 return this._viewWidth;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 value = value + this._owner.margin.left + this._owner.margin.right;
                 if (this._vtScrollBar != null)
                     value += this._vtScrollBar.width;
                 this._owner.width = value;
-            }
-        );
-        d(p, "viewHeight"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "viewHeight", {
+            get: function () {
                 return this._viewHeight;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 value = value + this._owner.margin.top + this._owner.margin.bottom;
                 if (this._hzScrollBar != null)
                     value += this._hzScrollBar.height;
                 this._owner.height = value;
-            }
-        );
-        p.getDeltaX = function (move) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        ScrollPane.prototype.getDeltaX = function (move) {
             return move / (this._contentWidth - this._viewWidth);
         };
-        p.getDeltaY = function (move) {
+        ScrollPane.prototype.getDeltaY = function (move) {
             return move / (this._contentHeight - this._viewHeight);
         };
-        p.scrollTop = function (ani) {
+        ScrollPane.prototype.scrollTop = function (ani) {
             if (ani === void 0) { ani = false; }
             this.setPercY(0, ani);
         };
-        p.scrollBottom = function (ani) {
+        ScrollPane.prototype.scrollBottom = function (ani) {
             if (ani === void 0) { ani = false; }
             this.setPercY(1, ani);
         };
-        p.scrollUp = function (speed, ani) {
+        ScrollPane.prototype.scrollUp = function (speed, ani) {
             if (speed === void 0) { speed = 1; }
             if (ani === void 0) { ani = false; }
             this.setPercY(this._yPerc - this.getDeltaY(this._scrollSpeed * speed), ani);
         };
-        p.scrollDown = function (speed, ani) {
+        ScrollPane.prototype.scrollDown = function (speed, ani) {
             if (speed === void 0) { speed = 1; }
             if (ani === void 0) { ani = false; }
             this.setPercY(this._yPerc + this.getDeltaY(this._scrollSpeed * speed), ani);
         };
-        p.scrollLeft = function (speed, ani) {
+        ScrollPane.prototype.scrollLeft = function (speed, ani) {
             if (speed === void 0) { speed = 1; }
             if (ani === void 0) { ani = false; }
             this.setPercX(this._xPerc - this.getDeltaX(this._scrollSpeed * speed), ani);
         };
-        p.scrollRight = function (speed, ani) {
+        ScrollPane.prototype.scrollRight = function (speed, ani) {
             if (speed === void 0) { speed = 1; }
             if (ani === void 0) { ani = false; }
             this.setPercX(this._xPerc + this.getDeltaX(this._scrollSpeed * speed), ani);
         };
-        p.scrollToView = function (target, ani, setFirst) {
+        ScrollPane.prototype.scrollToView = function (target, ani, setFirst) {
             if (ani === void 0) { ani = false; }
             if (setFirst === void 0) { setFirst = false; }
             this._owner.ensureBoundsCorrect();
@@ -12063,7 +12836,7 @@ var fairygui;
             if (!ani && this._needRefresh)
                 this.refresh();
         };
-        p.isChildInView = function (obj) {
+        ScrollPane.prototype.isChildInView = function (obj) {
             var dist;
             if (this._yOverlap > 0) {
                 dist = obj.y + this._container.y;
@@ -12077,7 +12850,7 @@ var fairygui;
             }
             return true;
         };
-        p.cancelDragging = function () {
+        ScrollPane.prototype.cancelDragging = function () {
             this._owner.displayObject.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.__touchMove, this);
             this._owner.displayObject.removeEventListener(egret.TouchEvent.TOUCH_END, this.__touchEnd, this);
             this._owner.displayObject.removeEventListener(egret.TouchEvent.TOUCH_TAP, this.__touchTap, this);
@@ -12087,11 +12860,11 @@ var fairygui;
             this.isDragged = false;
             this._maskContainer.touchChildren = true;
         };
-        p.onOwnerSizeChanged = function () {
+        ScrollPane.prototype.onOwnerSizeChanged = function () {
             this.setSize(this._owner.width, this._owner.height);
             this.posChanged(false);
         };
-        p.adjustMaskContainer = function () {
+        ScrollPane.prototype.adjustMaskContainer = function () {
             var mx, my;
             if (this._displayOnLeft && this._vtScrollBar != null)
                 mx = Math.floor(this._owner.margin.left + this._vtScrollBar.width);
@@ -12103,7 +12876,7 @@ var fairygui;
             this._maskContainer.x = mx;
             this._maskContainer.y = my;
         };
-        p.setSize = function (aWidth, aHeight) {
+        ScrollPane.prototype.setSize = function (aWidth, aHeight) {
             this.adjustMaskContainer();
             if (this._hzScrollBar) {
                 this._hzScrollBar.y = aHeight - this._hzScrollBar.height;
@@ -12142,14 +12915,14 @@ var fairygui;
             this._pageSizeV = this._viewHeight;
             this.handleSizeChanged();
         };
-        p.setContentSize = function (aWidth, aHeight) {
+        ScrollPane.prototype.setContentSize = function (aWidth, aHeight) {
             if (this._contentWidth == aWidth && this._contentHeight == aHeight)
                 return;
             this._contentWidth = aWidth;
             this._contentHeight = aHeight;
             this.handleSizeChanged();
         };
-        p.changeContentSizeOnScrolling = function (deltaWidth, deltaHeight, deltaPosX, deltaPosY) {
+        ScrollPane.prototype.changeContentSizeOnScrolling = function (deltaWidth, deltaHeight, deltaPosX, deltaPosY) {
             this._contentWidth += deltaWidth;
             this._contentHeight += deltaHeight;
             if (this.isDragged) {
@@ -12181,7 +12954,7 @@ var fairygui;
             }
             this.handleSizeChanged(true);
         };
-        p.handleSizeChanged = function (onScrolling) {
+        ScrollPane.prototype.handleSizeChanged = function (onScrolling) {
             if (onScrolling === void 0) { onScrolling = false; }
             if (this._displayInDemand) {
                 if (this._vtScrollBar) {
@@ -12272,11 +13045,11 @@ var fairygui;
             if (this._hzScrollBar != null)
                 this._hzScrollBar.scrollPerc = this._xPerc;
         };
-        p.validateHolderPos = function () {
+        ScrollPane.prototype.validateHolderPos = function () {
             this._container.x = fairygui.ToolSet.clamp(this._container.x, -this._xOverlap, 0);
             this._container.y = fairygui.ToolSet.clamp(this._container.y, -this._yOverlap, 0);
         };
-        p.posChanged = function (ani) {
+        ScrollPane.prototype.posChanged = function (ani) {
             if (this._aniFlag == 0)
                 this._aniFlag = ani ? 1 : -1;
             else if (this._aniFlag == 1 && !ani)
@@ -12288,7 +13061,7 @@ var fairygui;
                 this.killTween();
             }
         };
-        p.killTween = function () {
+        ScrollPane.prototype.killTween = function () {
             if (this._tweening == 1) {
                 this._tweener.setPaused(true);
                 this._tweening = 0;
@@ -12304,7 +13077,7 @@ var fairygui;
                 this.dispatchEventWith(ScrollPane.SCROLL_END, false);
             }
         };
-        p.refresh = function () {
+        ScrollPane.prototype.refresh = function () {
             this._needRefresh = false;
             fairygui.GTimers.inst.remove(this.refresh, this);
             if (this._pageMode) {
@@ -12365,7 +13138,7 @@ var fairygui;
             }
             this._aniFlag = 0;
         };
-        p.refresh2 = function () {
+        ScrollPane.prototype.refresh2 = function () {
             var contentXLoc = Math.floor(this._xPos);
             var contentYLoc = Math.floor(this._yPos);
             if (this._aniFlag == 1 && !this.isDragged) {
@@ -12414,7 +13187,7 @@ var fairygui;
                     this._hzScrollBar.scrollPerc = this._xPerc;
             }
         };
-        p.syncPos = function () {
+        ScrollPane.prototype.syncPos = function () {
             if (this._xOverlap > 0) {
                 this._xPos = fairygui.ToolSet.clamp(-this._container.x, 0, this._xOverlap);
                 this._xPerc = this._xPos / this._xOverlap;
@@ -12424,7 +13197,7 @@ var fairygui;
                 this._yPerc = this._yPos / this._yOverlap;
             }
         };
-        p.syncScrollBar = function (end) {
+        ScrollPane.prototype.syncScrollBar = function (end) {
             if (end === void 0) { end = false; }
             if (end) {
                 if (this._vtScrollBar) {
@@ -12450,7 +13223,7 @@ var fairygui;
                 }
             }
         };
-        p.__mouseDown = function (evt) {
+        ScrollPane.prototype.__mouseDown = function (evt) {
             if (!this._touchEffect)
                 return;
             if (this._tweener != null)
@@ -12469,7 +13242,7 @@ var fairygui;
             this._owner.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_END, this.__touchEnd, this);
             this._owner.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_TAP, this.__touchTap, this);
         };
-        p.__touchMove = function (evt) {
+        ScrollPane.prototype.__touchMove = function (evt) {
             if (this._owner.displayObject.stage == null)
                 return;
             if (!this._touchEffect)
@@ -12579,7 +13352,7 @@ var fairygui;
             this.syncScrollBar();
             this.dispatchEventWith(ScrollPane.SCROLL, false);
         };
-        p.__touchEnd = function (evt) {
+        ScrollPane.prototype.__touchEnd = function (evt) {
             evt.currentTarget.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.__touchMove, this);
             evt.currentTarget.removeEventListener(egret.TouchEvent.TOUCH_END, this.__touchEnd, this);
             evt.currentTarget.removeEventListener(egret.TouchEvent.TOUCH_TAP, this.__touchTap, this);
@@ -12705,16 +13478,16 @@ var fairygui;
             else if (fireRelease == 2)
                 this.dispatchEventWith(ScrollPane.PULL_UP_RELEASE);
         };
-        p.__touchTap = function (evt) {
+        ScrollPane.prototype.__touchTap = function (evt) {
             this.isDragged = false;
         };
-        p.__rollOver = function (evt) {
+        ScrollPane.prototype.__rollOver = function (evt) {
             this.showScrollBar(true);
         };
-        p.__rollOut = function (evt) {
+        ScrollPane.prototype.__rollOut = function (evt) {
             this.showScrollBar(false);
         };
-        p.showScrollBar = function (val) {
+        ScrollPane.prototype.showScrollBar = function (val) {
             if (val) {
                 this.__showScrollBar(true);
                 fairygui.GTimers.inst.remove(this.__showScrollBar, this);
@@ -12722,27 +13495,27 @@ var fairygui;
             else
                 fairygui.GTimers.inst.add(500, 1, this.__showScrollBar, this, val);
         };
-        p.__showScrollBar = function (val) {
+        ScrollPane.prototype.__showScrollBar = function (val) {
             this._scrollBarVisible = val && this._viewWidth > 0 && this._viewHeight > 0;
             if (this._vtScrollBar)
                 this._vtScrollBar.displayObject.visible = this._scrollBarVisible && !this._vScrollNone;
             if (this._hzScrollBar)
                 this._hzScrollBar.displayObject.visible = this._scrollBarVisible && !this._hScrollNone;
         };
-        p.__tweenUpdate = function () {
+        ScrollPane.prototype.__tweenUpdate = function () {
             if (this._tweening == 0)
                 return;
             this.syncScrollBar();
             this.dispatchEventWith(ScrollPane.SCROLL, false);
         };
-        p.__tweenComplete = function () {
+        ScrollPane.prototype.__tweenComplete = function () {
             this._tweening = 0;
             this._tweener = null;
             this.validateHolderPos();
             this.syncScrollBar(true);
             this.dispatchEventWith(ScrollPane.SCROLL, false);
         };
-        p.__tweenUpdate2 = function () {
+        ScrollPane.prototype.__tweenUpdate2 = function () {
             if (this._tweening == 0)
                 return;
             this._throwTween.update(this._container);
@@ -12750,7 +13523,7 @@ var fairygui;
             this.syncScrollBar();
             this.dispatchEventWith(ScrollPane.SCROLL, false);
         };
-        p.__tweenComplete2 = function () {
+        ScrollPane.prototype.__tweenComplete2 = function () {
             this._tweening = 0;
             this._tweener = null;
             this.validateHolderPos();
@@ -12759,25 +13532,24 @@ var fairygui;
             this.dispatchEventWith(ScrollPane.SCROLL, false);
             this.dispatchEventWith(ScrollPane.SCROLL_END, false);
         };
-        ScrollPane._gestureFlag = 0;
-        ScrollPane.SCROLL = "__scroll";
-        ScrollPane.SCROLL_END = "__scrollEnd";
-        ScrollPane.PULL_DOWN_RELEASE = "pullDownRelease";
-        ScrollPane.PULL_UP_RELEASE = "pullUpRelease";
-        ScrollPane.sHelperRect = new egret.Rectangle();
-        ScrollPane.sHelperPoint = new egret.Point();
         return ScrollPane;
     }(egret.EventDispatcher));
+    ScrollPane._gestureFlag = 0;
+    ScrollPane.SCROLL = "__scroll";
+    ScrollPane.SCROLL_END = "__scrollEnd";
+    ScrollPane.PULL_DOWN_RELEASE = "pullDownRelease";
+    ScrollPane.PULL_UP_RELEASE = "pullUpRelease";
+    ScrollPane.sHelperRect = new egret.Rectangle();
+    ScrollPane.sHelperPoint = new egret.Point();
     fairygui.ScrollPane = ScrollPane;
-    egret.registerClass(ScrollPane,'fairygui.ScrollPane');
+    __reflect(ScrollPane.prototype, "fairygui.ScrollPane");
     var ThrowTween = (function () {
         function ThrowTween() {
             this.start = new egret.Point();
             this.change1 = new egret.Point();
             this.change2 = new egret.Point();
         }
-        var d = __define,c=ThrowTween,p=c.prototype;
-        p.update = function (obj) {
+        ThrowTween.prototype.update = function (obj) {
             obj.x = Math.floor(this.start.x + this.change1.x * this.value + this.change2.x * this.value * this.value);
             obj.y = Math.floor(this.start.y + this.change1.y * this.value + this.change2.y * this.value * this.value);
         };
@@ -12787,57 +13559,61 @@ var fairygui;
         ThrowTween.easeOutCubic = function (t, b, c, d) {
             return c * ((t = t / d - 1) * t * t + 1) + b;
         };
-        ThrowTween.checkpoint = 0.05;
         return ThrowTween;
     }());
-    egret.registerClass(ThrowTween,'ThrowTween');
+    ThrowTween.checkpoint = 0.05;
+    __reflect(ThrowTween.prototype, "ThrowTween");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var UIConfig = (function () {
         function UIConfig() {
         }
-        var d = __define,c=UIConfig,p=c.prototype;
-        //Default font name
-        UIConfig.defaultFont = "宋体";
-        //When a modal window is in front, the background becomes dark.
-        UIConfig.modalLayerColor = 0x333333;
-        UIConfig.modalLayerAlpha = 0.2;
-        UIConfig.buttonSoundVolumeScale = 1;
-        //Scrolling step in pixels
-        UIConfig.defaultScrollSpeed = 25;
-        // Speed ratio of scrollpane when its touch dragging.
-        UIConfig.defaultTouchScrollSpeedRatio = 1;
-        //Default scrollbar display mode. Recommened visible for Desktop and Auto for mobile.
-        UIConfig.defaultScrollBarDisplay = fairygui.ScrollBarDisplayType.Visible;
-        //Allow dragging the content to scroll. Recommeded true for mobile.
-        UIConfig.defaultScrollTouchEffect = true;
-        //The "rebound" effect in the scolling container. Recommeded true for mobile.
-        UIConfig.defaultScrollBounceEffect = true;
-        //Max items displayed in combobox without scrolling.
-        UIConfig.defaultComboBoxVisibleItemCount = 10;
-        // Pixel offsets of finger to trigger scrolling.
-        UIConfig.touchScrollSensitivity = 20;
-        // Pixel offsets of finger to trigger dragging.
-        UIConfig.touchDragSensitivity = 10;
-        // Pixel offsets of mouse pointer to trigger dragging.
-        UIConfig.clickDragSensitivity = 2;
-        // When click the window, brings to front automatically.
-        UIConfig.bringWindowToFrontOnClick = true;
-        UIConfig.frameTimeForAsyncUIConstruction = 2;
         return UIConfig;
     }());
+    //Default font name
+    UIConfig.defaultFont = "宋体";
+    //When a modal window is in front, the background becomes dark.
+    UIConfig.modalLayerColor = 0x333333;
+    UIConfig.modalLayerAlpha = 0.2;
+    UIConfig.buttonSoundVolumeScale = 1;
+    //Scrolling step in pixels
+    UIConfig.defaultScrollSpeed = 25;
+    // Speed ratio of scrollpane when its touch dragging.
+    UIConfig.defaultTouchScrollSpeedRatio = 1;
+    //Default scrollbar display mode. Recommened visible for Desktop and Auto for mobile.
+    UIConfig.defaultScrollBarDisplay = fairygui.ScrollBarDisplayType.Visible;
+    //Allow dragging the content to scroll. Recommeded true for mobile.
+    UIConfig.defaultScrollTouchEffect = true;
+    //The "rebound" effect in the scolling container. Recommeded true for mobile.
+    UIConfig.defaultScrollBounceEffect = true;
+    //Max items displayed in combobox without scrolling.
+    UIConfig.defaultComboBoxVisibleItemCount = 10;
+    // Pixel offsets of finger to trigger scrolling.
+    UIConfig.touchScrollSensitivity = 20;
+    // Pixel offsets of finger to trigger dragging.
+    UIConfig.touchDragSensitivity = 10;
+    // Pixel offsets of mouse pointer to trigger dragging.
+    UIConfig.clickDragSensitivity = 2;
+    // When click the window, brings to front automatically.
+    UIConfig.bringWindowToFrontOnClick = true;
+    UIConfig.frameTimeForAsyncUIConstruction = 2;
     fairygui.UIConfig = UIConfig;
-    egret.registerClass(UIConfig,'fairygui.UIConfig');
+    __reflect(UIConfig.prototype, "fairygui.UIConfig");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var UIObjectFactory = (function () {
         function UIObjectFactory() {
         }
-        var d = __define,c=UIObjectFactory,p=c.prototype;
         UIObjectFactory.setPackageItemExtension = function (url, type) {
             if (url == null)
                 throw "Invaild url: " + url;
@@ -12919,13 +13695,16 @@ var fairygui;
             }
             return null;
         };
-        UIObjectFactory.packageItemExtensions = {};
         return UIObjectFactory;
     }());
+    UIObjectFactory.packageItemExtensions = {};
     fairygui.UIObjectFactory = UIObjectFactory;
-    egret.registerClass(UIObjectFactory,'fairygui.UIObjectFactory');
+    __reflect(UIObjectFactory.prototype, "fairygui.UIObjectFactory");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var UIPackage = (function () {
@@ -12933,7 +13712,6 @@ var fairygui;
             this._items = new Array();
             this._sprites = {};
         }
-        var d = __define,c=UIPackage,p=c.prototype;
         UIPackage.getById = function (id) {
             return UIPackage._packageInstById[id];
         };
@@ -13046,11 +13824,11 @@ var fairygui;
                 }
             }
         };
-        p.create = function (resKey) {
+        UIPackage.prototype.create = function (resKey) {
             this._resKey = resKey;
             this.loadPackage();
         };
-        p.loadPackage = function () {
+        UIPackage.prototype.loadPackage = function () {
             var str;
             var arr;
             var buf = RES.getRes(this._resKey);
@@ -13152,7 +13930,7 @@ var fairygui;
                 }
             }
         };
-        p.decompressPackage = function (buf) {
+        UIPackage.prototype.decompressPackage = function (buf) {
             this._resData = {};
             var inflater = new Zlib.RawInflate(buf);
             var data = inflater.decompress();
@@ -13174,7 +13952,7 @@ var fairygui;
                 curr += size;
             }
         };
-        p.dispose = function () {
+        UIPackage.prototype.dispose = function () {
             var cnt = this._items.length;
             for (var i = 0; i < cnt; i++) {
                 var pi = this._items[i];
@@ -13194,29 +13972,35 @@ var fairygui;
                 }
             }
         };
-        d(p, "id"
-            ,function () {
+        Object.defineProperty(UIPackage.prototype, "id", {
+            get: function () {
                 return this._id;
-            }
-        );
-        d(p, "name"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(UIPackage.prototype, "name", {
+            get: function () {
                 return this._name;
-            }
-        );
-        d(p, "customId"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(UIPackage.prototype, "customId", {
+            get: function () {
                 return this._customId;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._customId != null)
                     delete UIPackage._packageInstById[this._customId];
                 this._customId = value;
                 if (this._customId != null)
                     UIPackage._packageInstById[this._customId] = this;
-            }
-        );
-        p.createObject = function (resName, userClass) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        UIPackage.prototype.createObject = function (resName, userClass) {
             if (userClass === void 0) { userClass = null; }
             var pi = this._itemsByName[resName];
             if (pi)
@@ -13224,7 +14008,7 @@ var fairygui;
             else
                 return null;
         };
-        p.internalCreateObject = function (item, userClass) {
+        UIPackage.prototype.internalCreateObject = function (item, userClass) {
             if (userClass === void 0) { userClass = null; }
             var g;
             if (item.type == fairygui.PackageItemType.Component) {
@@ -13243,20 +14027,20 @@ var fairygui;
             UIPackage._constructing--;
             return g;
         };
-        p.getItemById = function (itemId) {
+        UIPackage.prototype.getItemById = function (itemId) {
             return this._itemsById[itemId];
         };
-        p.getItemByName = function (resName) {
+        UIPackage.prototype.getItemByName = function (resName) {
             return this._itemsByName[resName];
         };
-        p.getItemAssetByName = function (resName) {
+        UIPackage.prototype.getItemAssetByName = function (resName) {
             var pi = this._itemsByName[resName];
             if (pi == null) {
                 throw "Resource not found -" + resName;
             }
             return this.getItemAsset(pi);
         };
-        p.getItemAsset = function (item) {
+        UIPackage.prototype.getItemAsset = function (item) {
             switch (item.type) {
                 case fairygui.PackageItemType.Image:
                     if (!item.decoded) {
@@ -13310,7 +14094,7 @@ var fairygui;
                     return RES.getRes(this._resKey + "@" + item.id);
             }
         };
-        p.loadComponentChildren = function (item) {
+        UIPackage.prototype.loadComponentChildren = function (item) {
             var listNode = fairygui.ToolSet.findChildNode(item.componentData, "displayList");
             if (listNode != null) {
                 var col = listNode.children;
@@ -13347,10 +14131,10 @@ var fairygui;
             else
                 item.displayList = new Array();
         };
-        p.getDesc = function (fn) {
+        UIPackage.prototype.getDesc = function (fn) {
             return this._resData[fn];
         };
-        p.translateComponent = function (item) {
+        UIPackage.prototype.translateComponent = function (item) {
             if (UIPackage._stringsSource == null)
                 return;
             var strings = UIPackage._stringsSource[this.id + item.id];
@@ -13449,7 +14233,7 @@ var fairygui;
                 }
             }
         };
-        p.createSpriteTexture = function (sprite) {
+        UIPackage.prototype.createSpriteTexture = function (sprite) {
             var atlasItem = this._itemsById[sprite.atlas];
             if (atlasItem != null) {
                 var atlasTexture = this.getItemAsset(atlasItem);
@@ -13461,13 +14245,13 @@ var fairygui;
             else
                 return null;
         };
-        p.createSubTexture = function (atlasTexture, uvRect) {
+        UIPackage.prototype.createSubTexture = function (atlasTexture, uvRect) {
             var texture = new egret.Texture();
             texture._bitmapData = atlasTexture._bitmapData;
             texture.$initData(atlasTexture._bitmapX + uvRect.x, atlasTexture._bitmapY + uvRect.y, uvRect.width, uvRect.height, 0, 0, uvRect.width, uvRect.height, atlasTexture._sourceWidth, atlasTexture._sourceHeight);
             return texture;
         };
-        p.loadMovieClip = function (item) {
+        UIPackage.prototype.loadMovieClip = function (item) {
             var xml = egret.XML.parse(this.getDesc(item.id + ".xml"));
             var str;
             var arr;
@@ -13506,7 +14290,7 @@ var fairygui;
                 }
             }
         };
-        p.loadFont = function (item) {
+        UIPackage.prototype.loadFont = function (item) {
             var font = new fairygui.BitmapFont();
             font.id = "ui://" + this.id + item.id;
             var str = this.getDesc(item.id + ".fnt");
@@ -13616,53 +14400,60 @@ var fairygui;
             font.resizable = resizable;
             item.bitmapFont = font;
         };
-        //internal
-        UIPackage._constructing = 0;
-        UIPackage._packageInstById = {};
-        UIPackage._packageInstByName = {};
-        UIPackage._bitmapFonts = {};
-        UIPackage._stringsSource = null;
-        UIPackage.sep0 = ",";
-        UIPackage.sep1 = "\n";
-        UIPackage.sep2 = " ";
-        UIPackage.sep3 = "=";
         return UIPackage;
     }());
+    //internal
+    UIPackage._constructing = 0;
+    UIPackage._packageInstById = {};
+    UIPackage._packageInstByName = {};
+    UIPackage._bitmapFonts = {};
+    UIPackage._stringsSource = null;
+    UIPackage.sep0 = ",";
+    UIPackage.sep1 = "\n";
+    UIPackage.sep2 = " ";
+    UIPackage.sep3 = "=";
     fairygui.UIPackage = UIPackage;
-    egret.registerClass(UIPackage,'fairygui.UIPackage');
+    __reflect(UIPackage.prototype, "fairygui.UIPackage");
     var AtlasSprite = (function () {
         function AtlasSprite() {
             this.rect = new egret.Rectangle();
         }
-        var d = __define,c=AtlasSprite,p=c.prototype;
         return AtlasSprite;
     }());
-    egret.registerClass(AtlasSprite,'AtlasSprite');
+    __reflect(AtlasSprite.prototype, "AtlasSprite");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var fairygui;
 (function (fairygui) {
     var Window = (function (_super) {
         __extends(Window, _super);
         function Window() {
-            _super.call(this);
-            this._requestingCmd = 0;
-            this.focusable = true;
-            this._uiSources = new Array();
-            this.bringToFontOnClick = fairygui.UIConfig.bringWindowToFrontOnClick;
-            this.displayObject.addEventListener(egret.Event.ADDED_TO_STAGE, this.__onShown, this);
-            this.displayObject.addEventListener(egret.Event.REMOVED_FROM_STAGE, this.__onHidden, this);
-            this.displayObject.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__mouseDown, this, true);
+            var _this = _super.call(this) || this;
+            _this._requestingCmd = 0;
+            _this.focusable = true;
+            _this._uiSources = new Array();
+            _this.bringToFontOnClick = fairygui.UIConfig.bringWindowToFrontOnClick;
+            _this.displayObject.addEventListener(egret.Event.ADDED_TO_STAGE, _this.__onShown, _this);
+            _this.displayObject.addEventListener(egret.Event.REMOVED_FROM_STAGE, _this.__onHidden, _this);
+            _this.displayObject.addEventListener(egret.TouchEvent.TOUCH_BEGIN, _this.__mouseDown, _this, true);
+            return _this;
         }
-        var d = __define,c=Window,p=c.prototype;
-        p.addUISource = function (source) {
+        Window.prototype.addUISource = function (source) {
             this._uiSources.push(source);
         };
-        d(p, "contentPane"
-            ,function () {
+        Object.defineProperty(Window.prototype, "contentPane", {
+            get: function () {
                 return this._contentPane;
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 if (this._contentPane != val) {
                     if (this._contentPane != null)
                         this.removeChild(this._contentPane);
@@ -13679,30 +14470,36 @@ var fairygui;
                         }
                     }
                 }
-            }
-        );
-        d(p, "frame"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Window.prototype, "frame", {
+            get: function () {
                 return this._frame;
-            }
-        );
-        d(p, "closeButton"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Window.prototype, "closeButton", {
+            get: function () {
                 return this._closeButton;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._closeButton != null)
                     this._closeButton.removeClickListener(this.closeEventHandler, this);
                 this._closeButton = value;
                 if (this._closeButton != null)
                     this._closeButton.addClickListener(this.closeEventHandler, this);
-            }
-        );
-        d(p, "dragArea"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Window.prototype, "dragArea", {
+            get: function () {
                 return this._dragArea;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 if (this._dragArea != value) {
                     if (this._dragArea != null) {
                         this._dragArea.draggable = false;
@@ -13716,33 +14513,37 @@ var fairygui;
                         this._dragArea.addEventListener(fairygui.DragEvent.DRAG_START, this.__dragStart, this);
                     }
                 }
-            }
-        );
-        d(p, "contentArea"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Window.prototype, "contentArea", {
+            get: function () {
                 return this._contentArea;
-            }
-            ,function (value) {
+            },
+            set: function (value) {
                 this._contentArea = value;
-            }
-        );
-        p.show = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Window.prototype.show = function () {
             fairygui.GRoot.inst.showWindow(this);
         };
-        p.showOn = function (root) {
+        Window.prototype.showOn = function (root) {
             root.showWindow(this);
         };
-        p.hide = function () {
+        Window.prototype.hide = function () {
             if (this.isShowing)
                 this.doHideAnimation();
         };
-        p.hideImmediately = function () {
+        Window.prototype.hideImmediately = function () {
             var r = (this.parent instanceof fairygui.GRoot) ? (this.parent) : null;
             if (!r)
                 r = fairygui.GRoot.inst;
             r.hideWindowImmediately(this);
         };
-        p.centerOn = function (r, restraint) {
+        Window.prototype.centerOn = function (r, restraint) {
             if (restraint === void 0) { restraint = false; }
             this.setXY(Math.round((r.width - this.width) / 2), Math.round((r.height - this.height) / 2));
             if (restraint) {
@@ -13750,34 +14551,40 @@ var fairygui;
                 this.addRelation(r, fairygui.RelationType.Middle_Middle);
             }
         };
-        p.toggleStatus = function () {
+        Window.prototype.toggleStatus = function () {
             if (this.isTop)
                 this.hide();
             else
                 this.show();
         };
-        d(p, "isShowing"
-            ,function () {
+        Object.defineProperty(Window.prototype, "isShowing", {
+            get: function () {
                 return this.parent != null;
-            }
-        );
-        d(p, "isTop"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Window.prototype, "isTop", {
+            get: function () {
                 return this.parent != null && this.parent.getChildIndex(this) == this.parent.numChildren - 1;
-            }
-        );
-        d(p, "modal"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Window.prototype, "modal", {
+            get: function () {
                 return this._modal;
-            }
-            ,function (val) {
+            },
+            set: function (val) {
                 this._modal = val;
-            }
-        );
-        p.bringToFront = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Window.prototype.bringToFront = function () {
             this.root.bringToFront(this);
         };
-        p.showModalWait = function (requestingCmd) {
+        Window.prototype.showModalWait = function (requestingCmd) {
             if (requestingCmd === void 0) { requestingCmd = 0; }
             if (requestingCmd != 0)
                 this._requestingCmd = requestingCmd;
@@ -13788,7 +14595,7 @@ var fairygui;
                 this.addChild(this._modalWaitPane);
             }
         };
-        p.layoutModalWaitPane = function () {
+        Window.prototype.layoutModalWaitPane = function () {
             if (this._contentArea != null) {
                 var pt = this._frame.localToGlobal();
                 pt = this.globalToLocal(pt.x, pt.y, pt);
@@ -13798,7 +14605,7 @@ var fairygui;
             else
                 this._modalWaitPane.setSize(this.width, this.height);
         };
-        p.closeModalWait = function (requestingCmd) {
+        Window.prototype.closeModalWait = function (requestingCmd) {
             if (requestingCmd === void 0) { requestingCmd = 0; }
             if (requestingCmd != 0) {
                 if (this._requestingCmd != requestingCmd)
@@ -13809,12 +14616,14 @@ var fairygui;
                 this.removeChild(this._modalWaitPane);
             return true;
         };
-        d(p, "modalWaiting"
-            ,function () {
+        Object.defineProperty(Window.prototype, "modalWaiting", {
+            get: function () {
                 return this._modalWaitPane && this._modalWaitPane.parent != null;
-            }
-        );
-        p.init = function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Window.prototype.init = function () {
             if (this._inited || this._loading)
                 return;
             if (this._uiSources.length > 0) {
@@ -13833,19 +14642,19 @@ var fairygui;
             else
                 this._init();
         };
-        p.onInit = function () {
+        Window.prototype.onInit = function () {
         };
-        p.onShown = function () {
+        Window.prototype.onShown = function () {
         };
-        p.onHide = function () {
+        Window.prototype.onHide = function () {
         };
-        p.doShowAnimation = function () {
+        Window.prototype.doShowAnimation = function () {
             this.onShown();
         };
-        p.doHideAnimation = function () {
+        Window.prototype.doHideAnimation = function () {
             this.hideImmediately();
         };
-        p.__uiLoadComplete = function () {
+        Window.prototype.__uiLoadComplete = function () {
             var cnt = this._uiSources.length;
             for (var i = 0; i < cnt; i++) {
                 var lib = this._uiSources[i];
@@ -13855,46 +14664,49 @@ var fairygui;
             this._loading = false;
             this._init();
         };
-        p._init = function () {
+        Window.prototype._init = function () {
             this._inited = true;
             this.onInit();
             if (this.isShowing)
                 this.doShowAnimation();
         };
-        p.dispose = function () {
+        Window.prototype.dispose = function () {
             this.displayObject.removeEventListener(egret.Event.ADDED_TO_STAGE, this.__onShown, this);
             this.displayObject.removeEventListener(egret.Event.REMOVED_FROM_STAGE, this.__onHidden, this);
             if (this.parent != null)
                 this.hideImmediately();
             _super.prototype.dispose.call(this);
         };
-        p.closeEventHandler = function (evt) {
+        Window.prototype.closeEventHandler = function (evt) {
             this.hide();
         };
-        p.__onShown = function (evt) {
+        Window.prototype.__onShown = function (evt) {
             if (!this._inited)
                 this.init();
             else
                 this.doShowAnimation();
         };
-        p.__onHidden = function (evt) {
+        Window.prototype.__onHidden = function (evt) {
             this.closeModalWait();
             this.onHide();
         };
-        p.__mouseDown = function (evt) {
+        Window.prototype.__mouseDown = function (evt) {
             if (this.isShowing && this.bringToFontOnClick)
                 this.bringToFront();
         };
-        p.__dragStart = function (evt) {
+        Window.prototype.__dragStart = function (evt) {
             evt.preventDefault();
             this.startDrag(evt.touchPointID);
         };
         return Window;
     }(fairygui.GComponent));
     fairygui.Window = Window;
-    egret.registerClass(Window,'fairygui.Window');
+    __reflect(Window.prototype, "fairygui.Window");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var DragDropManager = (function () {
@@ -13909,25 +14721,30 @@ var fairygui;
             this._agent.sortingOrder = 1000000;
             this._agent.addEventListener(fairygui.DragEvent.DRAG_END, this.__dragEnd, this);
         }
-        var d = __define,c=DragDropManager,p=c.prototype;
-        d(DragDropManager, "inst"
-            ,function () {
+        Object.defineProperty(DragDropManager, "inst", {
+            get: function () {
                 if (DragDropManager._inst == null)
                     DragDropManager._inst = new DragDropManager();
                 return DragDropManager._inst;
-            }
-        );
-        d(p, "dragAgent"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(DragDropManager.prototype, "dragAgent", {
+            get: function () {
                 return this._agent;
-            }
-        );
-        d(p, "dragging"
-            ,function () {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(DragDropManager.prototype, "dragging", {
+            get: function () {
                 return this._agent.parent != null;
-            }
-        );
-        p.startDrag = function (source, icon, sourceData, touchPointID) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        DragDropManager.prototype.startDrag = function (source, icon, sourceData, touchPointID) {
             if (touchPointID === void 0) { touchPointID = -1; }
             if (this._agent.parent != null)
                 return;
@@ -13938,14 +14755,14 @@ var fairygui;
             this._agent.setXY(pt.x, pt.y);
             this._agent.startDrag(touchPointID);
         };
-        p.cancel = function () {
+        DragDropManager.prototype.cancel = function () {
             if (this._agent.parent != null) {
                 this._agent.stopDrag();
                 fairygui.GRoot.inst.removeChild(this._agent);
                 this._sourceData = null;
             }
         };
-        p.__dragEnd = function (evt) {
+        DragDropManager.prototype.__dragEnd = function (evt) {
             if (this._agent.parent == null)
                 return;
             fairygui.GRoot.inst.removeChild(this._agent);
@@ -13965,9 +14782,12 @@ var fairygui;
         return DragDropManager;
     }());
     fairygui.DragDropManager = DragDropManager;
-    egret.registerClass(DragDropManager,'fairygui.DragDropManager');
+    __reflect(DragDropManager.prototype, "fairygui.DragDropManager");
 })(fairygui || (fairygui = {}));
 
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
 var fairygui;
 (function (fairygui) {
     var AsyncOperation = (function () {
@@ -13975,8 +14795,7 @@ var fairygui;
             this._itemList = new Array();
             this._objectPool = new Array();
         }
-        var d = __define,c=AsyncOperation,p=c.prototype;
-        p.createObject = function (pkgName, resName) {
+        AsyncOperation.prototype.createObject = function (pkgName, resName) {
             var pkg = fairygui.UIPackage.getByName(pkgName);
             if (pkg) {
                 var pi = pkg.getItemByName(resName);
@@ -13987,14 +14806,14 @@ var fairygui;
             else
                 throw new Error("package not found: " + pkgName);
         };
-        p.createObjectFromURL = function (url) {
+        AsyncOperation.prototype.createObjectFromURL = function (url) {
             var pi = fairygui.UIPackage.getItemByURL(url);
             if (pi)
                 this.internalCreateObject(pi);
             else
                 throw new Error("resource not found: " + url);
         };
-        p.cancel = function () {
+        AsyncOperation.prototype.cancel = function () {
             fairygui.GTimers.inst.remove(this.run, this);
             this._itemList.length = 0;
             var cnt = this._objectPool.length;
@@ -14004,7 +14823,7 @@ var fairygui;
                 this._objectPool.length = 0;
             }
         };
-        p.internalCreateObject = function (item) {
+        AsyncOperation.prototype.internalCreateObject = function (item) {
             this._itemList.length = 0;
             this._objectPool.length = 0;
             this.collectComponentChildren(item);
@@ -14012,7 +14831,7 @@ var fairygui;
             this._index = 0;
             fairygui.GTimers.inst.add(1, 0, this.run, this);
         };
-        p.collectComponentChildren = function (item) {
+        AsyncOperation.prototype.collectComponentChildren = function (item) {
             item.owner.getItemAsset(item);
             var cnt = item.displayList.length;
             for (var i = 0; i < cnt; i++) {
@@ -14048,7 +14867,7 @@ var fairygui;
                 this._itemList.push(di);
             }
         };
-        p.run = function () {
+        AsyncOperation.prototype.run = function () {
             var obj;
             var di;
             var poolStart;
@@ -14097,6 +14916,6 @@ var fairygui;
         return AsyncOperation;
     }());
     fairygui.AsyncOperation = AsyncOperation;
-    egret.registerClass(AsyncOperation,'fairygui.AsyncOperation');
+    __reflect(AsyncOperation.prototype, "fairygui.AsyncOperation");
 })(fairygui || (fairygui = {}));
 

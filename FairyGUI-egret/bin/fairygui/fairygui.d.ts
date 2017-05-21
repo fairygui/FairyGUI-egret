@@ -1,508 +1,4 @@
 declare module fairygui {
-    class Controller extends egret.EventDispatcher {
-        private _name;
-        private _selectedIndex;
-        private _previousIndex;
-        private _pageIds;
-        private _pageNames;
-        private _pageTransitions;
-        private _playingTransition;
-        _parent: GComponent;
-        _autoRadioGroupDepth: boolean;
-        private static _nextPageId;
-        constructor();
-        name: string;
-        parent: GComponent;
-        selectedIndex: number;
-        setSelectedIndex(value?: number): void;
-        previsousIndex: number;
-        selectedPage: string;
-        setSelectedPage(value: string): void;
-        previousPage: string;
-        pageCount: number;
-        getPageName(index?: number): string;
-        addPage(name?: string): void;
-        addPageAt(name: string, index?: number): void;
-        removePage(name: string): void;
-        removePageAt(index?: number): void;
-        clearPages(): void;
-        hasPage(aName: string): boolean;
-        getPageIndexById(aId: string): number;
-        getPageIdByName(aName: string): string;
-        getPageNameById(aId: string): string;
-        getPageId(index?: number): string;
-        selectedPageId: string;
-        oppositePageId: string;
-        previousPageId: string;
-        setup(xml: any): void;
-    }
-}
-declare module fairygui {
-    class Frame {
-        rect: egret.Rectangle;
-        addDelay: number;
-        texture: egret.Texture;
-        constructor();
-    }
-}
-declare module fairygui {
-    class MovieClip extends egret.DisplayObject {
-        interval: number;
-        swing: boolean;
-        repeatDelay: number;
-        private playState;
-        private _texture;
-        private _needRebuild;
-        private _frameRect;
-        private _playing;
-        private _frameCount;
-        private _frames;
-        private _currentFrame;
-        private _start;
-        private _end;
-        private _times;
-        private _endAt;
-        private _status;
-        private _callback;
-        private _callbackObj;
-        constructor();
-        frames: Array<Frame>;
-        frameCount: number;
-        currentFrame: number;
-        playing: boolean;
-        setPlaySettings(start?: number, end?: number, times?: number, endAt?: number, endCallback?: Function, callbackObj?: any): void;
-        private update();
-        private __playEnd();
-        private setFrame(frame);
-        $render(): void;
-        $measureContentBounds(bounds: egret.Rectangle): void;
-        $onAddToStage(stage: egret.Stage, nestLevel: number): void;
-        $onRemoveFromStage(): void;
-    }
-}
-declare module fairygui {
-    class PlayState {
-        reachEnding: boolean;
-        reversed: boolean;
-        repeatedCount: number;
-        private _curFrame;
-        private _curFrameDelay;
-        private _lastUpdateSeq;
-        constructor();
-        update(mc: MovieClip): void;
-        currentFrame: number;
-        rewind(): void;
-        reset(): void;
-        copy(src: PlayState): void;
-    }
-}
-declare module fairygui {
-    class UIContainer extends egret.DisplayObjectContainer {
-        private _hitArea;
-        constructor();
-        hitArea: egret.Rectangle;
-        $hitTest(stageX: number, stageY: number): egret.DisplayObject;
-    }
-}
-declare module fairygui {
-    class UISprite extends egret.Sprite {
-        private _hitArea;
-        constructor();
-        hitArea: egret.Rectangle;
-        $hitTest(stageX: number, stageY: number): egret.DisplayObject;
-    }
-}
-declare module fairygui {
-    class BitmapFont {
-        id: string;
-        size: number;
-        ttf: boolean;
-        glyphs: any;
-        resizable: boolean;
-        constructor();
-    }
-}
-declare module fairygui {
-    class BMGlyph {
-        x: number;
-        y: number;
-        offsetX: number;
-        offsetY: number;
-        width: number;
-        height: number;
-        advance: number;
-        lineHeight: number;
-        channel: number;
-        texture: egret.Texture;
-        constructor();
-    }
-}
-declare module fairygui {
-    class DragEvent extends egret.Event {
-        stageX: number;
-        stageY: number;
-        touchPointID: number;
-        private _prevented;
-        static DRAG_START: string;
-        static DRAG_END: string;
-        static DRAG_MOVING: string;
-        constructor(type: string, stageX?: number, stageY?: number, touchPointID?: number);
-        preventDefault(): void;
-        isDefaultPrevented(): boolean;
-    }
-}
-declare module fairygui {
-    class DropEvent extends egret.Event {
-        source: any;
-        static DROP: string;
-        constructor(type: string, source?: any);
-    }
-}
-declare module fairygui {
-    class ItemEvent extends egret.Event {
-        itemObject: GObject;
-        stageX: number;
-        stageY: number;
-        static CLICK: string;
-        constructor(type: string, itemObject?: GObject, stageX?: number, stageY?: number);
-    }
-}
-declare module fairygui {
-    class StateChangeEvent extends egret.Event {
-        static CHANGED: string;
-        constructor(type: string);
-    }
-}
-declare module fairygui {
-    class UBBParser {
-        private _text;
-        private _readPos;
-        protected _handlers: any;
-        smallFontSize: number;
-        normalFontSize: number;
-        largeFontSize: number;
-        defaultImgWidth: number;
-        defaultImgHeight: number;
-        static inst: UBBParser;
-        constructor();
-        protected onTag_URL(tagName: string, end: boolean, attr: string): string;
-        protected onTag_IMG(tagName: string, end: boolean, attr: string): string;
-        protected onTag_Simple(tagName: string, end: boolean, attr: string): string;
-        protected onTag_COLOR(tagName: string, end: boolean, attr: string): string;
-        protected onTag_FONT(tagName: string, end: boolean, attr: string): string;
-        protected onTag_SIZE(tagName: string, end: boolean, attr: string): string;
-        protected getTagText(remove?: boolean): string;
-        parse(text: string): string;
-    }
-}
-declare module fairygui {
-    class ToolSet {
-        constructor();
-        static getFileName(source: string): string;
-        static startsWith(source: string, str: string, ignoreCase?: boolean): boolean;
-        static endsWith(source: string, str: string, ignoreCase?: boolean): boolean;
-        static trim(targetString: string): string;
-        static trimLeft(targetString: string): string;
-        static trimRight(targetString: string): string;
-        static convertToHtmlColor(argb: number, hasAlpha?: boolean): string;
-        static convertFromHtmlColor(str: string, hasAlpha?: boolean): number;
-        static displayObjectToGObject(obj: egret.DisplayObject): GObject;
-        static findChildNode(xml: any, name: string): any;
-        static encodeHTML(str: string): string;
-        static defaultUBBParser: UBBParser;
-        static parseUBB(text: string): string;
-        static clamp(value: number, min: number, max: number): number;
-        static clamp01(value: number): number;
-    }
-}
-declare module fairygui {
-    class ColorMatrix {
-        matrix: Array<number>;
-        private static IDENTITY_MATRIX;
-        private static LENGTH;
-        private static LUMA_R;
-        private static LUMA_G;
-        private static LUMA_B;
-        static create(p_brightness: number, p_contrast: number, p_saturation: number, p_hue: number): ColorMatrix;
-        constructor();
-        reset(): void;
-        invert(): void;
-        adjustColor(p_brightness: number, p_contrast: number, p_saturation: number, p_hue: number): void;
-        adjustBrightness(p_val: number): void;
-        adjustContrast(p_val: number): void;
-        adjustSaturation(p_val: number): void;
-        adjustHue(p_val: number): void;
-        concat(p_matrix: Array<number>): void;
-        clone(): ColorMatrix;
-        protected copyMatrix(p_matrix: Array<number>): void;
-        protected multiplyMatrix(p_matrix: Array<number>): void;
-        protected cleanValue(p_val: number, p_limit: number): number;
-    }
-}
-declare module fairygui {
-    enum ButtonMode {
-        Common = 0,
-        Check = 1,
-        Radio = 2,
-    }
-    enum AutoSizeType {
-        None = 0,
-        Both = 1,
-        Height = 2,
-    }
-    enum AlignType {
-        Left = 0,
-        Center = 1,
-        Right = 2,
-    }
-    enum VertAlignType {
-        Top = 0,
-        Middle = 1,
-        Bottom = 2,
-    }
-    enum LoaderFillType {
-        None = 0,
-        Scale = 1,
-        ScaleMatchHeight = 2,
-        ScaleMatchWidth = 3,
-        ScaleFree = 4,
-    }
-    enum ListLayoutType {
-        SingleColumn = 0,
-        SingleRow = 1,
-        FlowHorizontal = 2,
-        FlowVertical = 3,
-        Pagination = 4,
-    }
-    enum ListSelectionMode {
-        Single = 0,
-        Multiple = 1,
-        Multiple_SingleClick = 2,
-        None = 3,
-    }
-    enum OverflowType {
-        Visible = 0,
-        Hidden = 1,
-        Scroll = 2,
-        Scale = 3,
-        ScaleFree = 4,
-    }
-    enum PackageItemType {
-        Image = 0,
-        Swf = 1,
-        MovieClip = 2,
-        Sound = 3,
-        Component = 4,
-        Misc = 5,
-        Font = 6,
-        Atlas = 7,
-    }
-    enum ProgressTitleType {
-        Percent = 0,
-        ValueAndMax = 1,
-        Value = 2,
-        Max = 3,
-    }
-    enum ScrollBarDisplayType {
-        Default = 0,
-        Visible = 1,
-        Auto = 2,
-        Hidden = 3,
-    }
-    enum ScrollType {
-        Horizontal = 0,
-        Vertical = 1,
-        Both = 2,
-    }
-    enum FlipType {
-        None = 0,
-        Horizontal = 1,
-        Vertical = 2,
-        Both = 3,
-    }
-    enum ChildrenRenderOrder {
-        Ascent = 0,
-        Descent = 1,
-        Arch = 2,
-    }
-    enum RelationType {
-        Left_Left = 0,
-        Left_Center = 1,
-        Left_Right = 2,
-        Center_Center = 3,
-        Right_Left = 4,
-        Right_Center = 5,
-        Right_Right = 6,
-        Top_Top = 7,
-        Top_Middle = 8,
-        Top_Bottom = 9,
-        Middle_Middle = 10,
-        Bottom_Top = 11,
-        Bottom_Middle = 12,
-        Bottom_Bottom = 13,
-        Width = 14,
-        Height = 15,
-        LeftExt_Left = 16,
-        LeftExt_Right = 17,
-        RightExt_Left = 18,
-        RightExt_Right = 19,
-        TopExt_Top = 20,
-        TopExt_Bottom = 21,
-        BottomExt_Top = 22,
-        BottomExt_Bottom = 23,
-        Size = 24,
-    }
-    function parseButtonMode(value: string): ButtonMode;
-    function parseAutoSizeType(value: string): AutoSizeType;
-    function parseAlignType(value: string): AlignType;
-    function getAlignTypeString(type: AlignType): string;
-    function getVertAlignTypeString(type: VertAlignType): string;
-    function parseVertAlignType(value: string): VertAlignType;
-    function parseLoaderFillType(value: string): LoaderFillType;
-    function parseListLayoutType(value: string): ListLayoutType;
-    function parseListSelectionMode(value: string): ListSelectionMode;
-    function parseOverflowType(value: string): OverflowType;
-    function parsePackageItemType(value: string): PackageItemType;
-    function parseProgressTitleType(value: string): ProgressTitleType;
-    function parseScrollBarDisplayType(value: string): ScrollBarDisplayType;
-    function parseScrollType(value: string): ScrollType;
-    function parseFlipType(value: string): FlipType;
-    function ParseEaseType(value: string): Function;
-}
-declare module fairygui {
-    class GearBase {
-        static disableAllTweenEffect: boolean;
-        protected _tween: boolean;
-        protected _easeType: Function;
-        protected _tweenTime: number;
-        protected _tweenDelay: number;
-        protected _displayLockToken: number;
-        protected _owner: GObject;
-        protected _controller: Controller;
-        constructor(owner: GObject);
-        controller: Controller;
-        tween: boolean;
-        tweenDelay: number;
-        tweenTime: number;
-        easeType: Function;
-        setup(xml: any): void;
-        updateFromRelations(dx: number, dy: number): void;
-        protected addStatus(pageId: string, value: string): void;
-        protected init(): void;
-        apply(): void;
-        updateState(): void;
-    }
-}
-declare module fairygui {
-    class GearSize extends GearBase {
-        tweener: egret.Tween;
-        private _storage;
-        private _default;
-        private _tweenValue;
-        private _tweenTarget;
-        constructor(owner: GObject);
-        protected init(): void;
-        protected addStatus(pageId: string, value: string): void;
-        apply(): void;
-        updateState(): void;
-        updateFromRelations(dx: number, dy: number): void;
-    }
-}
-declare module fairygui {
-    class GearXY extends GearBase {
-        tweener: egret.Tween;
-        private _storage;
-        private _default;
-        private _tweenValue;
-        private _tweenTarget;
-        constructor(owner: GObject);
-        protected init(): void;
-        protected addStatus(pageId: string, value: string): void;
-        apply(): void;
-        updateState(): void;
-        updateFromRelations(dx: number, dy: number): void;
-    }
-}
-declare module fairygui {
-    class GearText extends GearBase {
-        private _storage;
-        private _default;
-        constructor(owner: GObject);
-        protected init(): void;
-        protected addStatus(pageId: string, value: string): void;
-        apply(): void;
-        updateState(): void;
-    }
-}
-declare module fairygui {
-    class GearIcon extends GearBase {
-        private _storage;
-        private _default;
-        constructor(owner: GObject);
-        protected init(): void;
-        protected addStatus(pageId: string, value: string): void;
-        apply(): void;
-        updateState(): void;
-    }
-}
-declare module fairygui {
-    class Transition {
-        name: string;
-        autoPlayRepeat: number;
-        autoPlayDelay: number;
-        private _owner;
-        private _ownerBaseX;
-        private _ownerBaseY;
-        private _items;
-        private _totalTimes;
-        private _totalTasks;
-        private _playing;
-        private _onComplete;
-        private _onCompleteObj;
-        private _onCompleteParam;
-        private _options;
-        private _reversed;
-        private _maxTime;
-        private _autoPlay;
-        static OPTION_IGNORE_DISPLAY_CONTROLLER: number;
-        static OPTION_AUTO_STOP_DISABLED: number;
-        static OPTION_AUTO_STOP_AT_END: number;
-        private static FRAME_RATE;
-        constructor(owner: GComponent);
-        autoPlay: boolean;
-        play(onComplete?: Function, onCompleteObj?: any, onCompleteParam?: any, times?: number, delay?: number): void;
-        playReverse(onComplete?: Function, onCompleteObj?: any, onCompleteParam?: any, times?: number, delay?: number): void;
-        private _play(onComplete?, onCompleteObj?, onCompleteParam?, times?, delay?, reversed?);
-        stop(setToComplete?: boolean, processCallback?: boolean): void;
-        private stopItem(item, setToComplete);
-        dispose(): void;
-        playing: boolean;
-        setValue(label: string, ...args: any[]): void;
-        setHook(label: string, callback: Function, thisObj: any): void;
-        clearHooks(): void;
-        setTarget(label: string, newTarget: GObject): void;
-        setDuration(label: string, value: number): void;
-        updateFromRelations(targetId: string, dx: number, dy: number): void;
-        OnOwnerRemovedFromStage(): void;
-        private internalPlay(delay?);
-        private prepareValue(item, toProps, reversed?);
-        private startTween(item, delay);
-        private __delayCall(item);
-        private __delayCall2(item);
-        private __tweenStart(item);
-        private __tweenUpdate();
-        private __tweenComplete(item);
-        private __tweenRepeatComplete(item);
-        private __playTransComplete(item);
-        private checkAllComplete();
-        private applyValue(item, value);
-        private __shake(trans);
-        private __shakeItem(item);
-        setup(xml: any): void;
-        private decodeValue(type, str, value);
-    }
-}
-declare module fairygui {
     class GObject extends egret.EventDispatcher {
         data: any;
         packageItem: PackageItem;
@@ -689,41 +185,98 @@ declare module fairygui {
     }
 }
 declare module fairygui {
-    class DisplayListItem {
-        packageItem: PackageItem;
-        type: string;
-        desc: any;
-        listItemCount: number;
-        constructor(packageItem: PackageItem, type: string);
+    class GTextField extends GObject {
+        protected _textField: egret.TextField;
+        protected _bitmapContainer: egret.DisplayObjectContainer;
+        protected _font: string;
+        protected _fontSize: number;
+        protected _align: AlignType;
+        protected _verticalAlign: VertAlignType;
+        protected _color: number;
+        protected _leading: number;
+        protected _letterSpacing: number;
+        protected _text: string;
+        protected _ubbEnabled: boolean;
+        protected _autoSize: AutoSizeType;
+        protected _widthAutoSize: boolean;
+        protected _heightAutoSize: boolean;
+        protected _updatingSize: boolean;
+        protected _sizeDirty: boolean;
+        protected _textWidth: number;
+        protected _textHeight: number;
+        protected _requireRender: boolean;
+        protected _bitmapFont: BitmapFont;
+        protected _lines: Array<LineInfo>;
+        protected _bitmapPool: Array<egret.Bitmap>;
+        protected static GUTTER_X: number;
+        protected static GUTTER_Y: number;
+        constructor();
+        protected createDisplayObject(): void;
+        private switchBitmapMode(val);
+        dispose(): void;
+        text: string;
+        protected updateTextFieldText(): void;
+        font: string;
+        fontSize: number;
+        color: number;
+        align: AlignType;
+        verticalAlign: VertAlignType;
+        leading: number;
+        letterSpacing: number;
+        underline: boolean;
+        bold: boolean;
+        italic: boolean;
+        singleLine: boolean;
+        stroke: number;
+        strokeColor: number;
+        ubbEnabled: boolean;
+        autoSize: AutoSizeType;
+        textWidth: number;
+        ensureSizeCorrect(): void;
+        protected updateTextFormat(): void;
+        protected render(): void;
+        private __render();
+        protected renderNow(updateBounds?: boolean): void;
+        private renderWithBitmapFont(updateBounds);
+        protected handleSizeChanged(): void;
+        protected handleGrayedChanged(): void;
+        private doAlign();
+        setup_beforeAdd(xml: any): void;
+        setup_afterAdd(xml: any): void;
+    }
+    class LineInfo {
+        width: number;
+        height: number;
+        textHeight: number;
+        text: string;
+        y: number;
+        private static pool;
+        static borrow(): LineInfo;
+        static returns(value: LineInfo): void;
+        static returnList(value: Array<LineInfo>): void;
+        constructor();
     }
 }
 declare module fairygui {
-    class PackageItem {
-        owner: UIPackage;
-        type: PackageItemType;
-        id: string;
-        name: string;
-        width: number;
-        height: number;
-        file: string;
-        decoded: boolean;
-        scale9Grid: egret.Rectangle;
-        scaleByTile: boolean;
-        tileGridIndice: number;
-        smoothing: boolean;
-        texture: egret.Texture;
-        interval: number;
-        repeatDelay: number;
-        swing: boolean;
-        frames: Array<Frame>;
-        componentData: any;
-        displayList: Array<DisplayListItem>;
-        extensionType: any;
-        sound: egret.Sound;
-        bitmapFont: BitmapFont;
+    class UBBParser {
+        private _text;
+        private _readPos;
+        protected _handlers: any;
+        smallFontSize: number;
+        normalFontSize: number;
+        largeFontSize: number;
+        defaultImgWidth: number;
+        defaultImgHeight: number;
+        static inst: UBBParser;
         constructor();
-        load(): any;
-        toString(): string;
+        protected onTag_URL(tagName: string, end: boolean, attr: string): string;
+        protected onTag_IMG(tagName: string, end: boolean, attr: string): string;
+        protected onTag_Simple(tagName: string, end: boolean, attr: string): string;
+        protected onTag_COLOR(tagName: string, end: boolean, attr: string): string;
+        protected onTag_FONT(tagName: string, end: boolean, attr: string): string;
+        protected onTag_SIZE(tagName: string, end: boolean, attr: string): string;
+        protected getTagText(remove?: boolean): string;
+        parse(text: string): string;
     }
 }
 declare module fairygui {
@@ -807,6 +360,511 @@ declare module fairygui {
         setup_afterAdd(xml: any): void;
         private ___added(evt);
         private ___removed(evt);
+    }
+}
+declare module fairygui {
+    enum ButtonMode {
+        Common = 0,
+        Check = 1,
+        Radio = 2,
+    }
+    enum AutoSizeType {
+        None = 0,
+        Both = 1,
+        Height = 2,
+    }
+    enum AlignType {
+        Left = 0,
+        Center = 1,
+        Right = 2,
+    }
+    enum VertAlignType {
+        Top = 0,
+        Middle = 1,
+        Bottom = 2,
+    }
+    enum LoaderFillType {
+        None = 0,
+        Scale = 1,
+        ScaleMatchHeight = 2,
+        ScaleMatchWidth = 3,
+        ScaleFree = 4,
+    }
+    enum ListLayoutType {
+        SingleColumn = 0,
+        SingleRow = 1,
+        FlowHorizontal = 2,
+        FlowVertical = 3,
+        Pagination = 4,
+    }
+    enum ListSelectionMode {
+        Single = 0,
+        Multiple = 1,
+        Multiple_SingleClick = 2,
+        None = 3,
+    }
+    enum OverflowType {
+        Visible = 0,
+        Hidden = 1,
+        Scroll = 2,
+        Scale = 3,
+        ScaleFree = 4,
+    }
+    enum PackageItemType {
+        Image = 0,
+        Swf = 1,
+        MovieClip = 2,
+        Sound = 3,
+        Component = 4,
+        Misc = 5,
+        Font = 6,
+        Atlas = 7,
+    }
+    enum ProgressTitleType {
+        Percent = 0,
+        ValueAndMax = 1,
+        Value = 2,
+        Max = 3,
+    }
+    enum ScrollBarDisplayType {
+        Default = 0,
+        Visible = 1,
+        Auto = 2,
+        Hidden = 3,
+    }
+    enum ScrollType {
+        Horizontal = 0,
+        Vertical = 1,
+        Both = 2,
+    }
+    enum FlipType {
+        None = 0,
+        Horizontal = 1,
+        Vertical = 2,
+        Both = 3,
+    }
+    enum ChildrenRenderOrder {
+        Ascent = 0,
+        Descent = 1,
+        Arch = 2,
+    }
+    enum RelationType {
+        Left_Left = 0,
+        Left_Center = 1,
+        Left_Right = 2,
+        Center_Center = 3,
+        Right_Left = 4,
+        Right_Center = 5,
+        Right_Right = 6,
+        Top_Top = 7,
+        Top_Middle = 8,
+        Top_Bottom = 9,
+        Middle_Middle = 10,
+        Bottom_Top = 11,
+        Bottom_Middle = 12,
+        Bottom_Bottom = 13,
+        Width = 14,
+        Height = 15,
+        LeftExt_Left = 16,
+        LeftExt_Right = 17,
+        RightExt_Left = 18,
+        RightExt_Right = 19,
+        TopExt_Top = 20,
+        TopExt_Bottom = 21,
+        BottomExt_Top = 22,
+        BottomExt_Bottom = 23,
+        Size = 24,
+    }
+    function parseButtonMode(value: string): ButtonMode;
+    function parseAutoSizeType(value: string): AutoSizeType;
+    function parseAlignType(value: string): AlignType;
+    function getAlignTypeString(type: AlignType): string;
+    function getVertAlignTypeString(type: VertAlignType): string;
+    function parseVertAlignType(value: string): VertAlignType;
+    function parseLoaderFillType(value: string): LoaderFillType;
+    function parseListLayoutType(value: string): ListLayoutType;
+    function parseListSelectionMode(value: string): ListSelectionMode;
+    function parseOverflowType(value: string): OverflowType;
+    function parsePackageItemType(value: string): PackageItemType;
+    function parseProgressTitleType(value: string): ProgressTitleType;
+    function parseScrollBarDisplayType(value: string): ScrollBarDisplayType;
+    function parseScrollType(value: string): ScrollType;
+    function parseFlipType(value: string): FlipType;
+    function ParseEaseType(value: string): Function;
+}
+declare module fairygui {
+    class GObjectPool {
+        private _pool;
+        private _count;
+        constructor();
+        clear(): void;
+        count: number;
+        getObject(url: string): GObject;
+        returnObject(obj: GObject): void;
+    }
+}
+declare module fairygui {
+    class GearBase {
+        static disableAllTweenEffect: boolean;
+        protected _tween: boolean;
+        protected _easeType: Function;
+        protected _tweenTime: number;
+        protected _tweenDelay: number;
+        protected _displayLockToken: number;
+        protected _owner: GObject;
+        protected _controller: Controller;
+        constructor(owner: GObject);
+        controller: Controller;
+        tween: boolean;
+        tweenDelay: number;
+        tweenTime: number;
+        easeType: Function;
+        setup(xml: any): void;
+        updateFromRelations(dx: number, dy: number): void;
+        protected addStatus(pageId: string, value: string): void;
+        protected init(): void;
+        apply(): void;
+        updateState(): void;
+    }
+}
+declare module fairygui {
+    class BMGlyph {
+        x: number;
+        y: number;
+        offsetX: number;
+        offsetY: number;
+        width: number;
+        height: number;
+        advance: number;
+        lineHeight: number;
+        channel: number;
+        texture: egret.Texture;
+        constructor();
+    }
+}
+declare module fairygui {
+    class DragEvent extends egret.Event {
+        stageX: number;
+        stageY: number;
+        touchPointID: number;
+        private _prevented;
+        static DRAG_START: string;
+        static DRAG_END: string;
+        static DRAG_MOVING: string;
+        constructor(type: string, stageX?: number, stageY?: number, touchPointID?: number);
+        preventDefault(): void;
+        isDefaultPrevented(): boolean;
+    }
+}
+declare module fairygui {
+    class DropEvent extends egret.Event {
+        source: any;
+        static DROP: string;
+        constructor(type: string, source?: any);
+    }
+}
+declare module fairygui {
+    class ItemEvent extends egret.Event {
+        itemObject: GObject;
+        stageX: number;
+        stageY: number;
+        static CLICK: string;
+        constructor(type: string, itemObject?: GObject, stageX?: number, stageY?: number);
+    }
+}
+declare module fairygui {
+    class StateChangeEvent extends egret.Event {
+        static CHANGED: string;
+        constructor(type: string);
+    }
+}
+declare module fairygui {
+    class ToolSet {
+        constructor();
+        static getFileName(source: string): string;
+        static startsWith(source: string, str: string, ignoreCase?: boolean): boolean;
+        static endsWith(source: string, str: string, ignoreCase?: boolean): boolean;
+        static trim(targetString: string): string;
+        static trimLeft(targetString: string): string;
+        static trimRight(targetString: string): string;
+        static convertToHtmlColor(argb: number, hasAlpha?: boolean): string;
+        static convertFromHtmlColor(str: string, hasAlpha?: boolean): number;
+        static displayObjectToGObject(obj: egret.DisplayObject): GObject;
+        static findChildNode(xml: any, name: string): any;
+        static encodeHTML(str: string): string;
+        static defaultUBBParser: UBBParser;
+        static parseUBB(text: string): string;
+        static clamp(value: number, min: number, max: number): number;
+        static clamp01(value: number): number;
+    }
+}
+declare module fairygui {
+    class ColorMatrix {
+        matrix: Array<number>;
+        private static IDENTITY_MATRIX;
+        private static LENGTH;
+        private static LUMA_R;
+        private static LUMA_G;
+        private static LUMA_B;
+        static create(p_brightness: number, p_contrast: number, p_saturation: number, p_hue: number): ColorMatrix;
+        constructor();
+        reset(): void;
+        invert(): void;
+        adjustColor(p_brightness: number, p_contrast: number, p_saturation: number, p_hue: number): void;
+        adjustBrightness(p_val: number): void;
+        adjustContrast(p_val: number): void;
+        adjustSaturation(p_val: number): void;
+        adjustHue(p_val: number): void;
+        concat(p_matrix: Array<number>): void;
+        clone(): ColorMatrix;
+        protected copyMatrix(p_matrix: Array<number>): void;
+        protected multiplyMatrix(p_matrix: Array<number>): void;
+        protected cleanValue(p_val: number, p_limit: number): number;
+    }
+}
+declare module fairygui {
+    class Controller extends egret.EventDispatcher {
+        private _name;
+        private _selectedIndex;
+        private _previousIndex;
+        private _pageIds;
+        private _pageNames;
+        private _pageTransitions;
+        private _playingTransition;
+        _parent: GComponent;
+        _autoRadioGroupDepth: boolean;
+        private static _nextPageId;
+        constructor();
+        name: string;
+        parent: GComponent;
+        selectedIndex: number;
+        setSelectedIndex(value?: number): void;
+        previsousIndex: number;
+        selectedPage: string;
+        setSelectedPage(value: string): void;
+        previousPage: string;
+        pageCount: number;
+        getPageName(index?: number): string;
+        addPage(name?: string): void;
+        addPageAt(name: string, index?: number): void;
+        removePage(name: string): void;
+        removePageAt(index?: number): void;
+        clearPages(): void;
+        hasPage(aName: string): boolean;
+        getPageIndexById(aId: string): number;
+        getPageIdByName(aName: string): string;
+        getPageNameById(aId: string): string;
+        getPageId(index?: number): string;
+        selectedPageId: string;
+        oppositePageId: string;
+        previousPageId: string;
+        setup(xml: any): void;
+    }
+}
+declare module fairygui {
+    class Frame {
+        rect: egret.Rectangle;
+        addDelay: number;
+        texture: egret.Texture;
+        constructor();
+    }
+}
+declare module fairygui {
+    class GearSize extends GearBase {
+        tweener: egret.Tween;
+        private _storage;
+        private _default;
+        private _tweenValue;
+        private _tweenTarget;
+        constructor(owner: GObject);
+        protected init(): void;
+        protected addStatus(pageId: string, value: string): void;
+        apply(): void;
+        updateState(): void;
+        updateFromRelations(dx: number, dy: number): void;
+    }
+}
+declare module fairygui {
+    class GearXY extends GearBase {
+        tweener: egret.Tween;
+        private _storage;
+        private _default;
+        private _tweenValue;
+        private _tweenTarget;
+        constructor(owner: GObject);
+        protected init(): void;
+        protected addStatus(pageId: string, value: string): void;
+        apply(): void;
+        updateState(): void;
+        updateFromRelations(dx: number, dy: number): void;
+    }
+}
+declare module fairygui {
+    class GearText extends GearBase {
+        private _storage;
+        private _default;
+        constructor(owner: GObject);
+        protected init(): void;
+        protected addStatus(pageId: string, value: string): void;
+        apply(): void;
+        updateState(): void;
+    }
+}
+declare module fairygui {
+    class GearIcon extends GearBase {
+        private _storage;
+        private _default;
+        constructor(owner: GObject);
+        protected init(): void;
+        protected addStatus(pageId: string, value: string): void;
+        apply(): void;
+        updateState(): void;
+    }
+}
+declare module fairygui {
+    class Transition {
+        name: string;
+        autoPlayRepeat: number;
+        autoPlayDelay: number;
+        private _owner;
+        private _ownerBaseX;
+        private _ownerBaseY;
+        private _items;
+        private _totalTimes;
+        private _totalTasks;
+        private _playing;
+        private _onComplete;
+        private _onCompleteObj;
+        private _onCompleteParam;
+        private _options;
+        private _reversed;
+        private _maxTime;
+        private _autoPlay;
+        static OPTION_IGNORE_DISPLAY_CONTROLLER: number;
+        static OPTION_AUTO_STOP_DISABLED: number;
+        static OPTION_AUTO_STOP_AT_END: number;
+        private static FRAME_RATE;
+        constructor(owner: GComponent);
+        autoPlay: boolean;
+        play(onComplete?: Function, onCompleteObj?: any, onCompleteParam?: any, times?: number, delay?: number): void;
+        playReverse(onComplete?: Function, onCompleteObj?: any, onCompleteParam?: any, times?: number, delay?: number): void;
+        private _play(onComplete?, onCompleteObj?, onCompleteParam?, times?, delay?, reversed?);
+        stop(setToComplete?: boolean, processCallback?: boolean): void;
+        private stopItem(item, setToComplete);
+        dispose(): void;
+        playing: boolean;
+        setValue(label: string, ...args: any[]): void;
+        setHook(label: string, callback: Function, thisObj: any): void;
+        clearHooks(): void;
+        setTarget(label: string, newTarget: GObject): void;
+        setDuration(label: string, value: number): void;
+        updateFromRelations(targetId: string, dx: number, dy: number): void;
+        OnOwnerRemovedFromStage(): void;
+        private internalPlay(delay?);
+        private prepareValue(item, toProps, reversed?);
+        private startTween(item, delay);
+        private __delayCall(item);
+        private __delayCall2(item);
+        private __tweenStart(item);
+        private __tweenUpdate();
+        private __tweenComplete(item);
+        private __tweenRepeatComplete(item);
+        private __playTransComplete(item);
+        private checkAllComplete();
+        private applyValue(item, value);
+        private __shake(trans);
+        private __shakeItem(item);
+        setup(xml: any): void;
+        private decodeValue(type, str, value);
+    }
+}
+declare module fairygui {
+    class MovieClip extends egret.DisplayObject {
+        interval: number;
+        swing: boolean;
+        repeatDelay: number;
+        private playState;
+        private _texture;
+        private _needRebuild;
+        private _frameRect;
+        private _playing;
+        private _frameCount;
+        private _frames;
+        private _currentFrame;
+        private _start;
+        private _end;
+        private _times;
+        private _endAt;
+        private _status;
+        private _callback;
+        private _callbackObj;
+        constructor();
+        frames: Array<Frame>;
+        frameCount: number;
+        currentFrame: number;
+        playing: boolean;
+        setPlaySettings(start?: number, end?: number, times?: number, endAt?: number, endCallback?: Function, callbackObj?: any): void;
+        private update();
+        private __playEnd();
+        private setFrame(frame);
+        $render(): void;
+        $measureContentBounds(bounds: egret.Rectangle): void;
+        $onAddToStage(stage: egret.Stage, nestLevel: number): void;
+        $onRemoveFromStage(): void;
+    }
+}
+declare module fairygui {
+    class DisplayListItem {
+        packageItem: PackageItem;
+        type: string;
+        desc: any;
+        listItemCount: number;
+        constructor(packageItem: PackageItem, type: string);
+    }
+}
+declare module fairygui {
+    class PackageItem {
+        owner: UIPackage;
+        type: PackageItemType;
+        id: string;
+        name: string;
+        width: number;
+        height: number;
+        file: string;
+        decoded: boolean;
+        scale9Grid: egret.Rectangle;
+        scaleByTile: boolean;
+        tileGridIndice: number;
+        smoothing: boolean;
+        texture: egret.Texture;
+        interval: number;
+        repeatDelay: number;
+        swing: boolean;
+        frames: Array<Frame>;
+        componentData: any;
+        displayList: Array<DisplayListItem>;
+        extensionType: any;
+        sound: egret.Sound;
+        bitmapFont: BitmapFont;
+        constructor();
+        load(): any;
+        toString(): string;
+    }
+}
+declare module fairygui {
+    class PlayState {
+        reachEnding: boolean;
+        reversed: boolean;
+        repeatedCount: number;
+        private _curFrame;
+        private _curFrameDelay;
+        private _lastUpdateSeq;
+        constructor();
+        update(mc: MovieClip): void;
+        currentFrame: number;
+        rewind(): void;
+        reset(): void;
+        copy(src: PlayState): void;
     }
 }
 declare module fairygui {
@@ -909,14 +967,11 @@ declare module fairygui {
     }
 }
 declare module fairygui {
-    class GearAnimation extends GearBase {
-        private _storage;
-        private _default;
-        constructor(owner: GObject);
-        protected init(): void;
-        protected addStatus(pageId: string, value: string): void;
-        apply(): void;
-        updateState(): void;
+    class UIContainer extends egret.DisplayObjectContainer {
+        private _hitArea;
+        constructor();
+        hitArea: egret.Rectangle;
+        $hitTest(stageX: number, stageY: number): egret.DisplayObject;
     }
 }
 declare module fairygui {
@@ -1131,14 +1186,11 @@ declare module fairygui {
     }
 }
 declare module fairygui {
-    class GObjectPool {
-        private _pool;
-        private _count;
+    class UISprite extends egret.Sprite {
+        private _hitArea;
         constructor();
-        clear(): void;
-        count: number;
-        getObject(url: string): GObject;
-        returnObject(obj: GObject): void;
+        hitArea: egret.Rectangle;
+        $hitTest(stageX: number, stageY: number): egret.DisplayObject;
     }
 }
 declare module fairygui {
@@ -1242,75 +1294,12 @@ declare module fairygui {
     }
 }
 declare module fairygui {
-    class GTextField extends GObject {
-        protected _textField: egret.TextField;
-        protected _bitmapContainer: egret.DisplayObjectContainer;
-        protected _font: string;
-        protected _fontSize: number;
-        protected _align: AlignType;
-        protected _verticalAlign: VertAlignType;
-        protected _color: number;
-        protected _leading: number;
-        protected _letterSpacing: number;
-        protected _text: string;
-        protected _ubbEnabled: boolean;
-        protected _autoSize: AutoSizeType;
-        protected _widthAutoSize: boolean;
-        protected _heightAutoSize: boolean;
-        protected _updatingSize: boolean;
-        protected _sizeDirty: boolean;
-        protected _textWidth: number;
-        protected _textHeight: number;
-        protected _requireRender: boolean;
-        protected _bitmapFont: BitmapFont;
-        protected _lines: Array<LineInfo>;
-        protected _bitmapPool: Array<egret.Bitmap>;
-        protected static GUTTER_X: number;
-        protected static GUTTER_Y: number;
-        constructor();
-        protected createDisplayObject(): void;
-        private switchBitmapMode(val);
-        dispose(): void;
-        text: string;
-        protected updateTextFieldText(): void;
-        font: string;
-        fontSize: number;
-        color: number;
-        align: AlignType;
-        verticalAlign: VertAlignType;
-        leading: number;
-        letterSpacing: number;
-        underline: boolean;
-        bold: boolean;
-        italic: boolean;
-        singleLine: boolean;
-        stroke: number;
-        strokeColor: number;
-        ubbEnabled: boolean;
-        autoSize: AutoSizeType;
-        textWidth: number;
-        ensureSizeCorrect(): void;
-        protected updateTextFormat(): void;
-        protected render(): void;
-        private __render();
-        protected renderNow(updateBounds?: boolean): void;
-        private renderWithBitmapFont(updateBounds);
-        protected handleSizeChanged(): void;
-        protected handleGrayedChanged(): void;
-        private doAlign();
-        setup_beforeAdd(xml: any): void;
-        setup_afterAdd(xml: any): void;
-    }
-    class LineInfo {
-        width: number;
-        height: number;
-        textHeight: number;
-        text: string;
-        y: number;
-        private static pool;
-        static borrow(): LineInfo;
-        static returns(value: LineInfo): void;
-        static returnList(value: Array<LineInfo>): void;
+    class BitmapFont {
+        id: string;
+        size: number;
+        ttf: boolean;
+        glyphs: any;
+        resizable: boolean;
         constructor();
     }
 }
@@ -1892,5 +1881,16 @@ declare module fairygui {
         private internalCreateObject(item);
         private collectComponentChildren(item);
         private run();
+    }
+}
+declare module fairygui {
+    class GearAnimation extends GearBase {
+        private _storage;
+        private _default;
+        constructor(owner: GObject);
+        protected init(): void;
+        protected addStatus(pageId: string, value: string): void;
+        apply(): void;
+        updateState(): void;
     }
 }

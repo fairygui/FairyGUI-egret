@@ -726,11 +726,28 @@ module fairygui {
         }
 
         private __render(): void {
-            if (this._boundsChanged)
+            if (this._boundsChanged) {
+                var len:number = this._children.length;
+                if(len > 0) {
+                    for(var i:number = 0;i < len;i++) {
+                        var child: GObject = this._children[i];
+                        child.ensureSizeCorrect();
+                    }
+                }
+
                 this.updateBounds();
+            }
         }
 
         public ensureBoundsCorrect(): void {
+            var len:number = this._children.length;
+            if(len > 0) {
+                for(var i:number = 0;i < len;i++) {
+                    var child: GObject = this._children[i];
+                    child.ensureSizeCorrect();
+                }
+            }
+
             if (this._boundsChanged)
                 this.updateBounds();
         }
@@ -744,11 +761,6 @@ module fairygui {
                 var tmp: number = 0;
                 var i: number = 0;
 
-                for(i = 0;i < len;i++) {
-                    child = this._children[i];
-                    child.ensureSizeCorrect();
-                }
-                
                 for(var i: number = 0;i < len;i++) {
                     var child: GObject = this._children[i];
                     tmp = child.x;

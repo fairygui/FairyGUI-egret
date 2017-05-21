@@ -1786,11 +1786,6 @@ module fairygui {
 			var viewWidth:number = this.viewWidth;
 			var viewHeight:number = this.viewHeight;
 
-            for(i = 0;i < cnt;i++) {
-                child = this.getChildAt(i);
-                child.ensureSizeCorrect();
-            }
-            
             if (this._layout == ListLayoutType.SingleColumn) {                
                 for (i = 0; i < cnt; i++) {
                     child = this.getChildAt(i);
