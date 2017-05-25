@@ -31,7 +31,7 @@ module fairygui {
         }
 
         public drawRect(lineSize: number, lineColor: number, lineAlpha: number,
-            fillColor: number, fillAlpha: number, corner: Array<number>= null): void {
+            fillColor: number, fillAlpha: number, corner: Array<number> = null): void {
             this._type = 1;
             this._lineSize = lineSize;
             this._lineColor = lineColor;
@@ -61,17 +61,15 @@ module fairygui {
             }
         }
 
-        public get color():number
-		{
-			return this._fillColor;
-		}
-		
-		public set color(value:number) 
-		{
-			this._fillColor = value;
-            if(this._type != 0)
-             this.drawCommon();
-		}
+        public get color(): number {
+            return this._fillColor;
+        }
+
+        public set color(value: number) {
+            this._fillColor = value;
+            if (this._type != 0)
+                this.drawCommon();
+        }
 
         private drawCommon(): void {
             this.graphics;
@@ -80,7 +78,7 @@ module fairygui {
 
             var w: number = this.width;
             var h: number = this.height;
-            if(w == 0 || h == 0)
+            if (w == 0 || h == 0)
                 return;
 
             if (this._lineSize == 0)
@@ -147,7 +145,7 @@ module fairygui {
 
         private delayCreateDisplayObject(): void {
             if (!this.displayObject) {
-                var sprite: UISprite= new UISprite();
+                var sprite: UISprite = new UISprite();
                 sprite["$owner"] = this;
                 this.setDisplayObject(sprite);
                 if (this._parent)
@@ -168,14 +166,14 @@ module fairygui {
         }
 
         protected handleSizeChanged(): void {
-            if(this._graphics) {
-                if(this._type != 0)
+            if (this._graphics) {
+                if (this._type != 0)
                     this.drawCommon();
             }
 
-            if(this.displayObject instanceof UISprite) {
-                if((<UISprite>(this.displayObject)).hitArea == null)
-                    (<UISprite>(this.displayObject)).hitArea = new egret.Rectangle(0,0,this.width,this.height);
+            if (this.displayObject instanceof UISprite) {
+                if ((<UISprite>(this.displayObject)).hitArea == null)
+                    (<UISprite>(this.displayObject)).hitArea = new egret.Rectangle(0, 0, this.width, this.height);
                 else {
                     (<UISprite>(this.displayObject)).hitArea.width = this.width;
                     (<UISprite>(this.displayObject)).hitArea.height = this.height;

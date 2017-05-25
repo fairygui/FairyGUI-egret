@@ -8,11 +8,11 @@ module fairygui {
             super();
             this._sizeImplType = 1;
         }
-        
+
         public get color(): number {
             return 0;
         }
-        
+
         public set color(value: number) {
         }
 
@@ -44,11 +44,11 @@ module fairygui {
                 this.updateGear(5);
             }
         }
-        
+
         //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
-        public setPlaySettings(start: number = 0,end: number = -1,
-            times: number = 0,endAt: number = -1,
-            endCallback: Function = null,callbackObj: any = null): void {
+        public setPlaySettings(start: number = 0, end: number = -1,
+            times: number = 0, endAt: number = -1,
+            endCallback: Function = null, callbackObj: any = null): void {
             this._movieClip.setPlaySettings(start, end, times, endAt, endCallback, callbackObj);
         }
 
@@ -77,9 +77,9 @@ module fairygui {
                 this._movieClip.currentFrame = parseInt(str);
             str = xml.attributes.playing;
             this._movieClip.playing = str != "false";
-            
+
             str = xml.attributes.color;
-            if(str)
+            if (str)
                 this.color = ToolSet.convertFromHtmlColor(str);
         }
     }

@@ -89,46 +89,46 @@ module fairygui {
                 this._barObjectV.height = (this.height - this._barMaxHeightDelta) * percent;
 
             if (this._aniObject instanceof GMovieClip)
-                (<GMovieClip><any> (this._aniObject)).frame = Math.round(percent * 100);
+                (<GMovieClip><any>(this._aniObject)).frame = Math.round(percent * 100);
         }
 
         protected constructFromXML(xml: any): void {
             super.constructFromXML(xml);
 
-            xml = ToolSet.findChildNode(xml,"Slider");
+            xml = ToolSet.findChildNode(xml, "Slider");
 
             var str: string;
             str = xml.attributes.titleType;
-            if(str)
+            if (str)
                 this._titleType = parseProgressTitleType(str);
 
-            this._titleObject = <GTextField><any> (this.getChild("title"));
+            this._titleObject = <GTextField><any>(this.getChild("title"));
             this._barObjectH = this.getChild("bar");
             this._barObjectV = this.getChild("bar_v");
             this._aniObject = this.getChild("ani");
             this._gripObject = this.getChild("grip");
 
-            if(this._barObjectH) {
+            if (this._barObjectH) {
                 this._barMaxWidth = this._barObjectH.width;
                 this._barMaxWidthDelta = this.width - this._barMaxWidth;
             }
-            if(this._barObjectV) {
+            if (this._barObjectV) {
                 this._barMaxHeight = this._barObjectV.height;
                 this._barMaxHeightDelta = this.height - this._barMaxHeight;
             }
-            if(this._gripObject) {
-                this._gripObject.addEventListener(egret.TouchEvent.TOUCH_BEGIN,this.__gripMouseDown,this);
+            if (this._gripObject) {
+                this._gripObject.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__gripMouseDown, this);
             }
         }
 
         protected handleSizeChanged(): void {
             super.handleSizeChanged();
 
-            if(this._barObjectH)
+            if (this._barObjectH)
                 this._barMaxWidth = this.width - this._barMaxWidthDelta;
-            if(this._barObjectV)
+            if (this._barObjectV)
                 this._barMaxHeight = this.height - this._barMaxHeightDelta;
-            if(!this._underConstruct)
+            if (!this._underConstruct)
                 this.update();
         }
 
@@ -145,16 +145,16 @@ module fairygui {
         }
 
         private __gripMouseDown(evt: egret.TouchEvent): void {
-            this._clickPos = this.globalToLocal(evt.stageX,evt.stageY);
+            this._clickPos = this.globalToLocal(evt.stageX, evt.stageY);
             this._clickPercent = this._value / this._max;
 
-            this._gripObject.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_MOVE,this.__gripMouseMove,this);
-            this._gripObject.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_END,this.__gripMouseUp,this);
+            this._gripObject.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__gripMouseMove, this);
+            this._gripObject.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_END, this.__gripMouseUp, this);
         }
 
         private static sSilderHelperPoint: egret.Point = new egret.Point();
         private __gripMouseMove(evt: egret.TouchEvent): void {
-            var pt: egret.Point = this.globalToLocal(evt.stageX,evt.stageY,GSlider.sSilderHelperPoint);
+            var pt: egret.Point = this.globalToLocal(evt.stageX, evt.stageY, GSlider.sSilderHelperPoint);
             var deltaX: number = pt.x - this._clickPos.x;
             var deltaY: number = pt.y - this._clickPos.y;
 

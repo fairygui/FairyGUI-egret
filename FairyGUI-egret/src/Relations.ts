@@ -41,7 +41,7 @@ module fairygui {
             this._items = new Array<RelationItem>();
         }
 
-        public add(target: GObject, relationType: number, usePercent: boolean= false): void {
+        public add(target: GObject, relationType: number, usePercent: boolean = false): void {
             var length: number = this._items.length;
             for (var i: number = 0; i < length; i++) {
                 var item: RelationItem = this._items[i];
@@ -156,7 +156,7 @@ module fairygui {
             this.clearAll();
         }
 
-        public onOwnerSizeChanged(dWidth:number, dHeight:number): void {
+        public onOwnerSizeChanged(dWidth: number, dHeight: number): void {
             if (this._items.length == 0)
                 return;
 
@@ -203,7 +203,7 @@ module fairygui {
                     }
                     else {
                         //call from component construction
-                        target = (<GComponent><any> (this._owner)).getChildById(targetId);
+                        target = (<GComponent><any>(this._owner)).getChildById(targetId);
                     }
                     if (target)
                         this.addItems(target, cxml.attributes.sidePair);
