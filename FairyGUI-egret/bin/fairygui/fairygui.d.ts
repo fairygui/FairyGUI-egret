@@ -1042,7 +1042,8 @@ declare module fairygui {
         scrollItemToViewOnClick: boolean;
         foldInvisibleItems: boolean;
         private _layout;
-        private _lineItemCount;
+        private _lineCount;
+        private _columnCount;
         private _lineGap;
         private _columnGap;
         private _defaultItem;
@@ -1066,8 +1067,9 @@ declare module fairygui {
         constructor();
         dispose(): void;
         layout: ListLayoutType;
+        lineCount: number;
+        columnCount: number;
         lineGap: number;
-        lineItemCount: number;
         columnGap: number;
         align: AlignType;
         verticalAlign: VertAlignType;

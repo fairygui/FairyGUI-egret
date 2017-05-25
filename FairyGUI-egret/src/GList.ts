@@ -16,7 +16,8 @@ module fairygui {
         public foldInvisibleItems: boolean = false;
 
         private _layout: ListLayoutType;
-        private _lineItemCount: number = 0;
+        private _lineCount: number = 0;
+        private _columnCount: number = 0;
         private _lineGap: number = 0;
         private _columnGap: number = 0;
         private _defaultItem: string;
@@ -76,21 +77,34 @@ module fairygui {
             }
         }
 
-        public get lineGap(): number {
-            return this._lineGap;
+        public get lineCount(): number {
+            return this._lineCount;
         }
 
-        public get lineItemCount(): number {
-            return this._lineItemCount;
-        }
-
-        public set lineItemCount(value: number) {
-            if (this._lineItemCount != value) {
-                this._lineItemCount = value;
+        public set lineCount(value: number) {
+            if (this._lineCount != value) {
+                this._lineCount = value;
                 this.setBoundsChangedFlag();
                 if (this._virtual)
                     this.setVirtualListChangedFlag(true);
             }
+        }
+
+        public get columnCount(): number {
+            return this._columnCount;
+        }
+
+        public set columnCount(value: number) {
+            if (this._columnCount != value) {
+                this._columnCount = value;
+                this.setBoundsChangedFlag();
+                if (this._virtual)
+                    this.setVirtualListChangedFlag(true);
+            }
+        }
+
+        public get lineGap(): number {
+            return this._lineGap;
         }
 
         public set lineGap(value: number) {
@@ -941,29 +955,41 @@ module fairygui {
             if (layoutChanged) {
                 if (this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.SingleRow)
                     this._curLineItemCount = 1;
-                else if (this._lineItemCount != 0)
-                    this._curLineItemCount = this._lineItemCount;
                 else if (this._layout == ListLayoutType.FlowHorizontal) {
-                    this._curLineItemCount = Math.floor((this._scrollPane.viewWidth + this._columnGap) / (this._itemSize.x + this._columnGap));
-                    if (this._curLineItemCount <= 0)
-                        this._curLineItemCount = 1;
+                    if (this._columnCount > 0)
+                        this._curLineItemCount = this._columnCount;
+                    else {
+                        this._curLineItemCount = Math.floor((this._scrollPane.viewWidth + this._columnGap) / (this._itemSize.x + this._columnGap));
+                        if (this._curLineItemCount <= 0)
+                            this._curLineItemCount = 1;
+                    }
                 }
                 else if (this._layout == ListLayoutType.FlowVertical) {
-                    this._curLineItemCount = Math.floor((this._scrollPane.viewHeight + this._lineGap) / (this._itemSize.y + this._lineGap));
-                    if (this._curLineItemCount <= 0)
-                        this._curLineItemCount = 1;
+                    if (this._lineCount > 0)
+                        this._curLineItemCount = this._lineCount;
+                    else {
+                        this._curLineItemCount = Math.floor((this._scrollPane.viewHeight + this._lineGap) / (this._itemSize.y + this._lineGap));
+                        if (this._curLineItemCount <= 0)
+                            this._curLineItemCount = 1;
+                    }
                 }
                 else //pagination
                 {
-                    this._curLineItemCount = Math.floor((this._scrollPane.viewWidth + this._columnGap) / (this._itemSize.x + this._columnGap));
-                    if (this._curLineItemCount <= 0)
-                        this._curLineItemCount = 1;
-                }
+                    if (this._columnCount > 0)
+                        this._curLineItemCount = this._columnCount;
+                    else {
+                        this._curLineItemCount = Math.floor((this._scrollPane.viewWidth + this._columnGap) / (this._itemSize.x + this._columnGap));
+                        if (this._curLineItemCount <= 0)
+                            this._curLineItemCount = 1;
+                    }
 
-                if (this._layout == ListLayoutType.Pagination) {
-                    this._curLineItemCount2 = Math.floor((this._scrollPane.viewHeight + this._lineGap) / (this._itemSize.y + this._lineGap));
-                    if (this._curLineItemCount2 <= 0)
-                        this._curLineItemCount2 = 1;
+                    if (this._lineCount > 0)
+                        this._curLineItemCount2 = this._lineCount;
+                    else {
+                        this._curLineItemCount2 = Math.floor((this._scrollPane.viewHeight + this._lineGap) / (this._itemSize.y + this._lineGap));
+                        if (this._curLineItemCount2 <= 0)
+                            this._curLineItemCount2 = 1;
+                    }
                 }
             }
 
@@ -1525,20 +1551,10 @@ module fairygui {
             var lastObj: GObject = null;
             var insertIndex: number = 0;
             for (i = startIndex; i < lastIndex; i++) {
-                if (i >= this._realNumItems)
+                ii = this._virtualItems[i];
+                if (ii.updateFlag != GList.itemInfoVer)
                     continue;
 
-                col = i % this._curLineItemCount;
-                if (i - startIndex < pageSize) {
-                    if (col < startCol)
-                        continue;
-                }
-                else {
-                    if (col > startCol)
-                        continue;
-                }
-
-                ii = this._virtualItems[i];
                 if (ii.obj == null) {
                     //寻找看有没有可重用的
                     while (reuseIndex < virtualItemCount) {
@@ -1581,11 +1597,38 @@ module fairygui {
                     lastObj = ii.obj;
                 }
 
-                if (needRender)
+                if (needRender) {
                     this.itemRenderer.call(this.callbackThisObj, i % this._numItems, ii.obj);
+                    ii.width = Math.ceil(ii.obj.width);
+                    ii.height = Math.ceil(ii.obj.height);
+                }
+            }
 
-                ii.obj.setXY(Math.floor(i / pageSize) * viewWidth + col * (ii.width + this._columnGap),
-                    Math.floor(i / this._curLineItemCount) % this._curLineItemCount2 * (ii.height + this._lineGap));
+            //排列item
+            var borderX: number = (startIndex / pageSize) * viewWidth;
+            var xx: number = borderX;
+            var yy: number = 0;
+            var lineHeight: number = 0;
+            for (i = startIndex; i < lastIndex; i++) {
+                ii = this._virtualItems[i];
+                if (ii.updateFlag == GList.itemInfoVer)
+                    ii.obj.setXY(xx, yy);
+
+                if (ii.height > lineHeight)
+                    lineHeight = ii.height;
+                if (i % this._curLineItemCount == this._curLineItemCount - 1) {
+                    xx = borderX;
+                    yy += lineHeight + this._lineGap;
+                    lineHeight = 0;
+
+                    if (i == startIndex + pageSize - 1) {
+                        borderX += viewWidth;
+                        xx = borderX;
+                        yy = 0;
+                    }
+                }
+                else
+                    xx += ii.width + this._columnGap;
             }
 
             //释放未使用的
@@ -1642,7 +1685,9 @@ module fairygui {
             var maxHeight: number = 0;
             var cw: number, ch: number = 0;
             var sw: number, sh: number;
+            var j: number = 0;
             var p: number = 0;
+            var k: number = 0;
             var cnt: number = this._children.length;
             var viewWidth: number = this.viewWidth;
             var viewHeight: number = this.viewHeight;
@@ -1686,7 +1731,6 @@ module fairygui {
                 ch = curY + maxHeight;
             }
             else if (this._layout == ListLayoutType.FlowHorizontal) {
-                var j: number = 0;
                 for (i = 0; i < cnt; i++) {
                     child = this.getChildAt(i);
                     if (this.foldInvisibleItems && !child.visible)
@@ -1698,8 +1742,8 @@ module fairygui {
                     if (curX != 0)
                         curX += this._columnGap;
 
-                    if (this._lineItemCount != 0 && j >= this._lineItemCount
-                        || this._lineItemCount == 0 && curX + sw > viewWidth && maxHeight != 0) {
+                    if (this._columnCount != 0 && j >= this._columnCount
+                        || this._columnCount == 0 && curX + sw > viewWidth && maxHeight != 0) {
                         //new line
                         curX -= this._columnGap;
                         if (curX > maxWidth)
@@ -1719,7 +1763,6 @@ module fairygui {
                 cw = maxWidth;
             }
             else if (this._layout == ListLayoutType.FlowVertical) {
-                j = 0;
                 for (i = 0; i < cnt; i++) {
                     child = this.getChildAt(i);
                     if (this.foldInvisibleItems && !child.visible)
@@ -1731,8 +1774,8 @@ module fairygui {
                     if (curY != 0)
                         curY += this._lineGap;
 
-                    if (this._lineItemCount != 0 && j >= this._lineItemCount
-                        || this._lineItemCount == 0 && curY + sh > viewHeight && maxWidth != 0) {
+                    if (this._lineCount != 0 && j >= this._lineCount
+                        || this._lineCount == 0 && curY + sh > viewHeight && maxWidth != 0) {
                         curY -= this._lineGap;
                         if (curY > maxHeight)
                             maxHeight = curY;
@@ -1763,8 +1806,8 @@ module fairygui {
                     if (curX != 0)
                         curX += this._columnGap;
 
-                    if (this._lineItemCount != 0 && j >= this._lineItemCount
-                        || this._lineItemCount == 0 && curX + sw > viewWidth && maxHeight != 0) {
+                    if (this._columnCount != 0 && j >= this._columnCount
+                        || this._columnCount == 0 && curX + sw > viewWidth && maxHeight != 0) {
                         //new line
                         curX -= this._columnGap;
                         if (curX > maxWidth)
@@ -1773,11 +1816,14 @@ module fairygui {
                         curY += maxHeight + this._lineGap;
                         maxHeight = 0;
                         j = 0;
+                        k++;
 
-                        if (curY + sh > viewHeight && maxWidth != 0)//new page
+                        if (this._lineCount != 0 && k >= this._lineCount
+                            || this._lineCount == 0 && curY + sh > viewHeight && maxWidth != 0)//new page
                         {
                             p++;
                             curY = 0;
+                            k = 0;
                         }
                     }
                     child.setXY(p * viewWidth + curX, curY);
@@ -1873,8 +1919,16 @@ module fairygui {
                 this._columnGap = parseInt(str);
 
             str = xml.attributes.lineItemCount;
+            if (str) {
+                if (this._layout == ListLayoutType.FlowHorizontal || this._layout == ListLayoutType.Pagination)
+                    this._columnCount = parseInt(str);
+                else if (this._layout == ListLayoutType.FlowVertical)
+                    this._lineCount = parseInt(str);
+            }
+
+            str = xml.attributes.lineItemCount2;
             if (str)
-                this._lineItemCount = parseInt(str);
+                this._lineCount = parseInt(str);
 
             str = xml.attributes.selectionMode;
             if (str)
