@@ -1031,12 +1031,12 @@ declare module fairygui {
 declare module fairygui {
     class GList extends GComponent {
         /**
-         * itemRenderer(number number, GObject item);
-         */
+        * itemRenderer(number number, GObject item);
+        */
         itemRenderer: Function;
         /**
          * itemProvider(index:number):string;
-         */
+        */
         itemProvider: Function;
         callbackThisObj: any;
         scrollItemToViewOnClick: boolean;
@@ -1597,6 +1597,7 @@ declare module fairygui {
         private _owner;
         private _maskContainer;
         private _container;
+        private _alignContainer;
         private _viewWidth;
         private _viewHeight;
         private _contentWidth;

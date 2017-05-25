@@ -4794,10 +4794,25 @@ var fairygui;
             }
         };
         p.__render = function () {
-            if (this._boundsChanged)
+            if (this._boundsChanged) {
+                var len = this._children.length;
+                if (len > 0) {
+                    for (var i = 0; i < len; i++) {
+                        var child = this._children[i];
+                        child.ensureSizeCorrect();
+                    }
+                }
                 this.updateBounds();
+            }
         };
         p.ensureBoundsCorrect = function () {
+            var len = this._children.length;
+            if (len > 0) {
+                for (var i = 0; i < len; i++) {
+                    var child = this._children[i];
+                    child.ensureSizeCorrect();
+                }
+            }
             if (this._boundsChanged)
                 this.updateBounds();
         };
@@ -4809,10 +4824,6 @@ var fairygui;
                 var ar = Number.NEGATIVE_INFINITY, ab = Number.NEGATIVE_INFINITY;
                 var tmp = 0;
                 var i = 0;
-                for (i = 0; i < len; i++) {
-                    child = this._children[i];
-                    child.ensureSizeCorrect();
-                }
                 for (var i = 0; i < len; i++) {
                     var child = this._children[i];
                     tmp = child.x;
@@ -8162,14 +8173,10 @@ var fairygui;
             var maxHeight = 0;
             var cw, ch = 0;
             var sw, sh;
-            var p;
+            var p = 0;
             var cnt = this._children.length;
             var viewWidth = this.viewWidth;
             var viewHeight = this.viewHeight;
-            for (i = 0; i < cnt; i++) {
-                child = this.getChildAt(i);
-                child.ensureSizeCorrect();
-            }
             if (this._layout == fairygui.ListLayoutType.SingleColumn) {
                 for (i = 0; i < cnt; i++) {
                     child = this.getChildAt(i);
@@ -8444,6 +8451,8 @@ var fairygui;
         );
         p.getObject = function (url) {
             url = fairygui.UIPackage.normalizeURL(url);
+            if (url == null)
+                return null;
             var arr = this._pool[url];
             if (arr != null && arr.length) {
                 this._count--;
@@ -12098,10 +12107,20 @@ var fairygui;
             else
                 mx = Math.floor(this._owner.margin.left);
             my = Math.floor(this._owner.margin.top);
-            mx += this._owner._alignOffset.x;
-            my += this._owner._alignOffset.y;
             this._maskContainer.x = mx;
             this._maskContainer.y = my;
+            if (this._owner._alignOffset.x != 0 || this._owner._alignOffset.y != 0) {
+                if (this._alignContainer == null) {
+                    this._alignContainer = new egret.DisplayObjectContainer();
+                    this._maskContainer.addChild(this._alignContainer);
+                    this._alignContainer.addChild(this._container);
+                }
+                this._alignContainer.x = this._owner._alignOffset.x;
+                this._alignContainer.y = this._owner._alignOffset.y;
+            }
+            else if (this._alignContainer) {
+                this._alignContainer.x = this._alignContainer.y = 0;
+            }
         };
         p.setSize = function (aWidth, aHeight) {
             this.adjustMaskContainer();
