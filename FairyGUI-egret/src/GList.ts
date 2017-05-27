@@ -867,8 +867,8 @@ module fairygui {
         }
 
         /// <summary>
-        /// Set the list item count. 
-        /// If the list is not virtual, specified number of items will be created. 
+        /// Set the list item count.
+        /// If the list is not virtual, specified number of items will be created.
         /// If the list is virtual, only items in view will be created.
         /// </summary>
         public get numItems(): number {
@@ -1552,7 +1552,7 @@ module fairygui {
             var insertIndex: number = 0;
             for (i = startIndex; i < lastIndex; i++) {
                 ii = this._virtualItems[i];
-                if (ii.updateFlag != GList.itemInfoVer)
+                if (ii == undefined || ii.updateFlag != GList.itemInfoVer)
                     continue;
 
                 if (ii.obj == null) {
@@ -1611,6 +1611,7 @@ module fairygui {
             var lineHeight: number = 0;
             for (i = startIndex; i < lastIndex; i++) {
                 ii = this._virtualItems[i];
+                if(ii==undefined)   continue;
                 if (ii.updateFlag == GList.itemInfoVer)
                     ii.obj.setXY(xx, yy);
 

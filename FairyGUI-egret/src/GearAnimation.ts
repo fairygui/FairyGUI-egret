@@ -1,3 +1,4 @@
+///<reference path="GearBase.ts"/>
 
 module fairygui {
 
