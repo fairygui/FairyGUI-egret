@@ -8,7 +8,7 @@ module fairygui {
         public constructor(owner: GObject) {
             super(owner);
         }
-        
+
         protected init(): void {
             this._default = this._owner.icon;
             this._storage = {};
@@ -28,7 +28,7 @@ module fairygui {
             if (data != undefined)
                 this._owner.icon = data;
             else
-               this._owner.icon = this._default;
+                this._owner.icon = this._default;
 
             this._owner._gearLocked = false;
         }

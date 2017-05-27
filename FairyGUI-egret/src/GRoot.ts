@@ -21,25 +21,25 @@ module fairygui {
         public static shiftKeyDown: boolean;
         public static mouseX: number;
         public static mouseY: number;
-        
-        public static FOCUS_CHANGED:string = "FocusChanged";
+
+        public static FOCUS_CHANGED: string = "FocusChanged";
 
         public static get inst(): GRoot {
-            if(GRoot._inst == null)
+            if (GRoot._inst == null)
                 new GRoot();
             return GRoot._inst;
         }
 
         public constructor() {
             super();
-            if(GRoot._inst == null)
+            if (GRoot._inst == null)
                 GRoot._inst = this;
 
             this.opaque = false;
             this._volumeScale = 1;
             this._popupStack = new Array<GObject>();
             this._justClosedPopups = new Array<GObject>();
-            this.displayObject.addEventListener(egret.Event.ADDED_TO_STAGE,this.__addedToStage,this);
+            this.displayObject.addEventListener(egret.Event.ADDED_TO_STAGE, this.__addedToStage, this);
         }
 
         public get nativeStage(): egret.Stage {
@@ -50,14 +50,14 @@ module fairygui {
             this.addChild(win);
             win.requestFocus();
 
-            if(win.x > this.width)
+            if (win.x > this.width)
                 win.x = this.width - win.width;
-            else if(win.x + win.width < 0)
+            else if (win.x + win.width < 0)
                 win.x = 0;
 
-            if(win.y > this.height)
+            if (win.y > this.height)
                 win.y = this.height - win.height;
-            else if(win.y + win.height < 0)
+            else if (win.y + win.height < 0)
                 win.y = 0;
 
             this.adjustModalLayer();
@@ -68,38 +68,38 @@ module fairygui {
         }
 
         public hideWindowImmediately(win: Window): void {
-            if(win.parent == this)
+            if (win.parent == this)
                 this.removeChild(win);
 
             this.adjustModalLayer();
         }
-        
-        public bringToFront(win: Window):void {
+
+        public bringToFront(win: Window): void {
             var cnt: number = this.numChildren;
             var i: number;
-            if(this._modalLayer.parent != null && !win.modal)
+            if (this._modalLayer.parent != null && !win.modal)
                 i = this.getChildIndex(this._modalLayer) - 1;
             else
-				i = cnt - 1;
-			
-            for(;i >= 0;i--) {
+                i = cnt - 1;
+
+            for (; i >= 0; i--) {
                 var g: GObject = this.getChildAt(i);
-                if(g == win)
+                if (g == win)
                     return;
-                if(g instanceof Window)
+                if (g instanceof Window)
                     break;
             }
-			
-			if(i>=0)
-				this.setChildIndex(win,i);
+
+            if (i >= 0)
+                this.setChildIndex(win, i);
         }
 
         public showModalWait(msg: string = null): void {
-            if(UIConfig.globalModalWaiting != null) {
-                if(this._modalWaitPane == null)
+            if (UIConfig.globalModalWaiting != null) {
+                if (this._modalWaitPane == null)
                     this._modalWaitPane = UIPackage.createObjectFromURL(UIConfig.globalModalWaiting);
-                this._modalWaitPane.setSize(this.width,this.height);
-                this._modalWaitPane.addRelation(this,RelationType.Size);
+                this._modalWaitPane.setSize(this.width, this.height);
+                this._modalWaitPane.addRelation(this, RelationType.Size);
 
                 this.addChild(this._modalWaitPane);
                 this._modalWaitPane.text = msg;
@@ -107,36 +107,36 @@ module fairygui {
         }
 
         public closeModalWait(): void {
-            if(this._modalWaitPane != null && this._modalWaitPane.parent != null)
+            if (this._modalWaitPane != null && this._modalWaitPane.parent != null)
                 this.removeChild(this._modalWaitPane);
         }
 
         public closeAllExceptModals(): void {
             var arr: Array<GObject> = this._children.slice();
             var cnt: number = arr.length;
-            for(var i: number = 0;i < cnt;i++) {
+            for (var i: number = 0; i < cnt; i++) {
                 var g: GObject = arr[i];
-                if((g instanceof Window) && !(<Window><any> g).modal)
-                    (<Window><any> g).hide();
+                if ((g instanceof Window) && !(<Window><any>g).modal)
+                    (<Window><any>g).hide();
             }
         }
 
         public closeAllWindows(): void {
             var arr: Array<GObject> = this._children.slice();
             var cnt: number = arr.length;
-            for(var i: number = 0;i < cnt;i++) {
+            for (var i: number = 0; i < cnt; i++) {
                 var g: GObject = arr[i];
-                if(g instanceof Window)
-                    (<Window><any> g).hide();
+                if (g instanceof Window)
+                    (<Window><any>g).hide();
             }
         }
 
         public getTopWindow(): Window {
             var cnt: number = this.numChildren;
-            for(var i: number = cnt - 1;i >= 0;i--) {
+            for (var i: number = cnt - 1; i >= 0; i--) {
                 var g: GObject = this.getChildAt(i);
-                if(g instanceof Window) {
-                    return <Window><any> g;
+                if (g instanceof Window) {
+                    return <Window><any>g;
                 }
             }
 
@@ -151,11 +151,11 @@ module fairygui {
             return this._modalWaitPane && this._modalWaitPane.inContainer;
         }
 
-        public showPopup(popup: GObject,target: GObject = null,downward: any = null): void {
-            if(this._popupStack.length > 0) {
+        public showPopup(popup: GObject, target: GObject = null, downward: any = null): void {
+            if (this._popupStack.length > 0) {
                 var k: number = this._popupStack.indexOf(popup);
-                if(k != -1) {
-                    for(var i: number = this._popupStack.length - 1;i >= k;i--)
+                if (k != -1) {
+                    for (var i: number = this._popupStack.length - 1; i >= k; i--)
                         this.removeChild(this._popupStack.pop());
                 }
             }
@@ -165,8 +165,8 @@ module fairygui {
             this.adjustModalLayer();
 
             var pos: egret.Point;
-            var sizeW: number,sizeH: number = 0;
-            if(target) {
+            var sizeW: number, sizeH: number = 0;
+            if (target) {
                 pos = target.localToRoot();
                 sizeW = target.width;
                 sizeH = target.height;
@@ -174,15 +174,15 @@ module fairygui {
             else {
                 pos = this.globalToLocal(GRoot.mouseX, GRoot.mouseY);
             }
-            var xx: number,yy: number;
+            var xx: number, yy: number;
             xx = pos.x;
-            if(xx + popup.width > this.width)
+            if (xx + popup.width > this.width)
                 xx = xx + sizeW - popup.width;
             yy = pos.y + sizeH;
-            if((downward == null && yy + popup.height > this.height)
+            if ((downward == null && yy + popup.height > this.height)
                 || downward == false) {
                 yy = pos.y - popup.height - 1;
-                if(yy < 0) {
+                if (yy < 0) {
                     yy = 0;
                     xx += sizeW / 2;
                 }
@@ -192,24 +192,24 @@ module fairygui {
             popup.y = yy;
         }
 
-        public togglePopup(popup: GObject,target: GObject = null,downward: any = null): void {
-            if(this._justClosedPopups.indexOf(popup) != -1)
+        public togglePopup(popup: GObject, target: GObject = null, downward: any = null): void {
+            if (this._justClosedPopups.indexOf(popup) != -1)
                 return;
 
-            this.showPopup(popup,target,downward);
+            this.showPopup(popup, target, downward);
         }
 
         public hidePopup(popup: GObject = null): void {
-            if(popup != null) {
+            if (popup != null) {
                 var k: number = this._popupStack.indexOf(popup);
-                if(k != -1) {
-                    for(var i: number = this._popupStack.length - 1;i >= k;i--)
+                if (k != -1) {
+                    for (var i: number = this._popupStack.length - 1; i >= k; i--)
                         this.closePopup(this._popupStack.pop());
                 }
             }
             else {
                 var cnt: number = this._popupStack.length;
-                for(i = cnt - 1;i >= 0;i--)
+                for (i = cnt - 1; i >= 0; i--)
                     this.closePopup(this._popupStack[i]);
                 this._popupStack.length = 0;
             }
@@ -220,8 +220,8 @@ module fairygui {
         }
 
         private closePopup(target: GObject): void {
-            if(target.parent != null) {
-                if(target instanceof Window)
+            if (target.parent != null) {
+                if (target instanceof Window)
                     (<Window><any>target).hide();
                 else
                     this.removeChild(target);
@@ -243,7 +243,7 @@ module fairygui {
             this.showTooltipsWin(this._defaultTooltipWin);
         }
 
-        public showTooltipsWin(tooltipWin: GObject, position: egret.Point= null): void {
+        public showTooltipsWin(tooltipWin: GObject, position: egret.Point = null): void {
             this.hideTooltips();
 
             this._tooltipWin = tooltipWin;
@@ -258,10 +258,10 @@ module fairygui {
                 xx = position.x;
                 yy = position.y;
             }
-            var pt: egret.Point = this.globalToLocal(xx,yy);
+            var pt: egret.Point = this.globalToLocal(xx, yy);
             xx = pt.x;
             yy = pt.y;
-            
+
             if (xx + this._tooltipWin.width > this.width) {
                 xx = xx - this._tooltipWin.width - 1;
                 if (xx < 0)
@@ -287,11 +287,10 @@ module fairygui {
                 this._tooltipWin = null;
             }
         }
-        
-        public getObjectUnderPoint(globalX:number, globalY:number):GObject
-        {
-            var ret:egret.DisplayObject = this._nativeStage.$hitTest(globalX,globalY);
-            if(ret)
+
+        public getObjectUnderPoint(globalX: number, globalY: number): GObject {
+            var ret: egret.DisplayObject = this._nativeStage.$hitTest(globalX, globalY);
+            if (ret)
                 return ToolSet.displayObjectToGObject(ret);
             else
                 return null;
@@ -310,28 +309,25 @@ module fairygui {
 
             this.setFocus(value);
         }
-        
+
         private setFocus(value: GObject) {
-            if(this._focusedObject!=value)
-            {
+            if (this._focusedObject != value) {
                 this._focusedObject = value;
                 this.dispatchEventWith(GRoot.FOCUS_CHANGED);
             }
         }
-        
-        public get volumeScale():number
-        {
+
+        public get volumeScale(): number {
             return this._volumeScale;
         }
-        
-        public set volumeScale(value:number)
-        {
+
+        public set volumeScale(value: number) {
             this._volumeScale = value;
         }
-        
-        public playOneShotSound(sound: egret.Sound,volumeScale: number = 1) {
+
+        public playOneShotSound(sound: egret.Sound, volumeScale: number = 1) {
             var vs: number = this._volumeScale * volumeScale;
-            var channel:egret.SoundChannel = sound.play(0,1);
+            var channel: egret.SoundChannel = sound.play(0, 1);
             channel.volume = vs;
         }
 
@@ -341,13 +337,13 @@ module fairygui {
             if (this._modalWaitPane != null && this._modalWaitPane.parent != null)
                 this.setChildIndex(this._modalWaitPane, cnt - 1);
 
-            for(var i: number = cnt - 1;i >= 0;i--) {
+            for (var i: number = cnt - 1; i >= 0; i--) {
                 var g: GObject = this.getChildAt(i);
-                if((g instanceof Window) && (<Window><any> g).modal) {
-                    if(this._modalLayer.parent == null)
-                        this.addChildAt(this._modalLayer,i);
+                if ((g instanceof Window) && (<Window><any>g).modal) {
+                    if (this._modalLayer.parent == null)
+                        this.addChildAt(this._modalLayer, i);
                     else
-                         this.setChildIndexBefore(this._modalLayer,i);
+                        this.setChildIndexBefore(this._modalLayer, i);
                     return;
                 }
             }
@@ -360,7 +356,7 @@ module fairygui {
             this.displayObject.removeEventListener(egret.Event.ADDED_TO_STAGE, this.__addedToStage, this);
 
             this._nativeStage = this.displayObject.stage;
-            
+
             this._nativeStage.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__stageMouseDownCapture, this, true);
             this._nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__stageMouseUpCapture, this, true);
             this._nativeStage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__stageMouseMoveCapture, this, true);
@@ -382,7 +378,7 @@ module fairygui {
             GRoot.mouseY = evt.stageY;
             GRoot.touchDown = true;
 
-            var mc: egret.DisplayObject = <egret.DisplayObject><any> (evt.target);
+            var mc: egret.DisplayObject = <egret.DisplayObject><any>(evt.target);
             while (mc != this.displayObject.stage && mc != null) {
                 if (mc["$owner"]) {
                     var gg: GObject = <GObject><any>mc["$owner"];
@@ -399,12 +395,12 @@ module fairygui {
 
             this._justClosedPopups.length = 0;
             if (this._popupStack.length > 0) {
-                mc = <egret.DisplayObject><any> (evt.target);
+                mc = <egret.DisplayObject><any>(evt.target);
                 while (mc != this.displayObject.stage && mc != null) {
-                    if(mc["$owner"]) {
+                    if (mc["$owner"]) {
                         var pindex: number = this._popupStack.indexOf(<GObject><any>mc["$owner"]);
                         if (pindex != -1) {
-                            for(var i: number = this._popupStack.length - 1;i > pindex;i--) {
+                            for (var i: number = this._popupStack.length - 1; i > pindex; i--) {
                                 var popup: GObject = this._popupStack.pop();
                                 this.closePopup(popup);
                                 this._justClosedPopups.push(popup);
@@ -416,7 +412,7 @@ module fairygui {
                 }
 
                 var cnt: number = this._popupStack.length;
-                for(i = cnt - 1;i >= 0;i--) {
+                for (i = cnt - 1; i >= 0; i--) {
                     popup = this._popupStack[i];
                     this.closePopup(popup);
                     this._justClosedPopups.push(popup);
@@ -437,7 +433,7 @@ module fairygui {
         }
 
         private __winResize(evt: egret.Event): void {
-            this.setSize(this._nativeStage.stageWidth,this._nativeStage.stageHeight);
+            this.setSize(this._nativeStage.stageWidth, this._nativeStage.stageHeight);
 
             //console.info("screen size=" + w + "x" + h + "/" + this.width + "x" + this.height);
         }

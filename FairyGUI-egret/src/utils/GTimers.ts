@@ -9,9 +9,9 @@ module fairygui {
         private _enumCount: number = 0;
         private _lastTime: number = 0;
 
-		public static deltaTime:number = 0;
-		public static time:number = 0;
-		public static workCount:number= 0;
+        public static deltaTime: number = 0;
+        public static time: number = 0;
+        public static workCount: number = 0;
 
         public static inst: GTimers = new GTimers();
 
@@ -21,7 +21,7 @@ module fairygui {
             this._items = new Array<TimerItem>();
             this._itemPool = new Array<TimerItem>();
 
-            this._lastTime = egret.getTimer(); 
+            this._lastTime = egret.getTimer();
             GTimers.time = this._lastTime;
             egret.startTick(this.__timer, this);
         }
@@ -43,7 +43,7 @@ module fairygui {
             return null;
         }
 
-        public add(delayInMiniseconds: number, repeat: number, callback: Function, thisObj: any, callbackParam: any= null): void {
+        public add(delayInMiniseconds: number, repeat: number, callback: Function, thisObj: any, callbackParam: any = null): void {
             var item: TimerItem = this.findItem(callback, thisObj);
             if (!item) {
                 item = this.getItem();
@@ -59,15 +59,15 @@ module fairygui {
             item.end = false;
         }
 
-        public callLater(callback: Function, thisObj: any, callbackParam: any= null): void {
+        public callLater(callback: Function, thisObj: any, callbackParam: any = null): void {
             this.add(1, 1, callback, thisObj, callbackParam);
         }
 
-        public callDelay(delay: number, callback: Function, thisObj: any, callbackParam: any= null): void {
+        public callDelay(delay: number, callback: Function, thisObj: any, callbackParam: any = null): void {
             this.add(delay, 1, callback, thisObj, callbackParam);
         }
 
-        public callBy24Fps(callback: Function, thisObj: any, callbackParam: any= null): void {
+        public callBy24Fps(callback: Function, thisObj: any, callbackParam: any = null): void {
             this.add(GTimers.FPS24, 0, callback, thisObj, callbackParam);
         }
 
@@ -94,7 +94,7 @@ module fairygui {
         private __timer(timeStamp: number): boolean {
             GTimers.time = timeStamp;
             GTimers.workCount++;
-            
+
             GTimers.deltaTime = timeStamp - this._lastTime;
             this._lastTime = timeStamp;
 
@@ -119,7 +119,7 @@ module fairygui {
                         item.callback.call(item.thisObj);
                 }
             }
-            
+
             return false;
         }
     }

@@ -19,7 +19,7 @@ module fairygui {
                 return source;
         }
 
-        public static startsWith(source: string, str: string, ignoreCase: boolean= false): boolean {
+        public static startsWith(source: string, str: string, ignoreCase: boolean = false): boolean {
             if (!source)
                 return false;
             else if (source.length < str.length)
@@ -33,7 +33,7 @@ module fairygui {
             }
         }
 
-        public static endsWith(source: string, str: string, ignoreCase: boolean= false): boolean {
+        public static endsWith(source: string, str: string, ignoreCase: boolean = false): boolean {
             if (!source)
                 return false;
             else if (source.length < str.length)
@@ -74,7 +74,7 @@ module fairygui {
         }
 
 
-        public static convertToHtmlColor(argb: number, hasAlpha: boolean= false): string {
+        public static convertToHtmlColor(argb: number, hasAlpha: boolean = false): string {
             var alpha: string;
             if (hasAlpha)
                 alpha = (argb >> 24 & 0xFF).toString(16);
@@ -94,7 +94,7 @@ module fairygui {
             return "#" + alpha + red + green + blue;
         }
 
-        public static convertFromHtmlColor(str: string, hasAlpha: boolean= false): number {
+        public static convertFromHtmlColor(str: string, hasAlpha: boolean = false): number {
             if (str.length < 1)
                 return 0;
 
@@ -111,7 +111,7 @@ module fairygui {
 
         public static displayObjectToGObject(obj: egret.DisplayObject): GObject {
             while (obj != null && !(obj instanceof egret.Stage)) {
-                if(obj["$owner"])
+                if (obj["$owner"])
                     return <GObject><any>obj["$owner"];
 
                 obj = obj.parent;
@@ -146,20 +146,20 @@ module fairygui {
             return ToolSet.defaultUBBParser.parse(text);
         }
 
-        public static clamp(value:number, min:number, max:number):number {
-			if(value<min)
-				value = min;
-			else if(value>max)
-				value = max;
-			return value;
-		}
-		
-		public static clamp01(value:number):number	{
-			if(value>1)
-				value = 1;
-			else if(value<0)
-				value = 0;
-			return value;
-		}
+        public static clamp(value: number, min: number, max: number): number {
+            if (value < min)
+                value = min;
+            else if (value > max)
+                value = max;
+            return value;
+        }
+
+        public static clamp01(value: number): number {
+            if (value > 1)
+                value = 1;
+            else if (value < 0)
+                value = 0;
+            return value;
+        }
     }
 }

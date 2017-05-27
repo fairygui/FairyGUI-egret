@@ -10,12 +10,12 @@ module fairygui {
         }
 
         public get icon(): string {
-            if(this._iconObject!=null)
+            if (this._iconObject != null)
                 return this._iconObject.icon;
         }
 
         public set icon(value: string) {
-            if(this._iconObject!=null)
+            if (this._iconObject != null)
                 this._iconObject.icon = value;
             this.updateGear(7);
         }
@@ -42,22 +42,22 @@ module fairygui {
         }
 
         public get titleColor(): number {
-            if(this._titleObject instanceof GTextField)
+            if (this._titleObject instanceof GTextField)
                 return (<GTextField>this._titleObject).color;
-            else if(this._titleObject instanceof GLabel)
+            else if (this._titleObject instanceof GLabel)
                 return (<GLabel>this._titleObject).titleColor;
-            else if(this._titleObject instanceof GButton)
+            else if (this._titleObject instanceof GButton)
                 return (<GButton>this._titleObject).titleColor;
             else
                 return 0;
         }
 
         public set titleColor(value: number) {
-            if(this._titleObject instanceof GTextField)
+            if (this._titleObject instanceof GTextField)
                 (<GTextField>this._titleObject).color = value;
-            else if(this._titleObject instanceof GLabel)
+            else if (this._titleObject instanceof GLabel)
                 (<GLabel>this._titleObject).titleColor = value;
-            else if(this._titleObject instanceof GButton)
+            else if (this._titleObject instanceof GButton)
                 (<GButton>this._titleObject).titleColor = value;
             this.updateGear(4);
         }
@@ -65,28 +65,28 @@ module fairygui {
         public get color(): number {
             return this.titleColor;
         }
-        
+
         public set color(value: number) {
             this.titleColor = value;
         }
 
         public get titleFontSize(): number {
-            if(this._titleObject instanceof GTextField)
+            if (this._titleObject instanceof GTextField)
                 return (<GTextField>this._titleObject).fontSize;
-            else if(this._titleObject instanceof GLabel)
+            else if (this._titleObject instanceof GLabel)
                 return (<GLabel>this._titleObject).titleFontSize;
-            else if(this._titleObject instanceof GButton)
+            else if (this._titleObject instanceof GButton)
                 return (<GButton>this._titleObject).titleFontSize;
             else
                 return 0;
         }
 
         public set titleFontSize(value: number) {
-            if(this._titleObject instanceof GTextField)
+            if (this._titleObject instanceof GTextField)
                 (<GTextField>this._titleObject).fontSize = value;
-            else if(this._titleObject instanceof GLabel)
+            else if (this._titleObject instanceof GLabel)
                 (<GLabel>this._titleObject).titleFontSize = value;
-            else if(this._titleObject instanceof GButton)
+            else if (this._titleObject instanceof GButton)
                 (<GButton>this._titleObject).titleFontSize = value;
         }
 
@@ -116,12 +116,12 @@ module fairygui {
             if (xml) {
                 var str: string;
                 str = xml.attributes.title;
-                if(str)
+                if (str)
                     this.text = str;
                 str = xml.attributes.icon;
-                if(str)
+                if (str)
                     this.icon = str;
-               
+
                 str = xml.attributes.titleColor;
                 if (str)
                     this.titleColor = ToolSet.convertFromHtmlColor(str);
@@ -129,20 +129,19 @@ module fairygui {
                 if (str)
                     this.titleFontSize = parseInt(str);
 
-                if(this._titleObject instanceof GTextInput)
-                {
+                if (this._titleObject instanceof GTextInput) {
                     str = xml.attributes.prompt;
-                    if(str)
+                    if (str)
                         (<GTextInput><any>this._titleObject).promptText = str;
                     str = xml.attributes.maxLength;
-					if(str)
-						(<GTextInput><any>this._titleObject).maxLength = parseInt(str);
-					str = xml.attributes.restrict;
-					if(str)
-						(<GTextInput><any>this._titleObject).restrict = str;
-					str = xml.attributes.password;
-					if(str)
-						(<GTextInput><any>this._titleObject).password = str=="true";
+                    if (str)
+                        (<GTextInput><any>this._titleObject).maxLength = parseInt(str);
+                    str = xml.attributes.restrict;
+                    if (str)
+                        (<GTextInput><any>this._titleObject).restrict = str;
+                    str = xml.attributes.password;
+                    if (str)
+                        (<GTextInput><any>this._titleObject).password = str == "true";
                 }
             }
         }

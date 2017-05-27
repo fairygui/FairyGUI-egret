@@ -27,7 +27,9 @@ module fairygui {
 
         public getObject(url: string): GObject {
             url = UIPackage.normalizeURL(url);
-            
+            if (url == null)
+                return null;
+
             var arr: Array<GObject> = this._pool[url];
             if (arr != null && arr.length) {
                 this._count--;

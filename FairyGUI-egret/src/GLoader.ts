@@ -51,9 +51,9 @@ module fairygui {
         }
 
         public dispose(): void {
-            if(this._contentItem == null && (this._content instanceof egret.Bitmap)) {
+            if (this._contentItem == null && (this._content instanceof egret.Bitmap)) {
                 var texture: egret.Texture = <egret.Texture>(<egret.Bitmap>this._content).texture;
-                if(texture != null)
+                if (texture != null)
                     this.freeExternal(texture);
             }
 
@@ -150,23 +150,23 @@ module fairygui {
                 this.updateGear(5);
             }
         }
-        
+
         public get color(): number {
             return this._color;
         }
-        
+
         public set color(value: number) {
-            if(this._color != value) {
+            if (this._color != value) {
                 this._color = value;
-               this.updateGear(4);
+                this.updateGear(4);
                 this.applyColor();
             }
         }
-                    
+
         private applyColor(): void {
             //todo:
         }
-            
+
         public get showErrorSign(): boolean {
             return this._showErrorSign;
         }
@@ -179,16 +179,16 @@ module fairygui {
             return this._content;
         }
 
-        public get texture():egret.Texture {
-            if(this._content instanceof egret.Bitmap)
+        public get texture(): egret.Texture {
+            if (this._content instanceof egret.Bitmap)
                 return (<egret.Bitmap>this._content).texture;
             else
                 return null;
         }
 
-        public set texture(value:egret.Texture) {
-           this.url = null;
-           this.switchToMovieMode(false);
+        public set texture(value: egret.Texture) {
+            this.url = null;
+            this.switchToMovieMode(false);
 
             (<egret.Bitmap>this._content).texture = value;
             if (value != null) {
@@ -208,30 +208,30 @@ module fairygui {
             if (!this._url)
                 return;
 
-            if(ToolSet.startsWith(this._url,"ui://"))
+            if (ToolSet.startsWith(this._url, "ui://"))
                 this.loadFromPackage(this._url);
             else
                 this.loadExternal();
         }
-        
+
         protected loadFromPackage(itemURL: string) {
             this._contentItem = UIPackage.getItemByURL(itemURL);
-            if(this._contentItem != null) {
+            if (this._contentItem != null) {
                 this._contentItem.load();
 
-                if(this._autoSize)
+                if (this._autoSize)
                     this.setSize(this._contentItem.width, this._contentItem.height);
 
-                if(this._contentItem.type == PackageItemType.Image) {
-                    if(this._contentItem.texture == null) {
+                if (this._contentItem.type == PackageItemType.Image) {
+                    if (this._contentItem.texture == null) {
                         this.setErrorState();
                     }
                     else {
                         this.switchToMovieMode(false);
-                        var bm:egret.Bitmap = <egret.Bitmap>this._content;
+                        var bm: egret.Bitmap = <egret.Bitmap>this._content;
                         bm.texture = this._contentItem.texture;
                         bm.scale9Grid = this._contentItem.scale9Grid;
-                        if(this._contentItem.scaleByTile)
+                        if (this._contentItem.scaleByTile)
                             bm.fillMode = egret.BitmapFillMode.REPEAT;
                         else
                             bm.fillMode = egret.BitmapFillMode.SCALE;
@@ -240,11 +240,11 @@ module fairygui {
                         this.updateLayout();
                     }
                 }
-                else if(this._contentItem.type == PackageItemType.MovieClip) {
+                else if (this._contentItem.type == PackageItemType.MovieClip) {
                     this.switchToMovieMode(true);
                     this._contentSourceWidth = this._contentItem.width;
                     this._contentSourceHeight = this._contentItem.height;
-                    var mc:MovieClip = <MovieClip>this._content;
+                    var mc: MovieClip = <MovieClip>this._content;
                     mc.interval = this._contentItem.interval;
                     mc.swing = this._contentItem.swing;
                     mc.repeatDelay = this._contentItem.repeatDelay;
@@ -258,27 +258,27 @@ module fairygui {
                 this.setErrorState();
         }
 
-        private switchToMovieMode(value: boolean):void {
-            if(value) {
-                if(!(this._content instanceof MovieClip))
+        private switchToMovieMode(value: boolean): void {
+            if (value) {
+                if (!(this._content instanceof MovieClip))
                     this._content = new MovieClip();
             }
             else {
-                if(!(this._content instanceof egret.Bitmap))
+                if (!(this._content instanceof egret.Bitmap))
                     this._content = new egret.Bitmap();
             }
             this._container.addChild(this._content);
         }
 
         protected loadExternal(): void {
-            RES.getResAsync(this._url,this.__getResCompleted,this);
+            RES.getResAsync(this._url, this.__getResCompleted, this);
         }
-        
+
         protected freeExternal(texture: egret.Texture): void {
-        }        
+        }
 
         protected onExternalLoadSuccess(texture: egret.Texture): void {
-            if(!(this._content instanceof egret.Bitmap)) {
+            if (!(this._content instanceof egret.Bitmap)) {
                 this._content = new egret.Bitmap();
                 this._container.addChild(this._content);
             }
@@ -295,9 +295,9 @@ module fairygui {
         protected onExternalLoadFailed(): void {
             this.setErrorState();
         }
-        
-        private __getResCompleted(res:any, key:string): void {
-            if(res instanceof egret.Texture)
+
+        private __getResCompleted(res: any, key: string): void {
+            if (res instanceof egret.Texture)
                 this.onExternalLoadSuccess(<egret.Texture>res);
             else
                 this.onExternalLoadFailed();
@@ -355,28 +355,25 @@ module fairygui {
             }
             else {
                 var sx: number = 1, sy: number = 1;
-				if(this._fill!=LoaderFillType.None)
-				{
-					sx = this.width/this._contentSourceWidth;
-					sy = this.height/this._contentSourceHeight;
-					
-					if(sx!=1 || sy!=1)
-					{
-						if (this._fill == LoaderFillType.ScaleMatchHeight)
-							sx = sy;
-						else if (this._fill == LoaderFillType.ScaleMatchWidth)
-							sy = sx;
-						else if (this._fill == LoaderFillType.Scale)
-						{
-							if (sx > sy)
-								sx = sy;
-							else
-								sy = sx;
-						}
-						this._contentWidth = this._contentSourceWidth * sx;
-						this._contentHeight = this._contentSourceHeight * sy;
-					}
-				}
+                if (this._fill != LoaderFillType.None) {
+                    sx = this.width / this._contentSourceWidth;
+                    sy = this.height / this._contentSourceHeight;
+
+                    if (sx != 1 || sy != 1) {
+                        if (this._fill == LoaderFillType.ScaleMatchHeight)
+                            sx = sy;
+                        else if (this._fill == LoaderFillType.ScaleMatchWidth)
+                            sy = sx;
+                        else if (this._fill == LoaderFillType.Scale) {
+                            if (sx > sy)
+                                sx = sy;
+                            else
+                                sy = sx;
+                        }
+                        this._contentWidth = this._contentSourceWidth * sx;
+                        this._contentHeight = this._contentSourceHeight * sy;
+                    }
+                }
 
                 if (this._content instanceof egret.Bitmap) {
                     this._content.width = this._contentWidth;
@@ -403,10 +400,10 @@ module fairygui {
 
             if (this._content != null && this._content.parent != null)
                 this._container.removeChild(this._content);
-                
-            if(this._contentItem == null && (this._content instanceof egret.Bitmap)) {
+
+            if (this._contentItem == null && (this._content instanceof egret.Bitmap)) {
                 var texture: egret.Texture = <egret.Texture>(<egret.Bitmap>this._content).texture;
-                if(texture != null)
+                if (texture != null)
                     this.freeExternal(texture);
             }
 
@@ -414,10 +411,10 @@ module fairygui {
         }
 
         protected handleSizeChanged(): void {
-            if(!this._updatingLayout)
+            if (!this._updatingLayout)
                 this.updateLayout();
 
-            this._container.hitArea.setTo(0,0,this.width,this.height);
+            this._container.hitArea.setTo(0, 0, this.width, this.height);
         }
 
         public setup_beforeAdd(xml: any): void {
@@ -449,9 +446,9 @@ module fairygui {
             this._playing = xml.attributes.playing != "false";
 
             str = xml.attributes.color;
-            if(str)
+            if (str)
                 this.color = ToolSet.convertFromHtmlColor(str);
-                        
+
             if (this._url)
                 this.loadContent();
         }

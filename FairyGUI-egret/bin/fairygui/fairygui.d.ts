@@ -1031,18 +1031,19 @@ declare module fairygui {
 declare module fairygui {
     class GList extends GComponent {
         /**
-         * itemRenderer(number number, GObject item);
-         */
+        * itemRenderer(number number, GObject item);
+        */
         itemRenderer: Function;
         /**
          * itemProvider(index:number):string;
-         */
+        */
         itemProvider: Function;
         callbackThisObj: any;
         scrollItemToViewOnClick: boolean;
         foldInvisibleItems: boolean;
         private _layout;
-        private _lineItemCount;
+        private _lineCount;
+        private _columnCount;
         private _lineGap;
         private _columnGap;
         private _defaultItem;
@@ -1066,8 +1067,9 @@ declare module fairygui {
         constructor();
         dispose(): void;
         layout: ListLayoutType;
+        lineCount: number;
+        columnCount: number;
         lineGap: number;
-        lineItemCount: number;
         columnGap: number;
         align: AlignType;
         verticalAlign: VertAlignType;
@@ -1597,6 +1599,7 @@ declare module fairygui {
         private _owner;
         private _maskContainer;
         private _container;
+        private _alignContainer;
         private _viewWidth;
         private _viewHeight;
         private _contentWidth;

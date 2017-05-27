@@ -9,11 +9,11 @@ module fairygui {
         private _pageNames: Array<string>;
         private _pageTransitions: Array<PageTransition>;
         private _playingTransition: Transition;
-        
+
         public _parent: GComponent;
         public _autoRadioGroupDepth: boolean;
-        
-        private static _nextPageId:number = 0;
+
+        private static _nextPageId: number = 0;
 
         public constructor() {
             super();
@@ -40,8 +40,8 @@ module fairygui {
         }
 
         public set selectedIndex(value: number) {
-            if(this._selectedIndex != value) {
-                if(value > this._pageIds.length - 1)
+            if (this._selectedIndex != value) {
+                if (value > this._pageIds.length - 1)
                     throw "index out of bounds: " + value;
                 this._previousIndex = this._selectedIndex;
                 this._selectedIndex = value;
@@ -49,23 +49,23 @@ module fairygui {
 
                 this.dispatchEvent(new StateChangeEvent(StateChangeEvent.CHANGED));
 
-                if(this._playingTransition) {
+                if (this._playingTransition) {
                     this._playingTransition.stop();
                     this._playingTransition = null;
                 }
 
-                if(this._pageTransitions) {
+                if (this._pageTransitions) {
                     var len: number = this._pageTransitions.length;
-                    for(var i: number = 0;i < len;i++) {
+                    for (var i: number = 0; i < len; i++) {
                         var pt: PageTransition = this._pageTransitions[i];
-                        if(pt.toIndex == this._selectedIndex && (pt.fromIndex == -1 || pt.fromIndex==this._previousIndex)) {
+                        if (pt.toIndex == this._selectedIndex && (pt.fromIndex == -1 || pt.fromIndex == this._previousIndex)) {
                             this._playingTransition = this.parent.getTransition(pt.transitionName);
                             break;
                         }
                     }
-                    
-                    if(this._playingTransition)
-                        this._playingTransition.play(function(): void { this._playingTransition = null; }, this);
+
+                    if (this._playingTransition)
+                        this._playingTransition.play(function (): void { this._playingTransition = null; }, this);
                 }
             }
         }
@@ -73,14 +73,14 @@ module fairygui {
         //功能和设置selectedIndex一样，但不会触发事件
         public setSelectedIndex(value: number = 0): void {
             if (this._selectedIndex != value) {
-                if(value > this._pageIds.length - 1)
+                if (value > this._pageIds.length - 1)
                     throw "index out of bounds: " + value;
-                    
+
                 this._previousIndex = this._selectedIndex;
                 this._selectedIndex = value;
                 this._parent.applyController(this);
-                    
-                if(this._playingTransition) {
+
+                if (this._playingTransition) {
                     this._playingTransition.stop();
                     this._playingTransition = null;
                 }
@@ -128,7 +128,7 @@ module fairygui {
             return this._pageNames[index];
         }
 
-        public addPage(name: string= ""): void {
+        public addPage(name: string = ""): void {
             this.addPageAt(name, this._pageIds.length);
         }
 
@@ -173,8 +173,8 @@ module fairygui {
             else
                 this._parent.applyController(this);
         }
-        
-        public hasPage(aName:string):boolean {
+
+        public hasPage(aName: string): boolean {
             return this._pageNames.indexOf(aName) != -1;
         }
 
@@ -184,7 +184,7 @@ module fairygui {
 
         public getPageIdByName(aName: string): string {
             var i: number = this._pageNames.indexOf(aName);
-            if(i != -1)
+            if (i != -1)
                 return this._pageIds[i];
             else
                 return null;
@@ -192,7 +192,7 @@ module fairygui {
 
         public getPageNameById(aId: string): string {
             var i: number = this._pageIds.indexOf(aId);
-            if(i != -1)
+            if (i != -1)
                 return this._pageNames[i];
             else
                 return null;
@@ -213,17 +213,17 @@ module fairygui {
             var i: number = this._pageIds.indexOf(val);
             this.selectedIndex = i;
         }
-        
+
         public set oppositePageId(val: string) {
             var i: number = this._pageIds.indexOf(val);
-            if(i > 0)
+            if (i > 0)
                 this.selectedIndex = 0;
-            else if(this._pageIds.length > 1)
+            else if (this._pageIds.length > 1)
                 this.selectedIndex = 1;
         }
-        
+
         public get previousPageId(): string {
-            if(this._previousIndex == -1)
+            if (this._previousIndex == -1)
                 return null;
             else
                 return this._pageIds[this._previousIndex];
@@ -232,7 +232,7 @@ module fairygui {
         public setup(xml: any): void {
             this._name = xml.attributes.name;
             this._autoRadioGroupDepth = xml.attributes.autoRadioGroupDepth == "true";
-            
+
             var i: number = 0;
             var k: number = 0;
             var str: string = xml.attributes.pages;
@@ -244,25 +244,25 @@ module fairygui {
                     this._pageNames.push(arr[i + 1]);
                 }
             }
-            
+
             str = xml.attributes.transitions;
-            if(str) {
+            if (str) {
                 this._pageTransitions = new Array<PageTransition>();
                 arr = str.split(",");
                 cnt = arr.length;
-                for(i = 0;i < cnt;i++) {
+                for (i = 0; i < cnt; i++) {
                     str = arr[i];
-                    if(!str)
+                    if (!str)
                         continue;
 
                     var pt: PageTransition = new PageTransition();
                     k = str.indexOf("=");
                     pt.transitionName = str.substr(k + 1);
-                    str = str.substring(0,k);
+                    str = str.substring(0, k);
                     k = str.indexOf("-");
                     pt.toIndex = parseInt(str.substring(k + 1));
-                    str = str.substring(0,k);
-                    if(str == "*")
+                    str = str.substring(0, k);
+                    if (str == "*")
                         pt.fromIndex = -1;
                     else
                         pt.fromIndex = parseInt(str);
@@ -276,10 +276,9 @@ module fairygui {
                 this._selectedIndex = -1;
         }
     }
-    
-    class PageTransition
-    {
-        public transitionName:string;
+
+    class PageTransition {
+        public transitionName: string;
         public fromIndex: number = 0;
         public toIndex: number = 0;
     }

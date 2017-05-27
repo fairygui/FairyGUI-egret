@@ -8,7 +8,7 @@ module fairygui {
         public constructor(owner: GObject) {
             super(owner);
         }
-        
+
         protected init(): void {
             this._default = new GearAnimationValue((<any>this._owner).playing,
                 (<any>this._owner).frame);
@@ -16,7 +16,7 @@ module fairygui {
         }
 
         protected addStatus(pageId: string, value: string): void {
-            if(value=="-")
+            if (value == "-")
                 return;
 
             var gv: GearAnimationValue;
@@ -40,13 +40,13 @@ module fairygui {
 
             (<any>this._owner).frame = gv.frame;
             (<any>this._owner).playing = gv.playing;
-            
+
             this._owner._gearLocked = false;
         }
 
         public updateState(): void {
             var gv: GearAnimationValue = this._storage[this._controller.selectedPageId];
-            if(!gv) {
+            if (!gv) {
                 gv = new GearAnimationValue();
                 this._storage[this._controller.selectedPageId] = gv;
             }
@@ -55,14 +55,12 @@ module fairygui {
             gv.playing = (<any>this._owner).playing;
         }
     }
-    
-    class GearAnimationValue
-    {
-        public playing:boolean;
-        public frame:number;
-        
-        public constructor(playing:boolean=true, frame:number=0)
-        {
+
+    class GearAnimationValue {
+        public playing: boolean;
+        public frame: number;
+
+        public constructor(playing: boolean = true, frame: number = 0) {
             this.playing = playing;
             this.frame = frame;
         }

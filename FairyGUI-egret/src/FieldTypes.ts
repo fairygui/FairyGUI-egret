@@ -11,7 +11,7 @@ module fairygui {
     export enum ProgressTitleType { Percent, ValueAndMax, Value, Max };
     export enum ScrollBarDisplayType { Default, Visible, Auto, Hidden };
     export enum ScrollType { Horizontal, Vertical, Both };
-    export enum FlipType { None,  Horizontal, Vertical, Both };
+    export enum FlipType { None, Horizontal, Vertical, Both };
     export enum ChildrenRenderOrder { Ascent, Descent, Arch };
 
     export enum RelationType {
@@ -237,10 +237,10 @@ module fairygui {
                 return ScrollType.Vertical;
         }
     }
-    
+
 
     export function parseFlipType(value: string): FlipType {
-        switch(value) {
+        switch (value) {
             case "hz":
                 return FlipType.Horizontal;
             case "vt":
