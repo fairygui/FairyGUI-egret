@@ -272,7 +272,7 @@ module fairygui {
         }
 
         protected loadExternal(): void {
-            RES.getResAsync(this._url, this.__getResCompleted, this);
+            RES.getResByUrl(this._url, this.__getResCompleted, this);
         }
 
         protected freeExternal(texture: egret.Texture): void {
