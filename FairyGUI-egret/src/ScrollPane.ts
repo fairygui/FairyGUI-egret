@@ -297,7 +297,11 @@ module fairygui {
         public get isRightMost(): boolean {
             return this._xPerc == 1 || this._xOverlap == 0;
         }
-
+        
+        public get pageSize():number
+        {
+            return this._pageMode ? Math.floor(this.contentWidth / this._pageSizeH) : 0;
+        }
         public get currentPageX(): number {
             return this._pageMode ? Math.floor(this.posX / this._pageSizeH) : 0;
         }
