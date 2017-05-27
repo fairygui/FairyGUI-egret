@@ -1,3 +1,4 @@
+///<reference path="GComponent.ts"/>
 
 module fairygui {
 

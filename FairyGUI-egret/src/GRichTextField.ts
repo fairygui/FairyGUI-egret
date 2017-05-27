@@ -1,3 +1,4 @@
+///<reference path="GTextField.ts"/>
 
 module fairygui {
 

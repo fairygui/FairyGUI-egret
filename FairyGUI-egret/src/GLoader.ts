@@ -1,3 +1,4 @@
+///<reference path="GObjectPool.ts"/>
 
 module fairygui {
 
