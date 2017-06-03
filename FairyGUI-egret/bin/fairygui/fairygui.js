@@ -10135,14 +10135,14 @@ var fairygui;
             var textLength = this._text.length;
             for (var offset = 0; offset < textLength; ++offset) {
                 var ch = this._text.charAt(offset);
-                var cc = ch.charCodeAt(offset);
-                if (ch == "\n") {
+                var cc = ch.charCodeAt(0);
+                if (cc == 10) {
                     lineBuffer += ch;
                     line = LineInfo.borrow();
                     line.width = lineWidth;
                     if (lineTextHeight == 0) {
                         if (lastLineHeight == 0)
-                            lastLineHeight = Math.ceil(this._fontSize * fontScale);
+                            lastLineHeight = this._fontSize;
                         if (lineHeight == 0)
                             lineHeight = lastLineHeight;
                         lineTextHeight = lineHeight;
@@ -10165,29 +10165,25 @@ var fairygui;
                     wordEnd = 0;
                     continue;
                 }
-                if (cc > 256 || cc <= 32) {
-                    if (wordChars > 0)
-                        wordEnd = lineWidth;
-                    wordChars = 0;
-                }
-                else {
+                if (cc >= 65 && cc <= 90 || cc >= 97 && cc <= 122) {
                     if (wordChars == 0)
                         wordStart = lineWidth;
                     wordChars++;
                 }
-                if (ch == " ") {
+                else {
+                    if (wordChars > 0)
+                        wordEnd = lineWidth;
+                    wordChars = 0;
+                }
+                if (cc == 32) {
                     glyphWidth = Math.ceil(this._fontSize / 2);
-                    glyphHeight = Math.ceil(this._fontSize);
+                    glyphHeight = this._fontSize;
                 }
                 else {
                     var glyph = this._bitmapFont.glyphs[ch];
                     if (glyph) {
                         glyphWidth = Math.ceil(glyph.advance * fontScale);
                         glyphHeight = Math.ceil(glyph.lineHeight * fontScale);
-                    }
-                    else if (ch == " ") {
-                        glyphWidth = Math.ceil(this._bitmapFont.size * fontScale / 2);
-                        glyphHeight = Math.ceil(this._bitmapFont.size * fontScale);
                     }
                     else {
                         glyphWidth = 0;
@@ -10216,7 +10212,7 @@ var fairygui;
                         var len = lineBuffer.length - wordChars;
                         line.text = fairygui.ToolSet.trimRight(lineBuffer.substr(0, len));
                         line.width = wordEnd;
-                        lineBuffer = lineBuffer.substr(len + 1);
+                        lineBuffer = lineBuffer.substr(len);
                         lineWidth -= wordStart;
                     }
                     else {
@@ -10237,8 +10233,7 @@ var fairygui;
                     this._lines.push(line);
                 }
             }
-            if (lineBuffer.length > 0
-                || this._lines.length > 0 && fairygui.ToolSet.endsWith(this._lines[this._lines.length - 1].text, "\n")) {
+            if (lineBuffer.length > 0) {
                 line = LineInfo.borrow();
                 line.width = lineWidth;
                 if (lineHeight == 0)
@@ -10305,6 +10300,13 @@ var fairygui;
                 textLength = line.text.length;
                 for (var j = 0; j < textLength; j++) {
                     ch = line.text.charAt(j);
+                    cc = ch.charCodeAt(0);
+                    if (cc == 10)
+                        continue;
+                    if (cc == 32) {
+                        charX += letterSpacing + Math.ceil(this._fontSize / 2);
+                        continue;
+                    }
                     glyph = this._bitmapFont.glyphs[ch];
                     if (glyph != null) {
                         charIndent = (line.height + line.textHeight) / 2 - Math.ceil(glyph.lineHeight * fontScale);
@@ -10322,9 +10324,6 @@ var fairygui;
                         bm.scaleY = fontScale;
                         this._bitmapContainer.addChild(bm);
                         charX += letterSpacing + Math.ceil(glyph.advance * fontScale);
-                    }
-                    else if (ch == " ") {
-                        charX += letterSpacing + Math.ceil(this._bitmapFont.size * fontScale / 2);
                     }
                     else {
                         charX += letterSpacing;
