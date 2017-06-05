@@ -1,3 +1,4 @@
+///<reference path="GComponent.ts"/>
 
 module fairygui {
 
@@ -352,9 +353,9 @@ module fairygui {
 
         public setup_afterAdd(xml: any): void {
             super.setup_afterAdd(xml);
-
-            if (this._downEffect == 2)
-                this.setPivot(0.5, 0.5);
+            
+            if(this._downEffect==2)
+                this.setPivot(0.5,0.5,xml.attributes.anchor);
 
             xml = ToolSet.findChildNode(xml, "Button");
             if (xml) {

@@ -1,3 +1,4 @@
+///<reference path="GObject.ts"/>
 
 module fairygui {
 

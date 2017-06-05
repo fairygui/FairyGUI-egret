@@ -221,7 +221,7 @@ module fairygui {
                 this._init();
         }
 
-        protected onInit(): void {
+        public onInit(): void {
         }
 
         protected onShown(): void {

@@ -1,3 +1,4 @@
+///<reference path="UBBParser.ts"/>
 
 module fairygui {
 
