@@ -1551,6 +1551,9 @@ module fairygui {
             var lastObj: GObject = null;
             var insertIndex: number = 0;
             for (i = startIndex; i < lastIndex; i++) {
+                if (i >= this._realNumItems)
+                    continue;
+
                 ii = this._virtualItems[i];
                 if (ii == undefined || ii.updateFlag != GList.itemInfoVer)
                     continue;
@@ -1610,6 +1613,9 @@ module fairygui {
             var yy: number = 0;
             var lineHeight: number = 0;
             for (i = startIndex; i < lastIndex; i++) {
+                if (i >= this._realNumItems)
+                    continue;
+
                 ii = this._virtualItems[i];
                 if(ii==undefined)   continue;
                 if (ii.updateFlag == GList.itemInfoVer)
