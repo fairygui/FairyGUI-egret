@@ -1078,6 +1078,9 @@ module fairygui {
             if (!this.isDragged || !this._touchEffect || this._inertiaDisabled || this._owner.displayObject.stage == null)
                 return;
 
+            // touch事件不一定都是以tap结束,拖拽的结束动作是touchEnd,这时需要正确处理isDragged标记位.否则在播放滚动动画时会因为处于拖拽状态而使滚动动画失效
+            this.isDragged = false;
+
             var time: number = (egret.getTimer() - this._time2) / 1000;
             if (time == 0)
                 time = 0.001;
