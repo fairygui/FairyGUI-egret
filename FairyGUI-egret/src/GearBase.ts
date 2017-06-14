@@ -103,12 +103,14 @@ module fairygui {
                 if (str)
                     pages = str.split(",");
 
-                str = xml.attributes.values;
-                if (str)
-                    values = str.split("|");
+                if (pages) {
+                    str = xml.attributes.values;
+                    if (str)
+                        values = str.split("|");
+                    else
+                        values = [];
 
-                if (pages && values) {
-                    for (var i: number = 0; i < values.length; i++)
+                    for (var i: number = 0; i < pages.length; i++)
                         this.addStatus(pages[i], values[i]);
                 }
 

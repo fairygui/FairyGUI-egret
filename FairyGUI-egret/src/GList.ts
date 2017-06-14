@@ -646,11 +646,9 @@ module fairygui {
             if (this._autoResizeItem)
                 this.adjustItemsSize();
 
-            if (this._layout == ListLayoutType.FlowHorizontal || this._layout == ListLayoutType.FlowVertical) {
-                this.setBoundsChangedFlag();
-                if (this._virtual)
-                    this.setVirtualListChangedFlag(true);
-            }
+            this.setBoundsChangedFlag();
+            if (this._virtual)
+                this.setVirtualListChangedFlag(true);
         }
 
         public adjustItemsSize(): void {
