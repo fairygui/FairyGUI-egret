@@ -17,6 +17,7 @@ module fairygui {
         private _selectedIndex: number = 0;
         private _buttonController: Controller;
         private _popupDownward: any = true;
+        private _selectionController: Controller;
 
         private _over: boolean;
         private _down: boolean;
@@ -160,6 +161,8 @@ module fairygui {
                 if (this._icons != null)
                     this.icon = null;
             }
+
+            this.updateSelectionController();
         }
 
         public get value(): string {
@@ -168,6 +171,14 @@ module fairygui {
 
         public set value(val: string) {
             this.selectedIndex = this._values.indexOf(val);
+        }
+
+        public get selectionController(): Controller {
+            return this._selectionController;
+        }
+
+        public set selectionController(value: Controller) {
+            this._selectionController = value;
         }
 
         protected setState(val: string): void {
@@ -217,6 +228,23 @@ module fairygui {
             }*/
 
             this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__mousedown, this);
+        }
+
+        public handleControllerChanged(c: Controller): void {
+            super.handleControllerChanged(c);
+
+            if (this._selectionController == c)
+                this.selectedIndex = c.selectedIndex;
+        }
+
+        private updateSelectionController(): void {
+            if (this._selectionController != null && !this._selectionController.changing
+                && this._selectedIndex < this._selectionController.pageCount) {
+                var c: Controller = this._selectionController;
+                this._selectionController = null;
+                c.selectedIndex = this._selectedIndex;
+                this._selectionController = c;
+            }
         }
 
         public dispose(): void {
@@ -282,6 +310,10 @@ module fairygui {
                     else if (str == "auto")
                         this._popupDownward = null;
                 }
+
+                str = xml.attributes.selectionController;
+                if (str)
+                    this._selectionController = this.parent.getController(str);
             }
         }
 

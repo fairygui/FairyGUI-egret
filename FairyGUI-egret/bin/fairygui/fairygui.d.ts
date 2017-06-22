@@ -9,6 +9,7 @@ declare module fairygui {
         private _playingTransition;
         _parent: GComponent;
         _autoRadioGroupDepth: boolean;
+        changing: boolean;
         private static _nextPageId;
         constructor();
         name: string;
@@ -881,6 +882,7 @@ declare module fairygui {
         private _selectedIndex;
         private _buttonController;
         private _popupDownward;
+        private _selectionController;
         private _over;
         private _down;
         constructor();
@@ -894,8 +896,11 @@ declare module fairygui {
         values: Array<string>;
         selectedIndex: number;
         value: string;
+        selectionController: Controller;
         protected setState(val: string): void;
         protected constructFromXML(xml: any): void;
+        handleControllerChanged(c: Controller): void;
+        private updateSelectionController();
         dispose(): void;
         setup_afterAdd(xml: any): void;
         protected showDropdown(): void;
@@ -1051,6 +1056,7 @@ declare module fairygui {
         private _selectionMode;
         private _align;
         private _verticalAlign;
+        private _selectionController;
         private _lastSelectedIndex;
         private _pool;
         private _virtual;
@@ -1077,6 +1083,7 @@ declare module fairygui {
         defaultItem: string;
         autoResizeItem: boolean;
         selectionMode: ListSelectionMode;
+        selectionController: Controller;
         itemPool: GObjectPool;
         getFromPool(url?: string): GObject;
         returnToPool(obj: GObject): void;
@@ -1102,6 +1109,8 @@ declare module fairygui {
         resizeToFit(itemCount?: number, minSize?: number): void;
         getMaxItemWidth(): number;
         protected handleSizeChanged(): void;
+        handleControllerChanged(c: Controller): void;
+        private updateSelectionController(index);
         adjustItemsSize(): void;
         getSnappingPosition(xValue: number, yValue: number, resultPoint?: egret.Point): egret.Point;
         scrollToView(index: number, ani?: boolean, setFirst?: boolean): void;
@@ -1130,6 +1139,7 @@ declare module fairygui {
         private handleAlign(contentWidth, contentHeight);
         protected updateBounds(): void;
         setup_beforeAdd(xml: any): void;
+        setup_afterAdd(xml: any): void;
     }
 }
 declare module fairygui {
@@ -1644,6 +1654,7 @@ declare module fairygui {
         private _isHoldAreaDone;
         private _aniFlag;
         private _scrollBarVisible;
+        private _pageController;
         private _hzScrollBar;
         private _vtScrollBar;
         isDragged: boolean;
@@ -1672,6 +1683,7 @@ declare module fairygui {
         isRightMost: boolean;
         currentPageX: number;
         currentPageY: number;
+        pageController: Controller;
         scrollingPosX: number;
         scrollingPosY: number;
         contentWidth: number;
@@ -1690,6 +1702,8 @@ declare module fairygui {
         isChildInView(obj: GObject): boolean;
         cancelDragging(): void;
         onOwnerSizeChanged(): void;
+        handleControllerChanged(c: Controller): void;
+        private updatePageController();
         adjustMaskContainer(): void;
         setSize(aWidth: number, aHeight: number): void;
         setContentSize(aWidth: number, aHeight: number): void;

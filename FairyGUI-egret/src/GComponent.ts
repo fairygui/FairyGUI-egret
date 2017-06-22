@@ -1051,7 +1051,15 @@ module fairygui {
         public setup_afterAdd(xml: any): void {
             super.setup_afterAdd(xml);
 
-            var str: String = xml.attributes.controller;
+            var str: string;
+
+            if (this.scrollPane) {
+                str = xml.attributes.pageController;
+                if (str)
+                    this.scrollPane.pageController = this.parent.getController(str);
+            }
+
+            str = xml.attributes.controller;
             if (str) {
                 var arr: string[] = str.split(",");
                 for (var i: number = 0; i < arr.length; i += 2) {

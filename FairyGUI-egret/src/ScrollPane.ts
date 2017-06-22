@@ -58,6 +58,8 @@ module fairygui {
         private _aniFlag: number;
         private _scrollBarVisible: boolean;
 
+        private _pageController: Controller;
+
         private _hzScrollBar: GScrollBar;
         private _vtScrollBar: GScrollBar;
 
@@ -299,7 +301,14 @@ module fairygui {
         }
 
         public get currentPageX(): number {
-            return this._pageMode ? Math.floor(this.posX / this._pageSizeH) : 0;
+            if (!this._pageMode)
+                return 0;
+
+            var page: number = Math.floor(this._xPos / this._pageSizeH);
+            if (this._xPos - page * this._pageSizeH > this._pageSizeH * 0.5)
+                page++;
+
+            return page;
         }
 
         public set currentPageX(value: number) {
@@ -308,13 +317,29 @@ module fairygui {
         }
 
         public get currentPageY(): number {
-            return this._pageMode ? Math.floor(this.posY / this._pageSizeV) : 0;
+            if (!this._pageMode)
+                return 0;
+
+            var page: number = Math.floor(this._yPos / this._pageSizeV);
+            if (this._yPos - page * this._pageSizeV > this._pageSizeV * 0.5)
+                page++;
+
+            return page;
         }
 
         public set currentPageY(value: number) {
             if (this._pageMode && this._yOverlap > 0)
                 this.setPosY(value * this._pageSizeV, false);
         }
+
+        public get pageController(): Controller {
+            return this._pageController;
+        }
+
+        public set pageController(value: Controller) {
+            this._pageController = value;
+        }
+
 
         public get scrollingPosX(): number {
             return ToolSet.clamp(-this._container.x, 0, this._xOverlap);
@@ -481,6 +506,31 @@ module fairygui {
         public onOwnerSizeChanged(): void {
             this.setSize(this._owner.width, this._owner.height);
             this.posChanged(false);
+        }
+
+        public handleControllerChanged(c: Controller): void {
+            if (this._pageController == c) {
+                if (this._scrollType == ScrollType.Horizontal)
+                    this.currentPageX = c.selectedIndex;
+                else
+                    this.currentPageY = c.selectedIndex;
+            }
+        }
+
+        private updatePageController(): void {
+            if (this._pageController != null && !this._pageController.changing) {
+                var index: number;
+                if (this._scrollType == ScrollType.Horizontal)
+                    index = this.currentPageX;
+                else
+                    index = this.currentPageY;
+                if (index < this._pageController.pageCount) {
+                    var c: Controller = this._pageController;
+                    this._pageController = null; //防止HandleControllerChanged的调用
+                    c.selectedIndex = index;
+                    this._pageController = c;
+                }
+            }
         }
 
         public adjustMaskContainer(): void {
@@ -699,6 +749,9 @@ module fairygui {
                 this._vtScrollBar.scrollPerc = this._yPerc;
             if (this._hzScrollBar != null)
                 this._hzScrollBar.scrollPerc = this._xPerc;
+
+            if (this._pageMode)
+                this.updatePageController();
         }
 
         private validateHolderPos(): void {
@@ -865,6 +918,9 @@ module fairygui {
                 if (this._hzScrollBar)
                     this._hzScrollBar.scrollPerc = this._xPerc;
             }
+
+            if (this._pageMode)
+                this.updatePageController();
         }
 
         private syncPos(): void {
@@ -877,6 +933,9 @@ module fairygui {
                 this._yPos = ToolSet.clamp(-this._container.y, 0, this._yOverlap);
                 this._yPerc = this._yPos / this._yOverlap;
             }
+
+            if (this._pageMode)
+                this.updatePageController();
         }
 
         private syncScrollBar(end: boolean = false): void {
