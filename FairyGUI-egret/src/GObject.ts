@@ -8,8 +8,6 @@ module fairygui {
 
         private _x: number = 0;
         private _y: number = 0;
-        private _width: number = 0;
-        private _height: number = 0;
         private _alpha: number = 1;
         private _rotation: number = 0;
         private _visible: boolean = true;
@@ -38,18 +36,26 @@ module fairygui {
         private _displayObject: egret.DisplayObject;
         private _dragBounds: egret.Rectangle;
 
+        public sourceWidth: number = 0;
+        public sourceHeight: number = 0;
+        public initWidth: number = 0;
+        public initHeight: number = 0;
+		public minWidth:number = 0;
+		public minHeight:number = 0;
+		public maxWidth:number = 0;
+		public maxHeight:number = 0;
+
         public _parent: GComponent;
+        public _width: number = 0;
+        public _height: number = 0;
         public _rawWidth: number = 0;
         public _rawHeight: number = 0;
-        public _sourceWidth: number = 0;
-        public _sourceHeight: number = 0;
-        public _initWidth: number = 0;
-        public _initHeight: number = 0;
         public _id: string;
         public _name: string;
         public _underConstruct: boolean;
         public _gearLocked: boolean;
         public _yOffset: number = 0;
+        public _sizePercentInGroup:number = 0;
         //Size的实现方式，有两种，0-GObject的w/h等于DisplayObject的w/h。1-GObject的sourceWidth/sourceHeight等于DisplayObject的w/h，剩余部分由scale实现
         public _sizeImplType: number = 0;
 
@@ -115,6 +121,8 @@ module fairygui {
 
                 if (this._parent && !(this._parent instanceof GList)) {
                     this._parent.setBoundsChangedFlag();
+                    if (this._group != null)
+						this._group.setBoundsChangedFlag();
                     this.dispatchEventWith(GObject.XY_CHANGED);
                 }
 
@@ -174,10 +182,14 @@ module fairygui {
             if (this._rawWidth != wv || this._rawHeight != hv) {
                 this._rawWidth = wv;
                 this._rawHeight = hv;
-                if (wv < 0)
-                    wv = 0;
-                if (hv < 0)
-                    hv = 0;
+				if(wv<this.minWidth)
+					wv = this.minWidth;
+				if(hv<this.minHeight)
+					hv = this.minHeight;
+				if(this.maxWidth>0 && wv>this.maxWidth)
+					wv = this.maxWidth;
+				if(this.maxHeight>0 && hv>this.maxHeight)
+					hv = this.maxHeight;
                 var dWidth: number = wv - this._width;
                 var dHeight: number = hv - this._height;
                 this._width = wv;
@@ -195,11 +207,16 @@ module fairygui {
                     }
                 }
 
+                if (this instanceof GGroup)
+                    (<GGroup><any>this).resizeChildren(dWidth, dHeight);
+
                 this.updateGear(2);
 
                 if (this._parent) {
                     this._relations.onOwnerSizeChanged(dWidth, dHeight);
                     this._parent.setBoundsChangedFlag();
+                    if (this._group != null)
+						this._group.setBoundsChangedFlag(true);
                 }
 
                 this.dispatchEventWith(GObject.SIZE_CHANGED);
@@ -207,22 +224,6 @@ module fairygui {
         }
 
         public ensureSizeCorrect(): void {
-        }
-
-        public get sourceHeight(): number {
-            return this._sourceHeight;
-        }
-
-        public get sourceWidth(): number {
-            return this._sourceWidth;
-        }
-
-        public get initHeight(): number {
-            return this._initHeight;
-        }
-
-        public get initWidth(): number {
-            return this._initWidth;
         }
 
         public get actualWidth(): number {
@@ -332,8 +333,8 @@ module fairygui {
                         py = this._pivotY * this._height;
                     }
                     else {
-                        px = this._pivotX * this._sourceWidth;
-                        py = this._pivotY * this._sourceHeight;
+                        px = this._pivotX * this.sourceWidth;
+                        py = this._pivotY * this.sourceHeight;
                     }
                     var pt: egret.Point = this._displayObject.matrix.transformPoint(px, py, GObject.sHelperPoint);
                     this._pivotOffsetX = this._pivotX * this._width - (pt.x - this._displayObject.x);
@@ -530,7 +531,14 @@ module fairygui {
         }
 
         public set group(value: GGroup) {
-            this._group = value;
+			if (this._group != value)
+			{
+				if (this._group != null)
+					this._group.setBoundsChangedFlag(true);
+				this._group = value;
+				if (this._group != null)
+					this._group.setBoundsChangedFlag(true);
+			}
         }
 
         public get group(): GGroup {
@@ -943,21 +951,21 @@ module fairygui {
         }
 
         protected handleSizeChanged(): void {
-            if (this._displayObject != null && this._sizeImplType == 1 && this._sourceWidth != 0 && this._sourceHeight != 0) {
-                this._displayObject.scaleX = this._width / this._sourceWidth * this._scaleX;
-                this._displayObject.scaleY = this._height / this._sourceHeight * this._scaleY;
+            if (this._displayObject != null && this._sizeImplType == 1 && this.sourceWidth != 0 && this.sourceHeight != 0) {
+                this._displayObject.scaleX = this._width / this.sourceWidth * this._scaleX;
+                this._displayObject.scaleY = this._height / this.sourceHeight * this._scaleY;
             }
         }
 
         protected handleScaleChanged(): void {
             if (this._displayObject != null) {
-                if (this._sizeImplType == 0 || this._sourceWidth == 0 || this._sourceHeight == 0) {
+                if (this._sizeImplType == 0 || this.sourceWidth == 0 || this.sourceHeight == 0) {
                     this._displayObject.scaleX = this._scaleX;
                     this._displayObject.scaleY = this._scaleY;
                 }
                 else {
-                    this._displayObject.scaleX = this._width / this._sourceWidth * this._scaleX;
-                    this._displayObject.scaleY = this._height / this._sourceHeight * this._scaleY;
+                    this._displayObject.scaleX = this._width / this.sourceWidth * this._scaleX;
+                    this._displayObject.scaleY = this._height / this.sourceHeight * this._scaleY;
                 }
             }
         }
@@ -996,9 +1004,18 @@ module fairygui {
             str = xml.attributes.size;
             if (str) {
                 arr = str.split(",");
-                this._initWidth = parseInt(arr[0]);
-                this._initHeight = parseInt(arr[1]);
-                this.setSize(this._initWidth, this._initHeight, true);
+                this.initWidth = parseInt(arr[0]);
+                this.initHeight = parseInt(arr[1]);
+                this.setSize(this.initWidth, this.initHeight, true);
+            }
+
+            str = xml.attributes.restrictSize;
+            if (str) {
+                arr = str.split(",");
+                this.minWidth = parseInt(arr[0]);
+                this.maxWidth = parseInt(arr[1]);
+                this.minHeight = parseInt(arr[2]);
+                this.maxHeight = parseInt(arr[3]);
             }
 
             str = xml.attributes.scale;
@@ -1020,27 +1037,9 @@ module fairygui {
             str = xml.attributes.pivot;
             if (str) {
                 arr = str.split(",");
-                var n1: number = parseFloat(arr[0]);
-                var n2: number = parseFloat(arr[1])
-                //旧版本的兼容性处理
-                if (n1 > 2) {
-                    if (this._sourceWidth != 0)
-                        n1 = n1 / this._sourceWidth;
-                    else
-                        n1 = 0;
-                }
-
-                if (n2 > 2) {
-                    if (this._sourceHeight != 0)
-                        n2 = n2 / this._sourceHeight;
-                    else
-                        n2 = 0;
-                }
                 str = xml.attributes.anchor;
-                this.setPivot(n1, n2, str == "true");
+                this.setPivot(parseFloat(arr[0]), parseFloat(arr[1]), str == "true");
             }
-            else
-                this.setPivot(0, 0, false);
 
             str = xml.attributes.alpha;
             if (str)

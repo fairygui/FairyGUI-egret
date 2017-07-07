@@ -13,6 +13,7 @@ module fairygui {
     export enum ScrollType { Horizontal, Vertical, Both };
     export enum FlipType { None, Horizontal, Vertical, Both };
     export enum ChildrenRenderOrder { Ascent, Descent, Arch };
+    export enum GroupLayoutType { None, Horizontal, Vertical };
 
     export enum RelationType {
         Left_Left = 0,
@@ -286,10 +287,21 @@ module fairygui {
             "Back.Out": egret.Ease.backOut,
             "Back.InOut": egret.Ease.backInOut
         };
-    export function ParseEaseType(value: string): Function {
+    export function parseEaseType(value: string): Function {
         var ret: Function = EaseMap[value];
         if (!ret)
             ret = egret.Ease.quartOut;
         return ret;
+    }
+
+    export function parseGroupLayoutType(value: string): GroupLayoutType {
+        switch (value) {
+            case "hz":
+                return GroupLayoutType.Horizontal;
+            case "vt":
+                return GroupLayoutType.Vertical;
+            default:
+                return GroupLayoutType.None;
+        }
     }
 } 

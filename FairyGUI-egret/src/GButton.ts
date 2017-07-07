@@ -464,18 +464,21 @@ module fairygui {
                 }
             }
 
-            if (!this._changeStateOnClick)
-                return;
-
             if (this._mode == ButtonMode.Check) {
-                this.selected = !this._selected;
-                this.dispatchEvent(new StateChangeEvent(StateChangeEvent.CHANGED));
+                if (this._changeStateOnClick) {
+                    this.selected = !this._selected;
+                    this.dispatchEvent(new StateChangeEvent(StateChangeEvent.CHANGED));
+                }
             }
             else if (this._mode == ButtonMode.Radio) {
-                if (!this._selected) {
+                if (this._changeStateOnClick && !this._selected) {
                     this.selected = true;
                     this.dispatchEvent(new StateChangeEvent(StateChangeEvent.CHANGED));
                 }
+            }
+            else {
+                if (this._relatedController)
+                    this._relatedController.selectedPageId = this._pageOption.id;
             }
         }
     }

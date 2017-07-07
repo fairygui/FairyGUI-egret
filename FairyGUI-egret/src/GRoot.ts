@@ -143,6 +143,11 @@ module fairygui {
             return null;
         }
 
+        public get modalLayer():GGraph
+		{
+			return this._modalLayer;
+		}
+
         public get hasModalWindow(): boolean {
             return this._modalLayer.parent != null;
         }

@@ -75,15 +75,15 @@ module fairygui {
 
         public set texture(value: egret.Texture) {
             if (value != null) {
-                this._sourceWidth = value.textureWidth;
-                this._sourceHeight = value.textureHeight;
+                this.sourceWidth = value.textureWidth;
+                this.sourceHeight = value.textureHeight;
             }
             else {
-                this._sourceWidth = 0;
-                this._sourceHeight = 0;
+                this.sourceWidth = 0;
+                this.sourceHeight = 0;
             }
-            this._initWidth = this._sourceWidth;
-            this._initHeight = this._sourceHeight;
+            this.initWidth = this.sourceWidth;
+            this.initHeight = this.sourceHeight;
             this._content.scale9Grid = null;
             this._content.fillMode = egret.BitmapFillMode.SCALE;
             this._content.texture = value;
@@ -101,16 +101,16 @@ module fairygui {
         }
 
         public constructFromResource(): void {
-            this._sourceWidth = this.packageItem.width;
-            this._sourceHeight = this.packageItem.height;
-            this._initWidth = this._sourceWidth;
-            this._initHeight = this._sourceHeight;
+            this.sourceWidth = this.packageItem.width;
+            this.sourceHeight = this.packageItem.height;
+            this.initWidth = this.sourceWidth;
+            this.initHeight = this.sourceHeight;
             this._content.scale9Grid = this.packageItem.scale9Grid;
             this._content.smoothing = this.packageItem.smoothing;
             if (this.packageItem.scaleByTile)
                 this._content.fillMode = egret.BitmapFillMode.REPEAT;
 
-            this.setSize(this._sourceWidth, this._sourceHeight);
+            this.setSize(this.sourceWidth, this.sourceHeight);
 
             this.packageItem.load();
             this._content.texture = this.packageItem.texture;

@@ -1324,6 +1324,13 @@ var fairygui;
     })(fairygui.ChildrenRenderOrder || (fairygui.ChildrenRenderOrder = {}));
     var ChildrenRenderOrder = fairygui.ChildrenRenderOrder;
     ;
+    (function (GroupLayoutType) {
+        GroupLayoutType[GroupLayoutType["None"] = 0] = "None";
+        GroupLayoutType[GroupLayoutType["Horizontal"] = 1] = "Horizontal";
+        GroupLayoutType[GroupLayoutType["Vertical"] = 2] = "Vertical";
+    })(fairygui.GroupLayoutType || (fairygui.GroupLayoutType = {}));
+    var GroupLayoutType = fairygui.GroupLayoutType;
+    ;
     (function (RelationType) {
         RelationType[RelationType["Left_Left"] = 0] = "Left_Left";
         RelationType[RelationType["Left_Center"] = 1] = "Left_Center";
@@ -1591,13 +1598,24 @@ var fairygui;
         "Back.Out": egret.Ease.backOut,
         "Back.InOut": egret.Ease.backInOut
     };
-    function ParseEaseType(value) {
+    function parseEaseType(value) {
         var ret = EaseMap[value];
         if (!ret)
             ret = egret.Ease.quartOut;
         return ret;
     }
-    fairygui.ParseEaseType = ParseEaseType;
+    fairygui.parseEaseType = parseEaseType;
+    function parseGroupLayoutType(value) {
+        switch (value) {
+            case "hz":
+                return GroupLayoutType.Horizontal;
+            case "vt":
+                return GroupLayoutType.Vertical;
+            default:
+                return GroupLayoutType.None;
+        }
+    }
+    fairygui.parseGroupLayoutType = parseGroupLayoutType;
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -1666,7 +1684,7 @@ var fairygui;
                 this._tween = true;
             str = xml.attributes.ease;
             if (str)
-                this._easeType = fairygui.ParseEaseType(str);
+                this._easeType = fairygui.parseEaseType(str);
             str = xml.attributes.duration;
             if (str)
                 this._tweenTime = parseFloat(str);
@@ -2821,7 +2839,7 @@ var fairygui;
                         this._maxTime = item.time + item.duration;
                     str = cxml.attributes.ease;
                     if (str)
-                        item.easeType = fairygui.ParseEaseType(str);
+                        item.easeType = fairygui.parseEaseType(str);
                     str = cxml.attributes.repeat;
                     if (str)
                         item.repeat = parseInt(str);
@@ -3006,8 +3024,6 @@ var fairygui;
             _super.call(this);
             this._x = 0;
             this._y = 0;
-            this._width = 0;
-            this._height = 0;
             this._alpha = 1;
             this._rotation = 0;
             this._visible = true;
@@ -3028,13 +3044,20 @@ var fairygui;
             this._handlingController = false;
             this._focusable = false;
             this._pixelSnapping = false;
+            this.sourceWidth = 0;
+            this.sourceHeight = 0;
+            this.initWidth = 0;
+            this.initHeight = 0;
+            this.minWidth = 0;
+            this.minHeight = 0;
+            this.maxWidth = 0;
+            this.maxHeight = 0;
+            this._width = 0;
+            this._height = 0;
             this._rawWidth = 0;
             this._rawHeight = 0;
-            this._sourceWidth = 0;
-            this._sourceHeight = 0;
-            this._initWidth = 0;
-            this._initHeight = 0;
             this._yOffset = 0;
+            this._sizePercentInGroup = 0;
             //Size的实现方式，有两种，0-GObject的w/h等于DisplayObject的w/h。1-GObject的sourceWidth/sourceHeight等于DisplayObject的w/h，剩余部分由scale实现
             this._sizeImplType = 0;
             this._id = "" + GObject._gInstanceCounter++;
@@ -3085,6 +3108,8 @@ var fairygui;
                 this.updateGear(1);
                 if (this._parent && !(this._parent instanceof fairygui.GList)) {
                     this._parent.setBoundsChangedFlag();
+                    if (this._group != null)
+                        this._group.setBoundsChangedFlag();
                     this.dispatchEventWith(GObject.XY_CHANGED);
                 }
                 if (GObject.draggingObject == this && !GObject.sUpdateInDragging)
@@ -3142,10 +3167,14 @@ var fairygui;
             if (this._rawWidth != wv || this._rawHeight != hv) {
                 this._rawWidth = wv;
                 this._rawHeight = hv;
-                if (wv < 0)
-                    wv = 0;
-                if (hv < 0)
-                    hv = 0;
+                if (wv < this.minWidth)
+                    wv = this.minWidth;
+                if (hv < this.minHeight)
+                    hv = this.minHeight;
+                if (this.maxWidth > 0 && wv > this.maxWidth)
+                    wv = this.maxWidth;
+                if (this.maxHeight > 0 && hv > this.maxHeight)
+                    hv = this.maxHeight;
                 var dWidth = wv - this._width;
                 var dHeight = hv - this._height;
                 this._width = wv;
@@ -3161,36 +3190,20 @@ var fairygui;
                         this.applyPivot();
                     }
                 }
+                if (this instanceof fairygui.GGroup)
+                    this.resizeChildren(dWidth, dHeight);
                 this.updateGear(2);
                 if (this._parent) {
                     this._relations.onOwnerSizeChanged(dWidth, dHeight);
                     this._parent.setBoundsChangedFlag();
+                    if (this._group != null)
+                        this._group.setBoundsChangedFlag(true);
                 }
                 this.dispatchEventWith(GObject.SIZE_CHANGED);
             }
         };
         p.ensureSizeCorrect = function () {
         };
-        d(p, "sourceHeight"
-            ,function () {
-                return this._sourceHeight;
-            }
-        );
-        d(p, "sourceWidth"
-            ,function () {
-                return this._sourceWidth;
-            }
-        );
-        d(p, "initHeight"
-            ,function () {
-                return this._initHeight;
-            }
-        );
-        d(p, "initWidth"
-            ,function () {
-                return this._initWidth;
-            }
-        );
         d(p, "actualWidth"
             ,function () {
                 return this.width * Math.abs(this._scaleX);
@@ -3298,8 +3311,8 @@ var fairygui;
                         py = this._pivotY * this._height;
                     }
                     else {
-                        px = this._pivotX * this._sourceWidth;
-                        py = this._pivotY * this._sourceHeight;
+                        px = this._pivotX * this.sourceWidth;
+                        py = this._pivotY * this.sourceHeight;
                     }
                     var pt = this._displayObject.matrix.transformPoint(px, py, GObject.sHelperPoint);
                     this._pivotOffsetX = this._pivotX * this._width - (pt.x - this._displayObject.x);
@@ -3498,7 +3511,13 @@ var fairygui;
                 return this._group;
             }
             ,function (value) {
-                this._group = value;
+                if (this._group != value) {
+                    if (this._group != null)
+                        this._group.setBoundsChangedFlag(true);
+                    this._group = value;
+                    if (this._group != null)
+                        this._group.setBoundsChangedFlag(true);
+                }
             }
         );
         p.getGear = function (index) {
@@ -3905,20 +3924,20 @@ var fairygui;
             }
         };
         p.handleSizeChanged = function () {
-            if (this._displayObject != null && this._sizeImplType == 1 && this._sourceWidth != 0 && this._sourceHeight != 0) {
-                this._displayObject.scaleX = this._width / this._sourceWidth * this._scaleX;
-                this._displayObject.scaleY = this._height / this._sourceHeight * this._scaleY;
+            if (this._displayObject != null && this._sizeImplType == 1 && this.sourceWidth != 0 && this.sourceHeight != 0) {
+                this._displayObject.scaleX = this._width / this.sourceWidth * this._scaleX;
+                this._displayObject.scaleY = this._height / this.sourceHeight * this._scaleY;
             }
         };
         p.handleScaleChanged = function () {
             if (this._displayObject != null) {
-                if (this._sizeImplType == 0 || this._sourceWidth == 0 || this._sourceHeight == 0) {
+                if (this._sizeImplType == 0 || this.sourceWidth == 0 || this.sourceHeight == 0) {
                     this._displayObject.scaleX = this._scaleX;
                     this._displayObject.scaleY = this._scaleY;
                 }
                 else {
-                    this._displayObject.scaleX = this._width / this._sourceWidth * this._scaleX;
-                    this._displayObject.scaleY = this._height / this._sourceHeight * this._scaleY;
+                    this._displayObject.scaleX = this._width / this.sourceWidth * this._scaleX;
+                    this._displayObject.scaleY = this._height / this.sourceHeight * this._scaleY;
                 }
             }
         };
@@ -3945,9 +3964,17 @@ var fairygui;
             str = xml.attributes.size;
             if (str) {
                 arr = str.split(",");
-                this._initWidth = parseInt(arr[0]);
-                this._initHeight = parseInt(arr[1]);
-                this.setSize(this._initWidth, this._initHeight, true);
+                this.initWidth = parseInt(arr[0]);
+                this.initHeight = parseInt(arr[1]);
+                this.setSize(this.initWidth, this.initHeight, true);
+            }
+            str = xml.attributes.restrictSize;
+            if (str) {
+                arr = str.split(",");
+                this.minWidth = parseInt(arr[0]);
+                this.maxWidth = parseInt(arr[1]);
+                this.minHeight = parseInt(arr[2]);
+                this.maxHeight = parseInt(arr[3]);
             }
             str = xml.attributes.scale;
             if (str) {
@@ -3965,26 +3992,9 @@ var fairygui;
             str = xml.attributes.pivot;
             if (str) {
                 arr = str.split(",");
-                var n1 = parseFloat(arr[0]);
-                var n2 = parseFloat(arr[1]);
-                //旧版本的兼容性处理
-                if (n1 > 2) {
-                    if (this._sourceWidth != 0)
-                        n1 = n1 / this._sourceWidth;
-                    else
-                        n1 = 0;
-                }
-                if (n2 > 2) {
-                    if (this._sourceHeight != 0)
-                        n2 = n2 / this._sourceHeight;
-                    else
-                        n2 = 0;
-                }
                 str = xml.attributes.anchor;
-                this.setPivot(n1, n2, str == "true");
+                this.setPivot(parseFloat(arr[0]), parseFloat(arr[1]), str == "true");
             }
-            else
-                this.setPivot(0, 0, false);
             str = xml.attributes.alpha;
             if (str)
                 this.alpha = parseFloat(str);
@@ -4310,6 +4320,7 @@ var fairygui;
                 if (child.sortingOrder != 0)
                     this._sortingChildCount--;
                 this._children.splice(index, 1);
+                child.group = null;
                 if (child.inContainer) {
                     this._container.removeChild(child.displayObject);
                     if (this._childrenRenderOrder == fairygui.ChildrenRenderOrder.Arch)
@@ -4973,11 +4984,19 @@ var fairygui;
             var arr;
             str = xml.attributes.size;
             arr = str.split(",");
-            this._sourceWidth = parseInt(arr[0]);
-            this._sourceHeight = parseInt(arr[1]);
-            this._initWidth = this._sourceWidth;
-            this._initHeight = this._sourceHeight;
-            this.setSize(this._sourceWidth, this._sourceHeight);
+            this.sourceWidth = parseInt(arr[0]);
+            this.sourceHeight = parseInt(arr[1]);
+            this.initWidth = this.sourceWidth;
+            this.initHeight = this.sourceHeight;
+            this.setSize(this.sourceWidth, this.sourceHeight);
+            str = xml.attributes.restrictSize;
+            if (str) {
+                arr = str.split(",");
+                this.minWidth = parseInt(arr[0]);
+                this.maxWidth = parseInt(arr[1]);
+                this.minHeight = parseInt(arr[2]);
+                this.maxHeight = parseInt(arr[3]);
+            }
             str = xml.attributes.pivot;
             if (str) {
                 arr = str.split(",");
@@ -5540,17 +5559,21 @@ var fairygui;
                         fairygui.GRoot.inst.playOneShotSound(sound, this._soundVolumeScale);
                 }
             }
-            if (!this._changeStateOnClick)
-                return;
             if (this._mode == fairygui.ButtonMode.Check) {
-                this.selected = !this._selected;
-                this.dispatchEvent(new fairygui.StateChangeEvent(fairygui.StateChangeEvent.CHANGED));
+                if (this._changeStateOnClick) {
+                    this.selected = !this._selected;
+                    this.dispatchEvent(new fairygui.StateChangeEvent(fairygui.StateChangeEvent.CHANGED));
+                }
             }
             else if (this._mode == fairygui.ButtonMode.Radio) {
-                if (!this._selected) {
+                if (this._changeStateOnClick && !this._selected) {
                     this.selected = true;
                     this.dispatchEvent(new fairygui.StateChangeEvent(fairygui.StateChangeEvent.CHANGED));
                 }
+            }
+            else {
+                if (this._relatedController)
+                    this._relatedController.selectedPageId = this._pageOption.id;
             }
         };
         GButton.UP = "up";
@@ -6417,18 +6440,76 @@ var fairygui;
         __extends(GGroup, _super);
         function GGroup() {
             _super.call(this);
+            this._layout = 0;
+            this._lineGap = 0;
+            this._columnGap = 0;
+            this._percentReady = false;
+            this._boundsChanged = false;
+            this._updating = 0;
         }
         var d = __define,c=GGroup,p=c.prototype;
+        d(p, "layout"
+            ,function () {
+                return this._layout;
+            }
+            ,function (value) {
+                if (this._layout != value) {
+                    this._layout = value;
+                    this.setBoundsChangedFlag(true);
+                }
+            }
+        );
+        d(p, "lineGap"
+            ,function () {
+                return this._lineGap;
+            }
+            ,function (value) {
+                if (this._lineGap != value) {
+                    this._lineGap = value;
+                    this.setBoundsChangedFlag();
+                }
+            }
+        );
+        d(p, "columnGap"
+            ,function () {
+                return this._columnGap;
+            }
+            ,function (value) {
+                if (this._columnGap != value) {
+                    this._columnGap = value;
+                    this.setBoundsChangedFlag();
+                }
+            }
+        );
+        p.setBoundsChangedFlag = function (childSizeChanged) {
+            if (childSizeChanged === void 0) { childSizeChanged = false; }
+            if (this._updating == 0 && this._parent != null && !this._underConstruct) {
+                if (childSizeChanged)
+                    this._percentReady = false;
+                if (!this._boundsChanged) {
+                    this._boundsChanged = true;
+                    if (this._layout != fairygui.GroupLayoutType.None)
+                        fairygui.GTimers.inst.callLater(this.ensureBoundsCorrect, this);
+                }
+            }
+        };
+        p.ensureBoundsCorrect = function () {
+            if (this._boundsChanged)
+                this.updateBounds();
+        };
         p.updateBounds = function () {
-            if (this._updating || !this.parent)
+            fairygui.GTimers.inst.remove(this.ensureBoundsCorrect, this);
+            this._boundsChanged = false;
+            if (this._parent == null)
                 return;
+            this.handleLayout();
             var cnt = this._parent.numChildren;
-            var i = 0;
+            var i;
             var child;
             var ax = Number.POSITIVE_INFINITY, ay = Number.POSITIVE_INFINITY;
             var ar = Number.NEGATIVE_INFINITY, ab = Number.NEGATIVE_INFINITY;
-            var tmp = 0;
-            this._empty = true;
+            var tmp;
+            var empty = true;
             for (i = 0; i < cnt; i++) {
                 child = this._parent.getChildAt(i);
                 if (child.group == this) {
@@ -6444,24 +6525,109 @@ var fairygui;
                     tmp = child.y + child.height;
                     if (tmp > ab)
                         ab = tmp;
-                    this._empty = false;
+                    empty = false;
                 }
             }
-            this._updating = true;
-            if (!this._empty) {
+            if (!empty) {
+                this._updating = 1;
                 this.setXY(ax, ay);
+                this._updating = 2;
                 this.setSize(ar - ax, ab - ay);
             }
-            else
+            else {
+                this._updating = 2;
                 this.setSize(0, 0);
-            this._updating = false;
+            }
+            this._updating = 0;
+        };
+        p.handleLayout = function () {
+            this._updating |= 1;
+            var child;
+            var i;
+            var cnt;
+            if (this._layout == fairygui.GroupLayoutType.Horizontal) {
+                var curX = NaN;
+                cnt = this._parent.numChildren;
+                for (i = 0; i < cnt; i++) {
+                    child = this._parent.getChildAt(i);
+                    if (child.group != this)
+                        continue;
+                    if (isNaN(curX))
+                        curX = Math.floor(child.x);
+                    else
+                        child.x = curX;
+                    if (child.width != 0)
+                        curX += Math.floor(child.width + this._columnGap);
+                }
+                if (!this._percentReady)
+                    this.updatePercent();
+            }
+            else if (this._layout == fairygui.GroupLayoutType.Vertical) {
+                var curY = NaN;
+                cnt = this._parent.numChildren;
+                for (i = 0; i < cnt; i++) {
+                    child = this._parent.getChildAt(i);
+                    if (child.group != this)
+                        continue;
+                    if (isNaN(curY))
+                        curY = Math.floor(child.y);
+                    else
+                        child.y = curY;
+                    if (child.height != 0)
+                        curY += Math.floor(child.height + this._lineGap);
+                }
+                if (!this._percentReady)
+                    this.updatePercent();
+            }
+            this._updating &= 2;
+        };
+        p.updatePercent = function () {
+            this._percentReady = true;
+            var cnt = this._parent.numChildren;
+            var i;
+            var child;
+            var size = 0;
+            if (this._layout == fairygui.GroupLayoutType.Horizontal) {
+                for (i = 0; i < cnt; i++) {
+                    child = this._parent.getChildAt(i);
+                    if (child.group != this)
+                        continue;
+                    size += child.width;
+                }
+                for (i = 0; i < cnt; i++) {
+                    child = this._parent.getChildAt(i);
+                    if (child.group != this)
+                        continue;
+                    if (size > 0)
+                        child._sizePercentInGroup = child.width / size;
+                    else
+                        child._sizePercentInGroup = 0;
+                }
+            }
+            else {
+                for (i = 0; i < cnt; i++) {
+                    child = this._parent.getChildAt(i);
+                    if (child.group != this)
+                        continue;
+                    size += child.height;
+                }
+                for (i = 0; i < cnt; i++) {
+                    child = this._parent.getChildAt(i);
+                    if (child.group != this)
+                        continue;
+                    if (size > 0)
+                        child._sizePercentInGroup = child.height / size;
+                    else
+                        child._sizePercentInGroup = 0;
+                }
+            }
         };
         p.moveChildren = function (dx, dy) {
-            if (this._updating || !this.parent)
+            if ((this._updating & 1) != 0 || this._parent == null)
                 return;
-            this._updating = true;
+            this._updating |= 1;
             var cnt = this._parent.numChildren;
-            var i = 0;
+            var i;
             var child;
             for (i = 0; i < cnt; i++) {
                 child = this._parent.getChildAt(i);
@@ -6469,19 +6635,137 @@ var fairygui;
                     child.setXY(child.x + dx, child.y + dy);
                 }
             }
-            this._updating = false;
+            this._updating &= 2;
+        };
+        p.resizeChildren = function (dw, dh) {
+            if (this._layout == fairygui.GroupLayoutType.None || (this._updating & 2) != 0 || this._parent == null)
+                return;
+            this._updating |= 2;
+            if (!this._percentReady)
+                this.updatePercent();
+            var cnt = this._parent.numChildren;
+            var i;
+            var j;
+            var child;
+            var last = -1;
+            var numChildren = 0;
+            var lineSize = 0;
+            var remainSize = 0;
+            var found = false;
+            for (i = 0; i < cnt; i++) {
+                child = this._parent.getChildAt(i);
+                if (child.group != this)
+                    continue;
+                last = i;
+                numChildren++;
+            }
+            if (this._layout == fairygui.GroupLayoutType.Horizontal) {
+                remainSize = lineSize = this.width - (numChildren - 1) * this._columnGap;
+                var curX = NaN;
+                var nw;
+                for (i = 0; i < cnt; i++) {
+                    child = this._parent.getChildAt(i);
+                    if (child.group != this)
+                        continue;
+                    if (isNaN(curX))
+                        curX = Math.floor(child.x);
+                    else
+                        child.x = curX;
+                    if (last == i)
+                        nw = remainSize;
+                    else
+                        nw = Math.round(child._sizePercentInGroup * lineSize);
+                    child.setSize(nw, child._rawHeight + dh, true);
+                    remainSize -= child.width;
+                    if (last == i) {
+                        if (remainSize >= 1) {
+                            for (j = 0; j <= i; j++) {
+                                child = this._parent.getChildAt(j);
+                                if (child.group != this)
+                                    continue;
+                                if (!found) {
+                                    nw = child.width + remainSize;
+                                    if ((child.maxWidth == 0 || nw < child.maxWidth)
+                                        && (child.minWidth == 0 || nw > child.minWidth)) {
+                                        child.setSize(nw, child.height, true);
+                                        found = true;
+                                    }
+                                }
+                                else
+                                    child.x += remainSize;
+                            }
+                        }
+                    }
+                    else
+                        curX += (child.width + this._columnGap);
+                }
+            }
+            else if (this._layout == fairygui.GroupLayoutType.Vertical) {
+                remainSize = lineSize = this.height - (numChildren - 1) * this._lineGap;
+                var curY = NaN;
+                var nh;
+                for (i = 0; i < cnt; i++) {
+                    child = this._parent.getChildAt(i);
+                    if (child.group != this)
+                        continue;
+                    if (isNaN(curY))
+                        curY = Math.floor(child.y);
+                    else
+                        child.y = curY;
+                    if (last == i)
+                        nh = remainSize;
+                    else
+                        nh = Math.round(child._sizePercentInGroup * lineSize);
+                    child.setSize(child._rawWidth + dw, nh, true);
+                    remainSize -= child.height;
+                    if (last == i) {
+                        if (remainSize >= 1) {
+                            for (j = 0; j <= i; j++) {
+                                child = this._parent.getChildAt(j);
+                                if (child.group != this)
+                                    continue;
+                                if (!found) {
+                                    nh = child.height + remainSize;
+                                    if ((child.maxHeight == 0 || nh < child.maxHeight)
+                                        && (child.minHeight == 0 || nh > child.minHeight)) {
+                                        child.setSize(child.width, nh, true);
+                                        found = true;
+                                    }
+                                }
+                                else
+                                    child.y += remainSize;
+                            }
+                        }
+                    }
+                    else
+                        curY += (child.height + this._lineGap);
+                }
+            }
+            this._updating &= 1;
         };
         p.updateAlpha = function () {
             _super.prototype.updateAlpha.call(this);
             if (this._underConstruct)
                 return;
             var cnt = this._parent.numChildren;
-            var i;
-            var child;
-            for (i = 0; i < cnt; i++) {
-                child = this._parent.getChildAt(i);
+            for (var i = 0; i < cnt; i++) {
+                var child = this._parent.getChildAt(i);
                 if (child.group == this)
                     child.alpha = this.alpha;
+            }
+        };
+        p.setup_beforeAdd = function (xml) {
+            _super.prototype.setup_beforeAdd.call(this, xml);
+            var str;
+            str = xml.attributes.layout;
+            if (str != null) {
+                this._layout = fairygui.parseGroupLayoutType(str);
+                str = xml.attributes.lineGap;
+                if (str)
+                    this._lineGap = parseInt(str);
+                str = xml.attributes.colGap;
+                if (str)
+                    this._columnGap = parseInt(str);
             }
         };
         return GGroup;
@@ -6560,15 +6844,15 @@ var fairygui;
             }
             ,function (value) {
                 if (value != null) {
-                    this._sourceWidth = value.textureWidth;
-                    this._sourceHeight = value.textureHeight;
+                    this.sourceWidth = value.textureWidth;
+                    this.sourceHeight = value.textureHeight;
                 }
                 else {
-                    this._sourceWidth = 0;
-                    this._sourceHeight = 0;
+                    this.sourceWidth = 0;
+                    this.sourceHeight = 0;
                 }
-                this._initWidth = this._sourceWidth;
-                this._initHeight = this._sourceHeight;
+                this.initWidth = this.sourceWidth;
+                this.initHeight = this.sourceHeight;
                 this._content.scale9Grid = null;
                 this._content.fillMode = egret.BitmapFillMode.SCALE;
                 this._content.texture = value;
@@ -6584,15 +6868,15 @@ var fairygui;
             _super.prototype.dispose.call(this);
         };
         p.constructFromResource = function () {
-            this._sourceWidth = this.packageItem.width;
-            this._sourceHeight = this.packageItem.height;
-            this._initWidth = this._sourceWidth;
-            this._initHeight = this._sourceHeight;
+            this.sourceWidth = this.packageItem.width;
+            this.sourceHeight = this.packageItem.height;
+            this.initWidth = this.sourceWidth;
+            this.initHeight = this.sourceHeight;
             this._content.scale9Grid = this.packageItem.scale9Grid;
             this._content.smoothing = this.packageItem.smoothing;
             if (this.packageItem.scaleByTile)
                 this._content.fillMode = egret.BitmapFillMode.REPEAT;
-            this.setSize(this._sourceWidth, this._sourceHeight);
+            this.setSize(this.sourceWidth, this.sourceHeight);
             this.packageItem.load();
             this._content.texture = this.packageItem.texture;
         };
@@ -6923,7 +7207,11 @@ var fairygui;
                 return this._autoResizeItem;
             }
             ,function (value) {
-                this._autoResizeItem = value;
+                if (this._autoResizeItem != value) {
+                    this.setBoundsChangedFlag();
+                    if (this._virtual)
+                        this.setVirtualListChangedFlag(true);
+                }
             }
         );
         d(p, "selectionMode"
@@ -7368,8 +7656,6 @@ var fairygui;
         };
         p.handleSizeChanged = function () {
             _super.prototype.handleSizeChanged.call(this);
-            if (this._autoResizeItem)
-                this.adjustItemsSize();
             this.setBoundsChangedFlag();
             if (this._virtual)
                 this.setVirtualListChangedFlag(true);
@@ -7386,24 +7672,6 @@ var fairygui;
                 this._selectionController = null;
                 c.selectedIndex = index;
                 this._selectionController = c;
-            }
-        };
-        p.adjustItemsSize = function () {
-            if (this._layout == fairygui.ListLayoutType.SingleColumn) {
-                var cnt = this._children.length;
-                var cw = this.viewWidth;
-                for (var i = 0; i < cnt; i++) {
-                    var child = this.getChildAt(i);
-                    child.width = cw;
-                }
-            }
-            else if (this._layout == fairygui.ListLayoutType.SingleRow) {
-                cnt = this._children.length;
-                var ch = this.viewHeight;
-                for (i = 0; i < cnt; i++) {
-                    child = this.getChildAt(i);
-                    child.height = ch;
-                }
             }
         };
         p.getSnappingPosition = function (xValue, yValue, resultPoint) {
@@ -7693,19 +7961,34 @@ var fairygui;
             if (this._realNumItems > 0) {
                 var i;
                 var len = Math.ceil(this._realNumItems / this._curLineItemCount) * this._curLineItemCount;
+                var len2 = Math.min(this._curLineItemCount, this._realNumItems);
                 if (this._layout == fairygui.ListLayoutType.SingleColumn || this._layout == fairygui.ListLayoutType.FlowHorizontal) {
                     for (i = 0; i < len; i += this._curLineItemCount)
                         ch += this._virtualItems[i].height + this._lineGap;
                     if (ch > 0)
                         ch -= this._lineGap;
-                    cw = this._scrollPane.contentWidth;
+                    if (this._autoResizeItem)
+                        cw = this._scrollPane.viewWidth;
+                    else {
+                        for (i = 0; i < len2; i++)
+                            cw += this._virtualItems[i].width + this._columnGap;
+                        if (cw > 0)
+                            cw -= this._columnGap;
+                    }
                 }
                 else if (this._layout == fairygui.ListLayoutType.SingleRow || this._layout == fairygui.ListLayoutType.FlowVertical) {
                     for (i = 0; i < len; i += this._curLineItemCount)
                         cw += this._virtualItems[i].width + this._columnGap;
                     if (cw > 0)
                         cw -= this._columnGap;
-                    ch = this._scrollPane.contentHeight;
+                    if (this._autoResizeItem)
+                        ch = this.scrollPane.viewHeight;
+                    else {
+                        for (i = 0; i < len2; i++)
+                            ch += this._virtualItems[i].height + this._lineGap;
+                        if (ch > 0)
+                            ch -= this._lineGap;
+                    }
                 }
                 else {
                     var pageCount = Math.ceil(len / (this._curLineItemCount * this._curLineItemCount2));
@@ -7911,6 +8194,7 @@ var fairygui;
             var url = this.defaultItem;
             var ii, ii2;
             var i, j;
+            var partSize = (this._scrollPane.viewWidth - this._columnGap * (this._curLineItemCount - 1)) / this._curLineItemCount;
             GList.itemInfoVer++;
             while (curIndex < this._realNumItems && (end || curY < max)) {
                 ii = this._virtualItems[curIndex];
@@ -7969,6 +8253,8 @@ var fairygui;
                 else
                     needRender = forceUpdate;
                 if (needRender) {
+                    if (this._autoResizeItem && (this._layout == fairygui.ListLayoutType.SingleColumn || this._columnCount > 0))
+                        ii.obj.setSize(partSize, ii.obj.height, true);
                     this.itemRenderer.call(this.callbackThisObj, curIndex % this._numItems, ii.obj);
                     if (curIndex % this._curLineItemCount == 0) {
                         deltaSize += Math.ceil(ii.obj.height) - ii.height;
@@ -8033,6 +8319,7 @@ var fairygui;
             var url = this.defaultItem;
             var ii, ii2;
             var i, j;
+            var partSize = (this._scrollPane.viewHeight - this._lineGap * (this._curLineItemCount - 1)) / this._curLineItemCount;
             GList.itemInfoVer++;
             while (curIndex < this._realNumItems && (end || curX < max)) {
                 ii = this._virtualItems[curIndex];
@@ -8090,6 +8377,8 @@ var fairygui;
                 else
                     needRender = forceUpdate;
                 if (needRender) {
+                    if (this._autoResizeItem && (this._layout == fairygui.ListLayoutType.SingleRow || this._lineCount > 0))
+                        ii.obj.setSize(ii.obj.width, partSize, true);
                     this.itemRenderer.call(this.callbackThisObj, curIndex % this._numItems, ii.obj);
                     if (curIndex % this._curLineItemCount == 0) {
                         deltaSize += Math.ceil(ii.obj.width) - ii.width;
@@ -8149,6 +8438,8 @@ var fairygui;
             var ii, ii2;
             var col;
             var url = this._defaultItem;
+            var partWidth = (this._scrollPane.viewWidth - this._columnGap * (this._curLineItemCount - 1)) / this._curLineItemCount;
+            var partHeight = (this._scrollPane.viewHeight - this._lineGap * (this._curLineItemCount2 - 1)) / this._curLineItemCount2;
             GList.itemInfoVer++;
             //先标记这次要用到的项目
             for (i = startIndex; i < lastIndex; i++) {
@@ -8211,6 +8502,14 @@ var fairygui;
                     lastObj = ii.obj;
                 }
                 if (needRender) {
+                    if (this._autoResizeItem) {
+                        if (this._curLineItemCount == this._columnCount && this._curLineItemCount2 == this._lineCount)
+                            ii.obj.setSize(partWidth, partHeight, true);
+                        else if (this._curLineItemCount == this._columnCount)
+                            ii.obj.setSize(partWidth, ii.obj.height, true);
+                        else if (this._curLineItemCount2 == this._lineCount)
+                            ii.obj.setSize(ii.obj.width, partHeight, true);
+                    }
                     this.itemRenderer.call(this.callbackThisObj, i % this._numItems, ii.obj);
                     ii.width = Math.ceil(ii.obj.width);
                     ii.height = Math.ceil(ii.obj.height);
@@ -8254,21 +8553,17 @@ var fairygui;
         p.handleAlign = function (contentWidth, contentHeight) {
             var newOffsetX = 0;
             var newOffsetY = 0;
-            if (this._layout == fairygui.ListLayoutType.SingleColumn || this._layout == fairygui.ListLayoutType.FlowHorizontal || this._layout == fairygui.ListLayoutType.Pagination) {
-                if (contentHeight < this.viewHeight) {
-                    if (this._verticalAlign == fairygui.VertAlignType.Middle)
-                        newOffsetY = Math.floor((this.viewHeight - contentHeight) / 2);
-                    else if (this._verticalAlign == fairygui.VertAlignType.Bottom)
-                        newOffsetY = this.viewHeight - contentHeight;
-                }
+            if (contentHeight < this.viewHeight) {
+                if (this._verticalAlign == fairygui.VertAlignType.Middle)
+                    newOffsetY = Math.floor((this.viewHeight - contentHeight) / 2);
+                else if (this._verticalAlign == fairygui.VertAlignType.Bottom)
+                    newOffsetY = this.viewHeight - contentHeight;
             }
-            else {
-                if (contentWidth < this.viewWidth) {
-                    if (this._align == fairygui.AlignType.Center)
-                        newOffsetX = Math.floor((this.viewWidth - contentWidth) / 2);
-                    else if (this._align == fairygui.AlignType.Right)
-                        newOffsetX = this.viewWidth - contentWidth;
-                }
+            if (contentWidth < this.viewWidth) {
+                if (this._align == fairygui.AlignType.Center)
+                    newOffsetX = Math.floor((this.viewWidth - contentWidth) / 2);
+                else if (this._align == fairygui.AlignType.Right)
+                    newOffsetX = this.viewWidth - contentWidth;
             }
             if (newOffsetX != this._alignOffset.x || newOffsetY != this._alignOffset.y) {
                 this._alignOffset.setTo(newOffsetX, newOffsetY);
@@ -8283,148 +8578,262 @@ var fairygui;
         p.updateBounds = function () {
             if (this._virtual)
                 return;
-            var cnt = this._children.length;
-            var i = 0;
+            var i;
             var child;
             var curX = 0;
             var curY = 0;
-            ;
             var maxWidth = 0;
             var maxHeight = 0;
-            var cw, ch = 0;
-            var sw, sh;
+            var cw = 0, ch = 0;
             var j = 0;
-            var p = 0;
+            var page = 0;
             var k = 0;
             var cnt = this._children.length;
             var viewWidth = this.viewWidth;
             var viewHeight = this.viewHeight;
+            var lineSize = 0;
+            var lineStart = 0;
+            var ratio = 0;
             if (this._layout == fairygui.ListLayoutType.SingleColumn) {
                 for (i = 0; i < cnt; i++) {
                     child = this.getChildAt(i);
                     if (this.foldInvisibleItems && !child.visible)
                         continue;
-                    sw = Math.ceil(child.width);
-                    sh = Math.ceil(child.height);
                     if (curY != 0)
                         curY += this._lineGap;
                     child.y = curY;
-                    curY += sh;
-                    if (sw > maxWidth)
-                        maxWidth = sw;
+                    if (this._autoResizeItem)
+                        child.setSize(viewWidth, child.height, true);
+                    curY += Math.ceil(child.height);
+                    if (child.width > maxWidth)
+                        maxWidth = child.width;
                 }
-                cw = curX + maxWidth;
+                cw = Math.ceil(maxWidth);
                 ch = curY;
             }
             else if (this._layout == fairygui.ListLayoutType.SingleRow) {
                 for (i = 0; i < cnt; i++) {
                     child = this.getChildAt(i);
-                    if (!child.visible)
+                    if (this.foldInvisibleItems && !child.visible)
                         continue;
-                    sw = Math.ceil(child.width);
-                    sh = Math.ceil(child.height);
                     if (curX != 0)
                         curX += this._columnGap;
                     child.x = curX;
-                    curX += sw;
-                    if (sh > maxHeight)
-                        maxHeight = sh;
+                    if (this._autoResizeItem)
+                        child.setSize(child.width, viewHeight, true);
+                    curX += Math.ceil(child.width);
+                    if (child.height > maxHeight)
+                        maxHeight = child.height;
                 }
                 cw = curX;
-                ch = curY + maxHeight;
+                ch = Math.ceil(maxHeight);
             }
             else if (this._layout == fairygui.ListLayoutType.FlowHorizontal) {
-                for (i = 0; i < cnt; i++) {
-                    child = this.getChildAt(i);
-                    if (this.foldInvisibleItems && !child.visible)
-                        continue;
-                    sw = Math.ceil(child.width);
-                    sh = Math.ceil(child.height);
-                    if (curX != 0)
-                        curX += this._columnGap;
-                    if (this._columnCount != 0 && j >= this._columnCount
-                        || this._columnCount == 0 && curX + sw > viewWidth && maxHeight != 0) {
-                        //new line
-                        curX -= this._columnGap;
-                        if (curX > maxWidth)
-                            maxWidth = curX;
-                        curX = 0;
-                        curY += maxHeight + this._lineGap;
-                        maxHeight = 0;
-                        j = 0;
-                    }
-                    child.setXY(curX, curY);
-                    curX += sw;
-                    if (sh > maxHeight)
-                        maxHeight = sh;
-                    j++;
-                }
-                ch = curY + maxHeight;
-                cw = maxWidth;
-            }
-            else if (this._layout == fairygui.ListLayoutType.FlowVertical) {
-                for (i = 0; i < cnt; i++) {
-                    child = this.getChildAt(i);
-                    if (this.foldInvisibleItems && !child.visible)
-                        continue;
-                    sw = Math.ceil(child.width);
-                    sh = Math.ceil(child.height);
-                    if (curY != 0)
-                        curY += this._lineGap;
-                    if (this._lineCount != 0 && j >= this._lineCount
-                        || this._lineCount == 0 && curY + sh > viewHeight && maxWidth != 0) {
-                        curY -= this._lineGap;
-                        if (curY > maxHeight)
-                            maxHeight = curY;
-                        curY = 0;
-                        curX += maxWidth + this._columnGap;
-                        maxWidth = 0;
-                        j = 0;
-                    }
-                    child.setXY(curX, curY);
-                    curY += sh;
-                    if (sw > maxWidth)
-                        maxWidth = sw;
-                    j++;
-                }
-                cw = curX + maxWidth;
-                ch = maxHeight;
-            }
-            else {
-                for (i = 0; i < cnt; i++) {
-                    child = this.getChildAt(i);
-                    if (this.foldInvisibleItems && !child.visible)
-                        continue;
-                    sw = Math.ceil(child.width);
-                    sh = Math.ceil(child.height);
-                    if (curX != 0)
-                        curX += this._columnGap;
-                    if (this._columnCount != 0 && j >= this._columnCount
-                        || this._columnCount == 0 && curX + sw > viewWidth && maxHeight != 0) {
-                        //new line
-                        curX -= this._columnGap;
-                        if (curX > maxWidth)
-                            maxWidth = curX;
-                        curX = 0;
-                        curY += maxHeight + this._lineGap;
-                        maxHeight = 0;
-                        j = 0;
-                        k++;
-                        if (this._lineCount != 0 && k >= this._lineCount
-                            || this._lineCount == 0 && curY + sh > viewHeight && maxWidth != 0) {
-                            p++;
-                            curY = 0;
-                            k = 0;
+                if (this._autoResizeItem && this._columnCount > 0) {
+                    for (i = 0; i < cnt; i++) {
+                        child = this.getChildAt(i);
+                        if (this.foldInvisibleItems && !child.visible)
+                            continue;
+                        lineSize += child.sourceWidth;
+                        j++;
+                        if (j == this._columnCount || i == cnt - 1) {
+                            ratio = (viewWidth - lineSize - (j - 1) * this._columnGap) / lineSize;
+                            curX = 0;
+                            for (j = lineStart; j <= i; j++) {
+                                child = this.getChildAt(j);
+                                if (this.foldInvisibleItems && !child.visible)
+                                    continue;
+                                child.setXY(curX, curY);
+                                if (j < i) {
+                                    child.setSize(child.sourceWidth + Math.round(child.sourceWidth * ratio), child.height, true);
+                                    curX += Math.ceil(child.width) + this._columnGap;
+                                }
+                                else {
+                                    child.setSize(viewWidth - curX, child.height, true);
+                                }
+                                if (child.height > maxHeight)
+                                    maxHeight = child.height;
+                            }
+                            //new line
+                            curY += Math.ceil(maxHeight) + this._lineGap;
+                            maxHeight = 0;
+                            j = 0;
+                            lineStart = i + 1;
+                            lineSize = 0;
                         }
                     }
-                    child.setXY(p * viewWidth + curX, curY);
-                    curX += sw;
-                    if (sh > maxHeight)
-                        maxHeight = sh;
-                    j++;
+                    ch = curY + Math.ceil(maxHeight);
+                    cw = viewWidth;
                 }
-                ch = curY + maxHeight;
-                cw = (p + 1) * viewWidth;
+                else {
+                    for (i = 0; i < cnt; i++) {
+                        child = this.getChildAt(i);
+                        if (this.foldInvisibleItems && !child.visible)
+                            continue;
+                        if (curX != 0)
+                            curX += this._columnGap;
+                        if (this._columnCount != 0 && j >= this._columnCount
+                            || this._columnCount == 0 && curX + child.width > viewWidth && maxHeight != 0) {
+                            //new line
+                            curX = 0;
+                            curY += Math.ceil(maxHeight) + this._lineGap;
+                            maxHeight = 0;
+                            j = 0;
+                        }
+                        child.setXY(curX, curY);
+                        curX += Math.ceil(child.width);
+                        if (curX > maxWidth)
+                            maxWidth = curX;
+                        if (child.height > maxHeight)
+                            maxHeight = child.height;
+                        j++;
+                    }
+                    ch = curY + Math.ceil(maxHeight);
+                    cw = Math.ceil(maxWidth);
+                }
+            }
+            else if (this._layout == fairygui.ListLayoutType.FlowVertical) {
+                if (this._autoResizeItem && this._lineCount > 0) {
+                    for (i = 0; i < cnt; i++) {
+                        child = this.getChildAt(i);
+                        if (this.foldInvisibleItems && !child.visible)
+                            continue;
+                        lineSize += child.sourceHeight;
+                        j++;
+                        if (j == this._lineCount || i == cnt - 1) {
+                            ratio = (viewHeight - lineSize - (j - 1) * this._lineGap) / lineSize;
+                            curY = 0;
+                            for (j = lineStart; j <= i; j++) {
+                                child = this.getChildAt(j);
+                                if (this.foldInvisibleItems && !child.visible)
+                                    continue;
+                                child.setXY(curX, curY);
+                                if (j < i) {
+                                    child.setSize(child.width, child.sourceHeight + Math.round(child.sourceHeight * ratio), true);
+                                    curY += Math.ceil(child.height) + this._lineGap;
+                                }
+                                else {
+                                    child.setSize(child.width, viewHeight - curY, true);
+                                }
+                                if (child.width > maxWidth)
+                                    maxWidth = child.width;
+                            }
+                            //new line
+                            curX += Math.ceil(maxWidth) + this._columnGap;
+                            maxWidth = 0;
+                            j = 0;
+                            lineStart = i + 1;
+                            lineSize = 0;
+                        }
+                    }
+                    cw = curX + Math.ceil(maxWidth);
+                    ch = viewHeight;
+                }
+                else {
+                    for (i = 0; i < cnt; i++) {
+                        child = this.getChildAt(i);
+                        if (this.foldInvisibleItems && !child.visible)
+                            continue;
+                        if (curY != 0)
+                            curY += this._lineGap;
+                        if (this._lineCount != 0 && j >= this._lineCount
+                            || this._lineCount == 0 && curY + child.height > viewHeight && maxWidth != 0) {
+                            curY = 0;
+                            curX += Math.ceil(maxWidth) + this._columnGap;
+                            maxWidth = 0;
+                            j = 0;
+                        }
+                        child.setXY(curX, curY);
+                        curY += Math.ceil(child.height);
+                        if (curY > maxHeight)
+                            maxHeight = curY;
+                        if (child.width > maxWidth)
+                            maxWidth = child.width;
+                        j++;
+                    }
+                    cw = curX + Math.ceil(maxWidth);
+                    ch = Math.ceil(maxHeight);
+                }
+            }
+            else {
+                var eachHeight;
+                if (this._autoResizeItem && this._lineCount > 0)
+                    eachHeight = Math.floor((viewHeight - (this._lineCount - 1) * this._lineGap) / this._lineCount);
+                if (this._autoResizeItem && this._columnCount > 0) {
+                    for (i = 0; i < cnt; i++) {
+                        child = this.getChildAt(i);
+                        if (this.foldInvisibleItems && !child.visible)
+                            continue;
+                        lineSize += child.sourceWidth;
+                        j++;
+                        if (j == this._columnCount || i == cnt - 1) {
+                            ratio = (viewWidth - lineSize - (j - 1) * this._columnGap) / lineSize;
+                            curX = 0;
+                            for (j = lineStart; j <= i; j++) {
+                                child = this.getChildAt(j);
+                                if (this.foldInvisibleItems && !child.visible)
+                                    continue;
+                                child.setXY(page * viewWidth + curX, curY);
+                                if (j < i) {
+                                    child.setSize(child.sourceWidth + Math.round(child.sourceWidth * ratio), this._lineCount > 0 ? eachHeight : child.height, true);
+                                    curX += Math.ceil(child.width) + this._columnGap;
+                                }
+                                else {
+                                    child.setSize(viewWidth - curX, this._lineCount > 0 ? eachHeight : child.height, true);
+                                }
+                                if (child.height > maxHeight)
+                                    maxHeight = child.height;
+                            }
+                            //new line
+                            curY += Math.ceil(maxHeight) + this._lineGap;
+                            maxHeight = 0;
+                            j = 0;
+                            lineStart = i + 1;
+                            lineSize = 0;
+                            k++;
+                            if (this._lineCount != 0 && k >= this._lineCount
+                                || this._lineCount == 0 && curY + child.height > viewHeight) {
+                                //new page
+                                page++;
+                                curY = 0;
+                                k = 0;
+                            }
+                        }
+                    }
+                }
+                else {
+                    for (i = 0; i < cnt; i++) {
+                        child = this.getChildAt(i);
+                        if (this.foldInvisibleItems && !child.visible)
+                            continue;
+                        if (curX != 0)
+                            curX += this._columnGap;
+                        if (this._autoResizeItem && this._lineCount > 0)
+                            child.setSize(child.width, eachHeight, true);
+                        if (this._columnCount != 0 && j >= this._columnCount
+                            || this._columnCount == 0 && curX + child.width > viewWidth && maxHeight != 0) {
+                            //new line
+                            curX = 0;
+                            curY += Math.ceil(maxHeight) + this._lineGap;
+                            maxHeight = 0;
+                            j = 0;
+                            k++;
+                            if (this._lineCount != 0 && k >= this._lineCount
+                                || this._lineCount == 0 && curY + child.height > viewHeight && maxWidth != 0) {
+                                page++;
+                                curY = 0;
+                                k = 0;
+                            }
+                        }
+                        child.setXY(page * viewWidth + curX, curY);
+                        curX += Math.ceil(child.width);
+                        if (child.height > maxHeight)
+                            maxHeight = child.height;
+                        j++;
+                    }
+                }
+                ch = page > 0 ? viewHeight : curY + Math.ceil(maxHeight);
+                cw = (page + 1) * viewWidth;
             }
             this.handleAlign(cw, ch);
             this.setBounds(0, 0, cw, ch);
@@ -8509,7 +8918,10 @@ var fairygui;
             if (str)
                 this._defaultItem = str;
             str = xml.attributes.autoItemSize;
-            this._autoResizeItem = str != "false";
+            if (this._layout == fairygui.ListLayoutType.SingleRow || this._layout == fairygui.ListLayoutType.SingleColumn)
+                this._autoResizeItem = str != "false";
+            else
+                this._autoResizeItem = str == "true";
             var col = xml.children;
             if (col) {
                 var length = col.length;
@@ -8924,44 +9336,44 @@ var fairygui;
                     this._contentHeight = 30;
                 this.setSize(this._contentWidth, this._contentHeight);
                 this._updatingLayout = false;
+                if (this._contentWidth == this._width && this._contentHeight == this._height)
+                    return;
+            }
+            var sx = 1, sy = 1;
+            if (this._fill != fairygui.LoaderFillType.None) {
+                sx = this.width / this._contentSourceWidth;
+                sy = this.height / this._contentSourceHeight;
+                if (sx != 1 || sy != 1) {
+                    if (this._fill == fairygui.LoaderFillType.ScaleMatchHeight)
+                        sx = sy;
+                    else if (this._fill == fairygui.LoaderFillType.ScaleMatchWidth)
+                        sy = sx;
+                    else if (this._fill == fairygui.LoaderFillType.Scale) {
+                        if (sx > sy)
+                            sx = sy;
+                        else
+                            sy = sx;
+                    }
+                    this._contentWidth = this._contentSourceWidth * sx;
+                    this._contentHeight = this._contentSourceHeight * sy;
+                }
+            }
+            if (this._content instanceof egret.Bitmap) {
+                this._content.width = this._contentWidth;
+                this._content.height = this._contentHeight;
             }
             else {
-                var sx = 1, sy = 1;
-                if (this._fill != fairygui.LoaderFillType.None) {
-                    sx = this.width / this._contentSourceWidth;
-                    sy = this.height / this._contentSourceHeight;
-                    if (sx != 1 || sy != 1) {
-                        if (this._fill == fairygui.LoaderFillType.ScaleMatchHeight)
-                            sx = sy;
-                        else if (this._fill == fairygui.LoaderFillType.ScaleMatchWidth)
-                            sy = sx;
-                        else if (this._fill == fairygui.LoaderFillType.Scale) {
-                            if (sx > sy)
-                                sx = sy;
-                            else
-                                sy = sx;
-                        }
-                        this._contentWidth = this._contentSourceWidth * sx;
-                        this._contentHeight = this._contentSourceHeight * sy;
-                    }
-                }
-                if (this._content instanceof egret.Bitmap) {
-                    this._content.width = this._contentWidth;
-                    this._content.height = this._contentHeight;
-                }
-                else {
-                    this._content.scaleX = sx;
-                    this._content.scaleY = sy;
-                }
-                if (this._align == fairygui.AlignType.Center)
-                    this._content.x = Math.floor((this.width - this._contentWidth) / 2);
-                else if (this._align == fairygui.AlignType.Right)
-                    this._content.x = this.width - this._contentWidth;
-                if (this._verticalAlign == fairygui.VertAlignType.Middle)
-                    this._content.y = Math.floor((this.height - this._contentHeight) / 2);
-                else if (this._verticalAlign == fairygui.VertAlignType.Bottom)
-                    this._content.y = this.height - this._contentHeight;
+                this._content.scaleX = sx;
+                this._content.scaleY = sy;
             }
+            if (this._align == fairygui.AlignType.Center)
+                this._content.x = Math.floor((this.width - this._contentWidth) / 2);
+            else if (this._align == fairygui.AlignType.Right)
+                this._content.x = this.width - this._contentWidth;
+            if (this._verticalAlign == fairygui.VertAlignType.Middle)
+                this._content.y = Math.floor((this.height - this._contentHeight) / 2);
+            else if (this._verticalAlign == fairygui.VertAlignType.Bottom)
+                this._content.y = this.height - this._contentHeight;
         };
         p.clearContent = function () {
             this.clearErrorState();
@@ -9067,11 +9479,11 @@ var fairygui;
             this._movieClip.setPlaySettings(start, end, times, endAt, endCallback, callbackObj);
         };
         p.constructFromResource = function () {
-            this._sourceWidth = this.packageItem.width;
-            this._sourceHeight = this.packageItem.height;
-            this._initWidth = this._sourceWidth;
-            this._initHeight = this._sourceHeight;
-            this.setSize(this._sourceWidth, this._sourceHeight);
+            this.sourceWidth = this.packageItem.width;
+            this.sourceHeight = this.packageItem.height;
+            this.initWidth = this.sourceWidth;
+            this.initHeight = this.sourceHeight;
+            this.setSize(this.sourceWidth, this.sourceHeight);
             this.packageItem.load();
             this._movieClip.interval = this.packageItem.interval;
             this._movieClip.swing = this.packageItem.swing;
@@ -10077,6 +10489,11 @@ var fairygui;
             }
             return null;
         };
+        d(p, "modalLayer"
+            ,function () {
+                return this._modalLayer;
+            }
+        );
         d(p, "hasModalWindow"
             ,function () {
                 return this._modalLayer.parent != null;
@@ -10594,7 +11011,6 @@ var fairygui;
             this._arrowButton1 = this.getChild("arrow1");
             this._arrowButton2 = this.getChild("arrow2");
             this._grip.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__gripMouseDown, this);
-            this._grip.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__gripDragging, this);
             if (this._arrowButton1)
                 this._arrowButton1.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__arrowButton1Click, this);
             if (this._arrowButton2)
@@ -10608,8 +11024,12 @@ var fairygui;
             this.globalToLocal(evt.stageX, evt.stageY, this._dragOffset);
             this._dragOffset.x -= this._grip.x;
             this._dragOffset.y -= this._grip.y;
+            this._grip.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__gripMouseMove, this);
+            this._grip.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_END, this.__gripMouseUp, this);
         };
-        p.__gripDragging = function (evt) {
+        p.__gripMouseMove = function (evt) {
+            if (!this.onStage)
+                return;
             var pt = this.globalToLocal(evt.stageX, evt.stageY, GScrollBar.sScrollbarHelperPoint);
             if (this._vertical) {
                 var curY = pt.y - this._dragOffset.y;
@@ -10619,6 +11039,11 @@ var fairygui;
                 var curX = pt.x - this._dragOffset.x;
                 this._target.setPercX((curX - this._bar.x) / (this._bar.width - this._grip.width), false);
             }
+        };
+        p.__gripMouseUp = function (evt) {
+            var st = evt.currentTarget;
+            st.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.__gripMouseMove, this);
+            st.removeEventListener(egret.TouchEvent.TOUCH_END, this.__gripMouseUp, this);
         };
         p.__arrowButton1Click = function (evt) {
             evt.stopPropagation();
@@ -11317,7 +11742,6 @@ var fairygui;
             }
         };
         p.applyOnXYChanged = function (info, dx, dy) {
-            var tmp;
             switch (info.type) {
                 case fairygui.RelationType.Left_Left:
                 case fairygui.RelationType.Left_Center:
@@ -11342,9 +11766,8 @@ var fairygui;
                     break;
                 case fairygui.RelationType.LeftExt_Left:
                 case fairygui.RelationType.LeftExt_Right:
-                    tmp = this._owner.x;
                     this._owner.x += dx;
-                    this._owner.width = this._owner._rawWidth - (this._owner.x - tmp);
+                    this._owner.width = this._owner._rawWidth - dx;
                     break;
                 case fairygui.RelationType.RightExt_Left:
                 case fairygui.RelationType.RightExt_Right:
@@ -11352,9 +11775,8 @@ var fairygui;
                     break;
                 case fairygui.RelationType.TopExt_Top:
                 case fairygui.RelationType.TopExt_Bottom:
-                    tmp = this._owner.y;
                     this._owner.y += dy;
-                    this._owner.height = this._owner._rawHeight - (this._owner.y - tmp);
+                    this._owner.height = this._owner._rawHeight - dy;
                     break;
                 case fairygui.RelationType.BottomExt_Top:
                 case fairygui.RelationType.BottomExt_Bottom:
@@ -11378,165 +11800,165 @@ var fairygui;
                     if (info.percent && this._target == this._owner.parent) {
                         v = this._owner.x - targetX;
                         if (info.percent)
-                            v = v / this._targetWidth * this._target._rawWidth;
+                            v = v / this._targetWidth * this._target._width;
                         this._owner.x = targetX + v;
                     }
                     break;
                 case fairygui.RelationType.Left_Center:
                     v = this._owner.x - (targetX + this._targetWidth / 2);
                     if (info.percent)
-                        v = v / this._targetWidth * this._target._rawWidth;
-                    this._owner.x = targetX + this._target._rawWidth / 2 + v;
+                        v = v / this._targetWidth * this._target._width;
+                    this._owner.x = targetX + this._target._width / 2 + v;
                     break;
                 case fairygui.RelationType.Left_Right:
                     v = this._owner.x - (targetX + this._targetWidth);
                     if (info.percent)
-                        v = v / this._targetWidth * this._target._rawWidth;
-                    this._owner.x = targetX + this._target._rawWidth + v;
+                        v = v / this._targetWidth * this._target._width;
+                    this._owner.x = targetX + this._target._width + v;
                     break;
                 case fairygui.RelationType.Center_Center:
                     v = this._owner.x + this._owner._rawWidth / 2 - (targetX + this._targetWidth / 2);
                     if (info.percent)
-                        v = v / this._targetWidth * this._target._rawWidth;
-                    this._owner.x = targetX + this._target._rawWidth / 2 + v - this._owner._rawWidth / 2;
+                        v = v / this._targetWidth * this._target._width;
+                    this._owner.x = targetX + this._target._width / 2 + v - this._owner._rawWidth / 2;
                     break;
                 case fairygui.RelationType.Right_Left:
                     v = this._owner.x + this._owner._rawWidth - targetX;
                     if (info.percent)
-                        v = v / this._targetWidth * this._target._rawWidth;
+                        v = v / this._targetWidth * this._target._width;
                     this._owner.x = targetX + v - this._owner._rawWidth;
                     break;
                 case fairygui.RelationType.Right_Center:
                     v = this._owner.x + this._owner._rawWidth - (targetX + this._targetWidth / 2);
                     if (info.percent)
-                        v = v / this._targetWidth * this._target._rawWidth;
-                    this._owner.x = targetX + this._target._rawWidth / 2 + v - this._owner._rawWidth;
+                        v = v / this._targetWidth * this._target._width;
+                    this._owner.x = targetX + this._target._width / 2 + v - this._owner._rawWidth;
                     break;
                 case fairygui.RelationType.Right_Right:
                     v = this._owner.x + this._owner._rawWidth - (targetX + this._targetWidth);
                     if (info.percent)
-                        v = v / this._targetWidth * this._target._rawWidth;
-                    this._owner.x = targetX + this._target._rawWidth + v - this._owner._rawWidth;
+                        v = v / this._targetWidth * this._target._width;
+                    this._owner.x = targetX + this._target._width + v - this._owner._rawWidth;
                     break;
                 case fairygui.RelationType.Top_Top:
                     if (info.percent && this._target == this._owner.parent) {
                         v = this._owner.y - targetY;
                         if (info.percent)
-                            v = v / this._targetHeight * this._target._rawHeight;
+                            v = v / this._targetHeight * this._target._height;
                         this._owner.y = targetY + v;
                     }
                     break;
                 case fairygui.RelationType.Top_Middle:
                     v = this._owner.y - (targetY + this._targetHeight / 2);
                     if (info.percent)
-                        v = v / this._targetHeight * this._target._rawHeight;
-                    this._owner.y = targetY + this._target._rawHeight / 2 + v;
+                        v = v / this._targetHeight * this._target._height;
+                    this._owner.y = targetY + this._target._height / 2 + v;
                     break;
                 case fairygui.RelationType.Top_Bottom:
                     v = this._owner.y - (targetY + this._targetHeight);
                     if (info.percent)
-                        v = v / this._targetHeight * this._target._rawHeight;
-                    this._owner.y = targetY + this._target._rawHeight + v;
+                        v = v / this._targetHeight * this._target._height;
+                    this._owner.y = targetY + this._target._height + v;
                     break;
                 case fairygui.RelationType.Middle_Middle:
                     v = this._owner.y + this._owner._rawHeight / 2 - (targetY + this._targetHeight / 2);
                     if (info.percent)
-                        v = v / this._targetHeight * this._target._rawHeight;
-                    this._owner.y = targetY + this._target._rawHeight / 2 + v - this._owner._rawHeight / 2;
+                        v = v / this._targetHeight * this._target._height;
+                    this._owner.y = targetY + this._target._height / 2 + v - this._owner._rawHeight / 2;
                     break;
                 case fairygui.RelationType.Bottom_Top:
                     v = this._owner.y + this._owner._rawHeight - targetY;
                     if (info.percent)
-                        v = v / this._targetHeight * this._target._rawHeight;
+                        v = v / this._targetHeight * this._target._height;
                     this._owner.y = targetY + v - this._owner._rawHeight;
                     break;
                 case fairygui.RelationType.Bottom_Middle:
                     v = this._owner.y + this._owner._rawHeight - (targetY + this._targetHeight / 2);
                     if (info.percent)
-                        v = v / this._targetHeight * this._target._rawHeight;
-                    this._owner.y = targetY + this._target._rawHeight / 2 + v - this._owner._rawHeight;
+                        v = v / this._targetHeight * this._target._height;
+                    this._owner.y = targetY + this._target._height / 2 + v - this._owner._rawHeight;
                     break;
                 case fairygui.RelationType.Bottom_Bottom:
                     v = this._owner.y + this._owner._rawHeight - (targetY + this._targetHeight);
                     if (info.percent)
-                        v = v / this._targetHeight * this._target._rawHeight;
-                    this._owner.y = targetY + this._target._rawHeight + v - this._owner._rawHeight;
+                        v = v / this._targetHeight * this._target._height;
+                    this._owner.y = targetY + this._target._height + v - this._owner._rawHeight;
                     break;
                 case fairygui.RelationType.Width:
                     if (this._owner._underConstruct && this._owner == this._target.parent)
-                        v = this._owner.sourceWidth - this._target._initWidth;
+                        v = this._owner.sourceWidth - this._target.initWidth;
                     else
                         v = this._owner._rawWidth - this._targetWidth;
                     if (info.percent)
-                        v = v / this._targetWidth * this._target._rawWidth;
+                        v = v / this._targetWidth * this._target._width;
                     if (this._target == this._owner.parent)
-                        this._owner.setSize(this._target._rawWidth + v, this._owner._rawHeight, true);
+                        this._owner.setSize(this._target._width + v, this._owner._rawHeight, true);
                     else
-                        this._owner.width = this._target._rawWidth + v;
+                        this._owner.width = this._target._width + v;
                     break;
                 case fairygui.RelationType.Height:
                     if (this._owner._underConstruct && this._owner == this._target.parent)
-                        v = this._owner.sourceHeight - this._target._initHeight;
+                        v = this._owner.sourceHeight - this._target.initHeight;
                     else
                         v = this._owner._rawHeight - this._targetHeight;
                     if (info.percent)
-                        v = v / this._targetHeight * this._target._rawHeight;
+                        v = v / this._targetHeight * this._target._height;
                     if (this._target == this._owner.parent)
-                        this._owner.setSize(this._owner._rawWidth, this._target._rawHeight + v, true);
+                        this._owner.setSize(this._owner._rawWidth, this._target._height + v, true);
                     else
-                        this._owner.height = this._target._rawHeight + v;
+                        this._owner.height = this._target._height + v;
                     break;
                 case fairygui.RelationType.LeftExt_Left:
                     break;
                 case fairygui.RelationType.LeftExt_Right:
                     v = this._owner.x - (targetX + this._targetWidth);
                     if (info.percent)
-                        v = v / this._targetWidth * this._target._rawWidth;
+                        v = v / this._targetWidth * this._target._width;
                     tmp = this._owner.x;
-                    this._owner.x = targetX + this._target._rawWidth + v;
+                    this._owner.x = targetX + this._target._width + v;
                     this._owner.width = this._owner._rawWidth - (this._owner.x - tmp);
                     break;
                 case fairygui.RelationType.RightExt_Left:
                     break;
                 case fairygui.RelationType.RightExt_Right:
                     if (this._owner._underConstruct && this._owner == this._target.parent)
-                        v = this._owner.sourceWidth - (targetX + this._target._initWidth);
+                        v = this._owner.sourceWidth - (targetX + this._target.initWidth);
                     else
                         v = this._owner.width - (targetX + this._targetWidth);
                     if (this._owner != this._target.parent)
                         v += this._owner.x;
                     if (info.percent)
-                        v = v / this._targetWidth * this._target._rawWidth;
+                        v = v / this._targetWidth * this._target._width;
                     if (this._owner != this._target.parent)
-                        this._owner.width = targetX + this._target._rawWidth + v - this._owner.x;
+                        this._owner.width = targetX + this._target._width + v - this._owner.x;
                     else
-                        this._owner.width = targetX + this._target._rawWidth + v;
+                        this._owner.width = targetX + this._target._width + v;
                     break;
                 case fairygui.RelationType.TopExt_Top:
                     break;
                 case fairygui.RelationType.TopExt_Bottom:
                     v = this._owner.y - (targetY + this._targetHeight);
                     if (info.percent)
-                        v = v / this._targetHeight * this._target._rawHeight;
+                        v = v / this._targetHeight * this._target._height;
                     tmp = this._owner.y;
-                    this._owner.y = targetY + this._target._rawHeight + v;
+                    this._owner.y = targetY + this._target._height + v;
                     this._owner.height = this._owner._rawHeight - (this._owner.y - tmp);
                     break;
                 case fairygui.RelationType.BottomExt_Top:
                     break;
                 case fairygui.RelationType.BottomExt_Bottom:
                     if (this._owner._underConstruct && this._owner == this._target.parent)
-                        v = this._owner.sourceHeight - (targetY + this._target._initHeight);
+                        v = this._owner.sourceHeight - (targetY + this._target.initHeight);
                     else
                         v = this._owner._rawHeight - (targetY + this._targetHeight);
                     if (this._owner != this._target.parent)
                         v += this._owner.y;
                     if (info.percent)
-                        v = v / this._targetHeight * this._target._rawHeight;
+                        v = v / this._targetHeight * this._target._height;
                     if (this._owner != this._target.parent)
-                        this._owner.height = targetY + this._target._rawHeight + v - this._owner.y;
+                        this._owner.height = targetY + this._target._height + v - this._owner.y;
                     else
-                        this._owner.height = targetY + this._target._rawHeight + v;
+                        this._owner.height = targetY + this._target._height + v;
                     break;
             }
         };
@@ -11547,8 +11969,8 @@ var fairygui;
             target.addEventListener(fairygui.GObject.SIZE_DELAY_CHANGE, this.__targetSizeWillChange, this);
             this._targetX = this._target.x;
             this._targetY = this._target.y;
-            this._targetWidth = this._target._rawWidth;
-            this._targetHeight = this._target._rawHeight;
+            this._targetWidth = this._target._width;
+            this._targetHeight = this._target._height;
         };
         p.releaseRefTarget = function (target) {
             target.removeEventListener(fairygui.GObject.XY_CHANGED, this.__targetXYChanged, this);
@@ -11601,8 +12023,8 @@ var fairygui;
                 var info = this._defs[i];
                 this.applyOnSizeChanged(info);
             }
-            this._targetWidth = this._target._rawWidth;
-            this._targetHeight = this._target._rawHeight;
+            this._targetWidth = this._target._width;
+            this._targetHeight = this._target._height;
             if (ox != this._owner.x || oy != this._owner.y) {
                 ox = this._owner.x - ox;
                 oy = this._owner.y - oy;

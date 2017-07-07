@@ -182,7 +182,11 @@ module fairygui {
         }
 
         public set autoResizeItem(value: boolean) {
-            this._autoResizeItem = value;
+            if (this._autoResizeItem != value) {
+                this.setBoundsChangedFlag();
+                if (this._virtual)
+                    this.setVirtualListChangedFlag(true);
+            }
         }
 
         public get selectionMode(): ListSelectionMode {
@@ -668,9 +672,6 @@ module fairygui {
         protected handleSizeChanged(): void {
             super.handleSizeChanged();
 
-            if (this._autoResizeItem)
-                this.adjustItemsSize();
-
             this.setBoundsChangedFlag();
             if (this._virtual)
                 this.setVirtualListChangedFlag(true);
@@ -690,25 +691,6 @@ module fairygui {
                 this._selectionController = null;
                 c.selectedIndex = index;
                 this._selectionController = c;
-            }
-        }
-
-        public adjustItemsSize(): void {
-            if (this._layout == ListLayoutType.SingleColumn) {
-                var cnt: number = this._children.length;
-                var cw: number = this.viewWidth;
-                for (var i: number = 0; i < cnt; i++) {
-                    var child: GObject = this.getChildAt(i);
-                    child.width = cw;
-                }
-            }
-            else if (this._layout == ListLayoutType.SingleRow) {
-                cnt = this._children.length;
-                var ch: number = this.viewHeight;
-                for (i = 0; i < cnt; i++) {
-                    child = this.getChildAt(i);
-                    child.height = ch;
-                }
             }
         }
 
@@ -1037,19 +1019,36 @@ module fairygui {
             if (this._realNumItems > 0) {
                 var i: number;
                 var len: number = Math.ceil(this._realNumItems / this._curLineItemCount) * this._curLineItemCount;
+                var len2: number = Math.min(this._curLineItemCount, this._realNumItems);
                 if (this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal) {
                     for (i = 0; i < len; i += this._curLineItemCount)
                         ch += this._virtualItems[i].height + this._lineGap;
                     if (ch > 0)
                         ch -= this._lineGap;
-                    cw = this._scrollPane.contentWidth;
+
+                    if (this._autoResizeItem)
+                        cw = this._scrollPane.viewWidth;
+                    else {
+                        for (i = 0; i < len2; i++)
+                            cw += this._virtualItems[i].width + this._columnGap;
+                        if (cw > 0)
+                            cw -= this._columnGap;
+                    }
                 }
                 else if (this._layout == ListLayoutType.SingleRow || this._layout == ListLayoutType.FlowVertical) {
                     for (i = 0; i < len; i += this._curLineItemCount)
                         cw += this._virtualItems[i].width + this._columnGap;
                     if (cw > 0)
                         cw -= this._columnGap;
-                    ch = this._scrollPane.contentHeight;
+
+                    if (this._autoResizeItem)
+                        ch = this.scrollPane.viewHeight;
+                    else {
+                        for (i = 0; i < len2; i++)
+                            ch += this._virtualItems[i].height + this._lineGap;
+                        if (ch > 0)
+                            ch -= this._lineGap;
+                    }
                 }
                 else {
                     var pageCount: number = Math.ceil(len / (this._curLineItemCount * this._curLineItemCount2));
@@ -1289,6 +1288,7 @@ module fairygui {
             var url: string = this.defaultItem;
             var ii: ItemInfo, ii2: ItemInfo;
             var i: number, j: number;
+            var partSize: number = (this._scrollPane.viewWidth - this._columnGap * (this._curLineItemCount - 1)) / this._curLineItemCount;
 
             GList.itemInfoVer++;
 
@@ -1355,6 +1355,9 @@ module fairygui {
                     needRender = forceUpdate;
 
                 if (needRender) {
+                    if (this._autoResizeItem && (this._layout == ListLayoutType.SingleColumn || this._columnCount > 0))
+                        ii.obj.setSize(partSize, ii.obj.height, true);
+
                     this.itemRenderer.call(this.callbackThisObj, curIndex % this._numItems, ii.obj);
                     if (curIndex % this._curLineItemCount == 0) {
                         deltaSize += Math.ceil(ii.obj.height) - ii.height;
@@ -1430,6 +1433,7 @@ module fairygui {
             var url: string = this.defaultItem;
             var ii: ItemInfo, ii2: ItemInfo;
             var i: number, j: number;
+            var partSize: number = (this._scrollPane.viewHeight - this._lineGap * (this._curLineItemCount - 1)) / this._curLineItemCount;
 
             GList.itemInfoVer++;
 
@@ -1495,6 +1499,10 @@ module fairygui {
                     needRender = forceUpdate;
 
                 if (needRender) {
+                    if (this._autoResizeItem && (this._layout == ListLayoutType.SingleRow || this._lineCount > 0))
+                        ii.obj.setSize(ii.obj.width, partSize, true);
+
+
                     this.itemRenderer.call(this.callbackThisObj, curIndex % this._numItems, ii.obj);
                     if (curIndex % this._curLineItemCount == 0) {
                         deltaSize += Math.ceil(ii.obj.width) - ii.width;
@@ -1566,6 +1574,8 @@ module fairygui {
             var ii: ItemInfo, ii2: ItemInfo;
             var col: number;
             var url: string = this._defaultItem;
+            var partWidth: number = (this._scrollPane.viewWidth - this._columnGap * (this._curLineItemCount - 1)) / this._curLineItemCount;
+            var partHeight: number = (this._scrollPane.viewHeight - this._lineGap * (this._curLineItemCount2 - 1)) / this._curLineItemCount2;
 
             GList.itemInfoVer++;
 
@@ -1641,6 +1651,15 @@ module fairygui {
                 }
 
                 if (needRender) {
+                    if (this._autoResizeItem) {
+                        if (this._curLineItemCount == this._columnCount && this._curLineItemCount2 == this._lineCount)
+                            ii.obj.setSize(partWidth, partHeight, true);
+                        else if (this._curLineItemCount == this._columnCount)
+                            ii.obj.setSize(partWidth, ii.obj.height, true);
+                        else if (this._curLineItemCount2 == this._lineCount)
+                            ii.obj.setSize(ii.obj.width, partHeight, true);
+                    }
+
                     this.itemRenderer.call(this.callbackThisObj, i % this._numItems, ii.obj);
                     ii.width = Math.ceil(ii.obj.width);
                     ii.height = Math.ceil(ii.obj.height);
@@ -1690,22 +1709,21 @@ module fairygui {
         private handleAlign(contentWidth: number, contentHeight: number): void {
             var newOffsetX: number = 0;
             var newOffsetY: number = 0;
-            if (this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal || this._layout == ListLayoutType.Pagination) {
-                if (contentHeight < this.viewHeight) {
-                    if (this._verticalAlign == VertAlignType.Middle)
-                        newOffsetY = Math.floor((this.viewHeight - contentHeight) / 2);
-                    else if (this._verticalAlign == VertAlignType.Bottom)
-                        newOffsetY = this.viewHeight - contentHeight;
-                }
+
+            if (contentHeight < this.viewHeight) {
+                if (this._verticalAlign == VertAlignType.Middle)
+                    newOffsetY = Math.floor((this.viewHeight - contentHeight) / 2);
+                else if (this._verticalAlign == VertAlignType.Bottom)
+                    newOffsetY = this.viewHeight - contentHeight;
             }
-            else {
-                if (contentWidth < this.viewWidth) {
-                    if (this._align == AlignType.Center)
-                        newOffsetX = Math.floor((this.viewWidth - contentWidth) / 2);
-                    else if (this._align == AlignType.Right)
-                        newOffsetX = this.viewWidth - contentWidth;
-                }
+
+            if (contentWidth < this.viewWidth) {
+                if (this._align == AlignType.Center)
+                    newOffsetX = Math.floor((this.viewWidth - contentWidth) / 2);
+                else if (this._align == AlignType.Right)
+                    newOffsetX = this.viewWidth - contentWidth;
             }
+
 
             if (newOffsetX != this._alignOffset.x || newOffsetY != this._alignOffset.y) {
                 this._alignOffset.setTo(newOffsetX, newOffsetY);
@@ -1722,21 +1740,22 @@ module fairygui {
             if (this._virtual)
                 return;
 
-            var cnt: number = this._children.length;
-            var i: number = 0;
+            var i: number;
             var child: GObject;
             var curX: number = 0;
-            var curY: number = 0;;
+            var curY: number = 0;
             var maxWidth: number = 0;
             var maxHeight: number = 0;
-            var cw: number, ch: number = 0;
-            var sw: number, sh: number;
+            var cw: number = 0, ch: number = 0;
             var j: number = 0;
-            var p: number = 0;
+            var page: number = 0;
             var k: number = 0;
             var cnt: number = this._children.length;
             var viewWidth: number = this.viewWidth;
             var viewHeight: number = this.viewHeight;
+            var lineSize: number = 0;
+            var lineStart: number = 0;
+            var ratio: number = 0;
 
             if (this._layout == ListLayoutType.SingleColumn) {
                 for (i = 0; i < cnt; i++) {
@@ -1744,142 +1763,265 @@ module fairygui {
                     if (this.foldInvisibleItems && !child.visible)
                         continue;
 
-                    sw = Math.ceil(child.width);
-                    sh = Math.ceil(child.height);
-
                     if (curY != 0)
                         curY += this._lineGap;
                     child.y = curY;
-                    curY += sh;
-                    if (sw > maxWidth)
-                        maxWidth = sw;
+                    if (this._autoResizeItem)
+                        child.setSize(viewWidth, child.height, true);
+                    curY += Math.ceil(child.height);
+                    if (child.width > maxWidth)
+                        maxWidth = child.width;
                 }
-                cw = curX + maxWidth;
+                cw = Math.ceil(maxWidth);
                 ch = curY;
             }
             else if (this._layout == ListLayoutType.SingleRow) {
                 for (i = 0; i < cnt; i++) {
                     child = this.getChildAt(i);
-                    if (!child.visible)
+                    if (this.foldInvisibleItems && !child.visible)
                         continue;
-
-                    sw = Math.ceil(child.width);
-                    sh = Math.ceil(child.height);
 
                     if (curX != 0)
                         curX += this._columnGap;
                     child.x = curX;
-                    curX += sw;
-                    if (sh > maxHeight)
-                        maxHeight = sh;
+                    if (this._autoResizeItem)
+                        child.setSize(child.width, viewHeight, true);
+                    curX += Math.ceil(child.width);
+                    if (child.height > maxHeight)
+                        maxHeight = child.height;
                 }
                 cw = curX;
-                ch = curY + maxHeight;
+                ch = Math.ceil(maxHeight);
             }
             else if (this._layout == ListLayoutType.FlowHorizontal) {
-                for (i = 0; i < cnt; i++) {
-                    child = this.getChildAt(i);
-                    if (this.foldInvisibleItems && !child.visible)
-                        continue;
+                if (this._autoResizeItem && this._columnCount > 0) {
+                    for (i = 0; i < cnt; i++) {
+                        child = this.getChildAt(i);
+                        if (this.foldInvisibleItems && !child.visible)
+                            continue;
 
-                    sw = Math.ceil(child.width);
-                    sh = Math.ceil(child.height);
+                        lineSize += child.sourceWidth;
+                        j++;
+                        if (j == this._columnCount || i == cnt - 1) {
+                            ratio = (viewWidth - lineSize - (j - 1) * this._columnGap) / lineSize;
+                            curX = 0;
+                            for (j = lineStart; j <= i; j++) {
+                                child = this.getChildAt(j);
+                                if (this.foldInvisibleItems && !child.visible)
+                                    continue;
 
-                    if (curX != 0)
-                        curX += this._columnGap;
+                                child.setXY(curX, curY);
 
-                    if (this._columnCount != 0 && j >= this._columnCount
-                        || this._columnCount == 0 && curX + sw > viewWidth && maxHeight != 0) {
-                        //new line
-                        curX -= this._columnGap;
+                                if (j < i) {
+                                    child.setSize(child.sourceWidth + Math.round(child.sourceWidth * ratio), child.height, true);
+                                    curX += Math.ceil(child.width) + this._columnGap;
+                                }
+                                else {
+                                    child.setSize(viewWidth - curX, child.height, true);
+                                }
+                                if (child.height > maxHeight)
+                                    maxHeight = child.height;
+                            }
+                            //new line
+                            curY += Math.ceil(maxHeight) + this._lineGap;
+                            maxHeight = 0;
+                            j = 0;
+                            lineStart = i + 1;
+                            lineSize = 0;
+                        }
+                    }
+                    ch = curY + Math.ceil(maxHeight);
+                    cw = viewWidth;
+                }
+                else {
+                    for (i = 0; i < cnt; i++) {
+                        child = this.getChildAt(i);
+                        if (this.foldInvisibleItems && !child.visible)
+                            continue;
+
+                        if (curX != 0)
+                            curX += this._columnGap;
+
+                        if (this._columnCount != 0 && j >= this._columnCount
+                            || this._columnCount == 0 && curX + child.width > viewWidth && maxHeight != 0) {
+                            //new line
+                            curX = 0;
+                            curY += Math.ceil(maxHeight) + this._lineGap;
+                            maxHeight = 0;
+                            j = 0;
+                        }
+                        child.setXY(curX, curY);
+                        curX += Math.ceil(child.width);
                         if (curX > maxWidth)
                             maxWidth = curX;
-                        curX = 0;
-                        curY += maxHeight + this._lineGap;
-                        maxHeight = 0;
-                        j = 0;
+                        if (child.height > maxHeight)
+                            maxHeight = child.height;
+                        j++;
                     }
-                    child.setXY(curX, curY);
-                    curX += sw;
-                    if (sh > maxHeight)
-                        maxHeight = sh;
-                    j++;
+                    ch = curY + Math.ceil(maxHeight);
+                    cw = Math.ceil(maxWidth);
                 }
-                ch = curY + maxHeight;
-                cw = maxWidth;
             }
             else if (this._layout == ListLayoutType.FlowVertical) {
-                for (i = 0; i < cnt; i++) {
-                    child = this.getChildAt(i);
-                    if (this.foldInvisibleItems && !child.visible)
-                        continue;
+                if (this._autoResizeItem && this._lineCount > 0) {
+                    for (i = 0; i < cnt; i++) {
+                        child = this.getChildAt(i);
+                        if (this.foldInvisibleItems && !child.visible)
+                            continue;
 
-                    sw = Math.ceil(child.width);
-                    sh = Math.ceil(child.height);
+                        lineSize += child.sourceHeight;
+                        j++;
+                        if (j == this._lineCount || i == cnt - 1) {
+                            ratio = (viewHeight - lineSize - (j - 1) * this._lineGap) / lineSize;
+                            curY = 0;
+                            for (j = lineStart; j <= i; j++) {
+                                child = this.getChildAt(j);
+                                if (this.foldInvisibleItems && !child.visible)
+                                    continue;
 
-                    if (curY != 0)
-                        curY += this._lineGap;
+                                child.setXY(curX, curY);
 
-                    if (this._lineCount != 0 && j >= this._lineCount
-                        || this._lineCount == 0 && curY + sh > viewHeight && maxWidth != 0) {
-                        curY -= this._lineGap;
+                                if (j < i) {
+                                    child.setSize(child.width, child.sourceHeight + Math.round(child.sourceHeight * ratio), true);
+                                    curY += Math.ceil(child.height) + this._lineGap;
+                                }
+                                else {
+                                    child.setSize(child.width, viewHeight - curY, true);
+                                }
+                                if (child.width > maxWidth)
+                                    maxWidth = child.width;
+                            }
+                            //new line
+                            curX += Math.ceil(maxWidth) + this._columnGap;
+                            maxWidth = 0;
+                            j = 0;
+                            lineStart = i + 1;
+                            lineSize = 0;
+                        }
+                    }
+                    cw = curX + Math.ceil(maxWidth);
+                    ch = viewHeight;
+                }
+                else {
+                    for (i = 0; i < cnt; i++) {
+                        child = this.getChildAt(i);
+                        if (this.foldInvisibleItems && !child.visible)
+                            continue;
+
+                        if (curY != 0)
+                            curY += this._lineGap;
+
+                        if (this._lineCount != 0 && j >= this._lineCount
+                            || this._lineCount == 0 && curY + child.height > viewHeight && maxWidth != 0) {
+                            curY = 0;
+                            curX += Math.ceil(maxWidth) + this._columnGap;
+                            maxWidth = 0;
+                            j = 0;
+                        }
+                        child.setXY(curX, curY);
+                        curY += Math.ceil(child.height);
                         if (curY > maxHeight)
                             maxHeight = curY;
-                        curY = 0;
-                        curX += maxWidth + this._columnGap;
-                        maxWidth = 0;
-                        j = 0;
+                        if (child.width > maxWidth)
+                            maxWidth = child.width;
+                        j++;
                     }
-                    child.setXY(curX, curY);
-                    curY += sh;
-                    if (sw > maxWidth)
-                        maxWidth = sw;
-                    j++;
+                    cw = curX + Math.ceil(maxWidth);
+                    ch = Math.ceil(maxHeight);
                 }
-                cw = curX + maxWidth;
-                ch = maxHeight;
             }
             else //pagination
             {
-                for (i = 0; i < cnt; i++) {
-                    child = this.getChildAt(i);
-                    if (this.foldInvisibleItems && !child.visible)
-                        continue;
+                var eachHeight: number;
+                if (this._autoResizeItem && this._lineCount > 0)
+                    eachHeight = Math.floor((viewHeight - (this._lineCount - 1) * this._lineGap) / this._lineCount);
 
-                    sw = Math.ceil(child.width);
-                    sh = Math.ceil(child.height);
+                if (this._autoResizeItem && this._columnCount > 0) {
+                    for (i = 0; i < cnt; i++) {
+                        child = this.getChildAt(i);
+                        if (this.foldInvisibleItems && !child.visible)
+                            continue;
 
-                    if (curX != 0)
-                        curX += this._columnGap;
+                        lineSize += child.sourceWidth;
+                        j++;
+                        if (j == this._columnCount || i == cnt - 1) {
+                            ratio = (viewWidth - lineSize - (j - 1) * this._columnGap) / lineSize;
+                            curX = 0;
+                            for (j = lineStart; j <= i; j++) {
+                                child = this.getChildAt(j);
+                                if (this.foldInvisibleItems && !child.visible)
+                                    continue;
 
-                    if (this._columnCount != 0 && j >= this._columnCount
-                        || this._columnCount == 0 && curX + sw > viewWidth && maxHeight != 0) {
-                        //new line
-                        curX -= this._columnGap;
-                        if (curX > maxWidth)
-                            maxWidth = curX;
-                        curX = 0;
-                        curY += maxHeight + this._lineGap;
-                        maxHeight = 0;
-                        j = 0;
-                        k++;
+                                child.setXY(page * viewWidth + curX, curY);
 
-                        if (this._lineCount != 0 && k >= this._lineCount
-                            || this._lineCount == 0 && curY + sh > viewHeight && maxWidth != 0)//new page
-                        {
-                            p++;
-                            curY = 0;
-                            k = 0;
+                                if (j < i) {
+                                    child.setSize(child.sourceWidth + Math.round(child.sourceWidth * ratio),
+                                        this._lineCount > 0 ? eachHeight : child.height, true);
+                                    curX += Math.ceil(child.width) + this._columnGap;
+                                }
+                                else {
+                                    child.setSize(viewWidth - curX, this._lineCount > 0 ? eachHeight : child.height, true);
+                                }
+                                if (child.height > maxHeight)
+                                    maxHeight = child.height;
+                            }
+                            //new line
+                            curY += Math.ceil(maxHeight) + this._lineGap;
+                            maxHeight = 0;
+                            j = 0;
+                            lineStart = i + 1;
+                            lineSize = 0;
+
+                            k++;
+
+                            if (this._lineCount != 0 && k >= this._lineCount
+                                || this._lineCount == 0 && curY + child.height > viewHeight) {
+                                //new page
+                                page++;
+                                curY = 0;
+                                k = 0;
+                            }
                         }
                     }
-                    child.setXY(p * viewWidth + curX, curY);
-                    curX += sw;
-                    if (sh > maxHeight)
-                        maxHeight = sh;
-                    j++;
                 }
-                ch = curY + maxHeight;
-                cw = (p + 1) * viewWidth;
+                else {
+                    for (i = 0; i < cnt; i++) {
+                        child = this.getChildAt(i);
+                        if (this.foldInvisibleItems && !child.visible)
+                            continue;
+
+                        if (curX != 0)
+                            curX += this._columnGap;
+
+                        if (this._autoResizeItem && this._lineCount > 0)
+                            child.setSize(child.width, eachHeight, true);
+
+                        if (this._columnCount != 0 && j >= this._columnCount
+                            || this._columnCount == 0 && curX + child.width > viewWidth && maxHeight != 0) {
+                            //new line
+                            curX = 0;
+                            curY += Math.ceil(maxHeight) + this._lineGap;
+                            maxHeight = 0;
+                            j = 0;
+                            k++;
+
+                            if (this._lineCount != 0 && k >= this._lineCount
+                                || this._lineCount == 0 && curY + child.height > viewHeight && maxWidth != 0)//new page
+                            {
+                                page++;
+                                curY = 0;
+                                k = 0;
+                            }
+                        }
+                        child.setXY(page * viewWidth + curX, curY);
+                        curX += Math.ceil(child.width);
+                        if (child.height > maxHeight)
+                            maxHeight = child.height;
+                        j++;
+                    }
+                }
+                ch = page > 0 ? viewHeight : curY + Math.ceil(maxHeight);
+                cw = (page + 1) * viewWidth;
             }
 
             this.handleAlign(cw, ch);
@@ -1985,7 +2127,10 @@ module fairygui {
                 this._defaultItem = str;
 
             str = xml.attributes.autoItemSize;
-            this._autoResizeItem = str != "false";
+            if (this._layout == ListLayoutType.SingleRow || this._layout == ListLayoutType.SingleColumn)
+                this._autoResizeItem = str != "false";
+            else
+                this._autoResizeItem = str == "true";
 
             var col: any = xml.children;
             if (col) {

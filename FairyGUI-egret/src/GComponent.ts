@@ -136,6 +136,7 @@ module fairygui {
                     this._sortingChildCount--;
 
                 this._children.splice(index, 1);
+                child.group = null;
                 if (child.inContainer) {
                     this._container.removeChild(child.displayObject);
                     if (this._childrenRenderOrder == ChildrenRenderOrder.Arch)
@@ -893,12 +894,21 @@ module fairygui {
 
             str = xml.attributes.size;
             arr = str.split(",");
-            this._sourceWidth = parseInt(arr[0]);
-            this._sourceHeight = parseInt(arr[1]);
-            this._initWidth = this._sourceWidth;
-            this._initHeight = this._sourceHeight;
+            this.sourceWidth = parseInt(arr[0]);
+            this.sourceHeight = parseInt(arr[1]);
+            this.initWidth = this.sourceWidth;
+            this.initHeight = this.sourceHeight;
 
-            this.setSize(this._sourceWidth, this._sourceHeight);
+            this.setSize(this.sourceWidth, this.sourceHeight);
+
+            str = xml.attributes.restrictSize;
+            if (str) {
+                arr = str.split(",");
+                this.minWidth = parseInt(arr[0]);
+                this.maxWidth = parseInt(arr[1]);
+                this.minHeight = parseInt(arr[2]);
+                this.maxHeight = parseInt(arr[3]);
+            }
 
             str = xml.attributes.pivot;
             if (str) {

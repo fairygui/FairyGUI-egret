@@ -352,47 +352,49 @@ module fairygui {
                     this._contentHeight = 30;
                 this.setSize(this._contentWidth, this._contentHeight);
                 this._updatingLayout = false;
+
+                if(this._contentWidth==this._width && this._contentHeight==this._height)
+                    return;
+            }
+
+            var sx: number = 1, sy: number = 1;
+            if (this._fill != LoaderFillType.None) {
+                sx = this.width / this._contentSourceWidth;
+                sy = this.height / this._contentSourceHeight;
+
+                if (sx != 1 || sy != 1) {
+                    if (this._fill == LoaderFillType.ScaleMatchHeight)
+                        sx = sy;
+                    else if (this._fill == LoaderFillType.ScaleMatchWidth)
+                        sy = sx;
+                    else if (this._fill == LoaderFillType.Scale) {
+                        if (sx > sy)
+                            sx = sy;
+                        else
+                            sy = sx;
+                    }
+                    this._contentWidth = this._contentSourceWidth * sx;
+                    this._contentHeight = this._contentSourceHeight * sy;
+                }
+            }
+
+            if (this._content instanceof egret.Bitmap) {
+                this._content.width = this._contentWidth;
+                this._content.height = this._contentHeight;
             }
             else {
-                var sx: number = 1, sy: number = 1;
-                if (this._fill != LoaderFillType.None) {
-                    sx = this.width / this._contentSourceWidth;
-                    sy = this.height / this._contentSourceHeight;
-
-                    if (sx != 1 || sy != 1) {
-                        if (this._fill == LoaderFillType.ScaleMatchHeight)
-                            sx = sy;
-                        else if (this._fill == LoaderFillType.ScaleMatchWidth)
-                            sy = sx;
-                        else if (this._fill == LoaderFillType.Scale) {
-                            if (sx > sy)
-                                sx = sy;
-                            else
-                                sy = sx;
-                        }
-                        this._contentWidth = this._contentSourceWidth * sx;
-                        this._contentHeight = this._contentSourceHeight * sy;
-                    }
-                }
-
-                if (this._content instanceof egret.Bitmap) {
-                    this._content.width = this._contentWidth;
-                    this._content.height = this._contentHeight;
-                }
-                else {
-                    this._content.scaleX = sx;
-                    this._content.scaleY = sy;
-                }
-
-                if (this._align == AlignType.Center)
-                    this._content.x = Math.floor((this.width - this._contentWidth) / 2);
-                else if (this._align == AlignType.Right)
-                    this._content.x = this.width - this._contentWidth;
-                if (this._verticalAlign == VertAlignType.Middle)
-                    this._content.y = Math.floor((this.height - this._contentHeight) / 2);
-                else if (this._verticalAlign == VertAlignType.Bottom)
-                    this._content.y = this.height - this._contentHeight;
+                this._content.scaleX = sx;
+                this._content.scaleY = sy;
             }
+
+            if (this._align == AlignType.Center)
+                this._content.x = Math.floor((this.width - this._contentWidth) / 2);
+            else if (this._align == AlignType.Right)
+                this._content.x = this.width - this._contentWidth;
+            if (this._verticalAlign == VertAlignType.Middle)
+                this._content.y = Math.floor((this.height - this._contentHeight) / 2);
+            else if (this._verticalAlign == VertAlignType.Bottom)
+                this._content.y = this.height - this._contentHeight;
         }
 
         private clearContent(): void {

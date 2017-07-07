@@ -857,7 +857,7 @@ module fairygui {
                         this._maxTime = item.time + item.duration;
                     str = cxml.attributes.ease;
                     if (str)
-                        item.easeType = ParseEaseType(str);
+                        item.easeType = parseEaseType(str);
                     str = cxml.attributes.repeat;
                     if (str)
                         item.repeat = parseInt(str);

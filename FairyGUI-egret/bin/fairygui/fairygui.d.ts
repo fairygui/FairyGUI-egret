@@ -326,6 +326,11 @@ declare module fairygui {
         Descent = 1,
         Arch = 2,
     }
+    enum GroupLayoutType {
+        None = 0,
+        Horizontal = 1,
+        Vertical = 2,
+    }
     enum RelationType {
         Left_Left = 0,
         Left_Center = 1,
@@ -368,7 +373,8 @@ declare module fairygui {
     function parseScrollBarDisplayType(value: string): ScrollBarDisplayType;
     function parseScrollType(value: string): ScrollType;
     function parseFlipType(value: string): FlipType;
-    function ParseEaseType(value: string): Function;
+    function parseEaseType(value: string): Function;
+    function parseGroupLayoutType(value: string): GroupLayoutType;
 }
 declare module fairygui {
     class GearBase {
@@ -510,8 +516,6 @@ declare module fairygui {
         static draggingObject: GObject;
         private _x;
         private _y;
-        private _width;
-        private _height;
         private _alpha;
         private _rotation;
         private _visible;
@@ -538,18 +542,25 @@ declare module fairygui {
         private _gears;
         private _displayObject;
         private _dragBounds;
+        sourceWidth: number;
+        sourceHeight: number;
+        initWidth: number;
+        initHeight: number;
+        minWidth: number;
+        minHeight: number;
+        maxWidth: number;
+        maxHeight: number;
         _parent: GComponent;
+        _width: number;
+        _height: number;
         _rawWidth: number;
         _rawHeight: number;
-        _sourceWidth: number;
-        _sourceHeight: number;
-        _initWidth: number;
-        _initHeight: number;
         _id: string;
         _name: string;
         _underConstruct: boolean;
         _gearLocked: boolean;
         _yOffset: number;
+        _sizePercentInGroup: number;
         _sizeImplType: number;
         static _gInstanceCounter: number;
         static XY_CHANGED: string;
@@ -568,10 +579,6 @@ declare module fairygui {
         height: number;
         setSize(wv: number, hv: number, ignorePivot?: boolean): void;
         ensureSizeCorrect(): void;
-        sourceHeight: number;
-        sourceWidth: number;
-        initHeight: number;
-        initWidth: number;
         actualWidth: number;
         actualHeight: number;
         scaleX: number;
@@ -989,12 +996,25 @@ declare module fairygui {
 }
 declare module fairygui {
     class GGroup extends GObject {
-        _updating: boolean;
-        _empty: boolean;
+        private _layout;
+        private _lineGap;
+        private _columnGap;
+        private _percentReady;
+        private _boundsChanged;
+        _updating: number;
         constructor();
-        updateBounds(): void;
+        layout: number;
+        lineGap: number;
+        columnGap: number;
+        setBoundsChangedFlag(childSizeChanged?: boolean): void;
+        ensureBoundsCorrect(): void;
+        private updateBounds();
+        private handleLayout();
+        private updatePercent();
         moveChildren(dx: number, dy: number): void;
+        resizeChildren(dw: number, dh: number): void;
         protected updateAlpha(): void;
+        setup_beforeAdd(xml: any): void;
     }
 }
 declare module fairygui {
@@ -1111,7 +1131,6 @@ declare module fairygui {
         protected handleSizeChanged(): void;
         handleControllerChanged(c: Controller): void;
         private updateSelectionController(index);
-        adjustItemsSize(): void;
         getSnappingPosition(xValue: number, yValue: number, resultPoint?: egret.Point): egret.Point;
         scrollToView(index: number, ani?: boolean, setFirst?: boolean): void;
         getFirstChildInView(): number;
@@ -1365,6 +1384,7 @@ declare module fairygui {
         closeAllExceptModals(): void;
         closeAllWindows(): void;
         getTopWindow(): Window;
+        modalLayer: GGraph;
         hasModalWindow: boolean;
         modalWaiting: boolean;
         showPopup(popup: GObject, target?: GObject, downward?: any): void;
@@ -1442,7 +1462,8 @@ declare module fairygui {
         protected constructFromXML(xml: any): void;
         private __gripMouseDown(evt);
         private static sScrollbarHelperPoint;
-        private __gripDragging(evt);
+        private __gripMouseMove(evt);
+        private __gripMouseUp(evt);
         private __arrowButton1Click(evt);
         private __arrowButton2Click(evt);
         private __barMouseDown(evt);

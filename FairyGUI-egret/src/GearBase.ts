@@ -80,7 +80,7 @@ module fairygui {
 
             str = xml.attributes.ease;
             if (str)
-                this._easeType = ParseEaseType(str);
+                this._easeType = parseEaseType(str);
 
             str = xml.attributes.duration;
             if (str)
