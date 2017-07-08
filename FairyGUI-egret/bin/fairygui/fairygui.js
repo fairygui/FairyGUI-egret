@@ -5406,10 +5406,18 @@ var fairygui;
                 }
             }
             else if (this._downEffect == 2) {
-                if (val == GButton.DOWN || val == GButton.SELECTED_OVER || val == GButton.SELECTED_DISABLED)
-                    this.setScale(this._downEffectValue, this._downEffectValue);
-                else
-                    this.setScale(1, 1);
+                if (val == GButton.DOWN || val == GButton.SELECTED_OVER || val == GButton.SELECTED_DISABLED) {
+                    if (!this._downScaled) {
+                        this._downScaled = true;
+                        this.setScale(this.scaleX * this._downEffectValue, this.scaleY * this._downEffectValue);
+                    }
+                }
+                else {
+                    if (this._downScaled) {
+                        this._downScaled = false;
+                        this.setScale(this.scaleX / this._downEffectValue, this.scaleY / this._downEffectValue);
+                    }
+                }
             }
         };
         p.handleControllerChanged = function (c) {

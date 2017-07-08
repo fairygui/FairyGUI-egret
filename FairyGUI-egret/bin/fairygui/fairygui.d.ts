@@ -836,6 +836,7 @@ declare module fairygui {
         private _linkedPopup;
         private _downEffect;
         private _downEffectValue;
+        private _downScaled;
         private _down;
         private _over;
         static UP: string;

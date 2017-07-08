@@ -20,6 +20,7 @@ module fairygui {
         private _linkedPopup: GObject;
         private _downEffect: number;
         private _downEffectValue: number;
+        private _downScaled: boolean;
 
         private _down: boolean;
         private _over: boolean;
@@ -281,10 +282,18 @@ module fairygui {
                 }
             }
             else if (this._downEffect == 2) {
-                if (val == GButton.DOWN || val == GButton.SELECTED_OVER || val == GButton.SELECTED_DISABLED)
-                    this.setScale(this._downEffectValue, this._downEffectValue);
-                else
-                    this.setScale(1, 1);
+                if (val == GButton.DOWN || val == GButton.SELECTED_OVER || val == GButton.SELECTED_DISABLED) {
+                    if (!this._downScaled) {
+                        this._downScaled = true;
+                        this.setScale(this.scaleX * this._downEffectValue, this.scaleY * this._downEffectValue);
+                    }
+                }
+                else {
+                    if (this._downScaled) {
+                        this._downScaled = false;
+                        this.setScale(this.scaleX / this._downEffectValue, this.scaleY / this._downEffectValue);
+                    }
+                }
             }
         }
 
