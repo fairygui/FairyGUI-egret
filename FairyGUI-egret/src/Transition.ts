@@ -59,13 +59,14 @@ module fairygui {
             this._play(onComplete, onCompleteObj, onCompleteParam, times, delay, true);
         }
 
+        public changeRepeat(value:number):void
+        {
+            this._totalTimes = value;
+        }
+
         private _play(onComplete: Function = null, onCompleteObj: any = null, onCompleteParam: any = null,
             times: number = 1, delay: number = 0, reversed: boolean = false) {
             this.stop();
-            if (times == 0)
-                times = 1;
-            else if (times == -1)
-                times = Number.MAX_VALUE;
             this._totalTimes = times;
             this._reversed = reversed;
             this.internalPlay(delay);
@@ -695,7 +696,7 @@ module fairygui {
                         if (value.i == 0)
                             trans.stop(false, true);
                         else if (trans.playing)
-                            trans._totalTimes = value.i == -1 ? Number.MAX_VALUE : value.i;
+                            trans._totalTimes = value.i;
                         else {
                             item.completed = false;
                             this._totalTasks++;
