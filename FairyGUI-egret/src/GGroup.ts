@@ -47,7 +47,7 @@ module fairygui {
         }
 
         public setBoundsChangedFlag(childSizeChanged: boolean = false): void {
-            if (this._updating == 0 && this._parent != null && !this._underConstruct) {
+            if (this._updating == 0 && this._parent != null) {
                 if (childSizeChanged)
                     this._percentReady = false;
 
