@@ -249,7 +249,7 @@ var fairygui;
                     if (ii < this._pageIds.length)
                         taction.toPage = [this._pageIds[ii]];
                     str = str.substring(0, k);
-                    if (str == "*") {
+                    if (str != "*") {
                         ii = parseInt(str);
                         if (ii < this._pageIds.length)
                             taction.fromPage = [this._pageIds[ii]];
