@@ -197,7 +197,7 @@ module fairygui {
 
                 this.handleSizeChanged();
                 if (this._pivotX != 0 || this._pivotY != 0) {
-                    if (this._pivotAsAnchor) {
+                    if (!this._pivotAsAnchor) {
                         if (!ignorePivot)
                             this.setXY(this.x - this._pivotX * dWidth, this.y - this._pivotY * dHeight);
                         this.updatePivotOffset();

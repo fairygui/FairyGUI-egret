@@ -226,13 +226,6 @@ module fairygui {
         }
 
         public addChildAt(child: GObject, index: number = 0): GObject {
-            if (this._autoResizeItem) {
-                if (this._layout == ListLayoutType.SingleColumn)
-                    child.width = this.viewWidth;
-                else if (this._layout == ListLayoutType.SingleRow)
-                    child.height = this.viewHeight;
-            }
-
             super.addChildAt(child, index);
 
             if (child instanceof GButton) {
