@@ -5,8 +5,7 @@ declare module fairygui {
         private _previousIndex;
         private _pageIds;
         private _pageNames;
-        private _pageTransitions;
-        private _playingTransition;
+        private _actions;
         _parent: GComponent;
         _autoRadioGroupDepth: boolean;
         changing: boolean;
@@ -35,6 +34,42 @@ declare module fairygui {
         selectedPageId: string;
         oppositePageId: string;
         previousPageId: string;
+        runActions(): void;
+        setup(xml: any): void;
+    }
+}
+declare module fairygui {
+    class ControllerAction {
+        fromPage: string[];
+        toPage: string[];
+        static createAction(type: string): ControllerAction;
+        constructor();
+        run(controller: Controller, prevPage: string, curPage: string): void;
+        protected enter(controller: Controller): void;
+        protected leave(controller: Controller): void;
+        setup(xml: any): void;
+    }
+}
+declare module fairygui {
+    class PlayTransitionAction extends ControllerAction {
+        transitionName: string;
+        repeat: number;
+        delay: number;
+        stopOnExit: boolean;
+        private _currentTransition;
+        constructor();
+        protected enter(controller: Controller): void;
+        protected leave(controller: Controller): void;
+        setup(xml: any): void;
+    }
+}
+declare module fairygui {
+    class ChangePageAction extends ControllerAction {
+        objectId: string;
+        controllerName: string;
+        targetPage: string;
+        constructor();
+        protected enter(controller: Controller): void;
         setup(xml: any): void;
     }
 }
@@ -479,6 +514,7 @@ declare module fairygui {
         autoPlay: boolean;
         play(onComplete?: Function, onCompleteObj?: any, onCompleteParam?: any, times?: number, delay?: number): void;
         playReverse(onComplete?: Function, onCompleteObj?: any, onCompleteParam?: any, times?: number, delay?: number): void;
+        changeRepeat(value: number): void;
         private _play(onComplete?, onCompleteObj?, onCompleteParam?, times?, delay?, reversed?);
         stop(setToComplete?: boolean, processCallback?: boolean): void;
         private stopItem(item, setToComplete);

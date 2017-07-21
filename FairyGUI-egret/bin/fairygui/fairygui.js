@@ -40,22 +40,6 @@ var fairygui;
                     this._parent.applyController(this);
                     this.dispatchEvent(new fairygui.StateChangeEvent(fairygui.StateChangeEvent.CHANGED));
                     this.changing = false;
-                    if (this._playingTransition) {
-                        this._playingTransition.stop();
-                        this._playingTransition = null;
-                    }
-                    if (this._pageTransitions) {
-                        var len = this._pageTransitions.length;
-                        for (var i = 0; i < len; i++) {
-                            var pt = this._pageTransitions[i];
-                            if (pt.toIndex == this._selectedIndex && (pt.fromIndex == -1 || pt.fromIndex == this._previousIndex)) {
-                                this._playingTransition = this.parent.getTransition(pt.transitionName);
-                                break;
-                            }
-                        }
-                        if (this._playingTransition)
-                            this._playingTransition.play(function () { this._playingTransition = null; }, this);
-                    }
                 }
             }
         );
@@ -70,10 +54,6 @@ var fairygui;
                 this._selectedIndex = value;
                 this._parent.applyController(this);
                 this.changing = false;
-                if (this._playingTransition) {
-                    this._playingTransition.stop();
-                    this._playingTransition = null;
-                }
             }
         };
         d(p, "previsousIndex"
@@ -216,6 +196,13 @@ var fairygui;
                     return this._pageIds[this._previousIndex];
             }
         );
+        p.runActions = function () {
+            if (this._actions) {
+                var cnt = this._actions.length;
+                for (var i = 0; i < cnt; i++)
+                    this._actions[i].run(this, this.previousPageId, this.selectedPageId);
+            }
+        };
         p.setup = function (xml) {
             this._name = xml.attributes.name;
             this._autoRadioGroupDepth = xml.attributes.autoRadioGroupDepth == "true";
@@ -230,27 +217,45 @@ var fairygui;
                     this._pageNames.push(arr[i + 1]);
                 }
             }
+            var col = xml.children;
+            var length1 = col.length;
+            if (length1 > 0) {
+                if (!this._actions)
+                    this._actions = new Array();
+                for (var i1 = 0; i1 < length1; i1++) {
+                    var cxml = col[i1];
+                    var action = fairygui.ControllerAction.createAction(cxml.attributes.type);
+                    action.setup(cxml);
+                    this._actions.push(action);
+                }
+            }
             str = xml.attributes.transitions;
             if (str) {
-                this._pageTransitions = new Array();
+                if (!this._actions)
+                    this._actions = new Array();
                 arr = str.split(",");
                 cnt = arr.length;
+                var ii;
                 for (i = 0; i < cnt; i++) {
                     str = arr[i];
                     if (!str)
                         continue;
-                    var pt = new PageTransition();
+                    var taction = new fairygui.PlayTransitionAction();
                     k = str.indexOf("=");
-                    pt.transitionName = str.substr(k + 1);
+                    taction.transitionName = str.substr(k + 1);
                     str = str.substring(0, k);
                     k = str.indexOf("-");
-                    pt.toIndex = parseInt(str.substring(k + 1));
+                    ii = parseInt(str.substring(k + 1));
+                    if (ii < this._pageIds.length)
+                        taction.toPage = [this._pageIds[ii]];
                     str = str.substring(0, k);
-                    if (str == "*")
-                        pt.fromIndex = -1;
-                    else
-                        pt.fromIndex = parseInt(str);
-                    this._pageTransitions.push(pt);
+                    if (str == "*") {
+                        ii = parseInt(str);
+                        if (ii < this._pageIds.length)
+                            taction.fromPage = [this._pageIds[ii]];
+                    }
+                    taction.stopOnExit = true;
+                    this._actions.push(taction);
                 }
             }
             if (this._parent && this._pageIds.length > 0)
@@ -263,15 +268,132 @@ var fairygui;
     }(egret.EventDispatcher));
     fairygui.Controller = Controller;
     egret.registerClass(Controller,'fairygui.Controller');
-    var PageTransition = (function () {
-        function PageTransition() {
-            this.fromIndex = 0;
-            this.toIndex = 0;
+})(fairygui || (fairygui = {}));
+
+var fairygui;
+(function (fairygui) {
+    var ControllerAction = (function () {
+        function ControllerAction() {
         }
-        var d = __define,c=PageTransition,p=c.prototype;
-        return PageTransition;
+        var d = __define,c=ControllerAction,p=c.prototype;
+        ControllerAction.createAction = function (type) {
+            switch (type) {
+                case "play_transition":
+                    return new fairygui.PlayTransitionAction();
+                case "change_page":
+                    return new fairygui.ChangePageAction();
+            }
+            return null;
+        };
+        p.run = function (controller, prevPage, curPage) {
+            if ((this.fromPage == null || this.fromPage.length == 0 || this.fromPage.indexOf(prevPage) != -1)
+                && (this.toPage == null || this.toPage.length == 0 || this.toPage.indexOf(curPage) != -1))
+                this.enter(controller);
+            else
+                this.leave(controller);
+        };
+        p.enter = function (controller) {
+        };
+        p.leave = function (controller) {
+        };
+        p.setup = function (xml) {
+            var str;
+            str = xml.attributes.fromPage;
+            if (str)
+                this.fromPage = str.split(",");
+            str = xml.attributes.toPage;
+            if (str)
+                this.toPage = str.split(",");
+        };
+        return ControllerAction;
     }());
-    egret.registerClass(PageTransition,'PageTransition');
+    fairygui.ControllerAction = ControllerAction;
+    egret.registerClass(ControllerAction,'fairygui.ControllerAction');
+})(fairygui || (fairygui = {}));
+
+var fairygui;
+(function (fairygui) {
+    var PlayTransitionAction = (function (_super) {
+        __extends(PlayTransitionAction, _super);
+        function PlayTransitionAction() {
+            _super.call(this);
+            this.repeat = 1;
+            this.delay = 0;
+            this.stopOnExit = false;
+        }
+        var d = __define,c=PlayTransitionAction,p=c.prototype;
+        p.enter = function (controller) {
+            var trans = controller.parent.getTransition(this.transitionName);
+            if (trans) {
+                if (this._currentTransition && this._currentTransition.playing)
+                    trans.changeRepeat(this.repeat);
+                else
+                    trans.play(null, null, null, this.repeat, this.delay);
+                this._currentTransition = trans;
+            }
+        };
+        p.leave = function (controller) {
+            if (this.stopOnExit && this._currentTransition) {
+                this._currentTransition.stop();
+                this._currentTransition = null;
+            }
+        };
+        p.setup = function (xml) {
+            _super.prototype.setup.call(this, xml);
+            this.transitionName = xml.attributes.transition;
+            var str;
+            str = xml.attributes.repeat;
+            if (str)
+                this.repeat = parseInt(str);
+            str = xml.attributes.delay;
+            if (str)
+                this.delay = parseFloat(str);
+            str = xml.attributes.stopOnExit;
+            this.stopOnExit = str == "true";
+        };
+        return PlayTransitionAction;
+    }(fairygui.ControllerAction));
+    fairygui.PlayTransitionAction = PlayTransitionAction;
+    egret.registerClass(PlayTransitionAction,'fairygui.PlayTransitionAction');
+})(fairygui || (fairygui = {}));
+
+var fairygui;
+(function (fairygui) {
+    var ChangePageAction = (function (_super) {
+        __extends(ChangePageAction, _super);
+        function ChangePageAction() {
+            _super.call(this);
+        }
+        var d = __define,c=ChangePageAction,p=c.prototype;
+        p.enter = function (controller) {
+            if (!this.controllerName)
+                return;
+            var gcom;
+            if (this.objectId) {
+                var obj = controller.parent.getChildById(this.objectId);
+                if (obj instanceof fairygui.GComponent)
+                    gcom = obj;
+                else
+                    return;
+            }
+            else
+                gcom = controller.parent;
+            if (gcom) {
+                var cc = gcom.getController(this.controllerName);
+                if (cc && cc != controller && !cc.changing)
+                    cc.selectedPageId = this.targetPage;
+            }
+        };
+        p.setup = function (xml) {
+            _super.prototype.setup.call(this, xml);
+            this.objectId = xml.attributes.objectId;
+            this.controllerName = xml.attributes.controller;
+            this.targetPage = xml.attributes.targetPage;
+        };
+        return ChangePageAction;
+    }(fairygui.ControllerAction));
+    fairygui.ChangePageAction = ChangePageAction;
+    egret.registerClass(ChangePageAction,'fairygui.ChangePageAction');
 })(fairygui || (fairygui = {}));
 
 var fairygui;
@@ -2088,6 +2210,9 @@ var fairygui;
             if (delay === void 0) { delay = 0; }
             this._play(onComplete, onCompleteObj, onCompleteParam, times, delay, true);
         };
+        p.changeRepeat = function (value) {
+            this._totalTimes = value;
+        };
         p._play = function (onComplete, onCompleteObj, onCompleteParam, times, delay, reversed) {
             if (onComplete === void 0) { onComplete = null; }
             if (onCompleteObj === void 0) { onCompleteObj = null; }
@@ -2096,10 +2221,6 @@ var fairygui;
             if (delay === void 0) { delay = 0; }
             if (reversed === void 0) { reversed = false; }
             this.stop();
-            if (times == 0)
-                times = 1;
-            else if (times == -1)
-                times = Number.MAX_VALUE;
             this._totalTimes = times;
             this._reversed = reversed;
             this.internalPlay(delay);
@@ -2683,7 +2804,7 @@ var fairygui;
                         if (value.i == 0)
                             trans.stop(false, true);
                         else if (trans.playing)
-                            trans._totalTimes = value.i == -1 ? Number.MAX_VALUE : value.i;
+                            trans._totalTimes = value.i;
                         else {
                             item.completed = false;
                             this._totalTasks++;
@@ -4620,6 +4741,7 @@ var fairygui;
                 child = this._children[i];
                 child.handleControllerChanged(c);
             }
+            c.runActions();
         };
         p.applyAllControllers = function () {
             var cnt = this._controllers.length;
@@ -5459,6 +5581,8 @@ var fairygui;
                 this._downEffect = str == "dark" ? 1 : (str == "scale" ? 2 : 0);
                 str = xml.attributes.downEffectValue;
                 this._downEffectValue = parseFloat(str);
+                if (this._downEffect == 2)
+                    this.setPivot(0.5, 0.5);
             }
             this._buttonController = this.getController("button");
             this._titleObject = this.getChild("title");
@@ -5474,8 +5598,6 @@ var fairygui;
         };
         p.setup_afterAdd = function (xml) {
             _super.prototype.setup_afterAdd.call(this, xml);
-            if (this._downEffect == 2)
-                this.setPivot(0.5, 0.5);
             xml = fairygui.ToolSet.findChildNode(xml, "Button");
             if (xml) {
                 var str;
@@ -6491,7 +6613,7 @@ var fairygui;
         );
         p.setBoundsChangedFlag = function (childSizeChanged) {
             if (childSizeChanged === void 0) { childSizeChanged = false; }
-            if (this._updating == 0 && this._parent != null && !this._underConstruct) {
+            if (this._updating == 0 && this._parent != null) {
                 if (childSizeChanged)
                     this._percentReady = false;
                 if (!this._boundsChanged) {
