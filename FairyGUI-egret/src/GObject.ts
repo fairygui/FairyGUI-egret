@@ -40,10 +40,10 @@ module fairygui {
         public sourceHeight: number = 0;
         public initWidth: number = 0;
         public initHeight: number = 0;
-		public minWidth:number = 0;
-		public minHeight:number = 0;
-		public maxWidth:number = 0;
-		public maxHeight:number = 0;
+        public minWidth: number = 0;
+        public minHeight: number = 0;
+        public maxWidth: number = 0;
+        public maxHeight: number = 0;
 
         public _parent: GComponent;
         public _width: number = 0;
@@ -55,7 +55,7 @@ module fairygui {
         public _underConstruct: boolean;
         public _gearLocked: boolean;
         public _yOffset: number = 0;
-        public _sizePercentInGroup:number = 0;
+        public _sizePercentInGroup: number = 0;
         //Size的实现方式，有两种，0-GObject的w/h等于DisplayObject的w/h。1-GObject的sourceWidth/sourceHeight等于DisplayObject的w/h，剩余部分由scale实现
         public _sizeImplType: number = 0;
 
@@ -122,7 +122,7 @@ module fairygui {
                 if (this._parent && !(this._parent instanceof GList)) {
                     this._parent.setBoundsChangedFlag();
                     if (this._group != null)
-						this._group.setBoundsChangedFlag();
+                        this._group.setBoundsChangedFlag();
                     this.dispatchEventWith(GObject.XY_CHANGED);
                 }
 
@@ -182,14 +182,14 @@ module fairygui {
             if (this._rawWidth != wv || this._rawHeight != hv) {
                 this._rawWidth = wv;
                 this._rawHeight = hv;
-				if(wv<this.minWidth)
-					wv = this.minWidth;
-				if(hv<this.minHeight)
-					hv = this.minHeight;
-				if(this.maxWidth>0 && wv>this.maxWidth)
-					wv = this.maxWidth;
-				if(this.maxHeight>0 && hv>this.maxHeight)
-					hv = this.maxHeight;
+                if (wv < this.minWidth)
+                    wv = this.minWidth;
+                if (hv < this.minHeight)
+                    hv = this.minHeight;
+                if (this.maxWidth > 0 && wv > this.maxWidth)
+                    wv = this.maxWidth;
+                if (this.maxHeight > 0 && hv > this.maxHeight)
+                    hv = this.maxHeight;
                 var dWidth: number = wv - this._width;
                 var dHeight: number = hv - this._height;
                 this._width = wv;
@@ -216,7 +216,7 @@ module fairygui {
                     this._relations.onOwnerSizeChanged(dWidth, dHeight);
                     this._parent.setBoundsChangedFlag();
                     if (this._group != null)
-						this._group.setBoundsChangedFlag(true);
+                        this._group.setBoundsChangedFlag(true);
                 }
 
                 this.dispatchEventWith(GObject.SIZE_CHANGED);
@@ -359,16 +359,20 @@ module fairygui {
         }
 
         public set touchable(value: boolean) {
-            this._touchable = value;
-            if ((this instanceof GImage) || (this instanceof GMovieClip)
-                || (this instanceof GTextField) && !(this instanceof GTextInput) && !(this instanceof GRichTextField))
-                //Touch is not supported by GImage/GMovieClip/GTextField
-                return;
+            if (this._touchable != value) {
+                this._touchable = value;
+                this.updateGear(3);
 
-            if (this._displayObject != null) {
-                this._displayObject.touchEnabled = this._touchable;
-                if (this._displayObject instanceof egret.DisplayObjectContainer)
-                    (<egret.DisplayObjectContainer>this._displayObject).touchChildren = this._touchable;
+                if ((this instanceof GImage) || (this instanceof GMovieClip)
+                    || (this instanceof GTextField) && !(this instanceof GTextInput) && !(this instanceof GRichTextField))
+                    //Touch is not supported by GImage/GMovieClip/GTextField
+                    return;
+
+                if (this._displayObject != null) {
+                    this._displayObject.touchEnabled = this._touchable;
+                    if (this._displayObject instanceof egret.DisplayObjectContainer)
+                        (<egret.DisplayObjectContainer>this._displayObject).touchChildren = this._touchable;
+                }
             }
         }
 
@@ -531,14 +535,13 @@ module fairygui {
         }
 
         public set group(value: GGroup) {
-			if (this._group != value)
-			{
-				if (this._group != null)
-					this._group.setBoundsChangedFlag(true);
-				this._group = value;
-				if (this._group != null)
-					this._group.setBoundsChangedFlag(true);
-			}
+            if (this._group != value) {
+                if (this._group != null)
+                    this._group.setBoundsChangedFlag(true);
+                this._group = value;
+                if (this._group != null)
+                    this._group.setBoundsChangedFlag(true);
+            }
         }
 
         public get group(): GGroup {

@@ -252,7 +252,7 @@ var fairygui;
                     this._actions = new Array();
                 for (var i1 = 0; i1 < length1; i1++) {
                     var cxml = col[i1];
-                    var action = ControllerAction.createAction(cxml.attributes.type);
+                    var action = fairygui.ControllerAction.createAction(cxml.attributes.type);
                     action.setup(cxml);
                     this._actions.push(action);
                 }
@@ -268,7 +268,7 @@ var fairygui;
                     str = arr[i];
                     if (!str)
                         continue;
-                    var taction = new PlayTransitionAction();
+                    var taction = new fairygui.PlayTransitionAction();
                     k = str.indexOf("=");
                     taction.transitionName = str.substr(k + 1);
                     str = str.substring(0, k);
@@ -296,6 +296,149 @@ var fairygui;
     Controller._nextPageId = 0;
     fairygui.Controller = Controller;
     __reflect(Controller.prototype, "fairygui.Controller");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var fairygui;
+(function (fairygui) {
+    var ControllerAction = (function () {
+        function ControllerAction() {
+        }
+        ControllerAction.createAction = function (type) {
+            switch (type) {
+                case "play_transition":
+                    return new fairygui.PlayTransitionAction();
+                case "change_page":
+                    return new fairygui.ChangePageAction();
+            }
+            return null;
+        };
+        ControllerAction.prototype.run = function (controller, prevPage, curPage) {
+            if ((this.fromPage == null || this.fromPage.length == 0 || this.fromPage.indexOf(prevPage) != -1)
+                && (this.toPage == null || this.toPage.length == 0 || this.toPage.indexOf(curPage) != -1))
+                this.enter(controller);
+            else
+                this.leave(controller);
+        };
+        ControllerAction.prototype.enter = function (controller) {
+        };
+        ControllerAction.prototype.leave = function (controller) {
+        };
+        ControllerAction.prototype.setup = function (xml) {
+            var str;
+            str = xml.attributes.fromPage;
+            if (str)
+                this.fromPage = str.split(",");
+            str = xml.attributes.toPage;
+            if (str)
+                this.toPage = str.split(",");
+        };
+        return ControllerAction;
+    }());
+    fairygui.ControllerAction = ControllerAction;
+    __reflect(ControllerAction.prototype, "fairygui.ControllerAction");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var fairygui;
+(function (fairygui) {
+    var PlayTransitionAction = (function (_super) {
+        __extends(PlayTransitionAction, _super);
+        function PlayTransitionAction() {
+            var _this = _super.call(this) || this;
+            _this.repeat = 1;
+            _this.delay = 0;
+            _this.stopOnExit = false;
+            return _this;
+        }
+        PlayTransitionAction.prototype.enter = function (controller) {
+            var trans = controller.parent.getTransition(this.transitionName);
+            if (trans) {
+                if (this._currentTransition && this._currentTransition.playing)
+                    trans.changeRepeat(this.repeat);
+                else
+                    trans.play(null, null, null, this.repeat, this.delay);
+                this._currentTransition = trans;
+            }
+        };
+        PlayTransitionAction.prototype.leave = function (controller) {
+            if (this.stopOnExit && this._currentTransition) {
+                this._currentTransition.stop();
+                this._currentTransition = null;
+            }
+        };
+        PlayTransitionAction.prototype.setup = function (xml) {
+            _super.prototype.setup.call(this, xml);
+            this.transitionName = xml.attributes.transition;
+            var str;
+            str = xml.attributes.repeat;
+            if (str)
+                this.repeat = parseInt(str);
+            str = xml.attributes.delay;
+            if (str)
+                this.delay = parseFloat(str);
+            str = xml.attributes.stopOnExit;
+            this.stopOnExit = str == "true";
+        };
+        return PlayTransitionAction;
+    }(fairygui.ControllerAction));
+    fairygui.PlayTransitionAction = PlayTransitionAction;
+    __reflect(PlayTransitionAction.prototype, "fairygui.PlayTransitionAction");
+})(fairygui || (fairygui = {}));
+
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var fairygui;
+(function (fairygui) {
+    var ChangePageAction = (function (_super) {
+        __extends(ChangePageAction, _super);
+        function ChangePageAction() {
+            return _super.call(this) || this;
+        }
+        ChangePageAction.prototype.enter = function (controller) {
+            if (!this.controllerName)
+                return;
+            var gcom;
+            if (this.objectId) {
+                var obj = controller.parent.getChildById(this.objectId);
+                if (obj instanceof fairygui.GComponent)
+                    gcom = obj;
+                else
+                    return;
+            }
+            else
+                gcom = controller.parent;
+            if (gcom) {
+                var cc = gcom.getController(this.controllerName);
+                if (cc && cc != controller && !cc.changing)
+                    cc.selectedPageId = this.targetPage;
+            }
+        };
+        ChangePageAction.prototype.setup = function (xml) {
+            _super.prototype.setup.call(this, xml);
+            this.objectId = xml.attributes.objectId;
+            this.controllerName = xml.attributes.controller;
+            this.targetPage = xml.attributes.targetPage;
+        };
+        return ChangePageAction;
+    }(fairygui.ControllerAction));
+    fairygui.ChangePageAction = ChangePageAction;
+    __reflect(ChangePageAction.prototype, "fairygui.ChangePageAction");
 })(fairygui || (fairygui = {}));
 
 var __reflect = (this && this.__reflect) || function (p, c, t) {
@@ -3521,15 +3664,18 @@ var fairygui;
                 return this._touchable;
             },
             set: function (value) {
-                this._touchable = value;
-                if ((this instanceof fairygui.GImage) || (this instanceof fairygui.GMovieClip)
-                    || (this instanceof fairygui.GTextField) && !(this instanceof fairygui.GTextInput) && !(this instanceof fairygui.GRichTextField))
-                    //Touch is not supported by GImage/GMovieClip/GTextField
-                    return;
-                if (this._displayObject != null) {
-                    this._displayObject.touchEnabled = this._touchable;
-                    if (this._displayObject instanceof egret.DisplayObjectContainer)
-                        this._displayObject.touchChildren = this._touchable;
+                if (this._touchable != value) {
+                    this._touchable = value;
+                    this.updateGear(3);
+                    if ((this instanceof fairygui.GImage) || (this instanceof fairygui.GMovieClip)
+                        || (this instanceof fairygui.GTextField) && !(this instanceof fairygui.GTextInput) && !(this instanceof fairygui.GRichTextField))
+                        //Touch is not supported by GImage/GMovieClip/GTextField
+                        return;
+                    if (this._displayObject != null) {
+                        this._displayObject.touchEnabled = this._touchable;
+                        if (this._displayObject instanceof egret.DisplayObjectContainer)
+                            this._displayObject.touchChildren = this._touchable;
+                    }
                 }
             },
             enumerable: true,
@@ -6541,7 +6687,7 @@ var fairygui;
             return _super.call(this, owner) || this;
         }
         GearLook.prototype.init = function () {
-            this._default = new GearLookValue(this._owner.alpha, this._owner.rotation, this._owner.grayed);
+            this._default = new GearLookValue(this._owner.alpha, this._owner.rotation, this._owner.grayed, this._owner.touchable);
             this._storage = {};
         };
         GearLook.prototype.addStatus = function (pageId, value) {
@@ -6558,6 +6704,10 @@ var fairygui;
             gv.alpha = parseFloat(arr[0]);
             gv.rotation = parseInt(arr[1]);
             gv.grayed = arr[2] == "1" ? true : false;
+            if (arr.length < 4)
+                gv.touchable = this._owner.touchable;
+            else
+                gv.touchable = arr[3] == "1" ? true : false;
         };
         GearLook.prototype.apply = function () {
             var gv = this._storage[this._controller.selectedPageId];
@@ -6566,6 +6716,7 @@ var fairygui;
             if (this._tween && !fairygui.UIPackage._constructing && !fairygui.GearBase.disableAllTweenEffect) {
                 this._owner._gearLocked = true;
                 this._owner.grayed = gv.grayed;
+                this._owner.touchable = gv.touchable;
                 this._owner._gearLocked = false;
                 if (this.tweener != null) {
                     if (this._tweenTarget.alpha != gv.alpha || this._tweenTarget.rotation != gv.rotation) {
@@ -6612,6 +6763,7 @@ var fairygui;
             else {
                 this._owner._gearLocked = true;
                 this._owner.grayed = gv.grayed;
+                this._owner.touchable = gv.touchable;
                 this._owner.alpha = gv.alpha;
                 this._owner.rotation = gv.rotation;
                 this._owner._gearLocked = false;
@@ -6626,19 +6778,22 @@ var fairygui;
             gv.alpha = this._owner.alpha;
             gv.rotation = this._owner.rotation;
             gv.grayed = this._owner.grayed;
+            gv.touchable = this._owner.touchable;
         };
         return GearLook;
     }(fairygui.GearBase));
     fairygui.GearLook = GearLook;
     __reflect(GearLook.prototype, "fairygui.GearLook");
     var GearLookValue = (function () {
-        function GearLookValue(alpha, rotation, grayed) {
+        function GearLookValue(alpha, rotation, grayed, touchable) {
             if (alpha === void 0) { alpha = 0; }
             if (rotation === void 0) { rotation = 0; }
             if (grayed === void 0) { grayed = false; }
+            if (touchable === void 0) { touchable = true; }
             this.alpha = alpha;
             this.rotation = rotation;
             this.grayed = grayed;
+            this.touchable = touchable;
         }
         return GearLookValue;
     }());
@@ -11759,10 +11914,16 @@ var fairygui;
             var _this = _super.call(this) || this;
             _this._max = 0;
             _this._value = 0;
+            _this._reverse = false;
             _this._barMaxWidth = 0;
             _this._barMaxHeight = 0;
             _this._barMaxWidthDelta = 0;
             _this._barMaxHeightDelta = 0;
+            _this._clickPercent = 0;
+            _this._barStartX = 0;
+            _this._barStartY = 0;
+            _this.changeOnClick = true;
+            _this.canDrag = true;
             _this._titleType = fairygui.ProgressTitleType.Percent;
             _this._value = 50;
             _this._max = 100;
@@ -11826,12 +11987,24 @@ var fairygui;
                         break;
                 }
             }
-            if (this._barObjectH)
-                this._barObjectH.width = (this.width - this._barMaxWidthDelta) * percent;
-            if (this._barObjectV)
-                this._barObjectV.height = (this.height - this._barMaxHeightDelta) * percent;
-            if (this._aniObject instanceof fairygui.GMovieClip)
-                (this._aniObject).frame = Math.round(percent * 100);
+            var fullWidth = this.width - this._barMaxWidthDelta;
+            var fullHeight = this.height - this._barMaxHeightDelta;
+            if (!this._reverse) {
+                if (this._barObjectH)
+                    this._barObjectH.width = fullWidth * percent;
+                if (this._barObjectV)
+                    this._barObjectV.height = fullHeight * percent;
+            }
+            else {
+                if (this._barObjectH) {
+                    this._barObjectH.width = Math.round(fullWidth * percent);
+                    this._barObjectH.x = this._barStartX + (fullWidth - this._barObjectH.width);
+                }
+                if (this._barObjectV) {
+                    this._barObjectV.height = Math.round(fullHeight * percent);
+                    this._barObjectV.y = this._barStartY + (fullHeight - this._barObjectV.height);
+                }
+            }
         };
         GSlider.prototype.constructFromXML = function (xml) {
             _super.prototype.constructFromXML.call(this, xml);
@@ -11840,22 +12013,25 @@ var fairygui;
             str = xml.attributes.titleType;
             if (str)
                 this._titleType = fairygui.parseProgressTitleType(str);
+            this._reverse = xml.attributes.reverse == "true";
             this._titleObject = (this.getChild("title"));
             this._barObjectH = this.getChild("bar");
             this._barObjectV = this.getChild("bar_v");
-            this._aniObject = this.getChild("ani");
             this._gripObject = this.getChild("grip");
             if (this._barObjectH) {
                 this._barMaxWidth = this._barObjectH.width;
                 this._barMaxWidthDelta = this.width - this._barMaxWidth;
+                this._barStartX = this._barObjectH.x;
             }
             if (this._barObjectV) {
                 this._barMaxHeight = this._barObjectV.height;
                 this._barMaxHeightDelta = this.height - this._barMaxHeight;
+                this._barStartY = this._barObjectV.y;
             }
             if (this._gripObject) {
                 this._gripObject.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__gripMouseDown, this);
             }
+            this.displayObject.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__barMouseDown, this);
         };
         GSlider.prototype.handleSizeChanged = function () {
             _super.prototype.handleSizeChanged.call(this);
@@ -11876,15 +12052,24 @@ var fairygui;
             this.update();
         };
         GSlider.prototype.__gripMouseDown = function (evt) {
+            this.canDrag = true;
+            evt.stopPropagation();
             this._clickPos = this.globalToLocal(evt.stageX, evt.stageY);
             this._clickPercent = this._value / this._max;
             this._gripObject.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__gripMouseMove, this);
             this._gripObject.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_END, this.__gripMouseUp, this);
         };
         GSlider.prototype.__gripMouseMove = function (evt) {
+            if (!this.canDrag) {
+                return;
+            }
             var pt = this.globalToLocal(evt.stageX, evt.stageY, GSlider.sSilderHelperPoint);
             var deltaX = pt.x - this._clickPos.x;
             var deltaY = pt.y - this._clickPos.y;
+            if (this._reverse) {
+                deltaX = -deltaX;
+                deltaY = -deltaY;
+            }
             var percent;
             if (this._barObjectH)
                 percent = this._clickPercent + deltaX / this._barMaxWidth;
@@ -11902,10 +12087,33 @@ var fairygui;
             this.updateWidthPercent(percent);
         };
         GSlider.prototype.__gripMouseUp = function (evt) {
-            var percent = this._value / this._max;
-            this.updateWidthPercent(percent);
             this._gripObject.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.__gripMouseMove, this);
             this._gripObject.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__gripMouseUp, this);
+        };
+        GSlider.prototype.__barMouseDown = function (evt) {
+            if (!this.changeOnClick)
+                return;
+            var pt = this._gripObject.globalToLocal(evt.stageX, evt.stageY, GSlider.sSilderHelperPoint);
+            var percent = this._value / this._max;
+            var delta;
+            if (this._barObjectH)
+                delta = (pt.x - this._gripObject.width / 2) / this._barMaxWidth;
+            if (this._barObjectV)
+                delta = (pt.y - this._gripObject.height / 2) / this._barMaxHeight;
+            if (this._reverse)
+                percent -= delta;
+            else
+                percent += delta;
+            if (percent > 1)
+                percent = 1;
+            else if (percent < 0)
+                percent = 0;
+            var newValue = Math.round(this._max * percent);
+            if (newValue != this._value) {
+                this._value = newValue;
+                this.dispatchEvent(new fairygui.StateChangeEvent(fairygui.StateChangeEvent.CHANGED));
+            }
+            this.updateWidthPercent(percent);
         };
         return GSlider;
     }(fairygui.GComponent));
