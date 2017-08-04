@@ -6,6 +6,7 @@ module fairygui {
         private _opaque: boolean;
         private _childrenRenderOrder: ChildrenRenderOrder = ChildrenRenderOrder.Ascent;
         private _apexIndex: number = 0;
+        private _applyingController: Controller;
 
         protected _margin: Margin;
         protected _trackBounds: boolean;
@@ -476,12 +477,15 @@ module fairygui {
         }
 
         public applyController(c: Controller): void {
+            this._applyingController = c;
             var child: GObject;
             var length: number = this._children.length;
             for (var i: number = 0; i < length; i++) {
                 child = this._children[i];
                 child.handleControllerChanged(c);
             }
+            this._applyingController = null;
+
             c.runActions();
         }
 
@@ -508,8 +512,11 @@ module fairygui {
                         maxIndex = i;
                 }
             }
-            if (myIndex < maxIndex)
+            if (myIndex < maxIndex) {
+                if (this._applyingController != null)
+                    this._children[maxIndex].handleControllerChanged(this._applyingController);
                 this.swapChildrenAt(myIndex, maxIndex);
+            }
         }
 
         public getTransitionAt(index: number): Transition {

@@ -4738,12 +4738,14 @@ var fairygui;
             }
         };
         p.applyController = function (c) {
+            this._applyingController = c;
             var child;
             var length = this._children.length;
             for (var i = 0; i < length; i++) {
                 child = this._children[i];
                 child.handleControllerChanged(c);
             }
+            this._applyingController = null;
             c.runActions();
         };
         p.applyAllControllers = function () {
@@ -4768,8 +4770,11 @@ var fairygui;
                         maxIndex = i;
                 }
             }
-            if (myIndex < maxIndex)
+            if (myIndex < maxIndex) {
+                if (this._applyingController != null)
+                    this._children[maxIndex].handleControllerChanged(this._applyingController);
                 this.swapChildrenAt(myIndex, maxIndex);
+            }
         };
         p.getTransitionAt = function (index) {
             return this._transitions[index];
@@ -9749,11 +9754,11 @@ var fairygui;
             }
             else {
                 if (this._barObjectH) {
-                    this._barObjectH.width = fullWidth * percent;
+                    this._barObjectH.width = Math.round(fullWidth * percent);
                     this._barObjectH.x = this._barStartX + (fullWidth - this._barObjectH.width);
                 }
                 if (this._barObjectV) {
-                    this._barObjectV.height = fullHeight * percent;
+                    this._barObjectV.height = Math.round(fullHeight * percent);
                     this._barObjectV.y = this._barStartY + (fullHeight - this._barObjectV.height);
                 }
             }

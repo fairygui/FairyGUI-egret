@@ -776,6 +776,7 @@ declare module fairygui {
         private _opaque;
         private _childrenRenderOrder;
         private _apexIndex;
+        private _applyingController;
         protected _margin: Margin;
         protected _trackBounds: boolean;
         protected _boundsChanged: boolean;
