@@ -837,6 +837,7 @@ declare module fairygui {
         protected setupOverflow(overflow: OverflowType): void;
         protected handleSizeChanged(): void;
         protected handleGrayedChanged(): void;
+        handleControllerChanged(c: Controller): void;
         setBoundsChangedFlag(): void;
         private __render();
         ensureBoundsCorrect(): void;

@@ -697,6 +697,13 @@ module fairygui {
             }
         }
 
+        public handleControllerChanged(c: Controller): void {
+            super.handleControllerChanged(c);
+
+            if (this._scrollPane != null)
+                this._scrollPane.handleControllerChanged(c);
+        }
+
         public setBoundsChangedFlag(): void {
             if (!this._scrollPane && !this._trackBounds)
                 return;

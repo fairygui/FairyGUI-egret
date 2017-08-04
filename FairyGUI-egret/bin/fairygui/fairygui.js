@@ -4933,6 +4933,11 @@ var fairygui;
                 this._children[i].grayed = v;
             }
         };
+        p.handleControllerChanged = function (c) {
+            _super.prototype.handleControllerChanged.call(this, c);
+            if (this._scrollPane != null)
+                this._scrollPane.handleControllerChanged(c);
+        };
         p.setBoundsChangedFlag = function () {
             if (!this._scrollPane && !this._trackBounds)
                 return;
