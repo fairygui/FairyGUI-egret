@@ -8,7 +8,7 @@ module fairygui {
         public constructor(owner: GObject) {
             super(owner);
         }
-        
+
         protected init(): void {
             this._default = this._owner.text;
             this._storage = {};
@@ -28,15 +28,12 @@ module fairygui {
             if (data != undefined)
                 this._owner.text = data;
             else
-               this._owner.text = this._default;
+                this._owner.text = this._default;
 
             this._owner._gearLocked = false;
         }
 
         public updateState(): void {
-            if (this._controller==null || this._owner._gearLocked || this._owner._underConstruct)
-                return;
-
             this._storage[this._controller.selectedPageId] = this._owner.text;
         }
     }

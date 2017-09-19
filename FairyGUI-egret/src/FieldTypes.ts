@@ -11,7 +11,9 @@ module fairygui {
     export enum ProgressTitleType { Percent, ValueAndMax, Value, Max };
     export enum ScrollBarDisplayType { Default, Visible, Auto, Hidden };
     export enum ScrollType { Horizontal, Vertical, Both };
-    export enum FlipType { None,  Horizontal, Vertical, Both };
+    export enum FlipType { None, Horizontal, Vertical, Both };
+    export enum ChildrenRenderOrder { Ascent, Descent, Arch };
+    export enum GroupLayoutType { None, Horizontal, Vertical };
 
     export enum RelationType {
         Left_Left = 0,
@@ -87,6 +89,11 @@ module fairygui {
     export function getAlignTypeString(type: AlignType): string {
         return type == AlignType.Left ? egret.HorizontalAlign.LEFT :
             (type == AlignType.Center ? egret.HorizontalAlign.CENTER : egret.HorizontalAlign.RIGHT);
+    }
+
+    export function getVertAlignTypeString(type: VertAlignType): string {
+        return type == VertAlignType.Top ? egret.VerticalAlign.TOP :
+            (type == VertAlignType.Middle ? egret.VerticalAlign.MIDDLE : egret.VerticalAlign.BOTTOM);
     }
 
     export function parseVertAlignType(value: string): VertAlignType {
@@ -231,10 +238,10 @@ module fairygui {
                 return ScrollType.Vertical;
         }
     }
-    
+
 
     export function parseFlipType(value: string): FlipType {
-        switch(value) {
+        switch (value) {
             case "hz":
                 return FlipType.Horizontal;
             case "vt":
@@ -280,10 +287,21 @@ module fairygui {
             "Back.Out": egret.Ease.backOut,
             "Back.InOut": egret.Ease.backInOut
         };
-    export function ParseEaseType(value: string): Function {
+    export function parseEaseType(value: string): Function {
         var ret: Function = EaseMap[value];
         if (!ret)
             ret = egret.Ease.quartOut;
         return ret;
+    }
+
+    export function parseGroupLayoutType(value: string): GroupLayoutType {
+        switch (value) {
+            case "hz":
+                return GroupLayoutType.Horizontal;
+            case "vt":
+                return GroupLayoutType.Vertical;
+            default:
+                return GroupLayoutType.None;
+        }
     }
 } 

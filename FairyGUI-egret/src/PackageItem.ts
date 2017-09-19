@@ -28,6 +28,7 @@ module fairygui {
         //componenet
         public componentData: any;
         public displayList: Array<DisplayListItem>;
+        public extensionType: any;
 
         //sound
         public sound: egret.Sound;

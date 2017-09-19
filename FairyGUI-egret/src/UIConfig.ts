@@ -19,13 +19,15 @@ module fairygui {
 
         //Default button click sound
         public static buttonSound: string;
-        public static buttonSoundVolumeScale:number = 1;
+        public static buttonSoundVolumeScale: number = 1;
 
         //Default button click sound
         public static horizontalScrollBar: string;
         public static verticalScrollBar: string;
         //Scrolling step in pixels
         public static defaultScrollSpeed: number = 25;
+        // Speed ratio of scrollpane when its touch dragging.
+        public static defaultTouchScrollSpeedRatio: number = 1;
         //Default scrollbar display mode. Recommened visible for Desktop and Auto for mobile.
         public static defaultScrollBarDisplay: number = ScrollBarDisplayType.Visible;
         //Allow dragging the content to scroll. Recommeded true for mobile.
@@ -41,22 +43,22 @@ module fairygui {
         public static loaderErrorSign: string;
         //Resources for tooltips.
         public static tooltipsWin: string;
-        
+
         //Max items displayed in combobox without scrolling.
         public static defaultComboBoxVisibleItemCount: number = 10;
-		
+
         // Pixel offsets of finger to trigger scrolling.
         public static touchScrollSensitivity: number = 20;
-		
+
         // Pixel offsets of finger to trigger dragging.
         public static touchDragSensitivity: number = 10;
-		
+
         // Pixel offsets of mouse pointer to trigger dragging.
         public static clickDragSensitivity: number = 2;
-        
-        // When click the window, brings to front automatically.
-        public static bringWindowToFrontOnClick:boolean = true;
 
-        public static frameTimeForAsyncUIConstruction:number = 2;
+        // When click the window, brings to front automatically.
+        public static bringWindowToFrontOnClick: boolean = true;
+
+        public static frameTimeForAsyncUIConstruction: number = 2;
     }
 }

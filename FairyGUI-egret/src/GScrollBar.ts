@@ -27,12 +27,12 @@ module fairygui {
 
         public set displayPerc(val: number) {
             if (this._vertical) {
-                if(!this._fixedGripSize)
+                if (!this._fixedGripSize)
                     this._grip.height = val * this._bar.height;
                 this._grip.y = this._bar.y + (this._bar.height - this._grip.height) * this._scrollPerc;
             }
             else {
-                if(!this._fixedGripSize)
+                if (!this._fixedGripSize)
                     this._grip.width = val * this._bar.width;
                 this._grip.x = this._bar.x + (this._bar.width - this._grip.width) * this._scrollPerc;
             }
@@ -55,19 +55,19 @@ module fairygui {
 
         protected constructFromXML(xml: any): void {
             super.constructFromXML(xml);
-            
-            xml = ToolSet.findChildNode(xml,"ScrollBar");
-            if(xml!=null)
+
+            xml = ToolSet.findChildNode(xml, "ScrollBar");
+            if (xml != null)
                 this._fixedGripSize = xml.attributes.fixedGripSize == "true";
 
             this._grip = this.getChild("grip");
-            if(!this._grip) {
+            if (!this._grip) {
                 console.error("需要定义grip");
                 return;
             }
 
             this._bar = this.getChild("bar");
-            if(!this._bar) {
+            if (!this._bar) {
                 console.error("需要定义bar");
                 return;
             }
@@ -75,15 +75,14 @@ module fairygui {
             this._arrowButton1 = this.getChild("arrow1");
             this._arrowButton2 = this.getChild("arrow2");
 
-            this._grip.addEventListener(egret.TouchEvent.TOUCH_BEGIN,this.__gripMouseDown,this);
-            this._grip.addEventListener(egret.TouchEvent.TOUCH_MOVE,this.__gripDragging,this);
+            this._grip.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__gripMouseDown, this);
 
-            if(this._arrowButton1)
-                this._arrowButton1.addEventListener(egret.TouchEvent.TOUCH_BEGIN,this.__arrowButton1Click,this);
-            if(this._arrowButton2)
-                this._arrowButton2.addEventListener(egret.TouchEvent.TOUCH_BEGIN,this.__arrowButton2Click,this);
+            if (this._arrowButton1)
+                this._arrowButton1.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__arrowButton1Click, this);
+            if (this._arrowButton2)
+                this._arrowButton2.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__arrowButton2Click, this);
 
-            this.addEventListener(egret.TouchEvent.TOUCH_BEGIN,this.__barMouseDown,this);
+            this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__barMouseDown, this);
         }
 
         private __gripMouseDown(evt: egret.TouchEvent): void {
@@ -92,22 +91,34 @@ module fairygui {
 
             evt.stopPropagation();
 
-            this.globalToLocal(evt.stageX,evt.stageY,this._dragOffset);
+            this.globalToLocal(evt.stageX, evt.stageY, this._dragOffset);
             this._dragOffset.x -= this._grip.x;
             this._dragOffset.y -= this._grip.y;
+
+            this._grip.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__gripMouseMove, this);
+            this._grip.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_END, this.__gripMouseUp, this);
         }
 
         private static sScrollbarHelperPoint: egret.Point = new egret.Point();
-        private __gripDragging(evt: egret.TouchEvent): void {
-            var pt: egret.Point = this.globalToLocal(evt.stageX,evt.stageY,GScrollBar.sScrollbarHelperPoint);
+        private __gripMouseMove(evt: egret.TouchEvent): void {
+            if(!this.onStage)
+                return;
+            
+            var pt: egret.Point = this.globalToLocal(evt.stageX, evt.stageY, GScrollBar.sScrollbarHelperPoint);
             if (this._vertical) {
-                var curY: number = pt.y- this._dragOffset.y;
+                var curY: number = pt.y - this._dragOffset.y;
                 this._target.setPercY((curY - this._bar.y) / (this._bar.height - this._grip.height), false);
             }
             else {
                 var curX: number = pt.x - this._dragOffset.x;
                 this._target.setPercX((curX - this._bar.x) / (this._bar.width - this._grip.width), false);
             }
+        }
+
+        private __gripMouseUp(evt: egret.TouchEvent): void {
+            var st:egret.Stage =  evt.currentTarget;
+            st.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.__gripMouseMove, this);
+            st.removeEventListener(egret.TouchEvent.TOUCH_END, this.__gripMouseUp, this);
         }
 
         private __arrowButton1Click(evt: egret.TouchEvent): void {
@@ -129,7 +140,7 @@ module fairygui {
         }
 
         private __barMouseDown(evt: egret.TouchEvent): void {
-            var pt: egret.Point = this._grip.globalToLocal(evt.stageX,evt.stageY,GScrollBar.sScrollbarHelperPoint);
+            var pt: egret.Point = this._grip.globalToLocal(evt.stageX, evt.stageY, GScrollBar.sScrollbarHelperPoint);
             if (this._vertical) {
                 if (pt.y < 0)
                     this._target.scrollUp(4);

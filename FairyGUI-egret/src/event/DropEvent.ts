@@ -5,8 +5,8 @@ module fairygui {
 
         public static DROP: string = "__drop";
 
-        public constructor(type: string,source: any = null) {
-            super(type,false);
+        public constructor(type: string, source: any = null) {
+            super(type, false);
             this.source = source;
         }
     }

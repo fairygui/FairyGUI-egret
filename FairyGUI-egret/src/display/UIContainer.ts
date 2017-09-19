@@ -1,7 +1,7 @@
 
 module fairygui {
 
-    export class UIContainer extends egret.DisplayObjectContainer{
+    export class UIContainer extends egret.DisplayObjectContainer {
         private _hitArea: egret.Rectangle;
 
         public constructor() {
@@ -25,17 +25,16 @@ module fairygui {
         }
 
         public $hitTest(stageX: number, stageY: number): egret.DisplayObject {
-            var ret: egret.DisplayObject = super.$hitTest(stageX,stageY);
-            if(ret == this)
-            {
-                if(!this.touchEnabled || this._hitArea==null) //穿透
+            var ret: egret.DisplayObject = super.$hitTest(stageX, stageY);
+            if (ret == this) {
+                if (!this.touchEnabled || this._hitArea == null) //穿透
                     return null;
             }
-            else if(ret == null && this.touchEnabled && this._hitArea != null) {
+            else if (ret == null && this.touchEnabled && this._hitArea != null) {
                 var m = this.$getInvertedConcatenatedMatrix();
                 var localX = m.a * stageX + m.c * stageY + m.tx;
                 var localY = m.b * stageX + m.d * stageY + m.ty;
-                if(this._hitArea.contains(localX,localY))
+                if (this._hitArea.contains(localX, localY))
                     ret = this;
             }
 

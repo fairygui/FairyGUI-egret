@@ -3,20 +3,34 @@ module fairygui {
 
     export class UIObjectFactory {
         public static packageItemExtensions: any = {};
-        private static loaderExtension: any;
+        private static loaderType: any;
 
         public constructor() {
         }
 
+
         public static setPackageItemExtension(url: string, type: any): void {
-            UIObjectFactory.packageItemExtensions[url.substring(5)] = type;
+            if (url == null)
+                throw "Invaild url: " + url;
+
+            var pi: PackageItem = UIPackage.getItemByURL(url);
+            if (pi != null)
+                pi.extensionType = type;
+
+            UIObjectFactory.packageItemExtensions[url] = type;
         }
 
         public static setLoaderExtension(type: any): void {
-            UIObjectFactory.loaderExtension = type;
+            UIObjectFactory.loaderType = type;
         }
 
-        public static newObject(pi:PackageItem): GObject {
+        public static $resolvePackageItemExtension(pi: PackageItem): void {
+            pi.extensionType = UIObjectFactory.packageItemExtensions["ui://" + pi.owner.id + pi.id];
+            if (!pi.extensionType)
+                pi.extensionType = UIObjectFactory.packageItemExtensions["ui://" + pi.owner.name + "/" + pi.name];
+        }
+
+        public static newObject(pi: PackageItem): GObject {
             switch (pi.type) {
                 case PackageItemType.Image:
                     return new GImage();
@@ -26,14 +40,14 @@ module fairygui {
 
                 case PackageItemType.Component:
                     {
-                        var cls:any = UIObjectFactory.packageItemExtensions[pi.owner.id + pi.id];
-                        if(cls) 
-                            return new cls();                        
+                        var cls: any = pi.extensionType;
+                        if (cls)
+                            return new cls();
 
                         var xml: any = pi.owner.getItemAsset(pi);
                         var extention: string = xml.attributes.extention;
-                        if(extention != null) {
-                            switch(extention) {
+                        if (extention != null) {
+                            switch (extention) {
                                 case "Button":
                                     return new GButton();
 
@@ -93,8 +107,8 @@ module fairygui {
                     return new GGraph();
 
                 case "loader":
-                    if (UIObjectFactory.loaderExtension != null)
-                        return new UIObjectFactory.loaderExtension();
+                    if (UIObjectFactory.loaderType != null)
+                        return new UIObjectFactory.loaderType();
                     else
                         return new GLoader();
             }

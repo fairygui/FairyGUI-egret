@@ -15,7 +15,6 @@ module fairygui {
         private _frameCount: number = 0;
         private _frames: Array<Frame>;
         private _currentFrame: number = 0;
-        private _boundsRect: egret.Rectangle;
         private _start: number = 0;
         private _end: number = 0;
         private _times: number = 0;
@@ -27,11 +26,11 @@ module fairygui {
         public constructor() {
             super();
             this.$renderNode = new egret.sys.BitmapNode();
-            
+
             this.playState = new PlayState();
             this._playing = true;
             this.touchEnabled = false;
-            
+
             this.setPlaySettings();
         }
 
@@ -45,16 +44,16 @@ module fairygui {
                 this._frameCount = this._frames.length;
             else
                 this._frameCount = 0;
-                
-            if(this._end == -1 || this._end > this._frameCount - 1)
+
+            if (this._end == -1 || this._end > this._frameCount - 1)
                 this._end = this._frameCount - 1;
-            if(this._endAt == -1 || this._endAt > this._frameCount - 1)
+            if (this._endAt == -1 || this._endAt > this._frameCount - 1)
                 this._endAt = this._frameCount - 1;
-                
-            if(this._currentFrame < 0 || this._currentFrame > this._frameCount - 1)
+
+            if (this._currentFrame < 0 || this._currentFrame > this._frameCount - 1)
                 this._currentFrame = this._frameCount - 1;
 
-            if(this._frameCount > 0)
+            if (this._frameCount > 0)
                 this.setFrame(this._frames[this._currentFrame]);
             else
                 this.setFrame(null);
@@ -63,14 +62,6 @@ module fairygui {
 
         public get frameCount(): number {
             return this._frameCount;
-        }
-
-        public get boundsRect(): egret.Rectangle {
-            return this._boundsRect;
-        }
-
-        public set boundsRect(value: egret.Rectangle) {
-            this._boundsRect = value;
         }
 
         public get currentFrame(): number {
@@ -91,25 +82,25 @@ module fairygui {
 
         public set playing(value: boolean) {
             this._playing = value;
-            
-            if(value && this.stage!=null) {
-                GTimers.inst.add(0,0,this.update,this);
+
+            if (value && this.stage != null) {
+                GTimers.inst.add(0, 0, this.update, this);
             } else {
-                GTimers.inst.remove(this.update,this);
+                GTimers.inst.remove(this.update, this);
             }
         }
 
         //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
         public setPlaySettings(start: number = 0, end: number = -1,
             times: number = 0, endAt: number = -1,
-            endCallback: Function = null, callbackObj:any = null): void {
+            endCallback: Function = null, callbackObj: any = null): void {
             this._start = start;
             this._end = end;
-            if(this._end == -1 || this._end > this._frameCount - 1)
+            if (this._end == -1 || this._end > this._frameCount - 1)
                 this._end = this._frameCount - 1;
             this._times = times;
             this._endAt = endAt;
-            if(this._endAt == -1)
+            if (this._endAt == -1)
                 this._endAt = this._end;
             this._status = 0;
             this._callback = endCallback;
@@ -155,15 +146,15 @@ module fairygui {
                 }
             }
         }
-        
-        private __playEnd():void {
-            if(this._callback != null) {
+
+        private __playEnd(): void {
+            if (this._callback != null) {
                 var f: Function = this._callback;
                 var fObj: any = this._callbackObj;
                 this._callback = null;
                 this._callbackObj = null;
-                if(f.length == 1)
-                    f.call(fObj,this);
+                if (f.length == 1)
+                    f.call(fObj, this);
                 else
                     f.call(fObj);
             }
@@ -189,49 +180,49 @@ module fairygui {
                 var bitmapHeight: number = texture._bitmapHeight;
                 var textureWidth: number = texture.$getTextureWidth();
                 var textureHeight: number = texture.$getTextureHeight();
-                var destW:number = Math.round(texture.$getScaleBitmapWidth());
-                var destH:number = Math.round(texture.$getScaleBitmapHeight());                
+                var destW: number = Math.round(texture.$getScaleBitmapWidth());
+                var destH: number = Math.round(texture.$getScaleBitmapHeight());
                 var sourceWidth: number = texture._sourceWidth;
                 var sourceHeight: number = texture._sourceHeight;
-                
+
                 egret.sys.BitmapNode.$updateTextureData
-                //before 3.1.7 egret.Bitmap.$drawImage
-                (<egret.sys.BitmapNode>this.$renderNode,texture._bitmapData,
-                    texture._bitmapX,texture._bitmapY,
-                    bitmapWidth,bitmapHeight,
-                    offsetX,offsetY,
-                    textureWidth,textureHeight,
-                    destW,destH,
-                    sourceWidth,sourceHeight,
-                    null,egret.BitmapFillMode.SCALE,true);
+                    //before 3.1.7 egret.Bitmap.$drawImage
+                    (<egret.sys.BitmapNode>this.$renderNode, texture._bitmapData,
+                    texture._bitmapX, texture._bitmapY,
+                    bitmapWidth, bitmapHeight,
+                    offsetX, offsetY,
+                    textureWidth, textureHeight,
+                    destW, destH,
+                    sourceWidth, sourceHeight,
+                    null, egret.BitmapFillMode.SCALE, true);
             }
         }
-        
-        $measureContentBounds(bounds:egret.Rectangle):void {
+
+        $measureContentBounds(bounds: egret.Rectangle): void {
             if (this._texture) {
-                var x:number = Math.round(this._texture._offsetX) + this._frameRect.x;
-                var y:number = Math.round(this._texture._offsetY) + this._frameRect.y;
-                var w:number = this._texture.$getTextureWidth();
-                var h:number = this._texture.$getTextureHeight();
-                
+                var x: number = Math.round(this._texture._offsetX) + this._frameRect.x;
+                var y: number = Math.round(this._texture._offsetY) + this._frameRect.y;
+                var w: number = this._texture.$getTextureWidth();
+                var h: number = this._texture.$getTextureHeight();
+
                 bounds.setTo(x, y, w, h);
             }
             else {
                 bounds.setEmpty();
             }
         }
-        
-        $onAddToStage(stage: egret.Stage, nestLevel: number): void {
-            super.$onAddToStage(stage,nestLevel);
 
-            if(this._playing)
-                GTimers.inst.add(0,0,this.update, this);
+        $onAddToStage(stage: egret.Stage, nestLevel: number): void {
+            super.$onAddToStage(stage, nestLevel);
+
+            if (this._playing)
+                GTimers.inst.add(0, 0, this.update, this);
         }
 
         $onRemoveFromStage(): void {
             super.$onRemoveFromStage();
 
-            if(this._playing)
+            if (this._playing)
                 GTimers.inst.remove(this.update, this);
         }
     }

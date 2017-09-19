@@ -1,7 +1,7 @@
 
 module fairygui {
 
-    export class GTextField extends GObject implements IColorGear {
+    export class GTextField extends GObject {
         protected _textField: egret.TextField;
         protected _bitmapContainer: egret.DisplayObjectContainer;
         protected _font: string;
@@ -10,10 +10,10 @@ module fairygui {
         protected _verticalAlign: VertAlignType;
         protected _color: number;
         protected _leading: number = 0;
-        protected _letterSpacing: number = 0;                
+        protected _letterSpacing: number = 0;
         protected _text: string;
         protected _ubbEnabled: boolean;
-        
+
         protected _autoSize: AutoSizeType;
         protected _widthAutoSize: boolean;
         protected _heightAutoSize: boolean;
@@ -40,7 +40,7 @@ module fairygui {
             this._text = "";
             this._leading = 3;
             this._color = 0;
-            
+
             this._autoSize = AutoSizeType.Both;
             this._widthAutoSize = true;
             this._heightAutoSize = true;
@@ -54,17 +54,16 @@ module fairygui {
             this._textField.touchEnabled = false;
             this.setDisplayObject(this._textField);
         }
-        
-        private switchBitmapMode(val:boolean):void
-		{
-            if(val && this.displayObject == this._textField) {
-                if(this._bitmapContainer == null) {
+
+        private switchBitmapMode(val: boolean): void {
+            if (val && this.displayObject == this._textField) {
+                if (this._bitmapContainer == null) {
                     this._bitmapContainer = new egret.Sprite();
                     this._bitmapContainer["$owner"] = this;
                 }
                 this.switchDisplayObject(this._bitmapContainer);
             }
-            else if(!val && this.displayObject == this._bitmapContainer)
+            else if (!val && this.displayObject == this._bitmapContainer)
                 this.switchDisplayObject(this._textField);
         }
 
@@ -76,18 +75,18 @@ module fairygui {
 
         public set text(value: string) {
             this._text = value;
-            if(this._text == null)
+            if (this._text == null)
                 this._text = "";
             this.updateGear(6);
 
-            if(this.parent && this.parent._underConstruct)
+            if (this.parent && this.parent._underConstruct)
                 this.renderNow();
             else
                 this.render();
         }
-        
-        protected updateTextFieldText():void {
-            if(this._ubbEnabled)
+
+        protected updateTextFieldText(): void {
+            if (this._ubbEnabled)
                 this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(ToolSet.encodeHTML(this._text)));
             else
                 this._textField.text = this._text;
@@ -129,7 +128,7 @@ module fairygui {
         public set color(value: number) {
             if (this._color != value) {
                 this._color = value;
-               this.updateGear(4);
+                this.updateGear(4);
                 this.updateTextFormat();
             }
         }
@@ -141,7 +140,9 @@ module fairygui {
         public set align(value: AlignType) {
             if (this._align != value) {
                 this._align = value;
-                this.updateTextFormat();
+                this._textField.textAlign = getAlignTypeString(this._align);
+                if (this._bitmapFont && !this._underConstruct)
+                    this.render();
             }
         }
 
@@ -152,7 +153,9 @@ module fairygui {
         public set verticalAlign(value: VertAlignType) {
             if (this._verticalAlign != value) {
                 this._verticalAlign = value;
-                this.doAlign();
+                this._textField.verticalAlign = getVertAlignTypeString(this._verticalAlign);
+                if (this._bitmapFont && !this._underConstruct)
+                    this.render();
             }
         }
 
@@ -230,6 +233,7 @@ module fairygui {
 
         public set strokeColor(value: number) {
             this._textField.strokeColor = value;
+            this.updateGear(4);
         }
 
         public set ubbEnabled(value: boolean) {
@@ -255,9 +259,9 @@ module fairygui {
         public get autoSize(): AutoSizeType {
             return this._autoSize;
         }
-        
+
         public get textWidth(): number {
-            if(this._requireRender)
+            if (this._requireRender)
                 this.renderNow();
             return this._textWidth;
         }
@@ -269,42 +273,41 @@ module fairygui {
 
         protected updateTextFormat(): void {
             this._textField.size = this._fontSize;
-            if(ToolSet.startsWith(this._font,"ui://"))
+            if (ToolSet.startsWith(this._font, "ui://"))
                 this._bitmapFont = UIPackage.getBitmapFontByURL(this._font);
             else {
                 this._bitmapFont = null;
 
-                if(this._font)
+                if (this._font)
                     this._textField.fontFamily = this._font;
                 else
                     this._textField.fontFamily = UIConfig.defaultFont;
             }
-            if(this.grayed)
+            if (this.grayed)
                 this._textField.textColor = 0xAAAAAA;
             else
                 this._textField.textColor = this._color;
-            this._textField.textAlign = getAlignTypeString(this._align);
             this._textField.lineSpacing = this._leading;
             //this._textField.letterSpacing = this._letterSpacing;
 
-            if(!this._underConstruct)
+            if (!this._underConstruct)
                 this.render();
         }
 
         protected render(): void {
-            if(!this._requireRender) {
+            if (!this._requireRender) {
                 this._requireRender = true;
-                egret.callLater(this.__render,this);
+                egret.callLater(this.__render, this);
             }
 
-            if(!this._sizeDirty && (this._widthAutoSize || this._heightAutoSize)) {
+            if (!this._sizeDirty && (this._widthAutoSize || this._heightAutoSize)) {
                 this._sizeDirty = true;
                 this.dispatchEventWith(GObject.SIZE_DELAY_CHANGE);
-            }            
+            }
         }
-        
-        private __render():void{
-            if(this._requireRender)
+
+        private __render(): void {
+            if (this._requireRender)
                 this.renderNow();
         }
 
@@ -312,55 +315,51 @@ module fairygui {
             this._requireRender = false;
             this._sizeDirty = false;
 
-            if(this._bitmapFont != null) {
+            if (this._bitmapFont != null) {
                 this.renderWithBitmapFont(updateBounds);
                 return;
             }
 
             this.switchBitmapMode(false);
-            
+
             this._textField.width = this._widthAutoSize ? 10000 : Math.ceil(this.width);
             this.updateTextFieldText();
             this._textWidth = Math.ceil(this._textField.textWidth);
-            if(this._textWidth > 0)
+            if (this._textWidth > 0)
                 this._textWidth += 4;
             this._textHeight = Math.ceil(this._textField.textHeight);
-            if(this._textHeight > 0)
+            if (this._textHeight > 0)
                 this._textHeight += 4;
 
-            var w: number,h: number = 0;
-            if(this._widthAutoSize)
-            {
+            var w: number, h: number = 0;
+            if (this._widthAutoSize) {
                 w = this._textWidth;
                 this._textField.width = w;
             }
             else
                 w = this.width;
 
-            if(this._heightAutoSize) {
+            if (this._heightAutoSize) {
                 h = this._textHeight;
-                if(!this._widthAutoSize)
+                if (this._textField.height != this._textHeight)
                     this._textField.height = this._textHeight;
             }
             else {
                 h = this.height;
-                if(this._textHeight > h)
+                if (this._textHeight > h)
                     this._textHeight = h;
-                this._textField.height = this._textHeight;
             }
 
-            if(updateBounds) {
+            if (updateBounds) {
                 this._updatingSize = true;
-                this.setSize(w,h);
+                this.setSize(w, h);
                 this._updatingSize = false;
-
-                this.doAlign();
             }
         }
 
         private renderWithBitmapFont(updateBounds: boolean): void {
             this.switchBitmapMode(true);
-            
+
             var cnt: number = this._bitmapContainer.numChildren;
             for (var i: number = 0; i < cnt; i++) {
                 var obj: egret.DisplayObject = this._bitmapContainer.getChildAt(i);
@@ -384,22 +383,22 @@ module fairygui {
             var lineY: number = GTextField.GUTTER_Y;
             var line: LineInfo;
             var wordWrap: boolean = !this._widthAutoSize && this._textField.multiline;
-            var fontScale: number = this._bitmapFont.resizable?this._fontSize/this._bitmapFont.size:1;
-			this._textWidth = 0;
-			this._textHeight = 0;
-            
+            var fontScale: number = this._bitmapFont.resizable ? this._fontSize / this._bitmapFont.size : 1;
+            this._textWidth = 0;
+            this._textHeight = 0;
+
             var textLength: number = this._text.length;
             for (var offset: number = 0; offset < textLength; ++offset) {
                 var ch: string = this._text.charAt(offset);
-                var cc: number = ch.charCodeAt(offset);
+                var cc: number = ch.charCodeAt(0);
 
-                if (ch == "\n") {
+                if (cc == 10) {
                     lineBuffer += ch;
                     line = LineInfo.borrow();
                     line.width = lineWidth;
                     if (lineTextHeight == 0) {
                         if (lastLineHeight == 0)
-                            lastLineHeight = Math.ceil(this._fontSize*fontScale);
+                            lastLineHeight = this._fontSize;
                         if (lineHeight == 0)
                             lineHeight = lastLineHeight;
                         lineTextHeight = lineHeight;
@@ -424,30 +423,26 @@ module fairygui {
                     continue;
                 }
 
-                if (cc > 256 || cc <= 32) {
-                    if (wordChars > 0)
-                        wordEnd = lineWidth;
-                    wordChars = 0;
-                }
-                else {
+                if (cc >= 65 && cc <= 90 || cc >= 97 && cc <= 122) { //a-z,A-Z
                     if (wordChars == 0)
                         wordStart = lineWidth;
                     wordChars++;
                 }
+                else {
+                    if (wordChars > 0)
+                        wordEnd = lineWidth;
+                    wordChars = 0;
+                }
 
-                if (ch == " ") {
+                if (cc == 32) {
                     glyphWidth = Math.ceil(this._fontSize / 2);
-                    glyphHeight = Math.ceil(this._fontSize);
+                    glyphHeight = this._fontSize;
                 }
                 else {
                     var glyph: BMGlyph = this._bitmapFont.glyphs[ch];
                     if (glyph) {
-                        glyphWidth = Math.ceil(glyph.advance*fontScale); 
-                        glyphHeight = Math.ceil(glyph.lineHeight*fontScale);
-                    }
-                    else if (ch == " ") {
-                        glyphWidth = Math.ceil(this._bitmapFont.size*fontScale/2);
-                        glyphHeight = Math.ceil(this._bitmapFont.size*fontScale);
+                        glyphWidth = Math.ceil(glyph.advance * fontScale);
+                        glyphHeight = Math.ceil(glyph.lineHeight * fontScale);
                     }
                     else {
                         glyphWidth = 0;
@@ -480,7 +475,7 @@ module fairygui {
                         var len: number = lineBuffer.length - wordChars;
                         line.text = ToolSet.trimRight(lineBuffer.substr(0, len));
                         line.width = wordEnd;
-                        lineBuffer = lineBuffer.substr(len + 1);
+                        lineBuffer = lineBuffer.substr(len);
                         lineWidth -= wordStart;
                     }
                     else {
@@ -503,8 +498,7 @@ module fairygui {
                 }
             }
 
-            if (lineBuffer.length > 0
-                || this._lines.length > 0 && ToolSet.endsWith(this._lines[this._lines.length - 1].text, "\n")) {
+            if (lineBuffer.length > 0) {
                 line = LineInfo.borrow();
                 line.width = lineWidth;
                 if (lineHeight == 0)
@@ -580,28 +574,34 @@ module fairygui {
                 textLength = line.text.length;
                 for (var j: number = 0; j < textLength; j++) {
                     ch = line.text.charAt(j);
+                    cc = ch.charCodeAt(0);
+
+                    if (cc == 10)
+                        continue;
+
+                    if (cc == 32) {
+                        charX += letterSpacing + Math.ceil(this._fontSize / 2);
+                        continue;
+                    }
 
                     glyph = this._bitmapFont.glyphs[ch];
                     if (glyph != null) {
-                        charIndent = (line.height + line.textHeight) / 2 - Math.ceil(glyph.lineHeight*fontScale);
+                        charIndent = (line.height + line.textHeight) / 2 - Math.ceil(glyph.lineHeight * fontScale);
                         var bm: egret.Bitmap;
-                        if(this._bitmapPool.length)
+                        if (this._bitmapPool.length)
                             bm = this._bitmapPool.pop();
-                        else { 
+                        else {
                             bm = new egret.Bitmap();
                             bm.smoothing = true;
-                        }                      
-                        bm.x = charX + lineIndent + Math.ceil(glyph.offsetX*fontScale);
-                        bm.y = line.y + charIndent + Math.ceil(glyph.offsetY*fontScale);
+                        }
+                        bm.x = charX + lineIndent + Math.ceil(glyph.offsetX * fontScale);
+                        bm.y = line.y + charIndent + Math.ceil(glyph.offsetY * fontScale);
                         bm.texture = glyph.texture;
                         bm.scaleX = fontScale;
                         bm.scaleY = fontScale;
                         this._bitmapContainer.addChild(bm);
 
-                        charX += letterSpacing + Math.ceil(glyph.advance*fontScale);
-                    }
-                    else if (ch == " ") {
-                        charX += letterSpacing + Math.ceil(this._bitmapFont.size*fontScale/2);
+                        charX += letterSpacing + Math.ceil(glyph.advance * fontScale);
                     }
                     else {
                         charX += letterSpacing;
@@ -611,11 +611,30 @@ module fairygui {
         }
 
         protected handleSizeChanged(): void {
-            if(!this._updatingSize) {
-                if(!this._widthAutoSize)
+            if (this._updatingSize)
+                return;
+
+            if (this._bitmapFont != null) {
+                if (!this._widthAutoSize)
                     this.render();
                 else
                     this.doAlign();
+            }
+            else {
+                if (this._underConstruct) {
+                    this._textField.width = this.width;
+                    this._textField.height = this.height;
+                }
+                else {
+                    if (!this._widthAutoSize) {
+                        if (!this._heightAutoSize) {
+                            this._textField.width = this.width;
+                            this._textField.height = this.height;
+                        }
+                        else
+                            this._textField.width = this.width;
+                    }
+                }
             }
         }
 
@@ -624,14 +643,14 @@ module fairygui {
             this.updateTextFormat();
         }
 
-        protected doAlign(): void {
-            if(this._verticalAlign == VertAlignType.Top || this._textHeight == 0)
+        private doAlign(): void {
+            if (this._verticalAlign == VertAlignType.Top || this._textHeight == 0)
                 this._yOffset = GTextField.GUTTER_Y;
             else {
                 var dh: number = this.height - this._textHeight;
-                if(dh < 0)
+                if (dh < 0)
                     dh = 0;
-                if(this._verticalAlign == VertAlignType.Middle)
+                if (this._verticalAlign == VertAlignType.Middle)
                     this._yOffset = Math.floor(dh / 2);
                 else
                     this._yOffset = Math.floor(dh);
@@ -643,7 +662,7 @@ module fairygui {
             super.setup_beforeAdd(xml);
 
             var str: string;
-            
+
             str = xml.attributes.font;
             if (str)
                 this._font = str;
@@ -658,11 +677,11 @@ module fairygui {
 
             str = xml.attributes.align;
             if (str)
-                this._align = parseAlignType(str);
+                this.align = parseAlignType(str);
 
             str = xml.attributes.vAlign;
             if (str)
-                this._verticalAlign = parseVertAlignType(str);
+                this.verticalAlign = parseVertAlignType(str);
 
             str = xml.attributes.leading;
             if (str)
@@ -691,7 +710,7 @@ module fairygui {
             if (str) {
                 this._textField.strokeColor = ToolSet.convertFromHtmlColor(str);
                 str = xml.attributes.strokeSize;
-                if(str)
+                if (str)
                     this.stroke = parseInt(str) + 1;
                 else
                     this.stroke = 2;
@@ -702,9 +721,9 @@ module fairygui {
             super.setup_afterAdd(xml);
 
             this.updateTextFormat();
-            
-            var str:string = xml.attributes.text;
-            if(str != null && str.length > 0)
+
+            var str: string = xml.attributes.text;
+            if (str != null && str.length > 0)
                 this.text = str;
             this._sizeDirty = false;
         }

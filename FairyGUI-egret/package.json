@@ -1,12 +1,15 @@
 {
 	"name": "egret",
-	"version": "3.1.7",
+	"version": "3.2.5",
 	"modules": [
 		{
 			"name": "fairygui",
 			"description": "fairygui",
 			"files": [
 				"Controller.ts",
+				"action/ControllerAction.ts",
+				"action/PlayTransitionAction.ts",
+				"action/ChangePageAction.ts",
 				"display/Frame.ts",
 				"display/MovieClip.ts",
 				"display/PlayState.ts",
@@ -20,12 +23,16 @@
 				"event/StateChangeEvent.ts",
 				"utils/UBBParser.ts",
 				"utils/ToolSet.ts",
+				"utils/ColorMatrix.ts",
 				"FieldTypes.ts",
 				"GearBase.ts",
 				"GearSize.ts",
 				"GearXY.ts",
+				"GearText.ts",
+				"GearIcon.ts",
 				"Transition.ts",
 				"GObject.ts",
+				"DisplayListItem.ts",
 				"PackageItem.ts",
 				"GComponent.ts",
 				"GButton.ts",
@@ -34,8 +41,6 @@
 				"GearColor.ts",
 				"GearDisplay.ts",
 				"GearLook.ts",
-				"GearText.ts",
-				"GearIcon.ts",
 				"GGraph.ts",
 				"GGroup.ts",
 				"GImage.ts",
@@ -53,8 +58,6 @@
 				"GScrollBar.ts",
 				"GSlider.ts",
 				"GTextInput.ts",
-				"IAnimationGear.ts",
-				"IColorGear.ts",
 				"IUISource.ts",
 				"PageOption.ts",
 				"PopupMenu.ts",
@@ -65,7 +68,8 @@
 				"UIObjectFactory.ts",
 				"UIPackage.ts",
 				"Window.ts",
-				"DragDropManager.ts"
+				"DragDropManager.ts",
+				"AsyncOperation.ts"
 			],
 			"root": "../FairyGUI-egret/src/fairygui"
 		}

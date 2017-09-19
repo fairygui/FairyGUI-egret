@@ -8,15 +8,15 @@ module fairygui {
         public constructor(owner: GObject) {
             super(owner);
         }
-        
+
         protected init(): void {
-            this._default = new GearAnimationValue((<IAnimationGear><any>this._owner).playing,
-                (<IAnimationGear><any>this._owner).frame);
+            this._default = new GearAnimationValue((<any>this._owner).playing,
+                (<any>this._owner).frame);
             this._storage = {};
         }
 
         protected addStatus(pageId: string, value: string): void {
-            if(value=="-")
+            if (value == "-")
                 return;
 
             var gv: GearAnimationValue;
@@ -38,35 +38,29 @@ module fairygui {
             if (!gv)
                 gv = this._default;
 
-            (<IAnimationGear><any>this._owner).frame = gv.frame;
-            (<IAnimationGear><any>this._owner).playing = gv.playing;
-            
+            (<any>this._owner).frame = gv.frame;
+            (<any>this._owner).playing = gv.playing;
+
             this._owner._gearLocked = false;
         }
 
         public updateState(): void {
-            if (this._controller==null || this._owner._gearLocked || this._owner._underConstruct)
-                return;
-
-            var mc: IAnimationGear = (<IAnimationGear><any>this._owner);
             var gv: GearAnimationValue = this._storage[this._controller.selectedPageId];
-            if(!gv) {
+            if (!gv) {
                 gv = new GearAnimationValue();
                 this._storage[this._controller.selectedPageId] = gv;
             }
 
-            gv.frame = mc.frame;
-            gv.playing = mc.playing;
+            gv.frame = (<any>this._owner).frame;
+            gv.playing = (<any>this._owner).playing;
         }
     }
-    
-    class GearAnimationValue
-    {
-        public playing:boolean;
-        public frame:number;
-        
-        public constructor(playing:boolean=true, frame:number=0)
-        {
+
+    class GearAnimationValue {
+        public playing: boolean;
+        public frame: number;
+
+        public constructor(playing: boolean = true, frame: number = 0) {
             this.playing = playing;
             this.frame = frame;
         }

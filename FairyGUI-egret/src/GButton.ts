@@ -18,8 +18,9 @@ module fairygui {
         private _buttonController: Controller;
         private _changeStateOnClick: boolean;
         private _linkedPopup: GObject;
-        private _downEffect:number;
-        private _downEffectValue:number;
+        private _downEffect: number;
+        private _downEffectValue: number;
+        private _downScaled: boolean;
 
         private _down: boolean;
         private _over: boolean;
@@ -30,7 +31,7 @@ module fairygui {
         public static SELECTED_OVER: string = "selectedOver";
         public static DISABLED: string = "disabled";
         public static SELECTED_DISABLED: string = "selectedDisabled";
-        
+
         public constructor() {
             super();
 
@@ -52,7 +53,7 @@ module fairygui {
         public set icon(value: string) {
             this._icon = value;
             value = (this._selected && this._selectedIcon) ? this._selectedIcon : this._icon;
-            if(this._iconObject!=null)
+            if (this._iconObject != null)
                 this._iconObject.icon = value;
             this.updateGear(7);
         }
@@ -64,7 +65,7 @@ module fairygui {
         public set selectedIcon(value: string) {
             this._selectedIcon = value;
             value = (this._selected && this._selectedIcon) ? this._selectedIcon : this._icon;
-           if(this._iconObject!=null)
+            if (this._iconObject != null)
                 this._iconObject.icon = value;
         }
 
@@ -98,23 +99,43 @@ module fairygui {
         }
 
         public get titleColor(): number {
-            if(this._titleObject instanceof GTextField)
+            if (this._titleObject instanceof GTextField)
                 return (<GTextField>this._titleObject).color;
-            else if(this._titleObject instanceof GLabel)
+            else if (this._titleObject instanceof GLabel)
                 return (<GLabel>this._titleObject).titleColor;
-            else if(this._titleObject instanceof GButton)
+            else if (this._titleObject instanceof GButton)
                 return (<GButton>this._titleObject).titleColor;
             else
                 return 0;
         }
 
         public set titleColor(value: number) {
-            if(this._titleObject instanceof GTextField)
+            if (this._titleObject instanceof GTextField)
                 (<GTextField>this._titleObject).color = value;
-            else if(this._titleObject instanceof GLabel)
+            else if (this._titleObject instanceof GLabel)
                 (<GLabel>this._titleObject).titleColor = value;
-            else if(this._titleObject instanceof GButton)
+            else if (this._titleObject instanceof GButton)
                 (<GButton>this._titleObject).titleColor = value;
+        }
+
+        public get titleFontSize(): number {
+            if (this._titleObject instanceof GTextField)
+                return (<GTextField>this._titleObject).fontSize;
+            else if (this._titleObject instanceof GLabel)
+                return (<GLabel>this._titleObject).titleFontSize;
+            else if (this._titleObject instanceof GButton)
+                return (<GButton>this._titleObject).titleFontSize;
+            else
+                return 0;
+        }
+
+        public set titleFontSize(value: number) {
+            if (this._titleObject instanceof GTextField)
+                (<GTextField>this._titleObject).fontSize = value;
+            else if (this._titleObject instanceof GLabel)
+                (<GLabel>this._titleObject).titleFontSize = value;
+            else if (this._titleObject instanceof GButton)
+                (<GButton>this._titleObject).titleFontSize = value;
         }
 
         public get sound(): string {
@@ -128,46 +149,45 @@ module fairygui {
         public get soundVolumeScale(): number {
             return this._soundVolumeScale;
         }
-        
+
         public set soundVolumeScale(value: number) {
             this._soundVolumeScale = value;
         }
-        
+
         public set selected(val: boolean) {
             if (this._mode == ButtonMode.Common)
                 return;
 
             if (this._selected != val) {
                 this._selected = val;
-                if(this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED)) {
-                    if(this._selected)
+                if (this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED)) {
+                    if (this._selected)
                         this.setState(GButton.SELECTED_DISABLED);
                     else
                         this.setState(GButton.DISABLED);
                 }
                 else {
-                    if(this._selected)
+                    if (this._selected)
                         this.setState(this._over ? GButton.SELECTED_OVER : GButton.DOWN);
                     else
                         this.setState(this._over ? GButton.OVER : GButton.UP);
                 }
-                if(this._selectedTitle && this._titleObject)
+                if (this._selectedTitle && this._titleObject)
                     this._titleObject.text = this._selected ? this._selectedTitle : this._title;
-                if(this._selectedIcon) {
+                if (this._selectedIcon) {
                     var str: string = this._selected ? this._selectedIcon : this._icon;
-                    if(this._iconObject!=null)
+                    if (this._iconObject != null)
                         this._iconObject.icon = str;
                 }
-                if(this._relatedController
+                if (this._relatedController
                     && this._parent
                     && !this._parent._buildingDisplayList) {
-                    if(this._selected)
-                    {
+                    if (this._selected) {
                         this._relatedController.selectedPageId = this._pageOption.id;
-                        if(this._relatedController._autoRadioGroupDepth)
-                            this._parent.adjustRadioGroupDepth(this,this._relatedController);
+                        if (this._relatedController._autoRadioGroupDepth)
+                            this._parent.adjustRadioGroupDepth(this, this._relatedController);
                     }
-                    else if(this._mode == ButtonMode.Check && this._relatedController.selectedPageId == this._pageOption.id)
+                    else if (this._mode == ButtonMode.Check && this._relatedController.selectedPageId == this._pageOption.id)
                         this._relatedController.oppositePageId = this._pageOption.id;
                 }
             }
@@ -229,7 +249,7 @@ module fairygui {
             this.removeEventListener(StateChangeEvent.CHANGED, listener, thisObj);
         }
 
-        public fireClick(downEffect: boolean= true): void {
+        public fireClick(downEffect: boolean = true): void {
             if (downEffect && this._mode == ButtonMode.Common) {
                 this.setState(GButton.OVER);
                 GTimers.inst.add(100, 1, this.setState, this, GButton.DOWN);
@@ -241,33 +261,39 @@ module fairygui {
         protected setState(val: string): void {
             if (this._buttonController)
                 this._buttonController.selectedPage = val;
-                
-            if(this._downEffect == 1) {
+
+            if (this._downEffect == 1) {
                 var cnt: number = this.numChildren;
-                if(val == GButton.DOWN || val == GButton.SELECTED_OVER || val == GButton.SELECTED_DISABLED) {
+                if (val == GButton.DOWN || val == GButton.SELECTED_OVER || val == GButton.SELECTED_DISABLED) {
                     var r: number = this._downEffectValue * 255;
                     var color: number = (r << 16) + (r << 8) + r;
-                    for(var i: number = 0;i < cnt;i++) {
+                    for (var i: number = 0; i < cnt; i++) {
                         var obj: GObject = this.getChildAt(i);
-                        if((obj instanceof GImage) || (obj instanceof GLoader) 
-                            || (obj instanceof GMovieClip))//instanceof IColorGear
-                            (<IColorGear><any>obj).color = color;
+                        if (obj["color"] != undefined && !(obj instanceof GTextField))
+                            (<any>obj).color = color;
                     }
                 }
                 else {
-                    for(var i:number = 0;i < cnt;i++) {
-                        var obj:GObject = this.getChildAt(i);
-                        if((obj instanceof GImage) || (obj instanceof GLoader)
-                            || (obj instanceof GMovieClip))
-                            (<IColorGear><any>obj).color = 0xFFFFFF;
+                    for (var i: number = 0; i < cnt; i++) {
+                        var obj: GObject = this.getChildAt(i);
+                        if (obj["color"] != undefined && !(obj instanceof GTextField))
+                            (<any>obj).color = 0xFFFFFF;
                     }
                 }
             }
-            else if(this._downEffect == 2) {
-                if(val == GButton.DOWN || val == GButton.SELECTED_OVER || val == GButton.SELECTED_DISABLED)
-                    this.setScale(this._downEffectValue,this._downEffectValue);
-                else
-                    this.setScale(1,1);
+            else if (this._downEffect == 2) {
+                if (val == GButton.DOWN || val == GButton.SELECTED_OVER || val == GButton.SELECTED_DISABLED) {
+                    if (!this._downScaled) {
+                        this._downScaled = true;
+                        this.setScale(this.scaleX * this._downEffectValue, this.scaleY * this._downEffectValue);
+                    }
+                }
+                else {
+                    if (this._downScaled) {
+                        this._downScaled = false;
+                        this.setScale(this.scaleX / this._downEffectValue, this.scaleY / this._downEffectValue);
+                    }
+                }
             }
         }
 
@@ -277,16 +303,16 @@ module fairygui {
             if (this._relatedController == c)
                 this.selected = this._pageOption.id == c.selectedPageId;
         }
-        
+
         protected handleGrayedChanged(): void {
-            if(this._buttonController && this._buttonController.hasPage(GButton.DISABLED)) {
-                if(this.grayed) {
-                    if(this._selected && this._buttonController.hasPage(GButton.SELECTED_DISABLED))
+            if (this._buttonController && this._buttonController.hasPage(GButton.DISABLED)) {
+                if (this.grayed) {
+                    if (this._selected && this._buttonController.hasPage(GButton.SELECTED_DISABLED))
                         this.setState(GButton.SELECTED_DISABLED);
                     else
                         this.setState(GButton.DISABLED);
                 }
-                else if(this._selected)
+                else if (this._selected)
                     this.setState(GButton.DOWN);
                 else
                     this.setState(GButton.UP);
@@ -304,29 +330,30 @@ module fairygui {
             str = xml.attributes.mode;
             if (str)
                 this._mode = parseButtonMode(str);
-                
-            str= xml.attributes.sound;
-            if(str != null)
+
+            str = xml.attributes.sound;
+            if (str != null)
                 this._sound = str;
             str = xml.attributes.volume;
-            if(str)
+            if (str)
                 this._soundVolumeScale = parseInt(str) / 100;
             str = xml.attributes.downEffect;
-            if(str)
-            {
-                this._downEffect = str=="dark"?1:(str=="scale"?2:0);
+            if (str) {
+                this._downEffect = str == "dark" ? 1 : (str == "scale" ? 2 : 0);
                 str = xml.attributes.downEffectValue;
                 this._downEffectValue = parseFloat(str);
+                if (this._downEffect == 2)
+                    this.setPivot(0.5, 0.5);
             }
 
             this._buttonController = this.getController("button");
             this._titleObject = this.getChild("title");
             this._iconObject = this.getChild("icon");
-			if (this._titleObject != null)
-				this._title = this._titleObject.text;
-			if (this._iconObject != null)
-				this._icon = this._iconObject.icon;
-                
+            if (this._titleObject != null)
+                this._title = this._titleObject.text;
+            if (this._iconObject != null)
+                this._icon = this._iconObject.icon;
+
             if (this._mode == ButtonMode.Common)
                 this.setState(GButton.UP);
 
@@ -336,9 +363,6 @@ module fairygui {
 
         public setup_afterAdd(xml: any): void {
             super.setup_afterAdd(xml);
-            
-            if(this._downEffect==2)
-                this.setPivot(0.5,0.5);
 
             xml = ToolSet.findChildNode(xml, "Button");
             if (xml) {
@@ -359,6 +383,18 @@ module fairygui {
                 str = xml.attributes.titleColor;
                 if (str)
                     this.titleColor = ToolSet.convertFromHtmlColor(str);
+                str = xml.attributes.titleFontSize;
+                if (str)
+                    this.titleFontSize = parseInt(str);
+
+                str = xml.attributes.sound;
+                if (str != null)
+                    this._sound = str;
+
+                str = xml.attributes.volume;
+                if (str)
+                    this._soundVolumeScale = parseInt(str) / 100;
+
                 str = xml.attributes.controller;
                 if (str)
                     this._relatedController = this._parent.getController(str);
@@ -370,7 +406,7 @@ module fairygui {
         }
 
         private __rollover(evt: egret.TouchEvent): void {
-            if(!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
+            if (!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
                 return;
 
             this._over = true;
@@ -381,7 +417,7 @@ module fairygui {
         }
 
         private __rollout(evt: egret.TouchEvent): void {
-            if(!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
+            if (!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
                 return;
 
             this._over = false;
@@ -395,8 +431,8 @@ module fairygui {
             this._down = true;
             GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
 
-            if(this._mode == ButtonMode.Common) {
-                if(this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED))
+            if (this._mode == ButtonMode.Common) {
+                if (this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED))
                     this.setState(GButton.SELECTED_DISABLED);
                 else
                     this.setState(GButton.DOWN);
@@ -404,8 +440,8 @@ module fairygui {
 
             if (this._linkedPopup != null) {
                 if (this._linkedPopup instanceof Window)
-                    (<Window><any> (this._linkedPopup)).toggleStatus();
-                else 
+                    (<Window><any>(this._linkedPopup)).toggleStatus();
+                else
                     this.root.togglePopup(this._linkedPopup, this);
             }
         }
@@ -415,10 +451,10 @@ module fairygui {
                 GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
                 this._down = false;
 
-                if(this._mode == ButtonMode.Common) {
-                    if(this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED))
+                if (this._mode == ButtonMode.Common) {
+                    if (this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED))
                         this.setState(GButton.DISABLED);
-                    else if(this._over)
+                    else if (this._over)
                         this.setState(GButton.OVER);
                     else
                         this.setState(GButton.UP);
@@ -427,27 +463,30 @@ module fairygui {
         }
 
         private __click(evt: egret.TouchEvent): void {
-            if(this._sound) {
+            if (this._sound) {
                 var pi: PackageItem = UIPackage.getItemByURL(this._sound);
                 if (pi) {
-                    var sound: egret.Sound = <egret.Sound> pi.owner.getItemAsset(pi);
-                    if(sound)
-                        GRoot.inst.playOneShotSound(sound,this._soundVolumeScale);
+                    var sound: egret.Sound = <egret.Sound>pi.owner.getItemAsset(pi);
+                    if (sound)
+                        GRoot.inst.playOneShotSound(sound, this._soundVolumeScale);
                 }
             }
 
-            if (!this._changeStateOnClick)
-                return;
-
             if (this._mode == ButtonMode.Check) {
-                this.selected = !this._selected;
-                this.dispatchEvent(new StateChangeEvent(StateChangeEvent.CHANGED));
+                if (this._changeStateOnClick) {
+                    this.selected = !this._selected;
+                    this.dispatchEvent(new StateChangeEvent(StateChangeEvent.CHANGED));
+                }
             }
             else if (this._mode == ButtonMode.Radio) {
-                if (!this._selected) {
+                if (this._changeStateOnClick && !this._selected) {
                     this.selected = true;
                     this.dispatchEvent(new StateChangeEvent(StateChangeEvent.CHANGED));
                 }
+            }
+            else {
+                if (this._relatedController)
+                    this._relatedController.selectedPageId = this._pageOption.id;
             }
         }
     }

@@ -94,7 +94,7 @@ module fairygui {
                 return "</font>";
         }
 
-        protected getTagText(remove: boolean= false): string {
+        protected getTagText(remove: boolean = false): string {
             var pos: number = this._text.indexOf("[", this._readPos);
             if (pos == -1)
                 return null;

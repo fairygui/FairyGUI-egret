@@ -3,7 +3,7 @@ module fairygui {
 
     export class GComboBox extends GComponent {
         public dropdown: GComponent;
-                
+
         protected _titleObject: GObject;
         protected _iconObject: GObject;
         protected _list: GList;
@@ -17,6 +17,7 @@ module fairygui {
         private _selectedIndex: number = 0;
         private _buttonController: Controller;
         private _popupDownward: any = true;
+        private _selectionController: Controller;
 
         private _over: boolean;
         private _down: boolean;
@@ -44,35 +45,35 @@ module fairygui {
         }
 
         public get icon(): string {
-             if (this._iconObject)
+            if (this._iconObject)
                 return this._iconObject.icon;
             else
                 return null;
         }
 
         public set icon(value: string) {
-            if(this._iconObject)
+            if (this._iconObject)
                 this._iconObject.icon = value;
             this.updateGear(7);
         }
 
         public get titleColor(): number {
-            if(this._titleObject instanceof GTextField)
+            if (this._titleObject instanceof GTextField)
                 return (<GTextField>this._titleObject).color;
-            else if(this._titleObject instanceof GLabel)
+            else if (this._titleObject instanceof GLabel)
                 return (<GLabel>this._titleObject).titleColor;
-            else if(this._titleObject instanceof GButton)
+            else if (this._titleObject instanceof GButton)
                 return (<GButton>this._titleObject).titleColor;
             else
                 return 0;
         }
 
         public set titleColor(value: number) {
-            if(this._titleObject instanceof GTextField)
+            if (this._titleObject instanceof GTextField)
                 (<GTextField>this._titleObject).color = value;
-            else if(this._titleObject instanceof GLabel)
+            else if (this._titleObject instanceof GLabel)
                 (<GLabel>this._titleObject).titleColor = value;
-            else if(this._titleObject instanceof GButton)
+            else if (this._titleObject instanceof GButton)
                 (<GButton>this._titleObject).titleColor = value;
         }
 
@@ -101,35 +102,34 @@ module fairygui {
                 this._items.length = 0;
             else
                 this._items = value.concat();
-            if(this._items.length > 0) {
-                if(this._selectedIndex >= this._items.length)
+            if (this._items.length > 0) {
+                if (this._selectedIndex >= this._items.length)
                     this._selectedIndex = this._items.length - 1;
-                else if(this._selectedIndex == -1)
+                else if (this._selectedIndex == -1)
                     this._selectedIndex = 0;
 
                 this.text = this._items[this._selectedIndex];
                 if (this._icons != null && this._selectedIndex < this._icons.length)
-					this.icon = this._icons[this._selectedIndex];
+                    this.icon = this._icons[this._selectedIndex];
             }
-            else
-            {
+            else {
                 this.text = "";
                 if (this._icons != null)
-					this.icon = null;
-				this._selectedIndex = -1;
+                    this.icon = null;
+                this._selectedIndex = -1;
             }
             this._itemsUpdated = true;
         }
 
-		public get icons(): Array<string> {
-			return this._icons;
-		}
-		
-		public set icons(value:Array<string>) {
-			this._icons = value;
-			if (this._icons != null && this._selectedIndex != -1 && this._selectedIndex < this._icons.length)
-				this.icon = this._icons[this._selectedIndex];
-		}
+        public get icons(): Array<string> {
+            return this._icons;
+        }
+
+        public set icons(value: Array<string>) {
+            this._icons = value;
+            if (this._icons != null && this._selectedIndex != -1 && this._selectedIndex < this._icons.length)
+                this.icon = this._icons[this._selectedIndex];
+        }
 
         public get values(): Array<string> {
             return this._values;
@@ -151,18 +151,18 @@ module fairygui {
                 return;
 
             this._selectedIndex = val;
-            if (this.selectedIndex >= 0 && this.selectedIndex < this._items.length)
-            {
+            if (this.selectedIndex >= 0 && this.selectedIndex < this._items.length) {
                 this.text = this._items[this._selectedIndex];
                 if (this._icons != null && this._selectedIndex < this._icons.length)
-					this.icon = this._icons[this._selectedIndex];
+                    this.icon = this._icons[this._selectedIndex];
             }
-            else
-            {
+            else {
                 this.text = "";
                 if (this._icons != null)
-					this.icon = null;
+                    this.icon = null;
             }
+
+            this.updateSelectionController();
         }
 
         public get value(): string {
@@ -171,6 +171,14 @@ module fairygui {
 
         public set value(val: string) {
             this.selectedIndex = this._values.indexOf(val);
+        }
+
+        public get selectionController(): Controller {
+            return this._selectionController;
+        }
+
+        public set selectionController(value: Controller) {
+            this._selectionController = value;
         }
 
         protected setState(val: string): void {
@@ -191,7 +199,7 @@ module fairygui {
 
             str = xml.attributes.dropdown;
             if (str) {
-                this.dropdown = <GComponent><any> (UIPackage.createObjectFromURL(str));
+                this.dropdown = <GComponent><any>(UIPackage.createObjectFromURL(str));
                 if (!this.dropdown) {
                     console.error("下拉框必须为元件");
                     return;
@@ -221,15 +229,32 @@ module fairygui {
 
             this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__mousedown, this);
         }
-        
-         public dispose(): void {
-             if(this.dropdown) {
-                 this.dropdown.dispose();
-                 this.dropdown = null;
-             }
-             
-             super.dispose();
-         }
+
+        public handleControllerChanged(c: Controller): void {
+            super.handleControllerChanged(c);
+
+            if (this._selectionController == c)
+                this.selectedIndex = c.selectedIndex;
+        }
+
+        private updateSelectionController(): void {
+            if (this._selectionController != null && !this._selectionController.changing
+                && this._selectedIndex < this._selectionController.pageCount) {
+                var c: Controller = this._selectionController;
+                this._selectionController = null;
+                c.selectedIndex = this._selectedIndex;
+                this._selectionController = c;
+            }
+        }
+
+        public dispose(): void {
+            if (this.dropdown) {
+                this.dropdown.dispose();
+                this.dropdown = null;
+            }
+
+            super.dispose();
+        }
 
         public setup_afterAdd(xml: any): void {
             super.setup_afterAdd(xml);
@@ -249,13 +274,12 @@ module fairygui {
                     var length: number = col.length;
                     for (var i: number = 0; i < length; i++) {
                         var cxml: any = col[i];
-                        if(cxml.name == "item") {
-                            this._items.push(<string><any> (cxml.attributes.title));
-                            this._values.push(<string><any> (cxml.attributes.value));
+                        if (cxml.name == "item") {
+                            this._items.push(<string><any>(cxml.attributes.title));
+                            this._values.push(<string><any>(cxml.attributes.value));
                             str = cxml.attributes.icon;
-                            if(str)
-                            {
-                                if(!this._icons)
+                            if (str) {
+                                if (!this._icons)
                                     this._icons = new Array<string>(length);
                                 this._icons[i] = str;
                             }
@@ -264,13 +288,11 @@ module fairygui {
                 }
 
                 str = xml.attributes.title;
-                if(str)
-                {
+                if (str) {
                     this.text = str;
                     this._selectedIndex = this._items.indexOf(str);
                 }
-                else if(this._items.length>0)
-                {
+                else if (this._items.length > 0) {
                     this._selectedIndex = 0;
                     this.text = this._items[0];
                 }
@@ -278,24 +300,27 @@ module fairygui {
                     this._selectedIndex = -1;
 
                 str = xml.attributes.icon;
-                if(str)
+                if (str)
                     this.icon = str;
-                    
+
                 str = xml.attributes.direction;
-				if(str)
-				{
-					if(str=="up")
-						this._popupDownward = false;
-					else if(str=="auto")
-						this._popupDownward = null;
-				}
+                if (str) {
+                    if (str == "up")
+                        this._popupDownward = false;
+                    else if (str == "auto")
+                        this._popupDownward = null;
+                }
+
+                str = xml.attributes.selectionController;
+                if (str)
+                    this._selectionController = this.parent.getController(str);
             }
         }
 
         protected showDropdown(): void {
             if (this._itemsUpdated) {
                 this._itemsUpdated = false;
- 
+
                 this._list.removeChildrenToPool();
                 var cnt: number = this._items.length;
                 for (var i: number = 0; i < cnt; i++) {
@@ -315,7 +340,7 @@ module fairygui {
         }
 
         private __popupWinClosed(evt: egret.Event): void {
-            if(this._over)
+            if (this._over)
                 this.setState(GButton.OVER);
             else
                 this.setState(GButton.UP);
@@ -324,10 +349,10 @@ module fairygui {
         private __clickItem(evt: ItemEvent): void {
             GTimers.inst.add(100, 1, this.__clickItem2, this, this._list.getChildIndex(evt.itemObject))
         }
-        
-        private __clickItem2(index:number):void {
+
+        private __clickItem2(index: number): void {
             if (this.dropdown.parent instanceof GRoot)
-                (<GRoot><any> (this.dropdown.parent)).hidePopup();
+                (<GRoot><any>(this.dropdown.parent)).hidePopup();
 
             this._selectedIndex = index;
             if (this._selectedIndex >= 0)
@@ -354,9 +379,9 @@ module fairygui {
         }
 
         private __mousedown(evt: egret.TouchEvent): void {
-            if((evt.target instanceof egret.TextField) && (<egret.TextField><any>evt.target).type==egret.TextFieldType.INPUT)
+            if ((evt.target instanceof egret.TextField) && (<egret.TextField><any>evt.target).type == egret.TextFieldType.INPUT)
                 return;
-                
+
             this._down = true;
             GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
 
@@ -365,12 +390,12 @@ module fairygui {
         }
 
         private __mouseup(evt: egret.TouchEvent): void {
-            if(this._down) {
+            if (this._down) {
                 this._down = false;
                 GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
 
-                if(this.dropdown && !this.dropdown.parent) {
-                    if(this._over)
+                if (this.dropdown && !this.dropdown.parent) {
+                    if (this._over)
                         this.setState(GButton.OVER);
                     else
                         this.setState(GButton.UP);

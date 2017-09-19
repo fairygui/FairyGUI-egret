@@ -1,18 +1,18 @@
 
 module fairygui {
 
-    export class GMovieClip extends GObject implements IAnimationGear, IColorGear {
+    export class GMovieClip extends GObject {
         private _movieClip: MovieClip;
 
         public constructor() {
             super();
             this._sizeImplType = 1;
         }
-        
+
         public get color(): number {
-            return 0
+            return 0;
         }
-        
+
         public set color(value: number) {
         }
 
@@ -44,21 +44,21 @@ module fairygui {
                 this.updateGear(5);
             }
         }
-        
+
         //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
-        public setPlaySettings(start: number = 0,end: number = -1,
-            times: number = 0,endAt: number = -1,
-            endCallback: Function = null,callbackObj: any = null): void {
+        public setPlaySettings(start: number = 0, end: number = -1,
+            times: number = 0, endAt: number = -1,
+            endCallback: Function = null, callbackObj: any = null): void {
             this._movieClip.setPlaySettings(start, end, times, endAt, endCallback, callbackObj);
         }
 
         public constructFromResource(): void {
-            this._sourceWidth = this.packageItem.width;
-            this._sourceHeight = this.packageItem.height;
-            this._initWidth = this._sourceWidth;
-            this._initHeight = this._sourceHeight;
+            this.sourceWidth = this.packageItem.width;
+            this.sourceHeight = this.packageItem.height;
+            this.initWidth = this.sourceWidth;
+            this.initHeight = this.sourceHeight;
 
-            this.setSize(this._sourceWidth, this._sourceHeight);
+            this.setSize(this.sourceWidth, this.sourceHeight);
 
             this.packageItem.load();
 
@@ -66,7 +66,6 @@ module fairygui {
             this._movieClip.swing = this.packageItem.swing;
             this._movieClip.repeatDelay = this.packageItem.repeatDelay;
             this._movieClip.frames = this.packageItem.frames;
-            this._movieClip.boundsRect = new egret.Rectangle(0, 0, this.sourceWidth, this.sourceHeight);
         }
 
         public setup_beforeAdd(xml: any): void {
@@ -78,9 +77,9 @@ module fairygui {
                 this._movieClip.currentFrame = parseInt(str);
             str = xml.attributes.playing;
             this._movieClip.playing = str != "false";
-            
+
             str = xml.attributes.color;
-            if(str)
+            if (str)
                 this.color = ToolSet.convertFromHtmlColor(str);
         }
     }
