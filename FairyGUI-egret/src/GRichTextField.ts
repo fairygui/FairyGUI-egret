@@ -7,7 +7,6 @@ module fairygui {
             super();
 
             this._textField.touchEnabled = true;
-            this._textField.addEventListener(egret.TextEvent.LINK, this.__clickLink, this);
         }
 
         protected updateTextFieldText(): void {
@@ -15,10 +14,6 @@ module fairygui {
                 this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(this._text));
             else
                 this._textField.textFlow = (new egret.HtmlTextParser).parser(this._text);
-        }
-
-        private __clickLink(evt: egret.TextEvent) {
-            this.dispatchEvent(new egret.TextEvent(egret.TextEvent.LINK, false, false, evt.text));
         }
     }
 }
