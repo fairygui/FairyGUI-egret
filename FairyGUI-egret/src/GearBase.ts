@@ -110,8 +110,12 @@ module fairygui {
                     else
                         values = [];
 
-                    for (var i: number = 0; i < pages.length; i++)
-                        this.addStatus(pages[i], values[i]);
+                    for (var i: number = 0; i < pages.length; i++) {
+                        str = values[i];
+                        if (str == null)
+                            str = "";
+                        this.addStatus(pages[i], str);
+                    }
                 }
 
                 str = xml.attributes.default;

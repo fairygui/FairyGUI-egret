@@ -22,6 +22,7 @@ module fairygui {
         private _status: number = 0; //0-none, 1-next loop, 2-ending, 3-ended
         private _callback: Function;
         private _callbackObj: any;
+        private _smoothing: boolean = true;
 
         public constructor() {
             super();
@@ -88,6 +89,14 @@ module fairygui {
             } else {
                 GTimers.inst.remove(this.update, this);
             }
+        }
+
+        public get smoothing(): boolean {
+            return this._smoothing;
+        }
+
+        public set smoothing(value: boolean) {
+            this._smoothing = value;
         }
 
         //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
@@ -194,7 +203,7 @@ module fairygui {
                     textureWidth, textureHeight,
                     destW, destH,
                     sourceWidth, sourceHeight,
-                    null, egret.BitmapFillMode.SCALE, true);
+                    null, egret.BitmapFillMode.SCALE, this._smoothing);
             }
         }
 

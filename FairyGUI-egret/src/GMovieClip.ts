@@ -66,6 +66,7 @@ module fairygui {
             this._movieClip.swing = this.packageItem.swing;
             this._movieClip.repeatDelay = this.packageItem.repeatDelay;
             this._movieClip.frames = this.packageItem.frames;
+            this._movieClip.smoothing = this.packageItem.smoothing;
         }
 
         public setup_beforeAdd(xml: any): void {

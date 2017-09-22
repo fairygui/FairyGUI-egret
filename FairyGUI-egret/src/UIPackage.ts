@@ -263,6 +263,11 @@ module fairygui {
                         pi.smoothing = str != "false";
                         break;
                     }
+                    
+                    case PackageItemType.MovieClip:
+                        str = cxml.attributes.smoothing;
+                        pi.smoothing = str != "false";
+                        break;
 
                     case PackageItemType.Component:
                         UIObjectFactory.$resolvePackageItemExtension(pi);

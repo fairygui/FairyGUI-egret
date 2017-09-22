@@ -16,7 +16,7 @@ module fairygui {
         }
 
         protected addStatus(pageId: string, value: string): void {
-            if (value == "-")
+            if (value == "-" || value.length == 0)
                 return;
 
             var gv: GearAnimationValue;
