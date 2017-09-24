@@ -1173,15 +1173,15 @@ declare module fairygui {
         selectedIndex: number;
         getSelection(): Array<number>;
         addSelection(index: number, scrollItToView?: boolean): void;
-        removeSelection(index?: number): void;
+        removeSelection(index: number): void;
         clearSelection(): void;
+        private clearSelectionExcept(g);
         selectAll(): void;
         selectNone(): void;
         selectReverse(): void;
         handleArrowKey(dir?: number): void;
         private __clickItem(evt);
         private setSelectionOnEvent(item);
-        private clearSelectionExcept(obj);
         resizeToFit(itemCount?: number, minSize?: number): void;
         getMaxItemWidth(): number;
         protected handleSizeChanged(): void;

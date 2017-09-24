@@ -7985,17 +7985,32 @@ var fairygui;
         };
         Object.defineProperty(GList.prototype, "selectedIndex", {
             get: function () {
-                var cnt = this._children.length;
-                for (var i = 0; i < cnt; i++) {
-                    var obj = this._children[i].asButton;
-                    if (obj != null && obj.selected)
-                        return this.childIndexToItemIndex(i);
+                var i;
+                if (this._virtual) {
+                    for (i = 0; i < this._realNumItems; i++) {
+                        var ii = this._virtualItems[i];
+                        if ((ii.obj instanceof fairygui.GButton) && (ii.obj).selected
+                            || ii.obj == null && ii.selected) {
+                            if (this._loop)
+                                return i % this._numItems;
+                            else
+                                return i;
+                        }
+                    }
+                }
+                else {
+                    var cnt = this._children.length;
+                    for (i = 0; i < cnt; i++) {
+                        var obj = this._children[i].asButton;
+                        if (obj != null && obj.selected)
+                            return i;
+                    }
                 }
                 return -1;
             },
             set: function (value) {
                 this.clearSelection();
-                if (value >= 0 && value < this.numItems)
+                if (value >= 0 && value < this._numItems)
                     this.addSelection(value);
             },
             enumerable: true,
@@ -8003,11 +8018,28 @@ var fairygui;
         });
         GList.prototype.getSelection = function () {
             var ret = new Array();
-            var cnt = this._children.length;
-            for (var i = 0; i < cnt; i++) {
-                var obj = this._children[i].asButton;
-                if (obj != null && obj.selected)
-                    ret.push(this.childIndexToItemIndex(i));
+            var i;
+            if (this._virtual) {
+                for (i = 0; i < this._realNumItems; i++) {
+                    var ii = this._virtualItems[i];
+                    if ((ii.obj instanceof fairygui.GButton) && ii.obj.selected
+                        || ii.obj == null && ii.selected) {
+                        if (this._loop) {
+                            i = i % this._numItems;
+                            if (ret.indexOf(i) != -1)
+                                continue;
+                        }
+                        ret.push(i);
+                    }
+                }
+            }
+            else {
+                var cnt = this._children.length;
+                for (i = 0; i < cnt; i++) {
+                    var obj = this._children[i].asButton;
+                    if (obj != null && obj.selected)
+                        ret.push(i);
+                }
             }
             return ret;
         };
@@ -8020,66 +8052,130 @@ var fairygui;
                 this.clearSelection();
             if (scrollItToView)
                 this.scrollToView(index);
-            index = this.itemIndexToChildIndex(index);
-            if (index < 0 || index >= this._children.length)
-                return;
-            var obj = this.getChildAt(index).asButton;
+            this._lastSelectedIndex = index;
+            var obj = null;
+            if (this._virtual) {
+                var ii = this._virtualItems[index];
+                if (ii.obj != null)
+                    obj = ii.obj.asButton;
+                ii.selected = true;
+            }
+            else
+                obj = this.getChildAt(index).asButton;
             if (obj != null && !obj.selected) {
                 obj.selected = true;
                 this.updateSelectionController(index);
             }
         };
         GList.prototype.removeSelection = function (index) {
-            if (index === void 0) { index = 0; }
             if (this._selectionMode == fairygui.ListSelectionMode.None)
                 return;
-            index = this.itemIndexToChildIndex(index);
-            if (index >= this._children.length)
-                return;
-            var obj = this.getChildAt(index).asButton;
-            if (obj != null && obj.selected)
+            var obj = null;
+            if (this._virtual) {
+                var ii = this._virtualItems[index];
+                if (ii.obj != null)
+                    obj = ii.obj.asButton;
+                ii.selected = false;
+            }
+            else
+                obj = this.getChildAt(index).asButton;
+            if (obj != null)
                 obj.selected = false;
         };
         GList.prototype.clearSelection = function () {
-            var cnt = this._children.length;
-            for (var i = 0; i < cnt; i++) {
-                var obj = this._children[i].asButton;
-                if (obj != null)
-                    obj.selected = false;
+            var i;
+            if (this._virtual) {
+                for (i = 0; i < this._realNumItems; i++) {
+                    var ii = this._virtualItems[i];
+                    if (ii.obj instanceof fairygui.GButton)
+                        ii.obj.selected = false;
+                    ii.selected = false;
+                }
+            }
+            else {
+                var cnt = this._children.length;
+                for (i = 0; i < cnt; i++) {
+                    var obj = this._children[i].asButton;
+                    if (obj != null)
+                        obj.selected = false;
+                }
+            }
+        };
+        GList.prototype.clearSelectionExcept = function (g) {
+            var i;
+            if (this._virtual) {
+                for (i = 0; i < this._realNumItems; i++) {
+                    var ii = this._virtualItems[i];
+                    if (ii.obj != g) {
+                        if ((ii.obj instanceof fairygui.GButton))
+                            ii.obj.selected = false;
+                        ii.selected = false;
+                    }
+                }
+            }
+            else {
+                var cnt = this._children.length;
+                for (i = 0; i < cnt; i++) {
+                    var obj = this._children[i].asButton;
+                    if (obj != null && obj != g)
+                        obj.selected = false;
+                }
             }
         };
         GList.prototype.selectAll = function () {
             this.checkVirtualList();
-            var cnt = this._children.length;
             var last = -1;
-            for (var i = 0; i < cnt; i++) {
-                var obj = this._children[i].asButton;
-                if (obj != null) {
-                    obj.selected = true;
-                    last = i;
+            var i;
+            if (this._virtual) {
+                for (i = 0; i < this._realNumItems; i++) {
+                    var ii = this._virtualItems[i];
+                    if ((ii.obj instanceof fairygui.GButton) && !(ii.obj).selected) {
+                        ii.obj.selected = true;
+                        last = i;
+                    }
+                    ii.selected = true;
+                }
+            }
+            else {
+                var cnt = this._children.length;
+                for (i = 0; i < cnt; i++) {
+                    var obj = this._children[i].asButton;
+                    if (obj != null && !obj.selected) {
+                        obj.selected = true;
+                        last = i;
+                    }
                 }
             }
             if (last != -1)
                 this.updateSelectionController(last);
         };
         GList.prototype.selectNone = function () {
-            var cnt = this._children.length;
-            for (var i = 0; i < cnt; i++) {
-                var obj = this._children[i].asButton;
-                if (obj != null)
-                    obj.selected = false;
-            }
+            this.clearSelection();
         };
         GList.prototype.selectReverse = function () {
             this.checkVirtualList();
-            var cnt = this._children.length;
             var last = -1;
-            for (var i = 0; i < cnt; i++) {
-                var obj = this._children[i].asButton;
-                if (obj != null) {
-                    obj.selected = !obj.selected;
-                    if (obj.selected)
-                        last = i;
+            var i;
+            if (this._virtual) {
+                for (i = 0; i < this._realNumItems; i++) {
+                    var ii = this._virtualItems[i];
+                    if (ii.obj instanceof fairygui.GButton) {
+                        ii.obj.selected = !(ii.obj).selected;
+                        if ((ii.obj).selected)
+                            last = i;
+                    }
+                    ii.selected = !ii.selected;
+                }
+            }
+            else {
+                var cnt = this._children.length;
+                for (i = 0; i < cnt; i++) {
+                    var obj = this._children[i].asButton;
+                    if (obj != null) {
+                        obj.selected = !obj.selected;
+                        if (obj.selected)
+                            last = i;
+                    }
                 }
             }
             if (last != -1)
@@ -8228,7 +8324,7 @@ var fairygui;
                 return;
             var dontChangeLastIndex = false;
             var button = item;
-            var index = this.getChildIndex(item);
+            var index = this.childIndexToItemIndex(this.getChildIndex(item));
             if (this._selectionMode == fairygui.ListSelectionMode.Single) {
                 if (!button.selected) {
                     this.clearSelectionExcept(button);
@@ -8241,11 +8337,22 @@ var fairygui;
                         if (this._lastSelectedIndex != -1) {
                             var min = Math.min(this._lastSelectedIndex, index);
                             var max = Math.max(this._lastSelectedIndex, index);
-                            max = Math.min(max, this._children.length - 1);
-                            for (var i = min; i <= max; i++) {
-                                var obj = this.getChildAt(i).asButton;
-                                if (obj != null && !obj.selected)
-                                    obj.selected = true;
+                            max = Math.min(max, this._numItems - 1);
+                            var i;
+                            if (this._virtual) {
+                                for (i = min; i <= max; i++) {
+                                    var ii = this._virtualItems[i];
+                                    if (ii.obj instanceof fairygui.GButton)
+                                        ii.obj.selected = true;
+                                    ii.selected = true;
+                                }
+                            }
+                            else {
+                                for (i = min; i <= max; i++) {
+                                    var obj = this.getChildAt(i).asButton;
+                                    if (obj != null)
+                                        obj.selected = true;
+                                }
                             }
                             dontChangeLastIndex = true;
                         }
@@ -8270,14 +8377,6 @@ var fairygui;
                 this._lastSelectedIndex = index;
             if (button.selected)
                 this.updateSelectionController(index);
-        };
-        GList.prototype.clearSelectionExcept = function (obj) {
-            var cnt = this._children.length;
-            for (var i = 0; i < cnt; i++) {
-                var button = this._children[i].asButton;
-                if (button != null && button != obj && button.selected)
-                    button.selected = false;
-            }
         };
         GList.prototype.resizeToFit = function (itemCount, minSize) {
             if (itemCount === void 0) { itemCount = Number.POSITIVE_INFINITY; }
@@ -8559,6 +8658,10 @@ var fairygui;
                             ii.height = this._itemSize.y;
                             this._virtualItems.push(ii);
                         }
+                    }
+                    else {
+                        for (i = this._realNumItems; i < oldCount; i++)
+                            this._virtualItems[i].selected = false;
                     }
                     if (this._virtualListChanged != 0)
                         fairygui.GTimers.inst.remove(this._refreshVirtualList, this);
@@ -8895,6 +8998,8 @@ var fairygui;
                         url = fairygui.UIPackage.normalizeURL(url);
                     }
                     if (ii.obj != null && ii.obj.resourceURL != url) {
+                        if (ii.obj instanceof fairygui.GButton)
+                            ii.selected = ii.obj.selected;
                         this.removeChildToPool(ii.obj);
                         ii.obj = null;
                     }
@@ -8905,6 +9010,8 @@ var fairygui;
                         for (j = reuseIndex; j >= oldFirstIndex; j--) {
                             ii2 = this._virtualItems[j];
                             if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer && ii2.obj.resourceURL == url) {
+                                if (ii2.obj instanceof fairygui.GButton)
+                                    ii2.selected = ii2.obj.selected;
                                 ii.obj = ii2.obj;
                                 ii2.obj = null;
                                 if (j == reuseIndex)
@@ -8917,6 +9024,8 @@ var fairygui;
                         for (j = reuseIndex; j <= lastIndex; j++) {
                             ii2 = this._virtualItems[j];
                             if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer && ii2.obj.resourceURL == url) {
+                                if (ii2.obj instanceof fairygui.GButton)
+                                    ii2.selected = ii2.obj.selected;
                                 ii.obj = ii2.obj;
                                 ii2.obj = null;
                                 if (j == reuseIndex)
@@ -8936,7 +9045,7 @@ var fairygui;
                             this.addChild(ii.obj);
                     }
                     if (ii.obj instanceof fairygui.GButton)
-                        ii.obj.selected = false;
+                        ii.obj.selected = ii.selected;
                     needRender = true;
                 }
                 else
@@ -8969,6 +9078,8 @@ var fairygui;
             for (i = 0; i < oldCount; i++) {
                 ii = this._virtualItems[oldFirstIndex + i];
                 if (ii.updateFlag != GList.itemInfoVer && ii.obj != null) {
+                    if (ii.obj instanceof fairygui.GButton)
+                        ii.selected = ii.obj.selected;
                     this.removeChildToPool(ii.obj);
                     ii.obj = null;
                 }
@@ -9020,6 +9131,8 @@ var fairygui;
                         url = fairygui.UIPackage.normalizeURL(url);
                     }
                     if (ii.obj != null && ii.obj.resourceURL != url) {
+                        if (ii.obj instanceof fairygui.GButton)
+                            ii.selected = ii.obj.selected;
                         this.removeChildToPool(ii.obj);
                         ii.obj = null;
                     }
@@ -9029,6 +9142,8 @@ var fairygui;
                         for (j = reuseIndex; j >= oldFirstIndex; j--) {
                             ii2 = this._virtualItems[j];
                             if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer && ii2.obj.resourceURL == url) {
+                                if (ii2.obj instanceof fairygui.GButton)
+                                    ii2.selected = ii2.obj.selected;
                                 ii.obj = ii2.obj;
                                 ii2.obj = null;
                                 if (j == reuseIndex)
@@ -9041,6 +9156,8 @@ var fairygui;
                         for (j = reuseIndex; j <= lastIndex; j++) {
                             ii2 = this._virtualItems[j];
                             if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer && ii2.obj.resourceURL == url) {
+                                if (ii2.obj instanceof fairygui.GButton)
+                                    ii2.selected = ii2.obj.selected;
                                 ii.obj = ii2.obj;
                                 ii2.obj = null;
                                 if (j == reuseIndex)
@@ -9060,7 +9177,7 @@ var fairygui;
                             this.addChild(ii.obj);
                     }
                     if (ii.obj instanceof fairygui.GButton)
-                        ii.obj.selected = false;
+                        ii.obj.selected = ii.selected;
                     needRender = true;
                 }
                 else
@@ -9093,6 +9210,8 @@ var fairygui;
             for (i = 0; i < oldCount; i++) {
                 ii = this._virtualItems[oldFirstIndex + i];
                 if (ii.updateFlag != GList.itemInfoVer && ii.obj != null) {
+                    if (ii.obj instanceof fairygui.GButton)
+                        ii.selected = ii.obj.selected;
                     this.removeChildToPool(ii.obj);
                     ii.obj = null;
                 }
@@ -9159,6 +9278,8 @@ var fairygui;
                     while (reuseIndex < virtualItemCount) {
                         ii2 = this._virtualItems[reuseIndex];
                         if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer) {
+                            if (ii2.obj instanceof fairygui.GButton)
+                                ii2.selected = ii2.obj.selected;
                             ii.obj = ii2.obj;
                             ii2.obj = null;
                             break;
@@ -9182,7 +9303,7 @@ var fairygui;
                     }
                     insertIndex++;
                     if (ii.obj instanceof fairygui.GButton)
-                        ii.obj.selected = false;
+                        ii.obj.selected = ii.selected;
                     needRender = true;
                 }
                 else {
@@ -9234,6 +9355,8 @@ var fairygui;
             for (i = reuseIndex; i < virtualItemCount; i++) {
                 ii = this._virtualItems[i];
                 if (ii.updateFlag != GList.itemInfoVer && ii.obj != null) {
+                    if (ii.obj instanceof fairygui.GButton)
+                        ii.selected = ii.obj.selected;
                     this.removeChildToPool(ii.obj);
                     ii.obj = null;
                 }
@@ -9658,6 +9781,8 @@ var fairygui;
         function ItemInfo() {
             this.width = 0;
             this.height = 0;
+            this.updateFlag = 0;
+            this.selected = false;
         }
         return ItemInfo;
     }());
@@ -14082,8 +14207,12 @@ var fairygui;
         ScrollPane.prototype.__mouseDown = function (evt) {
             if (!this._touchEffect)
                 return;
-            if (this._tweener != null)
+            if (this._tweener != null) {
                 this.killTween();
+                this.isDragged = true;
+            }
+            else
+                this.isDragged = false;
             this._maskContainer.globalToLocal(evt.stageX, evt.stageY, ScrollPane.sHelperPoint);
             this._x1 = this._x2 = this._container.x;
             this._y1 = this._y2 = this._container.y;
@@ -14093,7 +14222,6 @@ var fairygui;
             this._holdAreaPoint.x = ScrollPane.sHelperPoint.x;
             this._holdAreaPoint.y = ScrollPane.sHelperPoint.y;
             this._isHoldAreaDone = false;
-            this.isDragged = false;
             this._owner.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__touchMove, this);
             this._owner.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_END, this.__touchEnd, this);
             this._owner.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_TAP, this.__touchTap, this);

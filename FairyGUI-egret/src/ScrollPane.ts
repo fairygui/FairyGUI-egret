@@ -970,8 +970,12 @@ module fairygui {
             if (!this._touchEffect)
                 return;
 
-            if (this._tweener != null)
+            if (this._tweener != null) {
                 this.killTween();
+                this.isDragged = true;
+            }
+            else
+                this.isDragged = false;
 
             this._maskContainer.globalToLocal(evt.stageX, evt.stageY, ScrollPane.sHelperPoint);
 
@@ -985,7 +989,6 @@ module fairygui {
             this._holdAreaPoint.x = ScrollPane.sHelperPoint.x;
             this._holdAreaPoint.y = ScrollPane.sHelperPoint.y;
             this._isHoldAreaDone = false;
-            this.isDragged = false;
 
             this._owner.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__touchMove, this);
             this._owner.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_END, this.__touchEnd, this);

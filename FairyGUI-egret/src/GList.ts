@@ -275,28 +275,61 @@ module fairygui {
         }
 
         public get selectedIndex(): number {
-            var cnt: number = this._children.length;
-            for (var i: number = 0; i < cnt; i++) {
-                var obj: GButton = this._children[i].asButton;
-                if (obj != null && obj.selected)
-                    return this.childIndexToItemIndex(i);
+            var i: number;
+            if (this._virtual) {
+                for (i = 0; i < this._realNumItems; i++) {
+                    var ii: ItemInfo = this._virtualItems[i];
+                    if ((ii.obj instanceof GButton) && <any>(ii.obj).selected
+                        || ii.obj == null && ii.selected) {
+                        if (this._loop)
+                            return i % this._numItems;
+                        else
+                            return i;
+                    }
+                }
             }
+            else {
+                var cnt: number = this._children.length;
+                for (i = 0; i < cnt; i++) {
+                    var obj: GButton = this._children[i].asButton;
+                    if (obj != null && obj.selected)
+                        return i;
+                }
+            }
+
             return -1;
         }
 
         public set selectedIndex(value: number) {
             this.clearSelection();
-            if (value >= 0 && value < this.numItems)
+            if (value >= 0 && value < this._numItems)
                 this.addSelection(value);
         }
 
         public getSelection(): Array<number> {
             var ret: Array<number> = new Array<number>();
-            var cnt: number = this._children.length;
-            for (var i: number = 0; i < cnt; i++) {
-                var obj: GButton = this._children[i].asButton;
-                if (obj != null && obj.selected)
-                    ret.push(this.childIndexToItemIndex(i));
+            var i: number;
+            if (this._virtual) {
+                for (i = 0; i < this._realNumItems; i++) {
+                    var ii: ItemInfo = this._virtualItems[i];
+                    if ((ii.obj instanceof GButton) && (<any>ii.obj).selected
+                        || ii.obj == null && ii.selected) {
+                        if (this._loop) {
+                            i = i % this._numItems;
+                            if (ret.indexOf(i) != -1)
+                                continue;
+                        }
+                        ret.push(i);
+                    }
+                }
+            }
+            else {
+                var cnt: number = this._children.length;
+                for (i = 0; i < cnt; i++) {
+                    var obj: GButton = this._children[i].asButton;
+                    if (obj != null && obj.selected)
+                        ret.push(i);
+                }
             }
             return ret;
         }
@@ -313,49 +346,106 @@ module fairygui {
             if (scrollItToView)
                 this.scrollToView(index);
 
-            index = this.itemIndexToChildIndex(index);
-            if (index < 0 || index >= this._children.length)
-                return;
+            this._lastSelectedIndex = index;
+            var obj: GButton = null;
+            if (this._virtual) {
+                var ii: ItemInfo = this._virtualItems[index];
+                if (ii.obj != null)
+                    obj = ii.obj.asButton;
+                ii.selected = true;
+            }
+            else
+                obj = this.getChildAt(index).asButton;
 
-            var obj: GButton = this.getChildAt(index).asButton;
             if (obj != null && !obj.selected) {
                 obj.selected = true;
                 this.updateSelectionController(index);
             }
         }
 
-        public removeSelection(index: number = 0): void {
+        public removeSelection(index: number): void {
             if (this._selectionMode == ListSelectionMode.None)
                 return;
 
-            index = this.itemIndexToChildIndex(index);
-            if (index >= this._children.length)
-                return;
+            var obj: GButton = null;
+            if (this._virtual) {
+                var ii: ItemInfo = this._virtualItems[index];
+                if (ii.obj != null)
+                    obj = ii.obj.asButton;
+                ii.selected = false;
+            }
+            else
+                obj = this.getChildAt(index).asButton;
 
-            var obj: GButton = this.getChildAt(index).asButton;
-            if (obj != null && obj.selected)
+            if (obj != null)
                 obj.selected = false;
         }
 
         public clearSelection(): void {
-            var cnt: number = this._children.length;
-            for (var i: number = 0; i < cnt; i++) {
-                var obj: GButton = this._children[i].asButton;
-                if (obj != null)
-                    obj.selected = false;
+            var i: number;
+            if (this._virtual) {
+                for (i = 0; i < this._realNumItems; i++) {
+                    var ii: ItemInfo = this._virtualItems[i];
+                    if (ii.obj instanceof GButton)
+                        (<any>ii.obj).selected = false;
+                    ii.selected = false;
+                }
+            }
+            else {
+                var cnt: number = this._children.length;
+                for (i = 0; i < cnt; i++) {
+                    var obj: GButton = this._children[i].asButton;
+                    if (obj != null)
+                        obj.selected = false;
+                }
+            }
+        }
+
+        private clearSelectionExcept(g: GObject): void {
+            var i: number;
+            if (this._virtual) {
+                for (i = 0; i < this._realNumItems; i++) {
+                    var ii: ItemInfo = this._virtualItems[i];
+                    if (ii.obj != g) {
+                        if ((ii.obj instanceof GButton))
+                            (<any>ii.obj).selected = false;
+                        ii.selected = false;
+                    }
+                }
+            }
+            else {
+                var cnt: number = this._children.length;
+                for (i = 0; i < cnt; i++) {
+                    var obj: GButton = this._children[i].asButton;
+                    if (obj != null && obj != g)
+                        obj.selected = false;
+                }
             }
         }
 
         public selectAll(): void {
             this.checkVirtualList();
 
-            var cnt: number = this._children.length;
             var last: number = -1;
-            for (var i: number = 0; i < cnt; i++) {
-                var obj: GButton = this._children[i].asButton;
-                if (obj != null) {
-                    obj.selected = true;
-                    last = i;
+            var i: number;
+            if (this._virtual) {
+                for (i = 0; i < this._realNumItems; i++) {
+                    var ii: ItemInfo = this._virtualItems[i];
+                    if ((ii.obj instanceof GButton) && !<any>(ii.obj).selected) {
+                        (<any>ii.obj).selected = true;
+                        last = i;
+                    }
+                    ii.selected = true;
+                }
+            }
+            else {
+                var cnt: number = this._children.length;
+                for (i = 0; i < cnt; i++) {
+                    var obj: GButton = this._children[i].asButton;
+                    if (obj != null && !obj.selected) {
+                        obj.selected = true;
+                        last = i;
+                    }
                 }
             }
 
@@ -364,31 +454,41 @@ module fairygui {
         }
 
         public selectNone(): void {
-            var cnt: number = this._children.length;
-            for (var i: number = 0; i < cnt; i++) {
-                var obj: GButton = this._children[i].asButton;
-                if (obj != null)
-                    obj.selected = false;
-            }
+            this.clearSelection();
         }
 
         public selectReverse(): void {
             this.checkVirtualList();
 
-            var cnt: number = this._children.length;
             var last: number = -1;
-            for (var i: number = 0; i < cnt; i++) {
-                var obj: GButton = this._children[i].asButton;
-                if (obj != null) {
-                    obj.selected = !obj.selected;
-                    if (obj.selected)
-                        last = i;
+            var i: number;
+            if (this._virtual) {
+                for (i = 0; i < this._realNumItems; i++) {
+                    var ii: ItemInfo = this._virtualItems[i];
+                    if (ii.obj instanceof GButton) {
+                        (<any>ii.obj).selected = !<any>(ii.obj).selected;
+                        if (<any>(ii.obj).selected)
+                            last = i;
+                    }
+                    ii.selected = !ii.selected;
+                }
+            }
+            else {
+                var cnt: number = this._children.length;
+                for (i = 0; i < cnt; i++) {
+                    var obj: GButton = this._children[i].asButton;
+                    if (obj != null) {
+                        obj.selected = !obj.selected;
+                        if (obj.selected)
+                            last = i;
+                    }
                 }
             }
 
             if (last != -1)
                 this.updateSelectionController(last);
         }
+
 
         public handleArrowKey(dir: number = 0): void {
             var index: number = this.selectedIndex;
@@ -542,7 +642,7 @@ module fairygui {
 
             var dontChangeLastIndex: boolean = false;
             var button: GButton = <GButton><any>item;
-            var index: number = this.getChildIndex(item);
+            var index: number = this.childIndexToItemIndex(this.getChildIndex(item));
 
             if (this._selectionMode == ListSelectionMode.Single) {
                 if (!button.selected) {
@@ -556,11 +656,22 @@ module fairygui {
                         if (this._lastSelectedIndex != -1) {
                             var min: number = Math.min(this._lastSelectedIndex, index);
                             var max: number = Math.max(this._lastSelectedIndex, index);
-                            max = Math.min(max, this._children.length - 1);
-                            for (var i: number = min; i <= max; i++) {
-                                var obj: GButton = this.getChildAt(i).asButton;
-                                if (obj != null && !obj.selected)
-                                    obj.selected = true;
+                            max = Math.min(max, this._numItems - 1);
+                            var i: number;
+                            if (this._virtual) {
+                                for (i = min; i <= max; i++) {
+                                    var ii: ItemInfo = this._virtualItems[i];
+                                    if (ii.obj instanceof GButton)
+                                        (<any>ii.obj).selected = true;
+                                    ii.selected = true;
+                                }
+                            }
+                            else {
+                                for (i = min; i <= max; i++) {
+                                    var obj: GButton = this.getChildAt(i).asButton;
+                                    if (obj != null)
+                                        obj.selected = true;
+                                }
                             }
 
                             dontChangeLastIndex = true;
@@ -588,15 +699,6 @@ module fairygui {
 
             if (button.selected)
                 this.updateSelectionController(index);
-        }
-
-        private clearSelectionExcept(obj: GObject): void {
-            var cnt: number = this._children.length;
-            for (var i: number = 0; i < cnt; i++) {
-                var button: GButton = this._children[i].asButton;
-                if (button != null && button != obj && button.selected)
-                    button.selected = false;
-            }
         }
 
         public resizeToFit(itemCount: number = Number.POSITIVE_INFINITY, minSize: number = 0): void {
@@ -915,6 +1017,10 @@ module fairygui {
 
                         this._virtualItems.push(ii);
                     }
+                }
+                else {
+                    for (i = this._realNumItems; i < oldCount; i++)
+                        this._virtualItems[i].selected = false;
                 }
 
                 if (this._virtualListChanged != 0)
@@ -1298,6 +1404,8 @@ module fairygui {
                     }
 
                     if (ii.obj != null && ii.obj.resourceURL != url) {
+                        if (ii.obj instanceof GButton)
+                            ii.selected = (<any>ii.obj).selected;
                         this.removeChildToPool(ii.obj);
                         ii.obj = null;
                     }
@@ -1309,6 +1417,8 @@ module fairygui {
                         for (j = reuseIndex; j >= oldFirstIndex; j--) {
                             ii2 = this._virtualItems[j];
                             if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer && ii2.obj.resourceURL == url) {
+                                if (ii2.obj instanceof GButton)
+                                    ii2.selected = (<any>ii2.obj).selected;
                                 ii.obj = ii2.obj;
                                 ii2.obj = null;
                                 if (j == reuseIndex)
@@ -1321,6 +1431,8 @@ module fairygui {
                         for (j = reuseIndex; j <= lastIndex; j++) {
                             ii2 = this._virtualItems[j];
                             if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer && ii2.obj.resourceURL == url) {
+                                if (ii2.obj instanceof GButton)
+                                    ii2.selected = (<any>ii2.obj).selected;
                                 ii.obj = ii2.obj;
                                 ii2.obj = null;
                                 if (j == reuseIndex)
@@ -1341,7 +1453,7 @@ module fairygui {
                             this.addChild(ii.obj);
                     }
                     if (ii.obj instanceof GButton)
-                        (<GButton><any>ii.obj).selected = false;
+                        (<GButton><any>ii.obj).selected = ii.selected;
 
                     needRender = true;
                 }
@@ -1381,6 +1493,8 @@ module fairygui {
             for (i = 0; i < oldCount; i++) {
                 ii = this._virtualItems[oldFirstIndex + i];
                 if (ii.updateFlag != GList.itemInfoVer && ii.obj != null) {
+                    if (ii.obj instanceof GButton)
+                        ii.selected = (<any>ii.obj).selected;
                     this.removeChildToPool(ii.obj);
                     ii.obj = null;
                 }
@@ -1443,6 +1557,8 @@ module fairygui {
                     }
 
                     if (ii.obj != null && ii.obj.resourceURL != url) {
+                        if (ii.obj instanceof GButton)
+                            ii.selected = (<any>ii.obj).selected;
                         this.removeChildToPool(ii.obj);
                         ii.obj = null;
                     }
@@ -1453,6 +1569,8 @@ module fairygui {
                         for (j = reuseIndex; j >= oldFirstIndex; j--) {
                             ii2 = this._virtualItems[j];
                             if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer && ii2.obj.resourceURL == url) {
+                                if (ii2.obj instanceof GButton)
+                                    ii2.selected = (<any>ii2.obj).selected;
                                 ii.obj = ii2.obj;
                                 ii2.obj = null;
                                 if (j == reuseIndex)
@@ -1465,6 +1583,8 @@ module fairygui {
                         for (j = reuseIndex; j <= lastIndex; j++) {
                             ii2 = this._virtualItems[j];
                             if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer && ii2.obj.resourceURL == url) {
+                                if (ii2.obj instanceof GButton)
+                                    ii2.selected = (<any>ii2.obj).selected;
                                 ii.obj = ii2.obj;
                                 ii2.obj = null;
                                 if (j == reuseIndex)
@@ -1485,7 +1605,7 @@ module fairygui {
                             this.addChild(ii.obj);
                     }
                     if (ii.obj instanceof GButton)
-                        (<GButton><any>ii.obj).selected = false;
+                        (<GButton><any>ii.obj).selected = ii.selected;
 
                     needRender = true;
                 }
@@ -1526,6 +1646,8 @@ module fairygui {
             for (i = 0; i < oldCount; i++) {
                 ii = this._virtualItems[oldFirstIndex + i];
                 if (ii.updateFlag != GList.itemInfoVer && ii.obj != null) {
+                    if (ii.obj instanceof GButton)
+                        ii.selected = (<any>ii.obj).selected;
                     this.removeChildToPool(ii.obj);
                     ii.obj = null;
                 }
@@ -1607,6 +1729,8 @@ module fairygui {
                     while (reuseIndex < virtualItemCount) {
                         ii2 = this._virtualItems[reuseIndex];
                         if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer) {
+                            if (ii2.obj instanceof GButton)
+                                ii2.selected = (<any>ii2.obj).selected;
                             ii.obj = ii2.obj;
                             ii2.obj = null;
                             break;
@@ -1634,7 +1758,7 @@ module fairygui {
                     insertIndex++;
 
                     if (ii.obj instanceof GButton)
-                        (<GButton><any>ii.obj).selected = false;
+                        (<GButton><any>ii.obj).selected = ii.selected;
 
                     needRender = true;
                 }
@@ -1694,6 +1818,8 @@ module fairygui {
             for (i = reuseIndex; i < virtualItemCount; i++) {
                 ii = this._virtualItems[i];
                 if (ii.updateFlag != GList.itemInfoVer && ii.obj != null) {
+                    if (ii.obj instanceof GButton)
+                        ii.selected = (<any>ii.obj).selected;
                     this.removeChildToPool(ii.obj);
                     ii.obj = null;
                 }
@@ -2010,7 +2136,7 @@ module fairygui {
                         child.setXY(page * viewWidth + curX, curY);
                         curX += Math.ceil(child.width);
                         if (curX > maxWidth)
-							maxWidth = curX;
+                            maxWidth = curX;
                         if (child.height > maxHeight)
                             maxHeight = child.height;
                         j++;
@@ -2173,7 +2299,8 @@ module fairygui {
         public width: number = 0;
         public height: number = 0;
         public obj: GObject;
-        public updateFlag: number;
+        public updateFlag: number = 0;
+        public selected: boolean = false;
 
         public constructor() {
         }
