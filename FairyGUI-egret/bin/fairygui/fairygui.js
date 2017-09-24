@@ -8009,9 +8009,13 @@ var fairygui;
                 return -1;
             },
             set: function (value) {
-                this.clearSelection();
-                if (value >= 0 && value < this._numItems)
+                if (value >= 0 && value < this.numItems) {
+                    if (this._selectionMode != fairygui.ListSelectionMode.Single)
+                        this.clearSelection();
                     this.addSelection(value);
+                }
+                else
+                    this.clearSelection();
             },
             enumerable: true,
             configurable: true
@@ -8337,7 +8341,7 @@ var fairygui;
                         if (this._lastSelectedIndex != -1) {
                             var min = Math.min(this._lastSelectedIndex, index);
                             var max = Math.max(this._lastSelectedIndex, index);
-                            max = Math.min(max, this._numItems - 1);
+                            max = Math.min(max, this.numItems - 1);
                             var i;
                             if (this._virtual) {
                                 for (i = min; i <= max; i++) {

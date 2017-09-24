@@ -301,9 +301,13 @@ module fairygui {
         }
 
         public set selectedIndex(value: number) {
-            this.clearSelection();
-            if (value >= 0 && value < this._numItems)
+            if (value >= 0 && value < this.numItems) {
+                if (this._selectionMode != ListSelectionMode.Single)
+                    this.clearSelection();
                 this.addSelection(value);
+            }
+            else
+                this.clearSelection();
         }
 
         public getSelection(): Array<number> {
@@ -656,7 +660,7 @@ module fairygui {
                         if (this._lastSelectedIndex != -1) {
                             var min: number = Math.min(this._lastSelectedIndex, index);
                             var max: number = Math.max(this._lastSelectedIndex, index);
-                            max = Math.min(max, this._numItems - 1);
+                            max = Math.min(max, this.numItems - 1);
                             var i: number;
                             if (this._virtual) {
                                 for (i = min; i <= max; i++) {
