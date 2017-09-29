@@ -7989,7 +7989,7 @@ var fairygui;
                 if (this._virtual) {
                     for (i = 0; i < this._realNumItems; i++) {
                         var ii = this._virtualItems[i];
-                        if ((ii.obj instanceof fairygui.GButton) && (ii.obj).selected
+                        if ((ii.obj instanceof fairygui.GButton) && ii.obj.selected
                             || ii.obj == null && ii.selected) {
                             if (this._loop)
                                 return i % this._numItems;
@@ -8133,7 +8133,7 @@ var fairygui;
             if (this._virtual) {
                 for (i = 0; i < this._realNumItems; i++) {
                     var ii = this._virtualItems[i];
-                    if ((ii.obj instanceof fairygui.GButton) && !(ii.obj).selected) {
+                    if ((ii.obj instanceof fairygui.GButton) && !ii.obj.selected) {
                         ii.obj.selected = true;
                         last = i;
                     }
@@ -8164,8 +8164,8 @@ var fairygui;
                 for (i = 0; i < this._realNumItems; i++) {
                     var ii = this._virtualItems[i];
                     if (ii.obj instanceof fairygui.GButton) {
-                        ii.obj.selected = !(ii.obj).selected;
-                        if ((ii.obj).selected)
+                        ii.obj.selected = !ii.obj.selected;
+                        if (ii.obj.selected)
                             last = i;
                     }
                     ii.selected = !ii.selected;
@@ -11837,8 +11837,7 @@ var fairygui;
                 if (i < this._enumI)
                     this._enumI--;
                 this._enumCount--;
-                item.callback = null;
-                item.param = null;
+                item.reset();
                 this._itemPool.push(item);
             }
         };
@@ -11857,6 +11856,7 @@ var fairygui;
                         this._enumI--;
                         this._enumCount--;
                         this._items.splice(this._enumI, 1);
+                        item.reset();
                         this._itemPool.push(item);
                     }
                     if (item.hasParam)
@@ -11898,6 +11898,11 @@ var fairygui;
             }
             else
                 return false;
+        };
+        TimerItem.prototype.reset = function () {
+            this.callback = null;
+            this.thisObj = null;
+            this.param = null;
         };
         return TimerItem;
     }());

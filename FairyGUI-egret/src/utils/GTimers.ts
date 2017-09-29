@@ -85,8 +85,7 @@ module fairygui {
                     this._enumI--;
                 this._enumCount--;
 
-                item.callback = null;
-                item.param = null;
+                item.reset();
                 this._itemPool.push(item);
             }
         }
@@ -110,6 +109,7 @@ module fairygui {
                         this._enumI--;
                         this._enumCount--;
                         this._items.splice(this._enumI, 1);
+                        item.reset();
                         this._itemPool.push(item);
                     }
 
@@ -156,6 +156,12 @@ module fairygui {
             }
             else
                 return false;
+        }
+
+        public reset(): void {
+            this.callback = null;
+            this.thisObj = null;
+            this.param = null;
         }
     }
 }

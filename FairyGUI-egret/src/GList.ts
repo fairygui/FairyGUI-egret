@@ -279,7 +279,7 @@ module fairygui {
             if (this._virtual) {
                 for (i = 0; i < this._realNumItems; i++) {
                     var ii: ItemInfo = this._virtualItems[i];
-                    if ((ii.obj instanceof GButton) && <any>(ii.obj).selected
+                    if ((ii.obj instanceof GButton) && (<any>ii.obj).selected
                         || ii.obj == null && ii.selected) {
                         if (this._loop)
                             return i % this._numItems;
@@ -435,7 +435,7 @@ module fairygui {
             if (this._virtual) {
                 for (i = 0; i < this._realNumItems; i++) {
                     var ii: ItemInfo = this._virtualItems[i];
-                    if ((ii.obj instanceof GButton) && !<any>(ii.obj).selected) {
+                    if ((ii.obj instanceof GButton) && !(<any>ii.obj).selected) {
                         (<any>ii.obj).selected = true;
                         last = i;
                     }
@@ -470,8 +470,8 @@ module fairygui {
                 for (i = 0; i < this._realNumItems; i++) {
                     var ii: ItemInfo = this._virtualItems[i];
                     if (ii.obj instanceof GButton) {
-                        (<any>ii.obj).selected = !<any>(ii.obj).selected;
-                        if (<any>(ii.obj).selected)
+                        (<any>ii.obj).selected = !(<any>ii.obj).selected;
+                        if ((<any>ii.obj).selected)
                             last = i;
                     }
                     ii.selected = !ii.selected;
