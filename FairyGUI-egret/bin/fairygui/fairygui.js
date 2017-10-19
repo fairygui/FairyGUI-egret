@@ -609,6 +609,8 @@ var fairygui;
                                 else
                                     this._status = 1;
                             }
+                            else if (this._start != 0)
+                                this._status = 1;
                         }
                     }
                     //draw
