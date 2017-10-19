@@ -109,14 +109,17 @@ module fairygui {
                         this._enumI--;
                         this._enumCount--;
                         this._items.splice(this._enumI, 1);
-                        item.reset();
-                        this._itemPool.push(item);
                     }
 
                     if (item.hasParam)
                         item.callback.call(item.thisObj, item.param);
                     else
                         item.callback.call(item.thisObj);
+
+                    if (item.end) {
+                        item.reset();
+                        this._itemPool.push(item);
+                    }
                 }
             }
 

@@ -10488,9 +10488,9 @@ var fairygui;
             var fullHeight = this.height - this._barMaxHeightDelta;
             if (!this._reverse) {
                 if (this._barObjectH)
-                    this._barObjectH.width = fullWidth * percent;
+                    this._barObjectH.width = Math.round(fullWidth * percent);
                 if (this._barObjectV)
-                    this._barObjectV.height = fullHeight * percent;
+                    this._barObjectV.height = Math.round(fullHeight * percent);
             }
             else {
                 if (this._barObjectH) {
@@ -11856,13 +11856,15 @@ var fairygui;
                         this._enumI--;
                         this._enumCount--;
                         this._items.splice(this._enumI, 1);
-                        item.reset();
-                        this._itemPool.push(item);
                     }
                     if (item.hasParam)
                         item.callback.call(item.thisObj, item.param);
                     else
                         item.callback.call(item.thisObj);
+                    if (item.end) {
+                        item.reset();
+                        this._itemPool.push(item);
+                    }
                 }
             }
             return false;
@@ -12149,9 +12151,9 @@ var fairygui;
             var fullHeight = this.height - this._barMaxHeightDelta;
             if (!this._reverse) {
                 if (this._barObjectH)
-                    this._barObjectH.width = fullWidth * percent;
+                    this._barObjectH.width = Math.round(fullWidth * percent);
                 if (this._barObjectV)
-                    this._barObjectV.height = fullHeight * percent;
+                    this._barObjectV.height = Math.round(fullHeight * percent);
             }
             else {
                 if (this._barObjectH) {

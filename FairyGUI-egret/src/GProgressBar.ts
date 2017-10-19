@@ -114,9 +114,9 @@ module fairygui {
             var fullHeight: number = this.height - this._barMaxHeightDelta;
             if (!this._reverse) {
                 if (this._barObjectH)
-                    this._barObjectH.width = fullWidth * percent;
+                    this._barObjectH.width = Math.round(fullWidth * percent);
                 if (this._barObjectV)
-                    this._barObjectV.height = fullHeight * percent;
+                    this._barObjectV.height = Math.round(fullHeight * percent);
             }
             else {
                 if (this._barObjectH) {
