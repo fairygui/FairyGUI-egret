@@ -1,0 +1,17 @@
+{
+	"modules": [
+		{
+			"name": "egret"
+		},
+		{
+			"name": "res"
+		},
+		{
+			"name": "tween"
+		}
+	],
+	"native": {
+		"path_ignore": []
+	},
+	"egret_version": "3.2.6"
+}
