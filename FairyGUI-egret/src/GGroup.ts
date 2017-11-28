@@ -348,9 +348,7 @@ module fairygui {
             this._updating &= 1;
         }
 
-        protected updateAlpha(): void {
-            super.updateAlpha();
-
+        protected handleAlphaChanged(): void {
             if (this._underConstruct)
                 return;
 
@@ -359,6 +357,18 @@ module fairygui {
                 var child: GObject = this._parent.getChildAt(i);
                 if (child.group == this)
                     child.alpha = this.alpha;
+            }
+        }
+
+        public handleVisibleChanged(): void {
+            if (!this._parent)
+                return;
+
+            var cnt: number = this._parent.numChildren;
+            for (var i: number = 0; i < cnt; i++) {
+                var child: GObject = this._parent.getChildAt(i);
+                if (child.group == this)
+                    child.handleVisibleChanged();
             }
         }
 
@@ -377,6 +387,13 @@ module fairygui {
                 if (str)
                     this._columnGap = parseInt(str);
             }
+        }
+
+        public setup_afterAdd(xml: any): void {
+            super.setup_afterAdd(xml);
+
+            if (!this.visible)
+                this.handleVisibleChanged();
         }
     }
 }

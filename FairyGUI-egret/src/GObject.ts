@@ -429,15 +429,9 @@ module fairygui {
         public set alpha(value: number) {
             if (this._alpha != value) {
                 this._alpha = value;
-                this.updateAlpha();
+                this.handleAlphaChanged();
+                this.updateGear(3);
             }
-        }
-
-        protected updateAlpha(): void {
-            if (this._displayObject)
-                this._displayObject.alpha = this._alpha;
-
-            this.updateGear(3);
         }
 
         public get visible(): boolean {
@@ -447,17 +441,18 @@ module fairygui {
         public set visible(value: boolean) {
             if (this._visible != value) {
                 this._visible = value;
-                if (this._displayObject)
-                    this._displayObject.visible = this._visible;
-                if (this._parent) {
-                    this._parent.childStateChanged(this);
+                this.handleVisibleChanged();
+                if (this._parent)
                     this._parent.setBoundsChangedFlag();
-                }
             }
         }
 
-        public get finalVisible(): boolean {
-            return this._visible && this._internalVisible && (!this._group || this._group.finalVisible);
+        public get internalVisible(): boolean {
+            return this._internalVisible && (!this._group || this._group.internalVisible);
+        }
+
+        public get internalVisible2(): boolean {
+            return this._visible && (!this._group || this._group.internalVisible2);
         }
 
         public get sortingOrder(): number {
@@ -988,6 +983,16 @@ module fairygui {
                 else
                     this._displayObject.filters = null;
             }
+        }
+
+        protected handleAlphaChanged(): void {
+            if (this._displayObject)
+                this._displayObject.alpha = this._alpha;
+        }
+
+        public handleVisibleChanged(): void {
+            if (this._displayObject)
+                this._displayObject.visible = this.internalVisible2;
         }
 
         public constructFromResource(): void {

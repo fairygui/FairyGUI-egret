@@ -88,9 +88,9 @@ declare module fairygui {
         rotation: number;
         normalizeRotation: number;
         alpha: number;
-        protected updateAlpha(): void;
         visible: boolean;
-        finalVisible: boolean;
+        internalVisible: boolean;
+        internalVisible2: boolean;
         sortingOrder: number;
         focusable: boolean;
         focused: boolean;
@@ -164,6 +164,8 @@ declare module fairygui {
         protected handleScaleChanged(): void;
         private static colorMatrix;
         protected handleGrayedChanged(): void;
+        protected handleAlphaChanged(): void;
+        handleVisibleChanged(): void;
         constructFromResource(): void;
         setup_beforeAdd(xml: any): void;
         private static GearXMLKeys;
@@ -1069,8 +1071,10 @@ declare module fairygui {
         private updatePercent();
         moveChildren(dx: number, dy: number): void;
         resizeChildren(dw: number, dh: number): void;
-        protected updateAlpha(): void;
+        protected handleAlphaChanged(): void;
+        handleVisibleChanged(): void;
         setup_beforeAdd(xml: any): void;
+        setup_afterAdd(xml: any): void;
     }
 }
 declare module fairygui {

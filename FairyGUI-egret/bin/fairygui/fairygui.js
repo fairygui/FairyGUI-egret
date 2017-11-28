@@ -2428,9 +2428,9 @@ var fairygui;
             }
             else if (onComplete != null) {
                 if (onComplete.length > 0)
-                    onComplete.call(this._onCompleteObj, onCompleteParam);
+                    onComplete.call(onCompleteObj, onCompleteParam);
                 else
-                    onComplete(this._onCompleteObj);
+                    onComplete(onCompleteObj);
             }
         };
         Transition.prototype.stop = function (setToComplete, processCallback) {
@@ -3758,17 +3758,13 @@ var fairygui;
             set: function (value) {
                 if (this._alpha != value) {
                     this._alpha = value;
-                    this.updateAlpha();
+                    this.handleAlphaChanged();
+                    this.updateGear(3);
                 }
             },
             enumerable: true,
             configurable: true
         });
-        GObject.prototype.updateAlpha = function () {
-            if (this._displayObject)
-                this._displayObject.alpha = this._alpha;
-            this.updateGear(3);
-        };
         Object.defineProperty(GObject.prototype, "visible", {
             get: function () {
                 return this._visible;
@@ -3776,20 +3772,24 @@ var fairygui;
             set: function (value) {
                 if (this._visible != value) {
                     this._visible = value;
-                    if (this._displayObject)
-                        this._displayObject.visible = this._visible;
-                    if (this._parent) {
-                        this._parent.childStateChanged(this);
+                    this.handleVisibleChanged();
+                    if (this._parent)
                         this._parent.setBoundsChangedFlag();
-                    }
                 }
             },
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(GObject.prototype, "finalVisible", {
+        Object.defineProperty(GObject.prototype, "internalVisible", {
             get: function () {
-                return this._visible && this._internalVisible && (!this._group || this._group.finalVisible);
+                return this._internalVisible && (!this._group || this._group.internalVisible);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "internalVisible2", {
+            get: function () {
+                return this._visible && (!this._group || this._group.internalVisible2);
             },
             enumerable: true,
             configurable: true
@@ -4390,6 +4390,14 @@ var fairygui;
                     this._displayObject.filters = null;
             }
         };
+        GObject.prototype.handleAlphaChanged = function () {
+            if (this._displayObject)
+                this._displayObject.alpha = this._alpha;
+        };
+        GObject.prototype.handleVisibleChanged = function () {
+            if (this._displayObject)
+                this._displayObject.visible = this.internalVisible2;
+        };
         GObject.prototype.constructFromResource = function () {
         };
         GObject.prototype.setup_beforeAdd = function (xml) {
@@ -4816,7 +4824,7 @@ var fairygui;
             var cnt = this._children.length;
             for (var i = 0; i < cnt; ++i) {
                 var child = this._children[i];
-                if (child.finalVisible && child.name == name)
+                if (child.internalVisible && child.internalVisible && child.name == name)
                     return child;
             }
             return null;
@@ -4995,7 +5003,7 @@ var fairygui;
             }
             if (!child.displayObject)
                 return;
-            if (child.finalVisible) {
+            if (child.internalVisible) {
                 if (!child.displayObject.parent) {
                     var index = 0;
                     if (this._childrenRenderOrder == fairygui.ChildrenRenderOrder.Ascent) {
@@ -5040,7 +5048,7 @@ var fairygui;
                     {
                         for (i = 0; i < cnt; i++) {
                             child = this._children[i];
-                            if (child.displayObject != null && child.finalVisible)
+                            if (child.displayObject != null && child.internalVisible)
                                 this._container.addChild(child.displayObject);
                         }
                     }
@@ -5049,7 +5057,7 @@ var fairygui;
                     {
                         for (i = cnt - 1; i >= 0; i--) {
                             child = this._children[i];
-                            if (child.displayObject != null && child.finalVisible)
+                            if (child.displayObject != null && child.internalVisible)
                                 this._container.addChild(child.displayObject);
                         }
                     }
@@ -5058,12 +5066,12 @@ var fairygui;
                     {
                         for (i = 0; i < this._apexIndex; i++) {
                             child = this._children[i];
-                            if (child.displayObject != null && child.finalVisible)
+                            if (child.displayObject != null && child.internalVisible)
                                 this._container.addChild(child.displayObject);
                         }
                         for (i = cnt - 1; i >= this._apexIndex; i--) {
                             child = this._children[i];
-                            if (child.displayObject != null && child.finalVisible)
+                            if (child.displayObject != null && child.internalVisible)
                                 this._container.addChild(child.displayObject);
                         }
                     }
@@ -7366,8 +7374,7 @@ var fairygui;
             }
             this._updating &= 1;
         };
-        GGroup.prototype.updateAlpha = function () {
-            _super.prototype.updateAlpha.call(this);
+        GGroup.prototype.handleAlphaChanged = function () {
             if (this._underConstruct)
                 return;
             var cnt = this._parent.numChildren;
@@ -7375,6 +7382,16 @@ var fairygui;
                 var child = this._parent.getChildAt(i);
                 if (child.group == this)
                     child.alpha = this.alpha;
+            }
+        };
+        GGroup.prototype.handleVisibleChanged = function () {
+            if (!this._parent)
+                return;
+            var cnt = this._parent.numChildren;
+            for (var i = 0; i < cnt; i++) {
+                var child = this._parent.getChildAt(i);
+                if (child.group == this)
+                    child.handleVisibleChanged();
             }
         };
         GGroup.prototype.setup_beforeAdd = function (xml) {
@@ -7390,6 +7407,11 @@ var fairygui;
                 if (str)
                     this._columnGap = parseInt(str);
             }
+        };
+        GGroup.prototype.setup_afterAdd = function (xml) {
+            _super.prototype.setup_afterAdd.call(this, xml);
+            if (!this.visible)
+                this.handleVisibleChanged();
         };
         return GGroup;
     }(fairygui.GObject));

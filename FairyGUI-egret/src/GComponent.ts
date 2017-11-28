@@ -185,7 +185,7 @@ module fairygui {
             var cnt: number = this._children.length;
             for (var i: number = 0; i < cnt; ++i) {
                 var child: GObject = this._children[i];
-                if (child.finalVisible && child.name == name)
+                if (child.internalVisible && child.internalVisible && child.name == name)
                     return child;
             }
 
@@ -394,7 +394,7 @@ module fairygui {
             if (!child.displayObject)
                 return;
 
-            if (child.finalVisible) {
+            if (child.internalVisible) {
                 if (!child.displayObject.parent) {
                     var index: number = 0;
                     if (this._childrenRenderOrder == ChildrenRenderOrder.Ascent) {
@@ -444,7 +444,7 @@ module fairygui {
                     {
                         for (i = 0; i < cnt; i++) {
                             child = this._children[i];
-                            if (child.displayObject != null && child.finalVisible)
+                            if (child.displayObject != null && child.internalVisible)
                                 this._container.addChild(child.displayObject);
                         }
                     }
@@ -453,7 +453,7 @@ module fairygui {
                     {
                         for (i = cnt - 1; i >= 0; i--) {
                             child = this._children[i];
-                            if (child.displayObject != null && child.finalVisible)
+                            if (child.displayObject != null && child.internalVisible)
                                 this._container.addChild(child.displayObject);
                         }
                     }
@@ -463,12 +463,12 @@ module fairygui {
                     {
                         for (i = 0; i < this._apexIndex; i++) {
                             child = this._children[i];
-                            if (child.displayObject != null && child.finalVisible)
+                            if (child.displayObject != null && child.internalVisible)
                                 this._container.addChild(child.displayObject);
                         }
                         for (i = cnt - 1; i >= this._apexIndex; i--) {
                             child = this._children[i];
-                            if (child.displayObject != null && child.finalVisible)
+                            if (child.displayObject != null && child.internalVisible)
                                 this._container.addChild(child.displayObject);
                         }
                     }

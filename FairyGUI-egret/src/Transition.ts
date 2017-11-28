@@ -87,9 +87,9 @@ module fairygui {
             }
             else if (onComplete != null) {
                 if (onComplete.length > 0)
-                    onComplete.call(this._onCompleteObj, onCompleteParam);
+                    onComplete.call(onCompleteObj, onCompleteParam);
                 else
-                    onComplete(this._onCompleteObj);
+                    onComplete(onCompleteObj);
             }
         }
 
