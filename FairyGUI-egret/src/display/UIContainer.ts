@@ -30,7 +30,7 @@ module fairygui {
                 if (!this.touchEnabled || this._hitArea == null) //穿透
                     return null;
             }
-            else if (ret == null && this.touchEnabled && this._hitArea != null) {
+            else if (ret == null && this.touchEnabled && this.visible && this._hitArea != null) {
                 var m = this.$getInvertedConcatenatedMatrix();
                 var localX = m.a * stageX + m.c * stageY + m.tx;
                 var localY = m.b * stageX + m.d * stageY + m.ty;
