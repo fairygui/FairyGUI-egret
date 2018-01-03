@@ -26,7 +26,11 @@ module fairygui {
 
         public constructor() {
             super();
-            this.$renderNode = new egret.sys.BitmapNode();
+
+            //comment out below line before 5.1.0
+            this.$renderNode = new egret.sys.NormalBitmapNode();
+            //comment out below line after 5.1.0
+            //this.$renderNode = new egret.sys.BitmapNode();
 
             this.playState = new PlayState();
             this._playing = true;
@@ -179,9 +183,49 @@ module fairygui {
                 this._texture = frame.texture;
                 this._frameRect = frame.rect;
             }
-            this.$invalidateContentBounds();
+
+            if(this["$updateRenderNode"]) {
+                let self = <any>this;
+                self.$renderDirty = true;
+                let p = self.$parent;
+                if (p && !p.$cacheDirty) {
+                    p.$cacheDirty = true;
+                    p.$cacheDirtyUp();
+                }
+                let maskedObject = self.$maskedObject;
+                if (maskedObject && !maskedObject.$cacheDirty) {
+                    maskedObject.$cacheDirty = true;
+                    maskedObject.$cacheDirtyUp();
+                }
+            }
+            else {
+                let self = <any>this;
+                self.$invalidateContentBounds();
+            }
         }
 
+        //comment this function before 5.1.0
+         $updateRenderNode(): void {
+            var texture = this._texture;
+            if (texture) {
+                var offsetX: number = Math.round(texture.$offsetX) + this._frameRect.x;
+                var offsetY: number = Math.round(texture.$offsetY) + this._frameRect.y;
+                var bitmapWidth: number = texture.$bitmapWidth;
+                var bitmapHeight: number = texture.$bitmapHeight;
+                var textureWidth: number = texture.$getTextureWidth();
+                var textureHeight: number = texture.$getTextureHeight();
+                var destW: number = Math.round(texture.$getScaleBitmapWidth());
+                var destH: number = Math.round(texture.$getScaleBitmapHeight());
+                var sourceWidth: number = texture.$sourceWidth;
+                var sourceHeight: number = texture.$sourceHeight;
+
+                egret.sys.BitmapNode.$updateTextureData(<egret.sys.NormalBitmapNode>this.$renderNode, texture.$bitmapData, texture.$bitmapX, texture.$bitmapY,
+                    bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight, destW, destH, sourceWidth, sourceHeight, egret.BitmapFillMode.SCALE, this._smoothing);
+            }
+         }
+
+         //comment out this function after 5.1.0
+        /*
         $render(): void {
             var texture = this._texture;
             if (texture) {
@@ -207,12 +251,12 @@ module fairygui {
                     sourceWidth, sourceHeight,
                     null, egret.BitmapFillMode.SCALE, this._smoothing);
             }
-        }
+        }*/
 
         $measureContentBounds(bounds: egret.Rectangle): void {
             if (this._texture) {
-                var x: number = Math.round(this._texture._offsetX) + this._frameRect.x;
-                var y: number = Math.round(this._texture._offsetY) + this._frameRect.y;
+                var x: number = this._frameRect.x;
+                var y: number = this._frameRect.y;
                 var w: number = this._texture.$getTextureWidth();
                 var h: number = this._texture.$getTextureHeight();
 

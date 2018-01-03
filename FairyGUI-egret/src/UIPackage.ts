@@ -633,10 +633,21 @@ module fairygui {
 
         private createSubTexture(atlasTexture: egret.Texture, uvRect: egret.Rectangle): egret.Texture {
             var texture: egret.Texture = new egret.Texture();
-            texture._bitmapData = atlasTexture._bitmapData;
-            texture.$initData(atlasTexture._bitmapX + uvRect.x, atlasTexture._bitmapY + uvRect.y,
-                uvRect.width, uvRect.height, 0, 0, uvRect.width, uvRect.height,
-                atlasTexture._sourceWidth, atlasTexture._sourceHeight);
+            if(atlasTexture["_bitmapData"])
+            {
+                texture["_bitmapData"] = atlasTexture["_bitmapData"];
+                texture.$initData(atlasTexture["_bitmapX"] + uvRect.x, atlasTexture["_bitmapY"] + uvRect.y,
+                    uvRect.width, uvRect.height, 0, 0, uvRect.width, uvRect.height,
+                    atlasTexture["_sourceWidth"], atlasTexture["_sourceHeight"]);
+            }
+            else
+            {
+                texture.bitmapData = atlasTexture.bitmapData;
+                texture.$initData(atlasTexture["$bitmapX"] + uvRect.x, atlasTexture["$bitmapY"] + uvRect.y,
+                    uvRect.width, uvRect.height, 0, 0, uvRect.width, uvRect.height,
+                    atlasTexture["$sourceWidth"], atlasTexture["$sourceHeight"]);
+            }
+
             return texture;
         }
 

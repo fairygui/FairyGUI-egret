@@ -1,4 +1,6 @@
 {
+	"engineVersion": "5.1.2",
+	"compilerVersion": "5.1.2",
 	"modules": [
 		{
 			"name": "egret"
@@ -8,10 +10,10 @@
 		},
 		{
 			"name": "tween"
+		},
+		{
+			"name": "rawinflate",
+			"path": "./libs/rawinflate"
 		}
-	],
-	"native": {
-		"path_ignore": []
-	},
-	"egret_version": "3.2.6"
+	]
 }
