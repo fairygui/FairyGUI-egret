@@ -1147,6 +1147,10 @@ var fairygui;
                         break;
                 }
             }
+            str = xml.attributes.customData;
+            if (str) {
+                this.data = str;
+            }
         };
         GObject.prototype.setup_afterAdd = function (xml) {
             var cxml;
@@ -14376,9 +14380,10 @@ var fairygui;
         UIPackage.getByName = function (name) {
             return UIPackage._packageInstByName[name];
         };
-        UIPackage.addPackage = function (resKey) {
+        UIPackage.addPackage = function (resKey, descData) {
+            if (descData === void 0) { descData = null; }
             var pkg = new UIPackage();
-            pkg.create(resKey);
+            pkg.create(resKey, descData);
             UIPackage._packageInstById[pkg.id] = pkg;
             UIPackage._packageInstByName[pkg.name] = pkg;
             pkg.customId = resKey;
@@ -14482,18 +14487,23 @@ var fairygui;
                 }
             }
         };
-        UIPackage.prototype.create = function (resKey) {
+        UIPackage.prototype.create = function (resKey, descData) {
             this._resKey = resKey;
-            this.loadPackage();
+            this.loadPackage(descData);
         };
-        UIPackage.prototype.loadPackage = function () {
+        UIPackage.prototype.loadPackage = function (descData) {
             var str;
             var arr;
-            var buf = RES.getRes(this._resKey);
-            if (!buf)
-                buf = RES.getRes(this._resKey + "_fui");
-            if (!buf)
-                throw "Resource '" + this._resKey + "' not found, please check default.res.json!";
+            var buf;
+            if (descData)
+                buf = descData;
+            else {
+                buf = RES.getRes(this._resKey);
+                if (!buf)
+                    buf = RES.getRes(this._resKey + "_fui");
+                if (!buf)
+                    throw "Resource '" + this._resKey + "' not found, please check default.res.json!";
+            }
             this.decompressPackage(buf);
             str = this.getDesc("sprites.bytes");
             arr = str.split(UIPackage.sep1);
@@ -14594,6 +14604,11 @@ var fairygui;
         };
         UIPackage.prototype.decompressPackage = function (buf) {
             this._resData = {};
+            var mark = new Uint8Array(buf.slice(0, 2));
+            if (mark[0] == 0x50 && mark[1] == 0x4b) {
+                this.decodeUncompressed(buf);
+                return;
+            }
             var inflater = new Zlib.RawInflate(buf);
             var data = inflater.decompress();
             var tmp = new egret.ByteArray();
@@ -14612,6 +14627,33 @@ var fairygui;
                 curr = pos + 1;
                 this._resData[fn] = source.substr(curr, size);
                 curr += size;
+            }
+        };
+        UIPackage.prototype.decodeUncompressed = function (buf) {
+            var ba = new egret.ByteArray(buf);
+            ba.endian = egret.Endian.LITTLE_ENDIAN;
+            var pos = ba.length - 22;
+            ba.position = pos + 10;
+            var entryCount = ba.readUnsignedShort();
+            ba.position = pos + 16;
+            pos = ba.readInt();
+            for (var i = 0; i < entryCount; i++) {
+                ba.position = pos + 28;
+                var len = ba.readUnsignedShort();
+                var len2 = ba.readUnsignedShort() + ba.readUnsignedShort();
+                ba.position = pos + 46;
+                var entryName = ba.readUTFBytes(len);
+                if (entryName[entryName.length - 1] != '/' && entryName[entryName.length - 1] != '\\') {
+                    ba.position = pos + 20;
+                    var size = ba.readInt();
+                    ba.position = pos + 42;
+                    var offset = ba.readInt() + 30 + len;
+                    if (size > 0) {
+                        ba.position = offset;
+                        this._resData[entryName] = ba.readUTFBytes(size);
+                    }
+                }
+                pos += 46 + len + len2;
             }
         };
         UIPackage.prototype.dispose = function () {

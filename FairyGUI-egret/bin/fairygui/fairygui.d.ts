@@ -1866,7 +1866,7 @@ declare module fairygui {
         constructor();
         static getById(id: string): UIPackage;
         static getByName(name: string): UIPackage;
-        static addPackage(resKey: string): UIPackage;
+        static addPackage(resKey: string, descData?: ArrayBuffer): UIPackage;
         static removePackage(packageId: string): void;
         static createObject(pkgName: string, resName: string, userClass?: any): GObject;
         static createObjectFromURL(url: string, userClass?: any): GObject;
@@ -1875,9 +1875,10 @@ declare module fairygui {
         static normalizeURL(url: string): string;
         static getBitmapFontByURL(url: string): BitmapFont;
         static setStringsSource(source: string): void;
-        private create(resKey);
-        private loadPackage();
+        private create(resKey, descData);
+        private loadPackage(descData);
         private decompressPackage(buf);
+        private decodeUncompressed(buf);
         dispose(): void;
         readonly id: string;
         readonly name: string;

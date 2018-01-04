@@ -1081,6 +1081,11 @@ module fairygui {
                         break;
                 }
             }
+
+            str = xml.attributes.customData;
+            if (str) {
+                this.data = str;
+            }
         }
 
         private static GearXMLKeys: any = {

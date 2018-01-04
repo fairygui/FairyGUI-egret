@@ -39,9 +39,9 @@ module fairygui {
             return UIPackage._packageInstByName[name];
         }
 
-        public static addPackage(resKey: string): UIPackage {
+        public static addPackage(resKey: string, descData: ArrayBuffer = null): UIPackage {
             var pkg: UIPackage = new UIPackage();
-            pkg.create(resKey);
+            pkg.create(resKey, descData);
             UIPackage._packageInstById[pkg.id] = pkg;
             UIPackage._packageInstByName[pkg.name] = pkg;
             pkg.customId = resKey;
@@ -160,21 +160,26 @@ module fairygui {
             }
         }
 
-        private create(resKey: string): void {
+        private create(resKey: string, descData: ArrayBuffer): void {
             this._resKey = resKey;
 
-            this.loadPackage();
+            this.loadPackage(descData);
         }
 
-        private loadPackage(): void {
+        private loadPackage(descData: ArrayBuffer): void {
             var str: string;
             var arr: string[];
 
-            var buf: any = RES.getRes(this._resKey);
-            if (!buf)
-                buf = RES.getRes(this._resKey + "_fui");
-            if (!buf)
-                throw "Resource '" + this._resKey + "' not found, please check default.res.json!";
+            var buf: any;
+            if (descData)
+                buf = descData;
+            else {
+                buf = RES.getRes(this._resKey);
+                if (!buf)
+                    buf = RES.getRes(this._resKey + "_fui");
+                if (!buf)
+                    throw "Resource '" + this._resKey + "' not found, please check default.res.json!";
+            }
 
             this.decompressPackage(buf);
 
@@ -263,7 +268,7 @@ module fairygui {
                         pi.smoothing = str != "false";
                         break;
                     }
-                    
+
                     case PackageItemType.MovieClip:
                         str = cxml.attributes.smoothing;
                         pi.smoothing = str != "false";
@@ -290,8 +295,14 @@ module fairygui {
             }
         }
 
-        private decompressPackage(buf: any): void {
+        private decompressPackage(buf: ArrayBuffer): void {
             this._resData = {};
+
+            var mark: Uint8Array = new Uint8Array(buf.slice(0, 2));
+            if (mark[0] == 0x50 && mark[1] == 0x4b) {
+                this.decodeUncompressed(buf);
+                return;
+            }
 
             var inflater: Zlib.RawInflate = new Zlib.RawInflate(buf);
             var data: Uint8Array = inflater.decompress();
@@ -311,6 +322,40 @@ module fairygui {
                 curr = pos + 1;
                 this._resData[fn] = source.substr(curr, size);
                 curr += size;
+            }
+        }
+
+        private decodeUncompressed(buf: ArrayBuffer): void {
+            var ba: egret.ByteArray = new egret.ByteArray(buf);
+            ba.endian = egret.Endian.LITTLE_ENDIAN;
+            var pos: number = ba.length - 22;
+            ba.position = pos + 10;
+            var entryCount: number = ba.readUnsignedShort();
+            ba.position = pos + 16;
+            pos = ba.readInt();
+
+            for (var i: number = 0; i < entryCount; i++) {
+                ba.position = pos + 28;
+                var len: number = ba.readUnsignedShort();
+                var len2: number = ba.readUnsignedShort() + ba.readUnsignedShort();
+
+                ba.position = pos + 46;
+                var entryName: string = ba.readUTFBytes(len);
+
+                if (entryName[entryName.length - 1] != '/' && entryName[entryName.length - 1] != '\\') //not directory
+                {
+                    ba.position = pos + 20;
+                    var size: number = ba.readInt();
+                    ba.position = pos + 42;
+                    var offset: number = ba.readInt() + 30 + len;
+
+                    if (size > 0) {
+                        ba.position = offset;
+                        this._resData[entryName] = ba.readUTFBytes(size);
+                    }
+                }
+
+                pos += 46 + len + len2;
             }
         }
 
@@ -633,15 +678,13 @@ module fairygui {
 
         private createSubTexture(atlasTexture: egret.Texture, uvRect: egret.Rectangle): egret.Texture {
             var texture: egret.Texture = new egret.Texture();
-            if(atlasTexture["_bitmapData"])
-            {
+            if (atlasTexture["_bitmapData"]) {
                 texture["_bitmapData"] = atlasTexture["_bitmapData"];
                 texture.$initData(atlasTexture["_bitmapX"] + uvRect.x, atlasTexture["_bitmapY"] + uvRect.y,
                     uvRect.width, uvRect.height, 0, 0, uvRect.width, uvRect.height,
                     atlasTexture["_sourceWidth"], atlasTexture["_sourceHeight"]);
             }
-            else
-            {
+            else {
                 texture.bitmapData = atlasTexture.bitmapData;
                 texture.$initData(atlasTexture["$bitmapX"] + uvRect.x, atlasTexture["$bitmapY"] + uvRect.y,
                     uvRect.width, uvRect.height, 0, 0, uvRect.width, uvRect.height,
