@@ -8520,8 +8520,8 @@ var fairygui;
                     if ((ii.obj instanceof fairygui.GButton) && ii.obj.selected
                         || ii.obj == null && ii.selected) {
                         if (this._loop) {
-                            i = i % this._numItems;
-                            if (ret.indexOf(i) != -1)
+                            var j = i % this._numItems;
+                            if (ret.indexOf(j) != -1)
                                 continue;
                         }
                         ret.push(i);

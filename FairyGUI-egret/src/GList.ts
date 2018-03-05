@@ -319,8 +319,8 @@ module fairygui {
                     if ((ii.obj instanceof GButton) && (<any>ii.obj).selected
                         || ii.obj == null && ii.selected) {
                         if (this._loop) {
-                            i = i % this._numItems;
-                            if (ret.indexOf(i) != -1)
+                            var j: number = i % this._numItems;
+                            if (ret.indexOf(j) != -1)
                                 continue;
                         }
                         ret.push(i);
