@@ -1,6 +1,6 @@
 {
-	"engineVersion": "5.1.2",
-	"compilerVersion": "5.1.2",
+	"engineVersion": "5.1.5",
+	"compilerVersion": "5.1.5",
 	"modules": [
 		{
 			"name": "egret"

@@ -161,5 +161,9 @@ module fairygui {
                 value = 0;
             return value;
         }
+
+        public static lerp(start: number, end: number, percent: number): number {
+            return (start + percent * (end - start));
+        }
     }
 }

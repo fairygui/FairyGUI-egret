@@ -1991,13 +1991,21 @@ var fairygui;
         };
         GComponent.prototype.dispose = function () {
             var i;
-            var transCnt = this._transitions.length;
-            for (i = 0; i < transCnt; ++i) {
+            var cnt;
+            cnt = this._transitions.length;
+            for (i = 0; i < cnt; ++i) {
                 var trans = this._transitions[i];
                 trans.dispose();
             }
-            var numChildren = this._children.length;
-            for (i = numChildren - 1; i >= 0; --i) {
+            cnt = this._controllers.length;
+            for (i = 0; i < cnt; ++i) {
+                var cc = this._controllers[i];
+                cc.dispose();
+            }
+            if (this._scrollPane)
+                this._scrollPane.dispose();
+            cnt = this._children.length;
+            for (i = cnt - 1; i >= 0; --i) {
                 var obj = this._children[i];
                 obj.parent = null; //avoid removeFromParent call
                 obj.dispose();
@@ -2535,12 +2543,12 @@ var fairygui;
             rect.setTo(0, 0, w, h);
             this._rootContainer.scrollRect = rect;
         };
-        GComponent.prototype.setupScroll = function (scrollBarMargin, scroll, scrollBarDisplay, flags, vtScrollBarRes, hzScrollBarRes) {
+        GComponent.prototype.setupScroll = function (scrollBarMargin, scroll, scrollBarDisplay, flags, vtScrollBarRes, hzScrollBarRes, headerRes, footerRes) {
             if (this._rootContainer == this._container) {
                 this._container = new egret.DisplayObjectContainer();
                 this._rootContainer.addChild(this._container);
             }
-            this._scrollPane = new fairygui.ScrollPane(this, scroll, scrollBarMargin, scrollBarDisplay, flags, vtScrollBarRes, hzScrollBarRes);
+            this._scrollPane = new fairygui.ScrollPane(this, scroll, scrollBarMargin, scrollBarDisplay, flags, vtScrollBarRes, hzScrollBarRes, headerRes, footerRes);
             this.setBoundsChangedFlag();
         };
         GComponent.prototype.setupOverflow = function (overflow) {
@@ -2834,7 +2842,15 @@ var fairygui;
                     vtScrollBarRes = arr[0];
                     hzScrollBarRes = arr[1];
                 }
-                this.setupScroll(scrollBarMargin, scroll, scrollBarDisplay, scrollBarFlags, vtScrollBarRes, hzScrollBarRes);
+                var headerRes;
+                var footerRes;
+                str = xml.attributes.ptrRes;
+                if (str) {
+                    arr = str.split(",");
+                    headerRes = arr[0];
+                    footerRes = arr[1];
+                }
+                this.setupScroll(scrollBarMargin, scroll, scrollBarDisplay, scrollBarFlags, vtScrollBarRes, hzScrollBarRes, headerRes, footerRes);
             }
             else
                 this.setupOverflow(overflow);
@@ -3945,6 +3961,8 @@ var fairygui;
             _this._previousIndex = -1;
             return _this;
         }
+        Controller.prototype.dispose = function () {
+        };
         Object.defineProperty(Controller.prototype, "name", {
             get: function () {
                 return this._name;
@@ -4366,6 +4384,9 @@ var fairygui;
             else if (value < 0)
                 value = 0;
             return value;
+        };
+        ToolSet.lerp = function (start, end, percent) {
+            return (start + percent * (end - start));
         };
         ToolSet.defaultUBBParser = new fairygui.UBBParser();
         return ToolSet;
@@ -9094,10 +9115,16 @@ var fairygui;
                     }
                     this.returnToPool(obj);
                 }
-                if (this._layout == fairygui.ListLayoutType.SingleColumn || this._layout == fairygui.ListLayoutType.FlowHorizontal)
-                    this._scrollPane.scrollSpeed = this._itemSize.y;
-                else
-                    this._scrollPane.scrollSpeed = this._itemSize.x;
+                if (this._layout == fairygui.ListLayoutType.SingleColumn || this._layout == fairygui.ListLayoutType.FlowHorizontal) {
+                    this._scrollPane.scrollStep = this._itemSize.y;
+                    if (this._loop)
+                        this._scrollPane._loop = 2;
+                }
+                else {
+                    this._scrollPane.scrollStep = this._itemSize.x;
+                    if (this._loop)
+                        this._scrollPane._loop = 1;
+                }
                 this._scrollPane.addEventListener(fairygui.ScrollPane.SCROLL, this.__scrolled, this);
                 this.setVirtualListChangedFlag(true);
             }
@@ -9120,7 +9147,7 @@ var fairygui;
                         throw "Set itemRenderer first!";
                     this._numItems = value;
                     if (this._loop)
-                        this._realNumItems = this._numItems * 5; //设置5倍数量，用于循环滚动
+                        this._realNumItems = this._numItems * 6; //设置6倍数量，用于循环滚动
                     else
                         this._realNumItems = this._numItems;
                     //_virtualItems的设计是只增不减的
@@ -9248,7 +9275,7 @@ var fairygui;
                     if (cw > 0)
                         cw -= this._columnGap;
                     if (this._autoResizeItem)
-                        ch = this.scrollPane.viewHeight;
+                        ch = this._scrollPane.viewHeight;
                     else {
                         for (i = 0; i < len2; i++)
                             ch += this._virtualItems[i].height + this._lineGap;
@@ -9391,50 +9418,25 @@ var fairygui;
         GList.prototype.handleScroll = function (forceUpdate) {
             if (this._eventLocked)
                 return;
-            var pos;
-            var roundSize;
             if (this._layout == fairygui.ListLayoutType.SingleColumn || this._layout == fairygui.ListLayoutType.FlowHorizontal) {
-                if (this._loop) {
-                    pos = this._scrollPane.scrollingPosY;
-                    //循环列表的核心实现，滚动到头尾时重新定位
-                    roundSize = this._numItems * (this._itemSize.y + this._lineGap);
-                    if (pos == 0)
-                        this._scrollPane.posY = roundSize;
-                    else if (pos == this._scrollPane.contentHeight - this._scrollPane.viewHeight)
-                        this._scrollPane.posY = this._scrollPane.contentHeight - roundSize - this.viewHeight;
-                }
                 this.handleScroll1(forceUpdate);
+                this.handleArchOrder1();
             }
             else if (this._layout == fairygui.ListLayoutType.SingleRow || this._layout == fairygui.ListLayoutType.FlowVertical) {
-                if (this._loop) {
-                    pos = this._scrollPane.scrollingPosX;
-                    //循环列表的核心实现，滚动到头尾时重新定位
-                    roundSize = this._numItems * (this._itemSize.x + this._columnGap);
-                    if (pos == 0)
-                        this._scrollPane.posX = roundSize;
-                    else if (pos == this._scrollPane.contentWidth - this._scrollPane.viewWidth)
-                        this._scrollPane.posX = this._scrollPane.contentWidth - roundSize - this.viewWidth;
-                }
                 this.handleScroll2(forceUpdate);
+                this.handleArchOrder2();
             }
             else {
-                if (this._loop) {
-                    pos = this._scrollPane.scrollingPosX;
-                    //循环列表的核心实现，滚动到头尾时重新定位
-                    roundSize = Math.floor(this._numItems / (this._curLineItemCount * this._curLineItemCount2)) * this.viewWidth;
-                    if (pos == 0)
-                        this._scrollPane.posX = roundSize;
-                    else if (pos == this._scrollPane.contentWidth - this._scrollPane.viewWidth)
-                        this._scrollPane.posX = this._scrollPane.contentWidth - roundSize - this.viewWidth;
-                }
                 this.handleScroll3(forceUpdate);
             }
             this._boundsChanged = false;
         };
         GList.prototype.handleScroll1 = function (forceUpdate) {
             GList.enterCounter++;
-            if (GList.enterCounter > 3)
+            if (GList.enterCounter > 3) {
+                GList.enterCounter--;
                 return;
+            }
             var pos = this._scrollPane.scrollingPosY;
             var max = pos + this._scrollPane.viewHeight;
             var end = max == this._scrollPane.contentHeight; //这个标志表示当前需要滚动到最末，无论内容变化大小
@@ -9836,6 +9838,46 @@ var fairygui;
                 }
             }
         };
+        GList.prototype.handleArchOrder1 = function () {
+            if (this.childrenRenderOrder == fairygui.ChildrenRenderOrder.Arch) {
+                var mid = this._scrollPane.posY + this.viewHeight / 2;
+                var minDist = Number.POSITIVE_INFINITY;
+                var dist = 0;
+                var apexIndex = 0;
+                var cnt = this.numChildren;
+                for (var i = 0; i < cnt; i++) {
+                    var obj = this.getChildAt(i);
+                    if (!this.foldInvisibleItems || obj.visible) {
+                        dist = Math.abs(mid - obj.y - obj.height / 2);
+                        if (dist < minDist) {
+                            minDist = dist;
+                            apexIndex = i;
+                        }
+                    }
+                }
+                this.apexIndex = apexIndex;
+            }
+        };
+        GList.prototype.handleArchOrder2 = function () {
+            if (this.childrenRenderOrder == fairygui.ChildrenRenderOrder.Arch) {
+                var mid = this._scrollPane.posX + this.viewWidth / 2;
+                var minDist = Number.POSITIVE_INFINITY;
+                var dist = 0;
+                var apexIndex = 0;
+                var cnt = this.numChildren;
+                for (var i = 0; i < cnt; i++) {
+                    var obj = this.getChildAt(i);
+                    if (!this.foldInvisibleItems || obj.visible) {
+                        dist = Math.abs(mid - obj.x - obj.width / 2);
+                        if (dist < minDist) {
+                            minDist = dist;
+                            apexIndex = i;
+                        }
+                    }
+                }
+                this.apexIndex = apexIndex;
+            }
+        };
         GList.prototype.handleAlign = function (contentWidth, contentHeight) {
             var newOffsetX = 0;
             var newOffsetY = 0;
@@ -10179,7 +10221,15 @@ var fairygui;
                     vtScrollBarRes = arr[0];
                     hzScrollBarRes = arr[1];
                 }
-                this.setupScroll(scrollBarMargin, scroll, scrollBarDisplay, scrollBarFlags, vtScrollBarRes, hzScrollBarRes);
+                var headerRes;
+                var footerRes;
+                str = xml.attributes.ptrRes;
+                if (str) {
+                    arr = str.split(",");
+                    headerRes = arr[0];
+                    footerRes = arr[1];
+                }
+                this.setupScroll(scrollBarMargin, scroll, scrollBarDisplay, scrollBarFlags, vtScrollBarRes, hzScrollBarRes, headerRes, footerRes);
             }
             else
                 this.setupOverflow(overflow);
@@ -13042,18 +13092,8 @@ var fairygui;
 (function (fairygui) {
     var ScrollPane = (function (_super) {
         __extends(ScrollPane, _super);
-        function ScrollPane(owner, scrollType, scrollBarMargin, scrollBarDisplay, flags, vtScrollBarRes, hzScrollBarRes) {
+        function ScrollPane(owner, scrollType, scrollBarMargin, scrollBarDisplay, flags, vtScrollBarRes, hzScrollBarRes, headerRes, footerRes) {
             var _this = _super.call(this) || this;
-            _this._viewWidth = 0;
-            _this._viewHeight = 0;
-            _this._contentWidth = 0;
-            _this._contentHeight = 0;
-            _this._scrollType = 0;
-            _this._scrollSpeed = 0;
-            _this._mouseWheelSpeed = 0;
-            if (ScrollPane._easeTypeFunc == null)
-                ScrollPane._easeTypeFunc = egret.Ease.cubicOut;
-            _this._throwTween = new ThrowTween();
             _this._owner = owner;
             _this._maskContainer = new egret.DisplayObjectContainer();
             _this._owner._rootContainer.addChild(_this._maskContainer);
@@ -13061,12 +13101,11 @@ var fairygui;
             _this._container.x = 0;
             _this._container.y = 0;
             _this._maskContainer.addChild(_this._container);
-            _this._scrollType = scrollType;
             _this._scrollBarMargin = scrollBarMargin;
-            _this._bouncebackEffect = fairygui.UIConfig.defaultScrollBounceEffect;
-            _this._touchEffect = fairygui.UIConfig.defaultScrollTouchEffect;
-            _this._scrollSpeed = fairygui.UIConfig.defaultScrollSpeed;
-            _this._mouseWheelSpeed = _this._scrollSpeed * 2;
+            _this._scrollType = scrollType;
+            _this._scrollStep = fairygui.UIConfig.defaultScrollStep;
+            _this._mouseWheelStep = _this._scrollStep * 2;
+            _this._decelerationRate = fairygui.UIConfig.defaultScrollDecelerationRate;
             _this._displayOnLeft = (flags & 1) != 0;
             _this._snapToItem = (flags & 2) != 0;
             _this._displayInDemand = (flags & 4) != 0;
@@ -13086,16 +13125,28 @@ var fairygui;
             _this._inertiaDisabled = (flags & 256) != 0;
             if ((flags & 512) == 0)
                 _this._maskContainer.scrollRect = new egret.Rectangle();
-            _this._xPerc = 0;
-            _this._yPerc = 0;
+            _this._scrollBarVisible = true;
+            _this._mouseWheelEnabled = true;
             _this._xPos = 0;
             _this._yPos = 0;
-            _this._xOverlap = 0;
-            _this._yOverlap = 0;
             _this._aniFlag = 0;
-            _this._scrollBarVisible = true;
-            _this._mouseWheelEnabled = false;
-            _this._holdAreaPoint = new egret.Point();
+            _this._footerLockedSize = 0;
+            _this._headerLockedSize = 0;
+            if (scrollBarDisplay == fairygui.ScrollBarDisplayType.Default)
+                scrollBarDisplay = fairygui.UIConfig.defaultScrollBarDisplay;
+            _this._viewSize = new egret.Point();
+            _this._contentSize = new egret.Point();
+            _this._pageSize = new egret.Point(1, 1);
+            _this._overlapSize = new egret.Point();
+            _this._tweenTime = new egret.Point();
+            _this._tweenStart = new egret.Point();
+            _this._tweenDuration = new egret.Point();
+            _this._tweenChange = new egret.Point();
+            _this._velocity = new egret.Point();
+            _this._containerPos = new egret.Point();
+            _this._beginTouchPos = new egret.Point();
+            _this._lastTouchPos = new egret.Point();
+            _this._lastTouchGlobalPos = new egret.Point();
             if (scrollBarDisplay == fairygui.ScrollBarDisplayType.Default)
                 scrollBarDisplay = fairygui.UIConfig.defaultScrollBarDisplay;
             if (scrollBarDisplay != fairygui.ScrollBarDisplayType.Hidden) {
@@ -13128,15 +13179,66 @@ var fairygui;
                         _this._hzScrollBar.displayObject.visible = false;
                 }
             }
-            _this._contentWidth = 0;
-            _this._contentHeight = 0;
+            if (headerRes) {
+                _this._header = (fairygui.UIPackage.createObjectFromURL(headerRes));
+                if (_this._header == null)
+                    throw "cannot create scrollPane header from " + headerRes;
+            }
+            if (footerRes) {
+                _this._footer = (fairygui.UIPackage.createObjectFromURL(footerRes));
+                if (_this._footer == null)
+                    throw "cannot create scrollPane footer from " + footerRes;
+            }
+            if (_this._header != null || _this._footer != null)
+                _this._refreshBarAxis = (_this._scrollType == fairygui.ScrollType.Both || _this._scrollType == fairygui.ScrollType.Vertical) ? "y" : "x";
             _this.setSize(owner.width, owner.height);
-            _this._owner.addEventListener(egret.TouchEvent.TOUCH_BEGIN, _this.__mouseDown, _this);
+            _this._owner.addEventListener(egret.TouchEvent.TOUCH_BEGIN, _this.__touchBegin, _this);
             return _this;
         }
+        ScrollPane.prototype.dispose = function () {
+            if (this._tweening != 0)
+                egret.stopTick(this.tweenUpdate, this);
+            this._pageController = null;
+            if (this._hzScrollBar != null)
+                this._hzScrollBar.dispose();
+            if (this._vtScrollBar != null)
+                this._vtScrollBar.dispose();
+            if (this._header != null)
+                this._header.dispose();
+            if (this._footer != null)
+                this._footer.dispose();
+        };
         Object.defineProperty(ScrollPane.prototype, "owner", {
             get: function () {
                 return this._owner;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "hzScrollBar", {
+            get: function () {
+                return this._hzScrollBar;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "vtScrollBar", {
+            get: function () {
+                return this._vtScrollBar;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "header", {
+            get: function () {
+                return this._header;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "footer", {
+            get: function () {
+                return this._footer;
             },
             enumerable: true,
             configurable: true
@@ -13161,15 +13263,25 @@ var fairygui;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(ScrollPane.prototype, "scrollSpeed", {
+        Object.defineProperty(ScrollPane.prototype, "scrollStep", {
             get: function () {
-                return this._scrollSpeed;
+                return this._scrollStep;
             },
             set: function (val) {
-                this._scrollSpeed = this.scrollSpeed;
-                if (this._scrollSpeed == 0)
-                    this._scrollSpeed = fairygui.UIConfig.defaultScrollSpeed;
-                this._mouseWheelSpeed = this._scrollSpeed * 2;
+                this._scrollStep = val;
+                if (this._scrollStep == 0)
+                    this._scrollStep = fairygui.UIConfig.defaultScrollStep;
+                this._mouseWheelStep = this._scrollStep * 2;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "decelerationRate", {
+            get: function () {
+                return this._decelerationRate;
+            },
+            set: function (val) {
+                this._decelerationRate = val;
             },
             enumerable: true,
             configurable: true
@@ -13186,7 +13298,7 @@ var fairygui;
         });
         Object.defineProperty(ScrollPane.prototype, "percX", {
             get: function () {
-                return this._xPerc;
+                return this._overlapSize.x == 0 ? 0 : this._xPos / this._overlapSize.x;
             },
             set: function (value) {
                 this.setPercX(value, false);
@@ -13197,16 +13309,11 @@ var fairygui;
         ScrollPane.prototype.setPercX = function (value, ani) {
             if (ani === void 0) { ani = false; }
             this._owner.ensureBoundsCorrect();
-            value = fairygui.ToolSet.clamp01(value);
-            if (value != this._xPerc) {
-                this._xPerc = value;
-                this._xPos = this._xPerc * this._xOverlap;
-                this.posChanged(ani);
-            }
+            this.setPosX(this._overlapSize.x * fairygui.ToolSet.clamp01(value), ani);
         };
         Object.defineProperty(ScrollPane.prototype, "percY", {
             get: function () {
-                return this._yPerc;
+                return this._overlapSize.y == 0 ? 0 : this._yPos / this._overlapSize.y;
             },
             set: function (value) {
                 this.setPercY(value, false);
@@ -13217,12 +13324,7 @@ var fairygui;
         ScrollPane.prototype.setPercY = function (value, ani) {
             if (ani === void 0) { ani = false; }
             this._owner.ensureBoundsCorrect();
-            value = fairygui.ToolSet.clamp01(value);
-            if (value != this._yPerc) {
-                this._yPerc = value;
-                this._yPos = this._yPerc * this._yOverlap;
-                this.posChanged(ani);
-            }
+            this.setPosY(this._overlapSize.y * fairygui.ToolSet.clamp01(value), ani);
         };
         Object.defineProperty(ScrollPane.prototype, "posX", {
             get: function () {
@@ -13237,10 +13339,11 @@ var fairygui;
         ScrollPane.prototype.setPosX = function (value, ani) {
             if (ani === void 0) { ani = false; }
             this._owner.ensureBoundsCorrect();
-            value = fairygui.ToolSet.clamp(value, 0, this._xOverlap);
+            if (this._loop == 1)
+                value = this.loopCheckingNewPos(value, "x");
+            value = fairygui.ToolSet.clamp(value, 0, this._overlapSize.x);
             if (value != this._xPos) {
                 this._xPos = value;
-                this._xPerc = this._xOverlap == 0 ? 0 : this._xPos / this._xOverlap;
                 this.posChanged(ani);
             }
         };
@@ -13257,23 +13360,50 @@ var fairygui;
         ScrollPane.prototype.setPosY = function (value, ani) {
             if (ani === void 0) { ani = false; }
             this._owner.ensureBoundsCorrect();
-            value = fairygui.ToolSet.clamp(value, 0, this._yOverlap);
+            if (this._loop == 1)
+                value = this.loopCheckingNewPos(value, "y");
+            value = fairygui.ToolSet.clamp(value, 0, this._overlapSize.y);
             if (value != this._yPos) {
                 this._yPos = value;
-                this._yPerc = this._yOverlap == 0 ? 0 : this._yPos / this._yOverlap;
                 this.posChanged(ani);
             }
         };
-        Object.defineProperty(ScrollPane.prototype, "isBottomMost", {
+        Object.defineProperty(ScrollPane.prototype, "contentWidth", {
             get: function () {
-                return this._yPerc == 1 || this._yOverlap == 0;
+                return this._contentSize.x;
             },
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(ScrollPane.prototype, "isRightMost", {
+        Object.defineProperty(ScrollPane.prototype, "contentHeight", {
             get: function () {
-                return this._xPerc == 1 || this._xOverlap == 0;
+                return this._contentSize.y;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "viewWidth", {
+            get: function () {
+                return this._viewSize.x;
+            },
+            set: function (value) {
+                value = value + this._owner.margin.left + this._owner.margin.right;
+                if (this._vtScrollBar != null)
+                    value += this._vtScrollBar.width;
+                this._owner.width = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "viewHeight", {
+            get: function () {
+                return this._viewSize.y;
+            },
+            set: function (value) {
+                value = value + this._owner.margin.top + this._owner.margin.bottom;
+                if (this._hzScrollBar != null)
+                    value += this._hzScrollBar.height;
+                this._owner.height = value;
             },
             enumerable: true,
             configurable: true
@@ -13282,14 +13412,14 @@ var fairygui;
             get: function () {
                 if (!this._pageMode)
                     return 0;
-                var page = Math.floor(this._xPos / this._pageSizeH);
-                if (this._xPos - page * this._pageSizeH > this._pageSizeH * 0.5)
+                var page = Math.floor(this._xPos / this._pageSize.x);
+                if (this._xPos - page * this._pageSize.x > this._pageSize.x * 0.5)
                     page++;
                 return page;
             },
             set: function (value) {
-                if (this._pageMode && this._xOverlap > 0)
-                    this.setPosX(value * this._pageSizeH, false);
+                if (this._pageMode && this._overlapSize.x > 0)
+                    this.setPosX(value * this._pageSize.x, false);
             },
             enumerable: true,
             configurable: true
@@ -13298,14 +13428,28 @@ var fairygui;
             get: function () {
                 if (!this._pageMode)
                     return 0;
-                var page = Math.floor(this._yPos / this._pageSizeV);
-                if (this._yPos - page * this._pageSizeV > this._pageSizeV * 0.5)
+                var page = Math.floor(this._yPos / this._pageSize.y);
+                if (this._yPos - page * this._pageSize.y > this._pageSize.y * 0.5)
                     page++;
                 return page;
             },
             set: function (value) {
-                if (this._pageMode && this._yOverlap > 0)
-                    this.setPosY(value * this._pageSizeV, false);
+                if (this._pageMode && this._overlapSize.y > 0)
+                    this.setPosY(value * this._pageSize.y, false);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "isBottomMost", {
+            get: function () {
+                return this._yPos == this._overlapSize.y || this._overlapSize.y == 0;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ScrollPane.prototype, "isRightMost", {
+            get: function () {
+                return this._xPos == this._overlapSize.x || this._overlapSize.x == 0;
             },
             enumerable: true,
             configurable: true
@@ -13322,64 +13466,18 @@ var fairygui;
         });
         Object.defineProperty(ScrollPane.prototype, "scrollingPosX", {
             get: function () {
-                return fairygui.ToolSet.clamp(-this._container.x, 0, this._xOverlap);
+                return fairygui.ToolSet.clamp(-this._container.x, 0, this._overlapSize.x);
             },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(ScrollPane.prototype, "scrollingPosY", {
             get: function () {
-                return fairygui.ToolSet.clamp(-this._container.y, 0, this._yOverlap);
+                return fairygui.ToolSet.clamp(-this._container.y, 0, this._overlapSize.y);
             },
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(ScrollPane.prototype, "contentWidth", {
-            get: function () {
-                return this._contentWidth;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(ScrollPane.prototype, "contentHeight", {
-            get: function () {
-                return this._contentHeight;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(ScrollPane.prototype, "viewWidth", {
-            get: function () {
-                return this._viewWidth;
-            },
-            set: function (value) {
-                value = value + this._owner.margin.left + this._owner.margin.right;
-                if (this._vtScrollBar != null)
-                    value += this._vtScrollBar.width;
-                this._owner.width = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(ScrollPane.prototype, "viewHeight", {
-            get: function () {
-                return this._viewHeight;
-            },
-            set: function (value) {
-                value = value + this._owner.margin.top + this._owner.margin.bottom;
-                if (this._hzScrollBar != null)
-                    value += this._hzScrollBar.height;
-                this._owner.height = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        ScrollPane.prototype.getDeltaX = function (move) {
-            return move / (this._contentWidth - this._viewWidth);
-        };
-        ScrollPane.prototype.getDeltaY = function (move) {
-            return move / (this._contentHeight - this._viewHeight);
-        };
         ScrollPane.prototype.scrollTop = function (ani) {
             if (ani === void 0) { ani = false; }
             this.setPercY(0, ani);
@@ -13388,25 +13486,38 @@ var fairygui;
             if (ani === void 0) { ani = false; }
             this.setPercY(1, ani);
         };
-        ScrollPane.prototype.scrollUp = function (speed, ani) {
-            if (speed === void 0) { speed = 1; }
+        ScrollPane.prototype.scrollUp = function (ratio, ani) {
+            if (ratio === void 0) { ratio = 1; }
             if (ani === void 0) { ani = false; }
-            this.setPercY(this._yPerc - this.getDeltaY(this._scrollSpeed * speed), ani);
+            if (this._pageMode)
+                this.setPosY(this._yPos - this._pageSize.y * ratio, ani);
+            else
+                this.setPosY(this._yPos - this._scrollStep * ratio, ani);
+            ;
         };
-        ScrollPane.prototype.scrollDown = function (speed, ani) {
-            if (speed === void 0) { speed = 1; }
+        ScrollPane.prototype.scrollDown = function (ratio, ani) {
+            if (ratio === void 0) { ratio = 1; }
             if (ani === void 0) { ani = false; }
-            this.setPercY(this._yPerc + this.getDeltaY(this._scrollSpeed * speed), ani);
+            if (this._pageMode)
+                this.setPosY(this._yPos + this._pageSize.y * ratio, ani);
+            else
+                this.setPosY(this._yPos + this._scrollStep * ratio, ani);
         };
-        ScrollPane.prototype.scrollLeft = function (speed, ani) {
-            if (speed === void 0) { speed = 1; }
+        ScrollPane.prototype.scrollLeft = function (ratio, ani) {
+            if (ratio === void 0) { ratio = 1; }
             if (ani === void 0) { ani = false; }
-            this.setPercX(this._xPerc - this.getDeltaX(this._scrollSpeed * speed), ani);
+            if (this._pageMode)
+                this.setPosX(this._xPos - this._pageSize.x * ratio, ani);
+            else
+                this.setPosX(this._xPos - this._scrollStep * ratio, ani);
         };
-        ScrollPane.prototype.scrollRight = function (speed, ani) {
-            if (speed === void 0) { speed = 1; }
+        ScrollPane.prototype.scrollRight = function (ratio, ani) {
+            if (ratio === void 0) { ratio = 1; }
             if (ani === void 0) { ani = false; }
-            this.setPercX(this._xPerc + this.getDeltaX(this._scrollSpeed * speed), ani);
+            if (this._pageMode)
+                this.setPosX(this._xPos + this._pageSize.x * ratio, ani);
+            else
+                this.setPosX(this._xPos + this._scrollStep * ratio, ani);
         };
         ScrollPane.prototype.scrollToView = function (target, ani, setFirst) {
             if (ani === void 0) { ani = false; }
@@ -13427,55 +13538,52 @@ var fairygui;
             }
             else
                 rect = target;
-            if (this._yOverlap > 0) {
-                var top = this.posY;
-                var bottom = top + this._viewHeight;
-                if (setFirst || rect.y < top || rect.height >= this._viewHeight) {
+            if (this._overlapSize.y > 0) {
+                var bottom = this._yPos + this._viewSize.y;
+                if (setFirst || rect.y <= this._yPos || rect.height >= this._viewSize.y) {
                     if (this._pageMode)
-                        this.setPosY(Math.floor(rect.y / this._pageSizeV) * this._pageSizeV, ani);
+                        this.setPosY(Math.floor(rect.y / this._pageSize.y) * this._pageSize.y, ani);
                     else
                         this.setPosY(rect.y, ani);
                 }
                 else if (rect.y + rect.height > bottom) {
                     if (this._pageMode)
-                        this.setPosY(Math.floor(rect.y / this._pageSizeV) * this._pageSizeV, ani);
-                    else if (rect.height <= this._viewHeight / 2)
-                        this.setPosY(rect.y + rect.height * 2 - this._viewHeight, ani);
+                        this.setPosY(Math.floor(rect.y / this._pageSize.y) * this._pageSize.y, ani);
+                    else if (rect.height <= this._viewSize.y / 2)
+                        this.setPosY(rect.y + rect.height * 2 - this._viewSize.y, ani);
                     else
-                        this.setPosY(rect.y + rect.height - this._viewHeight, ani);
+                        this.setPosY(rect.y + rect.height - this._viewSize.y, ani);
                 }
             }
-            if (this._xOverlap > 0) {
-                var left = this.posX;
-                var right = left + this._viewWidth;
-                if (setFirst || rect.x < left || rect.width >= this._viewWidth) {
+            if (this._overlapSize.x > 0) {
+                var right = this._xPos + this._viewSize.x;
+                if (setFirst || rect.x <= this._xPos || rect.width >= this._viewSize.x) {
                     if (this._pageMode)
-                        this.setPosX(Math.floor(rect.x / this._pageSizeH) * this._pageSizeH, ani);
+                        this.setPosX(Math.floor(rect.x / this._pageSize.x) * this._pageSize.x, ani);
                     else
                         this.setPosX(rect.x, ani);
                 }
                 else if (rect.x + rect.width > right) {
                     if (this._pageMode)
-                        this.setPosX(Math.floor(rect.x / this._pageSizeH) * this._pageSizeH, ani);
-                    else if (rect.width <= this._viewWidth / 2)
-                        this.setPosX(rect.x + rect.width * 2 - this._viewWidth, ani);
+                        this.setPosX(Math.floor(rect.x / this._pageSize.x) * this._pageSize.x, ani);
+                    else if (rect.width <= this._viewSize.x / 2)
+                        this.setPosX(rect.x + rect.width * 2 - this._viewSize.x, ani);
                     else
-                        this.setPosX(rect.x + rect.width - this._viewWidth, ani);
+                        this.setPosX(rect.x + rect.width - this._viewSize.x, ani);
                 }
             }
             if (!ani && this._needRefresh)
                 this.refresh();
         };
         ScrollPane.prototype.isChildInView = function (obj) {
-            var dist;
-            if (this._yOverlap > 0) {
-                dist = obj.y + this._container.y;
-                if (dist < -obj.height - 20 || dist > this._viewHeight + 20)
+            if (this._overlapSize.y > 0) {
+                var dist = obj.y + this._container.y;
+                if (dist < -obj.height || dist > this._viewSize.y)
                     return false;
             }
-            if (this._xOverlap > 0) {
+            if (this._overlapSize.x > 0) {
                 dist = obj.x + this._container.x;
-                if (dist < -obj.width - 20 || dist > this._viewWidth + 20)
+                if (dist < -obj.width || dist > this._viewSize.x)
                     return false;
             }
             return true;
@@ -13489,6 +13597,39 @@ var fairygui;
             ScrollPane._gestureFlag = 0;
             this.isDragged = false;
             this._maskContainer.touchChildren = true;
+        };
+        ScrollPane.prototype.lockHeader = function (size) {
+            if (this._headerLockedSize == size)
+                return;
+            this._headerLockedSize = size;
+            if (!this._refreshEventDispatching && this._container[this._refreshBarAxis] >= 0) {
+                this._tweenStart.setTo(this._container.x, this._container.y);
+                this._tweenChange.setTo(0, 0);
+                this._tweenChange[this._refreshBarAxis] = this._headerLockedSize - this._tweenStart[this._refreshBarAxis];
+                this._tweenDuration.setTo(ScrollPane.TWEEN_TIME_DEFAULT, ScrollPane.TWEEN_TIME_DEFAULT);
+                this._tweenTime.setTo(0, 0);
+                this._tweening = 2;
+                egret.startTick(this.tweenUpdate, this);
+            }
+        };
+        ScrollPane.prototype.lockFooter = function (size) {
+            if (this._footerLockedSize == size)
+                return;
+            this._footerLockedSize = size;
+            if (!this._refreshEventDispatching && this._container[this._refreshBarAxis] <= -this._overlapSize[this._refreshBarAxis]) {
+                this._tweenStart.setTo(this._container.x, this._container.y);
+                this._tweenChange.setTo(0, 0);
+                var max = this._overlapSize[this._refreshBarAxis];
+                if (max == 0)
+                    max = Math.max(this._contentSize[this._refreshBarAxis] + this._footerLockedSize - this._viewSize[this._refreshBarAxis], 0);
+                else
+                    max += this._footerLockedSize;
+                this._tweenChange[this._refreshBarAxis] = -max - this._tweenStart[this._refreshBarAxis];
+                this._tweenDuration.setTo(ScrollPane.TWEEN_TIME_DEFAULT, ScrollPane.TWEEN_TIME_DEFAULT);
+                this._tweenTime.setTo(0, 0);
+                this._tweening = 2;
+                egret.startTick(this.tweenUpdate, this);
+            }
         };
         ScrollPane.prototype.onOwnerSizeChanged = function () {
             this.setSize(this._owner.width, this._owner.height);
@@ -13564,155 +13705,190 @@ var fairygui;
                     this._vtScrollBar.height = aHeight - this._scrollBarMargin.top - this._scrollBarMargin.bottom;
                 this._vtScrollBar.y = this._scrollBarMargin.top;
             }
-            this._viewWidth = aWidth;
-            this._viewHeight = aHeight;
+            this._viewSize.x = aWidth;
+            this._viewSize.y = aHeight;
             if (this._hzScrollBar && !this._hScrollNone)
-                this._viewHeight -= this._hzScrollBar.height;
+                this._viewSize.y -= this._hzScrollBar.height;
             if (this._vtScrollBar && !this._vScrollNone)
-                this._viewWidth -= this._vtScrollBar.width;
-            this._viewWidth -= (this._owner.margin.left + this._owner.margin.right);
-            this._viewHeight -= (this._owner.margin.top + this._owner.margin.bottom);
-            this._viewWidth = Math.max(1, this._viewWidth);
-            this._viewHeight = Math.max(1, this._viewHeight);
-            this._pageSizeH = this._viewWidth;
-            this._pageSizeV = this._viewHeight;
+                this._viewSize.x -= this._vtScrollBar.width;
+            this._viewSize.x -= (this._owner.margin.left + this._owner.margin.right);
+            this._viewSize.y -= (this._owner.margin.top + this._owner.margin.bottom);
+            this._viewSize.x = Math.max(1, this._viewSize.x);
+            this._viewSize.y = Math.max(1, this._viewSize.y);
+            this._pageSize.x = this._viewSize.x;
+            this._pageSize.y = this._viewSize.y;
             this.handleSizeChanged();
         };
         ScrollPane.prototype.setContentSize = function (aWidth, aHeight) {
-            if (this._contentWidth == aWidth && this._contentHeight == aHeight)
+            if (this._contentSize.x == aWidth && this._contentSize.y == aHeight)
                 return;
-            this._contentWidth = aWidth;
-            this._contentHeight = aHeight;
+            this._contentSize.x = aWidth;
+            this._contentSize.y = aHeight;
             this.handleSizeChanged();
         };
         ScrollPane.prototype.changeContentSizeOnScrolling = function (deltaWidth, deltaHeight, deltaPosX, deltaPosY) {
-            this._contentWidth += deltaWidth;
-            this._contentHeight += deltaHeight;
-            if (this.isDragged) {
-                if (deltaPosX != 0)
-                    this._container.x -= deltaPosX;
-                if (deltaPosY != 0)
-                    this._container.y -= deltaPosY;
-                this.validateHolderPos();
-                this._xOffset += deltaPosX;
-                this._yOffset += deltaPosY;
-                var tmp = this._y2 - this._y1;
-                this._y1 = this._container.y;
-                this._y2 = this._y1 + tmp;
-                tmp = this._x2 - this._x1;
-                this._x1 = this._container.x;
-                this._x2 = this._x1 + tmp;
-                this._yPos = -this._container.y;
-                this._xPos = -this._container.x;
+            var isRightmost = this._xPos == this._overlapSize.x;
+            var isBottom = this._yPos == this._overlapSize.y;
+            this._contentSize.x += deltaWidth;
+            this._contentSize.y += deltaHeight;
+            this.handleSizeChanged();
+            if (this._tweening == 1) {
+                //如果原来滚动位置是贴边，加入处理继续贴边。
+                if (deltaWidth != 0 && isRightmost && this._tweenChange.x < 0) {
+                    this._xPos = this._overlapSize.x;
+                    this._tweenChange.x = -this._xPos - this._tweenStart.x;
+                }
+                if (deltaHeight != 0 && isBottom && this._tweenChange.y < 0) {
+                    this._yPos = this._overlapSize.y;
+                    this._tweenChange.y = -this._yPos - this._tweenStart.y;
+                }
             }
             else if (this._tweening == 2) {
+                //重新调整起始位置，确保能够顺滑滚下去
                 if (deltaPosX != 0) {
                     this._container.x -= deltaPosX;
-                    this._throwTween.start.x -= deltaPosX;
+                    this._tweenStart.x -= deltaPosX;
+                    this._xPos = -this._container.x;
                 }
                 if (deltaPosY != 0) {
                     this._container.y -= deltaPosY;
-                    this._throwTween.start.y -= deltaPosY;
+                    this._tweenStart.y -= deltaPosY;
+                    this._yPos = -this._container.y;
                 }
             }
-            this.handleSizeChanged(true);
+            else if (this.isDragged) {
+                if (deltaPosX != 0) {
+                    this._container.x -= deltaPosX;
+                    this._containerPos.x -= deltaPosX;
+                    this._xPos = -this._container.x;
+                }
+                if (deltaPosY != 0) {
+                    this._container.y -= deltaPosY;
+                    this._containerPos.y -= deltaPosY;
+                    this._yPos = -this._container.y;
+                }
+            }
+            else {
+                //如果原来滚动位置是贴边，加入处理继续贴边。
+                if (deltaWidth != 0 && isRightmost) {
+                    this._xPos = this._overlapSize.x;
+                    this._container.x = -this._xPos;
+                }
+                if (deltaHeight != 0 && isBottom) {
+                    this._yPos = this._overlapSize.y;
+                    this._container.y = -this._yPos;
+                }
+            }
+            if (this._pageMode)
+                this.updatePageController();
         };
         ScrollPane.prototype.handleSizeChanged = function (onScrolling) {
             if (onScrolling === void 0) { onScrolling = false; }
             if (this._displayInDemand) {
                 if (this._vtScrollBar) {
-                    if (this._contentHeight <= this._viewHeight) {
+                    if (this._contentSize.y <= this._viewSize.y) {
                         if (!this._vScrollNone) {
                             this._vScrollNone = true;
-                            this._viewWidth += this._vtScrollBar.width;
+                            this._viewSize.x += this._vtScrollBar.width;
                         }
                     }
                     else {
                         if (this._vScrollNone) {
                             this._vScrollNone = false;
-                            this._viewWidth -= this._vtScrollBar.width;
+                            this._viewSize.x -= this._vtScrollBar.width;
                         }
                     }
                 }
                 if (this._hzScrollBar) {
-                    if (this._contentWidth <= this._viewWidth) {
+                    if (this._contentSize.x <= this._viewSize.x) {
                         if (!this._hScrollNone) {
                             this._hScrollNone = true;
-                            this._viewHeight += this._hzScrollBar.height;
+                            this._viewSize.y += this._hzScrollBar.height;
                         }
                     }
                     else {
                         if (this._hScrollNone) {
                             this._hScrollNone = false;
-                            this._viewHeight -= this._hzScrollBar.height;
+                            this._viewSize.y -= this._hzScrollBar.height;
                         }
                     }
                 }
             }
             if (this._vtScrollBar) {
-                if (this._viewHeight < this._vtScrollBar.minSize)
+                if (this._viewSize.y < this._vtScrollBar.minSize)
+                    //没有使用this._vtScrollBar.visible是因为ScrollBar用了一个trick，它并不在owner的DisplayList里，因此this._vtScrollBar.visible是无效的
                     this._vtScrollBar.displayObject.visible = false;
                 else {
                     this._vtScrollBar.displayObject.visible = this._scrollBarVisible && !this._vScrollNone;
-                    if (this._contentHeight == 0)
+                    if (this._contentSize.y == 0)
                         this._vtScrollBar.displayPerc = 0;
                     else
-                        this._vtScrollBar.displayPerc = Math.min(1, this._viewHeight / this._contentHeight);
+                        this._vtScrollBar.displayPerc = Math.min(1, this._viewSize.y / this._contentSize.y);
                 }
             }
             if (this._hzScrollBar) {
-                if (this._viewWidth < this._hzScrollBar.minSize)
+                if (this._viewSize.x < this._hzScrollBar.minSize)
                     this._hzScrollBar.displayObject.visible = false;
                 else {
                     this._hzScrollBar.displayObject.visible = this._scrollBarVisible && !this._hScrollNone;
-                    if (this._contentWidth == 0)
+                    if (this._contentSize.x == 0)
                         this._hzScrollBar.displayPerc = 0;
                     else
-                        this._hzScrollBar.displayPerc = Math.min(1, this._viewWidth / this._contentWidth);
+                        this._hzScrollBar.displayPerc = Math.min(1, this._viewSize.x / this._contentSize.x);
                 }
             }
             var rect = this._maskContainer.scrollRect;
-            if (rect != null) {
-                rect.setTo(0, 0, this._viewWidth, this._viewHeight);
+            if (rect) {
+                rect.width = this._viewSize.x;
+                rect.height = this._viewSize.y;
                 this._maskContainer.scrollRect = rect;
             }
             if (this._scrollType == fairygui.ScrollType.Horizontal || this._scrollType == fairygui.ScrollType.Both)
-                this._xOverlap = Math.ceil(Math.max(0, this._contentWidth - this._viewWidth));
+                this._overlapSize.x = Math.ceil(Math.max(0, this._contentSize.x - this._viewSize.x));
             else
-                this._xOverlap = 0;
+                this._overlapSize.x = 0;
             if (this._scrollType == fairygui.ScrollType.Vertical || this._scrollType == fairygui.ScrollType.Both)
-                this._yOverlap = Math.ceil(Math.max(0, this._contentHeight - this._viewHeight));
+                this._overlapSize.y = Math.ceil(Math.max(0, this._contentSize.y - this._viewSize.y));
             else
-                this._yOverlap = 0;
-            if (this._tweening == 0 && onScrolling) {
-                //如果原来是在边缘，且不在缓动状态，那么尝试继续贴边。（如果在缓动状态，需要修改tween的终值，暂时未支持）
-                if (this._xPerc == 0 || this._xPerc == 1) {
-                    this._xPos = this._xPerc * this._xOverlap;
-                    this._container.x = -this._xPos;
+                this._overlapSize.y = 0;
+            //边界检查
+            this._xPos = fairygui.ToolSet.clamp(this._xPos, 0, this._overlapSize.x);
+            this._yPos = fairygui.ToolSet.clamp(this._yPos, 0, this._overlapSize.y);
+            if (this._refreshBarAxis != null) {
+                var max = this._overlapSize[this._refreshBarAxis];
+                if (max == 0)
+                    max = Math.max(this._contentSize[this._refreshBarAxis] + this._footerLockedSize - this._viewSize[this._refreshBarAxis], 0);
+                else
+                    max += this._footerLockedSize;
+                if (this._refreshBarAxis == "x") {
+                    this._container.x = fairygui.ToolSet.clamp(this._container.x, -max, this._headerLockedSize);
+                    this._container.y = fairygui.ToolSet.clamp(this._container.y, -this._overlapSize.y, 0);
                 }
-                if (this._yPerc == 0 || this._yPerc == 1) {
-                    this._yPos = this._yPerc * this._yOverlap;
-                    this._container.y = -this._yPos;
+                else {
+                    this._container.x = fairygui.ToolSet.clamp(this._container.x, -this._overlapSize.x, 0);
+                    this._container.y = fairygui.ToolSet.clamp(this._container.y, -max, this._headerLockedSize);
+                }
+                if (this._header != null) {
+                    if (this._refreshBarAxis == "x")
+                        this._header.height = this._viewSize.y;
+                    else
+                        this._header.width = this._viewSize.x;
+                }
+                if (this._footer != null) {
+                    if (this._refreshBarAxis == "y")
+                        this._footer.height = this._viewSize.y;
+                    else
+                        this._footer.width = this._viewSize.x;
                 }
             }
             else {
-                //边界检查
-                this._xPos = fairygui.ToolSet.clamp(this._xPos, 0, this._xOverlap);
-                this._xPerc = this._xOverlap > 0 ? this._xPos / this._xOverlap : 0;
-                this._yPos = fairygui.ToolSet.clamp(this._yPos, 0, this._yOverlap);
-                this._yPerc = this._yOverlap > 0 ? this._yPos / this._yOverlap : 0;
+                this._container.x = fairygui.ToolSet.clamp(this._container.x, -this._overlapSize.x, 0);
+                this._container.y = fairygui.ToolSet.clamp(this._container.y, -this._overlapSize.y, 0);
             }
-            this.validateHolderPos();
-            if (this._vtScrollBar != null)
-                this._vtScrollBar.scrollPerc = this._yPerc;
-            if (this._hzScrollBar != null)
-                this._hzScrollBar.scrollPerc = this._xPerc;
+            this.syncScrollBar();
+            this.checkRefreshBar();
             if (this._pageMode)
                 this.updatePageController();
-        };
-        ScrollPane.prototype.validateHolderPos = function () {
-            this._container.x = fairygui.ToolSet.clamp(this._container.x, -this._xOverlap, 0);
-            this._container.y = fairygui.ToolSet.clamp(this._container.y, -this._yOverlap, 0);
         };
         ScrollPane.prototype.posChanged = function (ani) {
             if (this._aniFlag == 0)
@@ -13721,78 +13897,15 @@ var fairygui;
                 this._aniFlag = -1;
             this._needRefresh = true;
             fairygui.GTimers.inst.callLater(this.refresh, this);
-            //如果在甩手指滚动过程中用代码重新设置滚动位置，要停止滚动
-            if (this._tweening == 2) {
-                this.killTween();
-            }
-        };
-        ScrollPane.prototype.killTween = function () {
-            if (this._tweening == 1) {
-                this._tweener.setPaused(true);
-                this._tweening = 0;
-                this._tweener = null;
-                this.syncScrollBar(true);
-            }
-            else if (this._tweening == 2) {
-                this._tweener.setPaused(true);
-                this._tweener = null;
-                this._tweening = 0;
-                this.validateHolderPos();
-                this.syncScrollBar(true);
-                this.dispatchEventWith(ScrollPane.SCROLL_END, false);
-            }
         };
         ScrollPane.prototype.refresh = function () {
             this._needRefresh = false;
             fairygui.GTimers.inst.remove(this.refresh, this);
-            if (this._pageMode) {
-                var page;
-                var delta;
-                if (this._yOverlap > 0 && this._yPerc != 1 && this._yPerc != 0) {
-                    page = Math.floor(this._yPos / this._pageSizeV);
-                    delta = this._yPos - page * this._pageSizeV;
-                    if (delta > this._pageSizeV / 2)
-                        page++;
-                    this._yPos = page * this._pageSizeV;
-                    if (this._yPos > this._yOverlap) {
-                        this._yPos = this._yOverlap;
-                        this._yPerc = 1;
-                    }
-                    else
-                        this._yPerc = this._yPos / this._yOverlap;
-                }
-                if (this._xOverlap > 0 && this._xPerc != 1 && this._xPerc != 0) {
-                    page = Math.floor(this._xPos / this._pageSizeH);
-                    delta = this._xPos - page * this._pageSizeH;
-                    if (delta > this._pageSizeH / 2)
-                        page++;
-                    this._xPos = page * this._pageSizeH;
-                    if (this._xPos > this._xOverlap) {
-                        this._xPos = this._xOverlap;
-                        this._xPerc = 1;
-                    }
-                    else
-                        this._xPerc = this._xPos / this._xOverlap;
-                }
-            }
-            else if (this._snapToItem) {
-                var pt = this._owner.getSnappingPosition(this._xPerc == 1 ? 0 : this._xPos, this._yPerc == 1 ? 0 : this._yPos, ScrollPane.sHelperPoint);
-                if (this._xPerc != 1 && pt.x != this._xPos) {
-                    this._xPos = pt.x;
-                    this._xPerc = this._xPos / this._xOverlap;
-                    if (this._xPerc > 1) {
-                        this._xPerc = 1;
-                        this._xPos = this._xOverlap;
-                    }
-                }
-                if (this._yPerc != 1 && pt.y != this._yPos) {
-                    this._yPos = pt.y;
-                    this._yPerc = this._yPos / this._yOverlap;
-                    if (this._yPerc > 1) {
-                        this._yPerc = 1;
-                        this._yPos = this._yOverlap;
-                    }
-                }
+            if (this._pageMode || this._snapToItem) {
+                ScrollPane.sEndPos.setTo(-this._xPos, -this._yPos);
+                this.alignPosition(ScrollPane.sEndPos, false);
+                this._xPos = -ScrollPane.sEndPos.x;
+                this._yPos = -ScrollPane.sEndPos.y;
             }
             this.refresh2();
             this.dispatchEventWith(ScrollPane.SCROLL, false);
@@ -13801,115 +13914,81 @@ var fairygui;
                 fairygui.GTimers.inst.remove(this.refresh, this);
                 this.refresh2();
             }
+            this.syncScrollBar();
             this._aniFlag = 0;
         };
         ScrollPane.prototype.refresh2 = function () {
-            var contentXLoc = Math.floor(this._xPos);
-            var contentYLoc = Math.floor(this._yPos);
             if (this._aniFlag == 1 && !this.isDragged) {
-                var toX = this._container.x;
-                var toY = this._container.y;
-                if (this._yOverlap > 0)
-                    toY = -contentYLoc;
-                else {
-                    if (this._container.y != 0)
-                        this._container.y = 0;
-                }
-                if (this._xOverlap > 0)
-                    toX = -contentXLoc;
+                var posX;
+                var posY;
+                if (this._overlapSize.x > 0)
+                    posX = -Math.floor(this._xPos);
                 else {
                     if (this._container.x != 0)
                         this._container.x = 0;
+                    posX = 0;
                 }
-                if (toX != this._container.x || toY != this._container.y) {
-                    if (this._tweener != null)
-                        this.killTween();
+                if (this._overlapSize.y > 0)
+                    posY = -Math.floor(this._yPos);
+                else {
+                    if (this._container.y != 0)
+                        this._container.y = 0;
+                    posY = 0;
+                }
+                if (posX != this._container.x || posY != this._container.y) {
                     this._tweening = 1;
-                    this._maskContainer.touchChildren = false;
-                    this._tweener = egret.Tween.get(this._container, { onChange: this.__tweenUpdate, onChangeObj: this })
-                        .to({ x: toX, y: toY, }, 500, ScrollPane._easeTypeFunc)
-                        .call(this.__tweenComplete, this);
+                    this._tweenTime.setTo(0, 0);
+                    this._tweenDuration.setTo(ScrollPane.TWEEN_TIME_GO, ScrollPane.TWEEN_TIME_GO);
+                    this._tweenStart.setTo(this._container.x, this._container.y);
+                    this._tweenChange.setTo(posX - this._tweenStart.x, posY - this._tweenStart.y);
+                    egret.startTick(this.tweenUpdate, this);
                 }
+                else if (this._tweening != 0)
+                    this.killTween();
             }
             else {
-                if (this._tweener != null)
+                if (this._tweening != 0)
                     this.killTween();
-                //如果在拖动的过程中Refresh，这里要进行处理，保证拖动继续正常进行
-                if (this.isDragged) {
-                    this._xOffset += this._container.x - (-contentXLoc);
-                    this._yOffset += this._container.y - (-contentYLoc);
-                }
-                this._container.y = -contentYLoc;
-                this._container.x = -contentXLoc;
-                //如果在拖动的过程中Refresh，这里要进行处理，保证手指离开是滚动正常进行
-                if (this.isDragged) {
-                    this._y1 = this._y2 = this._container.y;
-                    this._x1 = this._x2 = this._container.x;
-                }
-                if (this._vtScrollBar)
-                    this._vtScrollBar.scrollPerc = this._yPerc;
-                if (this._hzScrollBar)
-                    this._hzScrollBar.scrollPerc = this._xPerc;
-            }
-            if (this._pageMode)
-                this.updatePageController();
-        };
-        ScrollPane.prototype.syncPos = function () {
-            if (this._xOverlap > 0) {
-                this._xPos = fairygui.ToolSet.clamp(-this._container.x, 0, this._xOverlap);
-                this._xPerc = this._xPos / this._xOverlap;
-            }
-            if (this._yOverlap > 0) {
-                this._yPos = fairygui.ToolSet.clamp(-this._container.y, 0, this._yOverlap);
-                this._yPerc = this._yPos / this._yOverlap;
+                this._container.x = Math.floor(-this._xPos);
+                this._container.y = Math.floor(-this._yPos);
+                this.loopCheckingCurrent();
             }
             if (this._pageMode)
                 this.updatePageController();
         };
         ScrollPane.prototype.syncScrollBar = function (end) {
             if (end === void 0) { end = false; }
-            if (end) {
-                if (this._vtScrollBar) {
-                    if (this._scrollBarDisplayAuto)
-                        this.showScrollBar(false);
-                }
-                if (this._hzScrollBar) {
-                    if (this._scrollBarDisplayAuto)
-                        this.showScrollBar(false);
-                }
+            if (this._vtScrollBar != null) {
+                this._vtScrollBar.scrollPerc = this._overlapSize.y == 0 ? 0 : fairygui.ToolSet.clamp(-this._container.y, 0, this._overlapSize.y) / this._overlapSize.y;
+                if (this._scrollBarDisplayAuto)
+                    this.showScrollBar(!end);
+            }
+            if (this._hzScrollBar != null) {
+                this._hzScrollBar.scrollPerc = this._overlapSize.x == 0 ? 0 : fairygui.ToolSet.clamp(-this._container.x, 0, this._overlapSize.x) / this._overlapSize.x;
+                if (this._scrollBarDisplayAuto)
+                    this.showScrollBar(!end);
+            }
+            if (end)
                 this._maskContainer.touchChildren = true;
-            }
-            else {
-                if (this._vtScrollBar) {
-                    this._vtScrollBar.scrollPerc = this._yOverlap == 0 ? 0 : fairygui.ToolSet.clamp(-this._container.y, 0, this._yOverlap) / this._yOverlap;
-                    if (this._scrollBarDisplayAuto)
-                        this.showScrollBar(true);
-                }
-                if (this._hzScrollBar) {
-                    this._hzScrollBar.scrollPerc = this._xOverlap == 0 ? 0 : fairygui.ToolSet.clamp(-this._container.x, 0, this._xOverlap) / this._xOverlap;
-                    if (this._scrollBarDisplayAuto)
-                        this.showScrollBar(true);
-                }
-            }
         };
-        ScrollPane.prototype.__mouseDown = function (evt) {
+        ScrollPane.prototype.__touchBegin = function (evt) {
             if (!this._touchEffect)
                 return;
-            if (this._tweener != null) {
+            if (this._tweening != 0) {
                 this.killTween();
                 this.isDragged = true;
             }
             else
                 this.isDragged = false;
-            this._maskContainer.globalToLocal(evt.stageX, evt.stageY, ScrollPane.sHelperPoint);
-            this._x1 = this._x2 = this._container.x;
-            this._y1 = this._y2 = this._container.y;
-            this._xOffset = ScrollPane.sHelperPoint.x - this._container.x;
-            this._yOffset = ScrollPane.sHelperPoint.y - this._container.y;
-            this._time1 = this._time2 = egret.getTimer();
-            this._holdAreaPoint.x = ScrollPane.sHelperPoint.x;
-            this._holdAreaPoint.y = ScrollPane.sHelperPoint.y;
+            var pt = this._owner.globalToLocal(evt.stageX, evt.stageY, ScrollPane.sHelperPoint);
+            this._containerPos.setTo(this._container.x, this._container.y);
+            this._beginTouchPos.setTo(pt.x, pt.y);
+            this._lastTouchPos.setTo(pt.x, pt.y);
+            this._lastTouchGlobalPos.setTo(evt.stageX, evt.stageY);
             this._isHoldAreaDone = false;
+            this._velocity.setTo(0, 0);
+            this._velocityScale = 1;
+            this._lastMoveTime = egret.getTimer() / 1000;
             this._owner.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__touchMove, this);
             this._owner.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_END, this.__touchEnd, this);
             this._owner.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_TAP, this.__touchTap, this);
@@ -13921,19 +14000,19 @@ var fairygui;
                 return;
             if (ScrollPane.draggingPane != null && ScrollPane.draggingPane != this || fairygui.GObject.draggingObject != null)
                 return;
+            var pt = this._owner.globalToLocal(evt.stageX, evt.stageY, ScrollPane.sHelperPoint);
             var sensitivity = fairygui.UIConfig.touchScrollSensitivity;
             var diff, diff2;
             var sv, sh, st;
-            var pt = this._maskContainer.globalToLocal(evt.stageX, evt.stageY, ScrollPane.sHelperPoint);
             if (this._scrollType == fairygui.ScrollType.Vertical) {
                 if (!this._isHoldAreaDone) {
                     //表示正在监测垂直方向的手势
                     ScrollPane._gestureFlag |= 1;
-                    diff = Math.abs(this._holdAreaPoint.y - pt.y);
+                    diff = Math.abs(this._beginTouchPos.y - pt.y);
                     if (diff < sensitivity)
                         return;
                     if ((ScrollPane._gestureFlag & 2) != 0) {
-                        diff2 = Math.abs(this._holdAreaPoint.x - pt.x);
+                        diff2 = Math.abs(this._beginTouchPos.x - pt.x);
                         if (diff < diff2)
                             return;
                     }
@@ -13943,11 +14022,11 @@ var fairygui;
             else if (this._scrollType == fairygui.ScrollType.Horizontal) {
                 if (!this._isHoldAreaDone) {
                     ScrollPane._gestureFlag |= 2;
-                    diff = Math.abs(this._holdAreaPoint.x - pt.x);
+                    diff = Math.abs(this._beginTouchPos.x - pt.x);
                     if (diff < sensitivity)
                         return;
                     if ((ScrollPane._gestureFlag & 1) != 0) {
-                        diff2 = Math.abs(this._holdAreaPoint.y - pt.y);
+                        diff2 = Math.abs(this._beginTouchPos.y - pt.y);
                         if (diff < diff2)
                             return;
                     }
@@ -13957,71 +14036,110 @@ var fairygui;
             else {
                 ScrollPane._gestureFlag = 3;
                 if (!this._isHoldAreaDone) {
-                    diff = Math.abs(this._holdAreaPoint.y - pt.y);
+                    diff = Math.abs(this._beginTouchPos.y - pt.y);
                     if (diff < sensitivity) {
-                        diff = Math.abs(this._holdAreaPoint.x - pt.x);
+                        diff = Math.abs(this._beginTouchPos.x - pt.x);
                         if (diff < sensitivity)
                             return;
                     }
                 }
                 sv = sh = true;
             }
-            var t = egret.getTimer();
-            if (t - this._time2 > 50) {
-                this._time2 = this._time1;
-                this._time1 = t;
-                st = true;
-            }
+            var newPosX = Math.floor(this._containerPos.x + pt.x - this._beginTouchPos.x);
+            var newPosY = Math.floor(this._containerPos.y + pt.y - this._beginTouchPos.y);
             if (sv) {
-                var y = Math.floor(ScrollPane.sHelperPoint.y - this._yOffset);
-                if (y > 0) {
-                    if (!this._bouncebackEffect || this._inertiaDisabled)
-                        this._container.y = 0;
-                    else
-                        this._container.y = Math.floor(y * 0.5);
-                }
-                else if (y < -this._yOverlap || this._inertiaDisabled) {
+                if (newPosY > 0) {
                     if (!this._bouncebackEffect)
-                        this._container.y = -Math.floor(this._yOverlap);
+                        this._container.y = 0;
+                    else if (this._header != null && this._header.maxHeight != 0)
+                        this._container.y = Math.floor(Math.min(newPosY * 0.5, this._header.maxHeight));
                     else
-                        this._container.y = Math.floor((y - this._yOverlap) * 0.5);
+                        this._container.y = Math.floor(Math.min(newPosY * 0.5, this._viewSize.y * ScrollPane.PULL_RATIO));
                 }
-                else {
-                    this._container.y = y;
+                else if (newPosY < -this._overlapSize.y) {
+                    if (!this._bouncebackEffect)
+                        this._container.y = -this._overlapSize.y;
+                    else if (this._footer != null && this._footer.maxHeight > 0)
+                        this._container.y = Math.floor(Math.max((newPosY + this._overlapSize.y) * 0.5, -this._footer.maxHeight) - this._overlapSize.y);
+                    else
+                        this._container.y = Math.floor(Math.max((newPosY + this._overlapSize.y) * 0.5, -this._viewSize.y * ScrollPane.PULL_RATIO) - this._overlapSize.y);
                 }
-                if (st) {
-                    this._y2 = this._y1;
-                    this._y1 = this._container.y;
-                }
+                else
+                    this._container.y = newPosY;
             }
             if (sh) {
-                var x = Math.floor(ScrollPane.sHelperPoint.x - this._xOffset);
-                if (x > 0) {
-                    if (!this._bouncebackEffect || this._inertiaDisabled)
-                        this._container.x = 0;
-                    else
-                        this._container.x = Math.floor(x * 0.5);
-                }
-                else if (x < 0 - this._xOverlap || this._inertiaDisabled) {
+                if (newPosX > 0) {
                     if (!this._bouncebackEffect)
-                        this._container.x = -Math.floor(this._xOverlap);
+                        this._container.x = 0;
+                    else if (this._header != null && this._header.maxWidth != 0)
+                        this._container.x = Math.floor(Math.min(newPosX * 0.5, this._header.maxWidth));
                     else
-                        this._container.x = Math.floor((x - this._xOverlap) * 0.5);
+                        this._container.x = Math.floor(Math.min(newPosX * 0.5, this._viewSize.x * ScrollPane.PULL_RATIO));
                 }
-                else {
-                    this._container.x = x;
+                else if (newPosX < 0 - this._overlapSize.x) {
+                    if (!this._bouncebackEffect)
+                        this._container.x = -this._overlapSize.x;
+                    else if (this._footer != null && this._footer.maxWidth > 0)
+                        this._container.x = Math.floor(Math.max((newPosX + this._overlapSize.x) * 0.5, -this._footer.maxWidth) - this._overlapSize.x);
+                    else
+                        this._container.x = Math.floor(Math.max((newPosX + this._overlapSize.x) * 0.5, -this._viewSize.x * ScrollPane.PULL_RATIO) - this._overlapSize.x);
                 }
-                if (st) {
-                    this._x2 = this._x1;
-                    this._x1 = this._container.x;
+                else
+                    this._container.x = newPosX;
+            }
+            //更新速度
+            var now = egret.getTimer() / 1000;
+            var deltaTime = Math.max(now - this._lastMoveTime, 1 / 60);
+            var deltaPositionX = pt.x - this._lastTouchPos.x;
+            var deltaPositionY = pt.y - this._lastTouchPos.y;
+            if (!sh)
+                deltaPositionX = 0;
+            if (!sv)
+                deltaPositionY = 0;
+            if (deltaTime != 0) {
+                var frameRate = this._owner.displayObject.stage.frameRate;
+                var elapsed = deltaTime * frameRate - 1;
+                if (elapsed > 1) {
+                    var factor = Math.pow(0.833, elapsed);
+                    this._velocity.x = this._velocity.x * factor;
+                    this._velocity.y = this._velocity.y * factor;
+                }
+                this._velocity.x = fairygui.ToolSet.lerp(this._velocity.x, deltaPositionX * 60 / frameRate / deltaTime, deltaTime * 10);
+                this._velocity.y = fairygui.ToolSet.lerp(this._velocity.y, deltaPositionY * 60 / frameRate / deltaTime, deltaTime * 10);
+            }
+            /*速度计算使用的是本地位移，但在后续的惯性滚动判断中需要用到屏幕位移，所以这里要记录一个位移的比例。
+            */
+            var deltaGlobalPositionX = this._lastTouchGlobalPos.x - evt.stageX;
+            var deltaGlobalPositionY = this._lastTouchGlobalPos.y - evt.stageY;
+            if (deltaPositionX != 0)
+                this._velocityScale = Math.abs(deltaGlobalPositionX / deltaPositionX);
+            else if (deltaPositionY != 0)
+                this._velocityScale = Math.abs(deltaGlobalPositionY / deltaPositionY);
+            this._lastTouchPos.setTo(pt.x, pt.y);
+            this._lastTouchGlobalPos.setTo(evt.stageX, evt.stageY);
+            this._lastMoveTime = now;
+            //同步更新pos值
+            if (this._overlapSize.x > 0)
+                this._xPos = fairygui.ToolSet.clamp(-this._container.x, 0, this._overlapSize.x);
+            if (this._overlapSize.y > 0)
+                this._yPos = fairygui.ToolSet.clamp(-this._container.y, 0, this._overlapSize.y);
+            //循环滚动特别检查
+            if (this._loop != 0) {
+                newPosX = this._container.x;
+                newPosY = this._container.y;
+                if (this.loopCheckingCurrent()) {
+                    this._containerPos.x += this._container.x - newPosX;
+                    this._containerPos.y += this._container.y - newPosY;
                 }
             }
             ScrollPane.draggingPane = this;
-            this._maskContainer.touchChildren = false;
             this._isHoldAreaDone = true;
             this.isDragged = true;
-            this.syncPos();
+            this._maskContainer.touchChildren = false;
             this.syncScrollBar();
+            this.checkRefreshBar();
+            if (this._pageMode)
+                this.updatePageController();
             this.dispatchEventWith(ScrollPane.SCROLL, false);
         };
         ScrollPane.prototype.__touchEnd = function (evt) {
@@ -14031,126 +14149,98 @@ var fairygui;
             if (ScrollPane.draggingPane == this)
                 ScrollPane.draggingPane = null;
             ScrollPane._gestureFlag = 0;
-            if (!this.isDragged || !this._touchEffect || this._inertiaDisabled || this._owner.displayObject.stage == null)
+            if (!this.isDragged || !this._touchEffect || this._owner.displayObject.stage == null) {
+                this.isDragged = false;
+                this._maskContainer.touchChildren = true;
                 return;
+            }
             // touch事件不一定都是以tap结束,拖拽的结束动作是touchEnd,这时需要正确处理isDragged标记位.否则在播放滚动动画时会因为处于拖拽状态而使滚动动画失效
             this.isDragged = false;
-            var time = (egret.getTimer() - this._time2) / 1000;
-            if (time == 0)
-                time = 0.001;
-            var yVelocity = (this._container.y - this._y2) / time * 2 * fairygui.UIConfig.defaultTouchScrollSpeedRatio;
-            var xVelocity = (this._container.x - this._x2) / time * 2 * fairygui.UIConfig.defaultTouchScrollSpeedRatio;
-            var duration = 0.3;
-            this._throwTween.start.x = this._container.x;
-            this._throwTween.start.y = this._container.y;
-            var change1 = this._throwTween.change1;
-            var change2 = this._throwTween.change2;
-            var endX = 0;
-            var endY = 0;
-            var page = 0;
-            var delta = 0;
-            var fireRelease = 0;
-            var testPageSize;
-            if (this._scrollType == fairygui.ScrollType.Both || this._scrollType == fairygui.ScrollType.Horizontal) {
-                if (this._container.x > fairygui.UIConfig.touchDragSensitivity)
-                    fireRelease = 1;
-                else if (this._container.x < -this._xOverlap - fairygui.UIConfig.touchDragSensitivity)
-                    fireRelease = 2;
-                change1.x = ThrowTween.calculateChange(xVelocity, duration);
-                change2.x = 0;
-                endX = this._container.x + change1.x;
-                if (this._pageMode && endX < 0 && endX > -this._xOverlap) {
-                    page = Math.floor(-endX / this._pageSizeH);
-                    testPageSize = Math.min(this._pageSizeH, this._contentWidth - (page + 1) * this._pageSizeH);
-                    delta = -endX - page * this._pageSizeH;
-                    //页面吸附策略
-                    if (Math.abs(change1.x) > this._pageSizeH) {
-                        if (delta > testPageSize * 0.5)
-                            page++;
-                    }
-                    else {
-                        if (delta > testPageSize * (change1.x < 0 ? 0.3 : 0.7))
-                            page++;
-                    }
-                    //重新计算终点
-                    endX = -page * this._pageSizeH;
-                    if (endX < -this._xOverlap)
-                        endX = -this._xOverlap;
-                    change1.x = endX - this._container.x;
+            this._maskContainer.touchChildren = true;
+            this._tweenStart.setTo(this._container.x, this._container.y);
+            ScrollPane.sEndPos.setTo(this._tweenStart.x, this._tweenStart.y);
+            var flag = false;
+            if (this._container.x > 0) {
+                ScrollPane.sEndPos.x = 0;
+                flag = true;
+            }
+            else if (this._container.x < -this._overlapSize.x) {
+                ScrollPane.sEndPos.x = -this._overlapSize.x;
+                flag = true;
+            }
+            if (this._container.y > 0) {
+                ScrollPane.sEndPos.y = 0;
+                flag = true;
+            }
+            else if (this._container.y < -this._overlapSize.y) {
+                ScrollPane.sEndPos.y = -this._overlapSize.y;
+                flag = true;
+            }
+            if (flag) {
+                this._tweenChange.setTo(ScrollPane.sEndPos.x - this._tweenStart.x, ScrollPane.sEndPos.y - this._tweenStart.y);
+                if (this._tweenChange.x < -fairygui.UIConfig.touchDragSensitivity || this._tweenChange.y < -fairygui.UIConfig.touchDragSensitivity) {
+                    this._refreshEventDispatching = true;
+                    this.dispatchEventWith(ScrollPane.PULL_DOWN_RELEASE);
+                    this._refreshEventDispatching = false;
                 }
-            }
-            else
-                change1.x = change2.x = 0;
-            if (this._scrollType == fairygui.ScrollType.Both || this._scrollType == fairygui.ScrollType.Vertical) {
-                if (this._container.y > fairygui.UIConfig.touchDragSensitivity)
-                    fireRelease = 1;
-                else if (this._container.y < -this._yOverlap - fairygui.UIConfig.touchDragSensitivity)
-                    fireRelease = 2;
-                change1.y = ThrowTween.calculateChange(yVelocity, duration);
-                change2.y = 0;
-                endY = this._container.y + change1.y;
-                if (this._pageMode && endY < 0 && endY > -this._yOverlap) {
-                    page = Math.floor(-endY / this._pageSizeV);
-                    testPageSize = Math.min(this._pageSizeV, this._contentHeight - (page + 1) * this._pageSizeV);
-                    delta = -endY - page * this._pageSizeV;
-                    if (Math.abs(change1.y) > this._pageSizeV) {
-                        if (delta > testPageSize * 0.5)
-                            page++;
-                    }
-                    else {
-                        if (delta > testPageSize * (change1.y < 0 ? 0.3 : 0.7))
-                            page++;
-                    }
-                    endY = -page * this._pageSizeV;
-                    if (endY < -this._yOverlap)
-                        endY = -this._yOverlap;
-                    change1.y = endY - this._container.y;
+                else if (this._tweenChange.x > fairygui.UIConfig.touchDragSensitivity || this._tweenChange.y > fairygui.UIConfig.touchDragSensitivity) {
+                    this._refreshEventDispatching = true;
+                    this.dispatchEventWith(ScrollPane.PULL_UP_RELEASE);
+                    this._refreshEventDispatching = false;
                 }
-            }
-            else
-                change1.y = change2.y = 0;
-            if (this._snapToItem && !this._pageMode) {
-                endX = -endX;
-                endY = -endY;
-                var pt = this._owner.getSnappingPosition(endX, endY, ScrollPane.sHelperPoint);
-                endX = -pt.x;
-                endY = -pt.y;
-                change1.x = endX - this._container.x;
-                change1.y = endY - this._container.y;
-            }
-            if (this._bouncebackEffect) {
-                if (endX > 0)
-                    change2.x = 0 - this._container.x - change1.x;
-                else if (endX < -this._xOverlap)
-                    change2.x = -this._xOverlap - this._container.x - change1.x;
-                if (endY > 0)
-                    change2.y = 0 - this._container.y - change1.y;
-                else if (endY < -this._yOverlap)
-                    change2.y = -this._yOverlap - this._container.y - change1.y;
+                if (this._headerLockedSize > 0 && ScrollPane.sEndPos[this._refreshBarAxis] == 0) {
+                    ScrollPane.sEndPos[this._refreshBarAxis] = this._headerLockedSize;
+                    this._tweenChange.x = ScrollPane.sEndPos.x - this._tweenStart.x;
+                    this._tweenChange.y = ScrollPane.sEndPos.y - this._tweenStart.y;
+                }
+                else if (this._footerLockedSize > 0 && ScrollPane.sEndPos[this._refreshBarAxis] == -this._overlapSize[this._refreshBarAxis]) {
+                    var max = this._overlapSize[this._refreshBarAxis];
+                    if (max == 0)
+                        max = Math.max(this._contentSize[this._refreshBarAxis] + this._footerLockedSize - this._viewSize[this._refreshBarAxis], 0);
+                    else
+                        max += this._footerLockedSize;
+                    ScrollPane.sEndPos[this._refreshBarAxis] = -max;
+                    this._tweenChange.x = ScrollPane.sEndPos.x - this._tweenStart.x;
+                    this._tweenChange.y = ScrollPane.sEndPos.y - this._tweenStart.y;
+                }
+                this._tweenDuration.setTo(ScrollPane.TWEEN_TIME_DEFAULT, ScrollPane.TWEEN_TIME_DEFAULT);
             }
             else {
-                if (endX > 0)
-                    change1.x = 0 - this._container.x;
-                else if (endX < -this._xOverlap)
-                    change1.x = -this._xOverlap - this._container.x;
-                if (endY > 0)
-                    change1.y = 0 - this._container.y;
-                else if (endY < -this._yOverlap)
-                    change1.y = -this._yOverlap - this._container.y;
+                //更新速度
+                if (!this._inertiaDisabled) {
+                    var frameRate = this._owner.displayObject.stage.frameRate;
+                    var elapsed = (egret.getTimer() / 1000 - this._lastMoveTime) * frameRate - 1;
+                    if (elapsed > 1) {
+                        var factor = Math.pow(0.833, elapsed);
+                        this._velocity.x = this._velocity.x * factor;
+                        this._velocity.y = this._velocity.y * factor;
+                    }
+                    //根据速度计算目标位置和需要时间
+                    this.updateTargetAndDuration(this._tweenStart, ScrollPane.sEndPos);
+                }
+                else
+                    this._tweenDuration.setTo(ScrollPane.TWEEN_TIME_DEFAULT, ScrollPane.TWEEN_TIME_DEFAULT);
+                ScrollPane.sOldChange.setTo(ScrollPane.sEndPos.x - this._tweenStart.x, ScrollPane.sEndPos.y - this._tweenStart.y);
+                //调整目标位置
+                this.loopCheckingTarget(ScrollPane.sEndPos);
+                if (this._pageMode || this._snapToItem)
+                    this.alignPosition(ScrollPane.sEndPos, true);
+                this._tweenChange.x = ScrollPane.sEndPos.x - this._tweenStart.x;
+                this._tweenChange.y = ScrollPane.sEndPos.y - this._tweenStart.y;
+                if (this._tweenChange.x == 0 && this._tweenChange.y == 0) {
+                    if (this._scrollBarDisplayAuto)
+                        this.showScrollBar(false);
+                    return;
+                }
+                //如果目标位置已调整，随之调整需要时间
+                if (this._pageMode || this._snapToItem) {
+                    this.fixDuration("x", ScrollPane.sOldChange.x);
+                    this.fixDuration("y", ScrollPane.sOldChange.y);
+                }
             }
-            this._throwTween.value = 0;
-            this._throwTween.change1 = change1;
-            this._throwTween.change2 = change2;
-            if (this._tweener != null)
-                this.killTween();
             this._tweening = 2;
-            this._tweener = egret.Tween.get(this._throwTween, { onChange: this.__tweenUpdate2, onChangeObj: this })
-                .to({ value: 1 }, duration * 1000, ScrollPane._easeTypeFunc)
-                .call(this.__tweenComplete2, this);
-            if (fireRelease == 1)
-                this.dispatchEventWith(ScrollPane.PULL_DOWN_RELEASE);
-            else if (fireRelease == 2)
-                this.dispatchEventWith(ScrollPane.PULL_UP_RELEASE);
+            this._tweenTime.setTo(0, 0);
+            egret.startTick(this.tweenUpdate, this);
         };
         ScrollPane.prototype.__touchTap = function (evt) {
             this.isDragged = false;
@@ -14170,73 +14260,372 @@ var fairygui;
                 fairygui.GTimers.inst.add(500, 1, this.__showScrollBar, this, val);
         };
         ScrollPane.prototype.__showScrollBar = function (val) {
-            this._scrollBarVisible = val && this._viewWidth > 0 && this._viewHeight > 0;
+            this._scrollBarVisible = val && this._viewSize.x > 0 && this._viewSize.y > 0;
             if (this._vtScrollBar)
                 this._vtScrollBar.displayObject.visible = this._scrollBarVisible && !this._vScrollNone;
             if (this._hzScrollBar)
                 this._hzScrollBar.displayObject.visible = this._scrollBarVisible && !this._hScrollNone;
         };
-        ScrollPane.prototype.__tweenUpdate = function () {
-            if (this._tweening == 0)
+        ScrollPane.prototype.getLoopPartSize = function (division, axis) {
+            return (this._contentSize[axis] + (axis == "x" ? this._owner.columnGap : this._owner.lineGap)) / division;
+        };
+        ScrollPane.prototype.loopCheckingCurrent = function () {
+            var changed = false;
+            if (this._loop == 1 && this._overlapSize.x > 0) {
+                if (this._xPos < 0.001) {
+                    this._xPos += this.getLoopPartSize(2, "x");
+                    changed = true;
+                }
+                else if (this._xPos >= this._overlapSize.x) {
+                    this._xPos -= this.getLoopPartSize(2, "x");
+                    changed = true;
+                }
+            }
+            else if (this._loop == 2 && this._overlapSize.y > 0) {
+                if (this._yPos < 0.001) {
+                    this._yPos += this.getLoopPartSize(2, "y");
+                    changed = true;
+                }
+                else if (this._yPos >= this._overlapSize.y) {
+                    this._yPos -= this.getLoopPartSize(2, "y");
+                    changed = true;
+                }
+            }
+            if (changed) {
+                this._container.x = Math.floor(-this._xPos);
+                this._container.y = Math.floor(-this._yPos);
+            }
+            return changed;
+        };
+        ScrollPane.prototype.loopCheckingTarget = function (endPos) {
+            if (this._loop == 1)
+                this.loopCheckingTarget2(endPos, "x");
+            if (this._loop == 2)
+                this.loopCheckingTarget2(endPos, "y");
+        };
+        ScrollPane.prototype.loopCheckingTarget2 = function (endPos, axis) {
+            var halfSize;
+            var tmp;
+            if (endPos[axis] > 0) {
+                halfSize = this.getLoopPartSize(2, axis);
+                tmp = this._tweenStart[axis] - halfSize;
+                if (tmp <= 0 && tmp >= -this._overlapSize[axis]) {
+                    endPos[axis] -= halfSize;
+                    this._tweenStart[axis] = tmp;
+                }
+            }
+            else if (endPos[axis] < -this._overlapSize[axis]) {
+                halfSize = this.getLoopPartSize(2, axis);
+                tmp = this._tweenStart[axis] + halfSize;
+                if (tmp <= 0 && tmp >= -this._overlapSize[axis]) {
+                    endPos[axis] += halfSize;
+                    this._tweenStart[axis] = tmp;
+                }
+            }
+        };
+        ScrollPane.prototype.loopCheckingNewPos = function (value, axis) {
+            if (this._overlapSize[axis] == 0)
+                return value;
+            var pos = axis == "x" ? this._xPos : this._yPos;
+            var changed = false;
+            var v;
+            if (value < 0.001) {
+                value += this.getLoopPartSize(2, axis);
+                if (value > pos) {
+                    v = this.getLoopPartSize(6, axis);
+                    v = Math.ceil((value - pos) / v) * v;
+                    pos = fairygui.ToolSet.clamp(pos + v, 0, this._overlapSize[axis]);
+                    changed = true;
+                }
+            }
+            else if (value >= this._overlapSize[axis]) {
+                value -= this.getLoopPartSize(2, axis);
+                if (value < pos) {
+                    v = this.getLoopPartSize(6, axis);
+                    v = Math.ceil((pos - value) / v) * v;
+                    pos = fairygui.ToolSet.clamp(pos - v, 0, this._overlapSize[axis]);
+                    changed = true;
+                }
+            }
+            if (changed) {
+                if (axis == "x")
+                    this._container.x = -Math.floor(pos);
+                else
+                    this._container.y = -Math.floor(pos);
+            }
+            return value;
+        };
+        ScrollPane.prototype.alignPosition = function (pos, inertialScrolling) {
+            if (this._pageMode) {
+                pos.x = this.alignByPage(pos.x, "x", inertialScrolling);
+                pos.y = this.alignByPage(pos.y, "y", inertialScrolling);
+            }
+            else if (this._snapToItem) {
+                var pt = this._owner.getSnappingPosition(-pos.x, -pos.y, ScrollPane.sHelperPoint);
+                if (pos.x < 0 && pos.x > -this._overlapSize.x)
+                    pos.x = -pt.x;
+                if (pos.y < 0 && pos.y > -this._overlapSize.y)
+                    pos.y = -pt.y;
+            }
+        };
+        ScrollPane.prototype.alignByPage = function (pos, axis, inertialScrolling) {
+            var page;
+            if (pos > 0)
+                page = 0;
+            else if (pos < -this._overlapSize[axis])
+                page = Math.ceil(this._contentSize[axis] / this._pageSize[axis]) - 1;
+            else {
+                page = Math.floor(-pos / this._pageSize[axis]);
+                var change = inertialScrolling ? (pos - this._containerPos[axis]) : (pos - this._container[axis]);
+                var testPageSize = Math.min(this._pageSize[axis], this._contentSize[axis] - (page + 1) * this._pageSize[axis]);
+                var delta = -pos - page * this._pageSize[axis];
+                //页面吸附策略
+                if (Math.abs(change) > this._pageSize[axis]) {
+                    if (delta > testPageSize * 0.5)
+                        page++;
+                }
+                else {
+                    if (delta > testPageSize * (change < 0 ? 0.3 : 0.7))
+                        page++;
+                }
+                //重新计算终点
+                pos = -page * this._pageSize[axis];
+                if (pos < -this._overlapSize[axis])
+                    pos = -this._overlapSize[axis];
+            }
+            //惯性滚动模式下，会增加判断尽量不要滚动超过一页
+            if (inertialScrolling) {
+                var oldPos = this._tweenStart[axis];
+                var oldPage;
+                if (oldPos > 0)
+                    oldPage = 0;
+                else if (oldPos < -this._overlapSize[axis])
+                    oldPage = Math.ceil(this._contentSize[axis] / this._pageSize[axis]) - 1;
+                else
+                    oldPage = Math.floor(-oldPos / this._pageSize[axis]);
+                var startPage = Math.floor(-this._containerPos[axis] / this._pageSize[axis]);
+                if (Math.abs(page - startPage) > 1 && Math.abs(oldPage - startPage) <= 1) {
+                    if (page > startPage)
+                        page = startPage + 1;
+                    else
+                        page = startPage - 1;
+                    pos = -page * this._pageSize[axis];
+                }
+            }
+            return pos;
+        };
+        ScrollPane.prototype.updateTargetAndDuration = function (orignPos, resultPos) {
+            resultPos.x = this.updateTargetAndDuration2(orignPos.x, "x");
+            resultPos.y = this.updateTargetAndDuration2(orignPos.y, "y");
+        };
+        ScrollPane.prototype.updateTargetAndDuration2 = function (pos, axis) {
+            var v = this._velocity[axis];
+            var duration = 0;
+            if (pos > 0)
+                pos = 0;
+            else if (pos < -this._overlapSize[axis])
+                pos = -this._overlapSize[axis];
+            else {
+                //以屏幕像素为基准
+                var isMobile = egret.Capabilities.isMobile;
+                var v2 = Math.abs(v) * this._velocityScale;
+                //在移动设备上，需要对不同分辨率做一个适配，我们的速度判断以1136分辨率为基准
+                if (isMobile)
+                    v2 *= 1136 / Math.max(this._owner.displayObject.stage.stageWidth, this._owner.displayObject.stage.stageHeight);
+                //这里有一些阈值的处理，因为在低速内，不希望产生较大的滚动（甚至不滚动）
+                var ratio = 0;
+                if (this._pageMode || !isMobile) {
+                    if (v2 > 500)
+                        ratio = Math.pow((v2 - 500) / 500, 2);
+                }
+                else {
+                    if (v2 > 1000)
+                        ratio = Math.pow((v2 - 1000) / 1000, 2);
+                }
+                if (ratio != 0) {
+                    if (ratio > 1)
+                        ratio = 1;
+                    v2 *= ratio;
+                    v *= ratio;
+                    this._velocity[axis] = v;
+                    //算法：v*（this._decelerationRate的n次幂）= 60，即在n帧后速度降为60（假设每秒60帧）。
+                    duration = Math.log(60 / v2) / Math.log(this._decelerationRate) / 60;
+                    //计算距离要使用本地速度
+                    //理论公式貌似滚动的距离不够，改为经验公式
+                    //var change:number = (v/ 60 - 1) / (1 - this._decelerationRate);
+                    var change = Math.floor(v * duration * 0.4);
+                    pos += change;
+                }
+            }
+            if (duration < ScrollPane.TWEEN_TIME_DEFAULT)
+                duration = ScrollPane.TWEEN_TIME_DEFAULT;
+            this._tweenDuration[axis] = duration;
+            return pos;
+        };
+        ScrollPane.prototype.fixDuration = function (axis, oldChange) {
+            if (this._tweenChange[axis] == 0 || Math.abs(this._tweenChange[axis]) >= Math.abs(oldChange))
                 return;
-            this.syncScrollBar();
-            this.dispatchEventWith(ScrollPane.SCROLL, false);
+            var newDuration = Math.abs(this._tweenChange[axis] / oldChange) * this._tweenDuration[axis];
+            if (newDuration < ScrollPane.TWEEN_TIME_DEFAULT)
+                newDuration = ScrollPane.TWEEN_TIME_DEFAULT;
+            this._tweenDuration[axis] = newDuration;
         };
-        ScrollPane.prototype.__tweenComplete = function () {
+        ScrollPane.prototype.killTween = function () {
+            if (this._tweening == 1) {
+                this._container.x = this._tweenStart.x + this._tweenChange.x;
+                this._container.y = this._tweenStart.y + this._tweenChange.y;
+                this.dispatchEventWith(ScrollPane.SCROLL);
+            }
             this._tweening = 0;
-            this._tweener = null;
-            this.validateHolderPos();
-            this.syncScrollBar(true);
-            this.dispatchEventWith(ScrollPane.SCROLL, false);
+            egret.stopTick(this.tweenUpdate, this);
+            this.dispatchEventWith(ScrollPane.SCROLL_END);
         };
-        ScrollPane.prototype.__tweenUpdate2 = function () {
-            if (this._tweening == 0)
+        ScrollPane.prototype.checkRefreshBar = function () {
+            if (this._header == null && this._footer == null)
                 return;
-            this._throwTween.update(this._container);
-            this.syncPos();
-            this.syncScrollBar();
-            this.dispatchEventWith(ScrollPane.SCROLL, false);
+            var pos = this._container[this._refreshBarAxis];
+            if (this._header != null) {
+                if (pos > 0) {
+                    if (this._header.displayObject.parent == null)
+                        this._maskContainer.addChildAt(this._header.displayObject, 0);
+                    var pt = ScrollPane.sHelperPoint;
+                    pt.setTo(this._header.width, this._header.height);
+                    pt[this._refreshBarAxis] = pos;
+                    this._header.setSize(pt.x, pt.y);
+                }
+                else {
+                    if (this._header.displayObject.parent != null)
+                        this._maskContainer.removeChild(this._header.displayObject);
+                }
+            }
+            if (this._footer != null) {
+                var max = this._overlapSize[this._refreshBarAxis];
+                if (pos < -max || max == 0 && this._footerLockedSize > 0) {
+                    if (this._footer.displayObject.parent == null)
+                        this._maskContainer.addChildAt(this._footer.displayObject, 0);
+                    pt = ScrollPane.sHelperPoint;
+                    pt.setTo(this._footer.x, this._footer.y);
+                    if (max > 0)
+                        pt[this._refreshBarAxis] = pos + this._contentSize[this._refreshBarAxis];
+                    else
+                        pt[this._refreshBarAxis] = Math.max(Math.min(pos + this._viewSize[this._refreshBarAxis], this._viewSize[this._refreshBarAxis] - this._footerLockedSize), this._viewSize[this._refreshBarAxis] - this._contentSize[this._refreshBarAxis]);
+                    this._footer.setXY(pt.x, pt.y);
+                    pt.setTo(this._footer.width, this._footer.height);
+                    if (max > 0)
+                        pt[this._refreshBarAxis] = -max - pos;
+                    else
+                        pt[this._refreshBarAxis] = this._viewSize[this._refreshBarAxis] - this._footer[this._refreshBarAxis];
+                    this._footer.setSize(pt.x, pt.y);
+                }
+                else {
+                    if (this._footer.displayObject.parent != null)
+                        this._maskContainer.removeChild(this._footer.displayObject);
+                }
+            }
         };
-        ScrollPane.prototype.__tweenComplete2 = function () {
-            this._tweening = 0;
-            this._tweener = null;
-            this.validateHolderPos();
-            this.syncPos();
-            this.syncScrollBar(true);
-            this.dispatchEventWith(ScrollPane.SCROLL, false);
-            this.dispatchEventWith(ScrollPane.SCROLL_END, false);
+        ScrollPane.prototype.tweenUpdate = function (timestamp) {
+            var nx = this.runTween("x");
+            var ny = this.runTween("y");
+            this._container.x = nx;
+            this._container.y = ny;
+            if (this._tweening == 2) {
+                if (this._overlapSize.x > 0)
+                    this._xPos = fairygui.ToolSet.clamp(-nx, 0, this._overlapSize.x);
+                if (this._overlapSize.y > 0)
+                    this._yPos = fairygui.ToolSet.clamp(-ny, 0, this._overlapSize.y);
+                if (this._pageMode)
+                    this.updatePageController();
+            }
+            if (this._tweenChange.x == 0 && this._tweenChange.y == 0) {
+                this._tweening = 0;
+                egret.stopTick(this.tweenUpdate, this);
+                this.loopCheckingCurrent();
+                this.syncScrollBar(true);
+                this.checkRefreshBar();
+                this.dispatchEventWith(ScrollPane.SCROLL);
+                this.dispatchEventWith(ScrollPane.SCROLL_END);
+            }
+            else {
+                this.syncScrollBar(false);
+                this.checkRefreshBar();
+                this.dispatchEventWith(ScrollPane.SCROLL);
+            }
+            return true;
+        };
+        ScrollPane.prototype.runTween = function (axis) {
+            var newValue;
+            if (this._tweenChange[axis] != 0) {
+                this._tweenTime[axis] += fairygui.GTimers.deltaTime / 1000;
+                if (this._tweenTime[axis] >= this._tweenDuration[axis]) {
+                    newValue = this._tweenStart[axis] + this._tweenChange[axis];
+                    this._tweenChange[axis] = 0;
+                }
+                else {
+                    var ratio = ScrollPane.easeFunc(this._tweenTime[axis], this._tweenDuration[axis]);
+                    newValue = this._tweenStart[axis] + Math.floor(this._tweenChange[axis] * ratio);
+                }
+                var threshold1 = 0;
+                var threshold2 = -this._overlapSize[axis];
+                if (this._headerLockedSize > 0 && this._refreshBarAxis == axis)
+                    threshold1 = this._headerLockedSize;
+                if (this._footerLockedSize > 0 && this._refreshBarAxis == axis) {
+                    var max = this._overlapSize[this._refreshBarAxis];
+                    if (max == 0)
+                        max = Math.max(this._contentSize[this._refreshBarAxis] + this._footerLockedSize - this._viewSize[this._refreshBarAxis], 0);
+                    else
+                        max += this._footerLockedSize;
+                    threshold2 = -max;
+                }
+                if (this._tweening == 2 && this._bouncebackEffect) {
+                    if (newValue > 20 + threshold1 && this._tweenChange[axis] > 0
+                        || newValue > threshold1 && this._tweenChange[axis] == 0) {
+                        this._tweenTime[axis] = 0;
+                        this._tweenDuration[axis] = ScrollPane.TWEEN_TIME_DEFAULT;
+                        this._tweenChange[axis] = -newValue + threshold1;
+                        this._tweenStart[axis] = newValue;
+                    }
+                    else if (newValue < threshold2 - 20 && this._tweenChange[axis] < 0
+                        || newValue < threshold2 && this._tweenChange[axis] == 0) {
+                        this._tweenTime[axis] = 0;
+                        this._tweenDuration[axis] = ScrollPane.TWEEN_TIME_DEFAULT;
+                        this._tweenChange[axis] = threshold2 - newValue;
+                        this._tweenStart[axis] = newValue;
+                    }
+                }
+                else {
+                    if (newValue > threshold1) {
+                        newValue = threshold1;
+                        this._tweenChange[axis] = 0;
+                    }
+                    else if (newValue < threshold2) {
+                        newValue = threshold2;
+                        this._tweenChange[axis] = 0;
+                    }
+                }
+            }
+            else
+                newValue = this._container[axis];
+            return newValue;
+        };
+        ScrollPane.easeFunc = function (t, d) {
+            return (t = t / d - 1) * t * t + 1; //cubicOut
         };
         ScrollPane._gestureFlag = 0;
         ScrollPane.SCROLL = "__scroll";
         ScrollPane.SCROLL_END = "__scrollEnd";
         ScrollPane.PULL_DOWN_RELEASE = "pullDownRelease";
         ScrollPane.PULL_UP_RELEASE = "pullUpRelease";
-        ScrollPane.sHelperRect = new egret.Rectangle();
+        ScrollPane.TWEEN_TIME_GO = 0.5; //调用SetPos(ani)时使用的缓动时间
+        ScrollPane.TWEEN_TIME_DEFAULT = 0.3; //惯性滚动的最小缓动时间
+        ScrollPane.PULL_RATIO = 0.5; //下拉过顶或者上拉过底时允许超过的距离占显示区域的比例
         ScrollPane.sHelperPoint = new egret.Point();
+        ScrollPane.sHelperRect = new egret.Rectangle();
+        ScrollPane.sEndPos = new egret.Point();
+        ScrollPane.sOldChange = new egret.Point();
         return ScrollPane;
     }(egret.EventDispatcher));
     fairygui.ScrollPane = ScrollPane;
     __reflect(ScrollPane.prototype, "fairygui.ScrollPane");
-    var ThrowTween = (function () {
-        function ThrowTween() {
-            this.start = new egret.Point();
-            this.change1 = new egret.Point();
-            this.change2 = new egret.Point();
-        }
-        ThrowTween.prototype.update = function (obj) {
-            obj.x = Math.floor(this.start.x + this.change1.x * this.value + this.change2.x * this.value * this.value);
-            obj.y = Math.floor(this.start.y + this.change1.y * this.value + this.change2.y * this.value * this.value);
-        };
-        ThrowTween.calculateChange = function (velocity, duration) {
-            return (duration * ThrowTween.checkpoint * velocity) / ThrowTween.easeOutCubic(ThrowTween.checkpoint, 0, 1, 1);
-        };
-        ThrowTween.easeOutCubic = function (t, b, c, d) {
-            return c * ((t = t / d - 1) * t * t + 1) + b;
-        };
-        ThrowTween.checkpoint = 0.05;
-        return ThrowTween;
-    }());
-    __reflect(ThrowTween.prototype, "ThrowTween");
 })(fairygui || (fairygui = {}));
 var fairygui;
 (function (fairygui) {
@@ -14250,9 +14639,9 @@ var fairygui;
         UIConfig.modalLayerAlpha = 0.2;
         UIConfig.buttonSoundVolumeScale = 1;
         //Scrolling step in pixels
-        UIConfig.defaultScrollSpeed = 25;
-        // Speed ratio of scrollpane when its touch dragging.
-        UIConfig.defaultTouchScrollSpeedRatio = 1;
+        UIConfig.defaultScrollStep = 25;
+        //Deceleration ratio of scrollpane when its in touch dragging.
+        UIConfig.defaultScrollDecelerationRate = 0.967;
         //Default scrollbar display mode. Recommened visible for Desktop and Auto for mobile.
         UIConfig.defaultScrollBarDisplay = fairygui.ScrollBarDisplayType.Visible;
         //Allow dragging the content to scroll. Recommeded true for mobile.

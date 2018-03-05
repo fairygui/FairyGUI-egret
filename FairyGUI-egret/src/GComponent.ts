@@ -39,15 +39,25 @@ module fairygui {
 
         public dispose(): void {
             var i: number;
+            var cnt: number;
 
-            var transCnt: number = this._transitions.length;
-            for (i = 0; i < transCnt; ++i) {
+            cnt = this._transitions.length;
+            for (i = 0; i < cnt; ++i) {
                 var trans: Transition = this._transitions[i];
                 trans.dispose();
             }
 
-            var numChildren: number = this._children.length;
-            for (i = numChildren - 1; i >= 0; --i) {
+            cnt = this._controllers.length;
+            for (i = 0; i < cnt; ++i) {
+                var cc: Controller = this._controllers[i];
+                cc.dispose();
+            }
+
+            if (this._scrollPane)
+                this._scrollPane.dispose();
+
+            cnt = this._children.length;
+            for (i = cnt - 1; i >= 0; --i) {
                 var obj: GObject = this._children[i];
                 obj.parent = null;//avoid removeFromParent call
                 obj.dispose();
@@ -641,12 +651,14 @@ module fairygui {
             scrollBarDisplay: ScrollBarDisplayType,
             flags: number,
             vtScrollBarRes: string,
-            hzScrollBarRes: string): void {
+            hzScrollBarRes: string,
+            headerRes: string,
+            footerRes: string): void {
             if (this._rootContainer == this._container) {
                 this._container = new egret.DisplayObjectContainer();
                 this._rootContainer.addChild(this._container);
             }
-            this._scrollPane = new ScrollPane(this, scroll, scrollBarMargin, scrollBarDisplay, flags, vtScrollBarRes, hzScrollBarRes);
+            this._scrollPane = new ScrollPane(this, scroll, scrollBarMargin, scrollBarDisplay, flags, vtScrollBarRes, hzScrollBarRes, headerRes, footerRes);
 
             this.setBoundsChangedFlag();
         }
@@ -982,7 +994,16 @@ module fairygui {
                     hzScrollBarRes = arr[1];
                 }
 
-                this.setupScroll(scrollBarMargin, scroll, scrollBarDisplay, scrollBarFlags, vtScrollBarRes, hzScrollBarRes);
+                var headerRes: string;
+                var footerRes: string;
+                str = xml.attributes.ptrRes;
+                if (str) {
+                    arr = str.split(",");
+                    headerRes = arr[0];
+                    footerRes = arr[1];
+                }
+
+                this.setupScroll(scrollBarMargin, scroll, scrollBarDisplay, scrollBarFlags, vtScrollBarRes, hzScrollBarRes, headerRes, footerRes);
             }
             else
                 this.setupOverflow(overflow);

@@ -25,9 +25,9 @@ module fairygui {
         public static horizontalScrollBar: string;
         public static verticalScrollBar: string;
         //Scrolling step in pixels
-        public static defaultScrollSpeed: number = 25;
-        // Speed ratio of scrollpane when its touch dragging.
-        public static defaultTouchScrollSpeedRatio: number = 1;
+        public static defaultScrollStep: number = 25;
+		//Deceleration ratio of scrollpane when its in touch dragging.
+		public static defaultScrollDecelerationRate:number = 0.967;
         //Default scrollbar display mode. Recommened visible for Desktop and Auto for mobile.
         public static defaultScrollBarDisplay: number = ScrollBarDisplayType.Visible;
         //Allow dragging the content to scroll. Recommeded true for mobile.

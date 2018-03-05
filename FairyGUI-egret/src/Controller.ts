@@ -23,6 +23,10 @@ module fairygui {
             this._previousIndex = -1;
         }
 
+        public dispose():void {
+
+        }
+
         public get name(): string {
             return this._name;
         }
