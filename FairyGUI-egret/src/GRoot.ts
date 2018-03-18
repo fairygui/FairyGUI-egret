@@ -143,10 +143,9 @@ module fairygui {
             return null;
         }
 
-        public get modalLayer():GGraph
-		{
-			return this._modalLayer;
-		}
+        public get modalLayer(): GGraph {
+            return this._modalLayer;
+        }
 
         public get hasModalWindow(): boolean {
             return this._modalLayer.parent != null;
@@ -165,6 +164,19 @@ module fairygui {
                 }
             }
             this._popupStack.push(popup);
+
+            if (target != null) {
+                var p: GObject = target;
+                while (p != null) {
+                    if (p.parent == this) {
+                        if (popup.sortingOrder < p.sortingOrder) {
+                            popup.sortingOrder = p.sortingOrder;
+                        }
+                        break;
+                    }
+                    p = p.parent;
+                }
+            }
 
             this.addChild(popup);
             this.adjustModalLayer();

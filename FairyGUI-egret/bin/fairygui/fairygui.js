@@ -8519,12 +8519,13 @@ var fairygui;
                     var ii = this._virtualItems[i];
                     if ((ii.obj instanceof fairygui.GButton) && ii.obj.selected
                         || ii.obj == null && ii.selected) {
+                        var j = i;
                         if (this._loop) {
-                            var j = i % this._numItems;
+                            j = i % this._numItems;
                             if (ret.indexOf(j) != -1)
                                 continue;
                         }
-                        ret.push(i);
+                        ret.push(j);
                     }
                 }
             }
@@ -10284,6 +10285,9 @@ var fairygui;
                         str = cxml.attributes.name;
                         if (str)
                             obj.name = str;
+                        str = cxml.attributes.selectedIcon;
+                        if (str && (obj instanceof fairygui.GButton))
+                            obj.selectedIcon = str;
                     }
                 }
             }
@@ -11250,6 +11254,18 @@ var fairygui;
                 }
             }
             this._popupStack.push(popup);
+            if (target != null) {
+                var p = target;
+                while (p != null) {
+                    if (p.parent == this) {
+                        if (popup.sortingOrder < p.sortingOrder) {
+                            popup.sortingOrder = p.sortingOrder;
+                        }
+                        break;
+                    }
+                    p = p.parent;
+                }
+            }
             this.addChild(popup);
             this.adjustModalLayer();
             var pos;

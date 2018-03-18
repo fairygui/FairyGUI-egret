@@ -318,12 +318,13 @@ module fairygui {
                     var ii: ItemInfo = this._virtualItems[i];
                     if ((ii.obj instanceof GButton) && (<any>ii.obj).selected
                         || ii.obj == null && ii.selected) {
+                        var j: number = i;
                         if (this._loop) {
-                            var j: number = i % this._numItems;
+                            j = i % this._numItems;
                             if (ret.indexOf(j) != -1)
                                 continue;
                         }
-                        ret.push(i);
+                        ret.push(j);
                     }
                 }
             }
@@ -2312,6 +2313,9 @@ module fairygui {
                         str = cxml.attributes.name;
                         if (str)
                             obj.name = str;
+                        str = cxml.attributes.selectedIcon;
+                        if (str && (obj instanceof GButton))
+                            (<GButton><any>obj).selectedIcon = str;
                     }
                 }
             }
