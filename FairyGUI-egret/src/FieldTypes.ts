@@ -3,7 +3,7 @@ module fairygui {
     export enum AutoSizeType { None, Both, Height };
     export enum AlignType { Left, Center, Right };
     export enum VertAlignType { Top, Middle, Bottom };
-    export enum LoaderFillType { None, Scale, ScaleMatchHeight, ScaleMatchWidth, ScaleFree };
+    export enum LoaderFillType { None, Scale, ScaleMatchHeight, ScaleMatchWidth, ScaleFree, ScaleNoBorder };
     export enum ListLayoutType { SingleColumn, SingleRow, FlowHorizontal, FlowVertical, Pagination };
     export enum ListSelectionMode { Single, Multiple, Multiple_SingleClick, None };
     export enum OverflowType { Visible, Hidden, Scroll, Scale, ScaleFree };
@@ -121,6 +121,8 @@ module fairygui {
                 return LoaderFillType.ScaleMatchWidth;
             case "scaleFree":
                 return LoaderFillType.ScaleFree;
+            case "scaleNoBorder":
+                return LoaderFillType.ScaleNoBorder;
             default:
                 return LoaderFillType.None;
         }

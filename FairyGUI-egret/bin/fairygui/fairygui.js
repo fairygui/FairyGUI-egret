@@ -1469,6 +1469,7 @@ var fairygui;
         LoaderFillType[LoaderFillType["ScaleMatchHeight"] = 2] = "ScaleMatchHeight";
         LoaderFillType[LoaderFillType["ScaleMatchWidth"] = 3] = "ScaleMatchWidth";
         LoaderFillType[LoaderFillType["ScaleFree"] = 4] = "ScaleFree";
+        LoaderFillType[LoaderFillType["ScaleNoBorder"] = 5] = "ScaleNoBorder";
     })(LoaderFillType = fairygui.LoaderFillType || (fairygui.LoaderFillType = {}));
     ;
     var ListLayoutType;
@@ -1657,6 +1658,8 @@ var fairygui;
                 return LoaderFillType.ScaleMatchWidth;
             case "scaleFree":
                 return LoaderFillType.ScaleFree;
+            case "scaleNoBorder":
+                return LoaderFillType.ScaleNoBorder;
             default:
                 return LoaderFillType.None;
         }
@@ -7427,9 +7430,9 @@ var fairygui;
             if (this._type == 1) {
                 if (this._corner) {
                     if (this._corner.length == 1)
-                        this._graphics.drawRoundRect(0, 0, w, h, this._corner[0], this._corner[0]);
+                        this._graphics.drawRoundRect(0, 0, w, h, this._corner[0] * 2, this._corner[0] * 2);
                     else
-                        this._graphics.drawRoundRect(0, 0, w, h, this._corner[0], this._corner[1]);
+                        this._graphics.drawRoundRect(0, 0, w, h, this._corner[0] * 2, this._corner[1] * 2);
                 }
                 else
                     this._graphics.drawRect(0, 0, w, h);
@@ -8228,6 +8231,8 @@ var fairygui;
             _this._curLineItemCount = 0; //item count in one line
             _this._curLineItemCount2 = 0; //只用在页面模式，表示垂直方向的项目数
             _this._virtualListChanged = 0; //1-content changed, 2-size changed
+            _this.itemInfoVer = 0; //用来标志item是否在本次处理中已经被重用了
+            _this.enterCounter = 0; //因为HandleScroll是会重入的，这个用来避免极端情况下的死锁
             _this._trackBounds = true;
             _this._pool = new fairygui.GObjectPool();
             _this._layout = fairygui.ListLayoutType.SingleColumn;
@@ -9419,6 +9424,7 @@ var fairygui;
         GList.prototype.handleScroll = function (forceUpdate) {
             if (this._eventLocked)
                 return;
+            this.enterCounter = 0;
             if (this._layout == fairygui.ListLayoutType.SingleColumn || this._layout == fairygui.ListLayoutType.FlowHorizontal) {
                 this.handleScroll1(forceUpdate);
                 this.handleArchOrder1();
@@ -9433,9 +9439,9 @@ var fairygui;
             this._boundsChanged = false;
         };
         GList.prototype.handleScroll1 = function (forceUpdate) {
-            GList.enterCounter++;
-            if (GList.enterCounter > 3) {
-                GList.enterCounter--;
+            this.enterCounter++;
+            if (this.enterCounter > 3) {
+                console.log("FairyGUI: list will never be filled as the item renderer function always returns a different size.");
                 return;
             }
             var pos = this._scrollPane.scrollingPosY;
@@ -9446,7 +9452,6 @@ var fairygui;
             var newFirstIndex = this.getIndexOnPos1(forceUpdate);
             pos = GList.pos_param;
             if (newFirstIndex == this._firstIndex && !forceUpdate) {
-                GList.enterCounter--;
                 return;
             }
             var oldFirstIndex = this._firstIndex;
@@ -9464,7 +9469,7 @@ var fairygui;
             var ii, ii2;
             var i, j;
             var partSize = (this._scrollPane.viewWidth - this._columnGap * (this._curLineItemCount - 1)) / this._curLineItemCount;
-            GList.itemInfoVer++;
+            this.itemInfoVer++;
             while (curIndex < this._realNumItems && (end || curY < max)) {
                 ii = this._virtualItems[curIndex];
                 if (ii.obj == null || forceUpdate) {
@@ -9486,7 +9491,7 @@ var fairygui;
                     if (forward) {
                         for (j = reuseIndex; j >= oldFirstIndex; j--) {
                             ii2 = this._virtualItems[j];
-                            if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer && ii2.obj.resourceURL == url) {
+                            if (ii2.obj != null && ii2.updateFlag != this.itemInfoVer && ii2.obj.resourceURL == url) {
                                 if (ii2.obj instanceof fairygui.GButton)
                                     ii2.selected = ii2.obj.selected;
                                 ii.obj = ii2.obj;
@@ -9500,7 +9505,7 @@ var fairygui;
                     else {
                         for (j = reuseIndex; j <= lastIndex; j++) {
                             ii2 = this._virtualItems[j];
-                            if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer && ii2.obj.resourceURL == url) {
+                            if (ii2.obj != null && ii2.updateFlag != this.itemInfoVer && ii2.obj.resourceURL == url) {
                                 if (ii2.obj instanceof fairygui.GButton)
                                     ii2.selected = ii2.obj.selected;
                                 ii.obj = ii2.obj;
@@ -9541,7 +9546,7 @@ var fairygui;
                     ii.width = Math.ceil(ii.obj.width);
                     ii.height = Math.ceil(ii.obj.height);
                 }
-                ii.updateFlag = GList.itemInfoVer;
+                ii.updateFlag = this.itemInfoVer;
                 ii.obj.setXY(curX, curY);
                 if (curIndex == newFirstIndex)
                     max += ii.height;
@@ -9554,7 +9559,7 @@ var fairygui;
             }
             for (i = 0; i < oldCount; i++) {
                 ii = this._virtualItems[oldFirstIndex + i];
-                if (ii.updateFlag != GList.itemInfoVer && ii.obj != null) {
+                if (ii.updateFlag != this.itemInfoVer && ii.obj != null) {
                     if (ii.obj instanceof fairygui.GButton)
                         ii.selected = ii.obj.selected;
                     this.removeChildToPool(ii.obj);
@@ -9565,12 +9570,13 @@ var fairygui;
                 this._scrollPane.changeContentSizeOnScrolling(0, deltaSize, 0, firstItemDeltaSize);
             if (curIndex > 0 && this.numChildren > 0 && this._container.y < 0 && this.getChildAt(0).y > -this._container.y)
                 this.handleScroll1(false);
-            GList.enterCounter--;
         };
         GList.prototype.handleScroll2 = function (forceUpdate) {
-            GList.enterCounter++;
-            if (GList.enterCounter > 3)
+            this.enterCounter++;
+            if (this.enterCounter > 3) {
+                console.log("FairyGUI: list will never be filled as the item renderer function always returns a different size.");
                 return;
+            }
             var pos = this._scrollPane.scrollingPosX;
             var max = pos + this._scrollPane.viewWidth;
             var end = pos == this._scrollPane.contentWidth; //这个标志表示当前需要滚动到最末，无论内容变化大小
@@ -9579,7 +9585,6 @@ var fairygui;
             var newFirstIndex = this.getIndexOnPos2(forceUpdate);
             pos = GList.pos_param;
             if (newFirstIndex == this._firstIndex && !forceUpdate) {
-                GList.enterCounter--;
                 return;
             }
             var oldFirstIndex = this._firstIndex;
@@ -9597,7 +9602,7 @@ var fairygui;
             var ii, ii2;
             var i, j;
             var partSize = (this._scrollPane.viewHeight - this._lineGap * (this._curLineItemCount - 1)) / this._curLineItemCount;
-            GList.itemInfoVer++;
+            this.itemInfoVer++;
             while (curIndex < this._realNumItems && (end || curX < max)) {
                 ii = this._virtualItems[curIndex];
                 if (ii.obj == null || forceUpdate) {
@@ -9618,7 +9623,7 @@ var fairygui;
                     if (forward) {
                         for (j = reuseIndex; j >= oldFirstIndex; j--) {
                             ii2 = this._virtualItems[j];
-                            if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer && ii2.obj.resourceURL == url) {
+                            if (ii2.obj != null && ii2.updateFlag != this.itemInfoVer && ii2.obj.resourceURL == url) {
                                 if (ii2.obj instanceof fairygui.GButton)
                                     ii2.selected = ii2.obj.selected;
                                 ii.obj = ii2.obj;
@@ -9632,7 +9637,7 @@ var fairygui;
                     else {
                         for (j = reuseIndex; j <= lastIndex; j++) {
                             ii2 = this._virtualItems[j];
-                            if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer && ii2.obj.resourceURL == url) {
+                            if (ii2.obj != null && ii2.updateFlag != this.itemInfoVer && ii2.obj.resourceURL == url) {
                                 if (ii2.obj instanceof fairygui.GButton)
                                     ii2.selected = ii2.obj.selected;
                                 ii.obj = ii2.obj;
@@ -9673,7 +9678,7 @@ var fairygui;
                     ii.width = Math.ceil(ii.obj.width);
                     ii.height = Math.ceil(ii.obj.height);
                 }
-                ii.updateFlag = GList.itemInfoVer;
+                ii.updateFlag = this.itemInfoVer;
                 ii.obj.setXY(curX, curY);
                 if (curIndex == newFirstIndex)
                     max += ii.width;
@@ -9686,7 +9691,7 @@ var fairygui;
             }
             for (i = 0; i < oldCount; i++) {
                 ii = this._virtualItems[oldFirstIndex + i];
-                if (ii.updateFlag != GList.itemInfoVer && ii.obj != null) {
+                if (ii.updateFlag != this.itemInfoVer && ii.obj != null) {
                     if (ii.obj instanceof fairygui.GButton)
                         ii.selected = ii.obj.selected;
                     this.removeChildToPool(ii.obj);
@@ -9697,7 +9702,6 @@ var fairygui;
                 this._scrollPane.changeContentSizeOnScrolling(deltaSize, 0, firstItemDeltaSize, 0);
             if (curIndex > 0 && this.numChildren > 0 && this._container.x < 0 && this.getChildAt(0).x > -this._container.x)
                 this.handleScroll2(false);
-            GList.enterCounter--;
         };
         GList.prototype.handleScroll3 = function (forceUpdate) {
             var pos = this._scrollPane.scrollingPosX;
@@ -9725,7 +9729,7 @@ var fairygui;
             var url = this._defaultItem;
             var partWidth = (this._scrollPane.viewWidth - this._columnGap * (this._curLineItemCount - 1)) / this._curLineItemCount;
             var partHeight = (this._scrollPane.viewHeight - this._lineGap * (this._curLineItemCount2 - 1)) / this._curLineItemCount2;
-            GList.itemInfoVer++;
+            this.itemInfoVer++;
             //先标记这次要用到的项目
             for (i = startIndex; i < lastIndex; i++) {
                 if (i >= this._realNumItems)
@@ -9740,7 +9744,7 @@ var fairygui;
                         continue;
                 }
                 ii = this._virtualItems[i];
-                ii.updateFlag = GList.itemInfoVer;
+                ii.updateFlag = this.itemInfoVer;
             }
             var lastObj = null;
             var insertIndex = 0;
@@ -9748,13 +9752,13 @@ var fairygui;
                 if (i >= this._realNumItems)
                     continue;
                 ii = this._virtualItems[i];
-                if (ii.updateFlag != GList.itemInfoVer)
+                if (ii.updateFlag != this.itemInfoVer)
                     continue;
                 if (ii.obj == null) {
                     //寻找看有没有可重用的
                     while (reuseIndex < virtualItemCount) {
                         ii2 = this._virtualItems[reuseIndex];
-                        if (ii2.obj != null && ii2.updateFlag != GList.itemInfoVer) {
+                        if (ii2.obj != null && ii2.updateFlag != this.itemInfoVer) {
                             if (ii2.obj instanceof fairygui.GButton)
                                 ii2.selected = ii2.obj.selected;
                             ii.obj = ii2.obj;
@@ -9811,7 +9815,7 @@ var fairygui;
                 if (i >= this._realNumItems)
                     continue;
                 ii = this._virtualItems[i];
-                if (ii.updateFlag == GList.itemInfoVer)
+                if (ii.updateFlag == this.itemInfoVer)
                     ii.obj.setXY(xx, yy);
                 if (ii.height > lineHeight)
                     lineHeight = ii.height;
@@ -9831,7 +9835,7 @@ var fairygui;
             //释放未使用的
             for (i = reuseIndex; i < virtualItemCount; i++) {
                 ii = this._virtualItems[i];
-                if (ii.updateFlag != GList.itemInfoVer && ii.obj != null) {
+                if (ii.updateFlag != this.itemInfoVer && ii.obj != null) {
                     if (ii.obj instanceof fairygui.GButton)
                         ii.selected = ii.obj.selected;
                     this.removeChildToPool(ii.obj);
@@ -10299,8 +10303,6 @@ var fairygui;
             if (str)
                 this._selectionController = this.parent.getController(str);
         };
-        GList.itemInfoVer = 0; //用来标志item是否在本次处理中已经被重用了
-        GList.enterCounter = 0; //因为HandleScroll是会重入的，这个用来避免极端情况下的死锁
         return GList;
     }(fairygui.GComponent));
     fairygui.GList = GList;
@@ -10712,6 +10714,12 @@ var fairygui;
                             sx = sy;
                         else
                             sy = sx;
+                    }
+                    else if (this._fill == fairygui.LoaderFillType.ScaleNoBorder) {
+                        if (sx > sy)
+                            sy = sx;
+                        else
+                            sx = sy;
                     }
                     this._contentWidth = this._contentSourceWidth * sx;
                     this._contentHeight = this._contentSourceHeight * sy;

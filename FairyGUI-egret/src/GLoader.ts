@@ -353,7 +353,7 @@ module fairygui {
                 this.setSize(this._contentWidth, this._contentHeight);
                 this._updatingLayout = false;
 
-                if(this._contentWidth==this._width && this._contentHeight==this._height)
+                if (this._contentWidth == this._width && this._contentHeight == this._height)
                     return;
             }
 
@@ -372,6 +372,12 @@ module fairygui {
                             sx = sy;
                         else
                             sy = sx;
+                    }
+                    else if (this._fill == LoaderFillType.ScaleNoBorder) {
+                        if (sx > sy)
+                            sy = sx;
+                        else
+                            sx = sy;
                     }
                     this._contentWidth = this._contentSourceWidth * sx;
                     this._contentHeight = this._contentSourceHeight * sy;

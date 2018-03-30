@@ -236,6 +236,7 @@ declare module fairygui {
         ScaleMatchHeight = 2,
         ScaleMatchWidth = 3,
         ScaleFree = 4,
+        ScaleNoBorder = 5,
     }
     enum ListLayoutType {
         SingleColumn = 0,
@@ -1205,6 +1206,8 @@ declare module fairygui {
         private _virtualListChanged;
         private _virtualItems;
         private _eventLocked;
+        private itemInfoVer;
+        private enterCounter;
         constructor();
         dispose(): void;
         layout: ListLayoutType;
@@ -1264,8 +1267,6 @@ declare module fairygui {
         private getIndexOnPos2(forceUpdate);
         private getIndexOnPos3(forceUpdate);
         private handleScroll(forceUpdate);
-        private static itemInfoVer;
-        private static enterCounter;
         private static pos_param;
         private handleScroll1(forceUpdate);
         private handleScroll2(forceUpdate);

@@ -89,9 +89,9 @@ module fairygui {
             if (this._type == 1) {
                 if (this._corner) {
                     if (this._corner.length == 1)
-                        this._graphics.drawRoundRect(0, 0, w, h, this._corner[0], this._corner[0]);
+                        this._graphics.drawRoundRect(0, 0, w, h, this._corner[0]*2, this._corner[0]*2);
                     else
-                        this._graphics.drawRoundRect(0, 0, w, h, this._corner[0], this._corner[1]);
+                        this._graphics.drawRoundRect(0, 0, w, h, this._corner[0]*2, this._corner[1]*2);
                 }
                 else
                     this._graphics.drawRect(0, 0, w, h);
