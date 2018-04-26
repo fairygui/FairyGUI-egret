@@ -100,6 +100,7 @@ module fairygui {
         protected updateTextFieldText(): void {
             if (!this._text && this._promptText) {
                 this._textField.displayAsPassword = false;
+                this._textField.text = this._text;
                 this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(this._promptText));
             }
             else {
