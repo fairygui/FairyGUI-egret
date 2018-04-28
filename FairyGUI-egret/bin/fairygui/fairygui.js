@@ -12137,6 +12137,10 @@ var fairygui;
                 if (this._password != val) {
                     this._password = val;
                     this._textField.displayAsPassword = this._password;
+                    if (val)
+                        this._textField.inputType = egret.TextFieldInputType.PASSWORD;
+                    else
+                        this._textField.inputType = egret.TextFieldInputType.TEXT;
                     this.render();
                 }
             },
@@ -14657,7 +14661,7 @@ var fairygui;
         function UIConfig() {
         }
         //Default font name
-        UIConfig.defaultFont = "宋体";
+        UIConfig.defaultFont = "SimSun";
         //When a modal window is in front, the background becomes dark.
         UIConfig.modalLayerColor = 0x333333;
         UIConfig.modalLayerAlpha = 0.2;
