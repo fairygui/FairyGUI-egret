@@ -67,6 +67,10 @@ module fairygui {
             if (this._password != val) {
                 this._password = val;
                 this._textField.displayAsPassword = this._password;
+                if(val)
+                    this._textField.inputType = egret.TextFieldInputType.PASSWORD;
+                else
+                    this._textField.inputType = egret.TextFieldInputType.TEXT;
                 this.render();
             }
         }
