@@ -89,7 +89,7 @@ module fairygui {
         }
 
         public update(newValue: number): void {
-            var percent: number = Math.min(newValue / this._max, 1);
+            var percent: number = this._max != 0 ? Math.min(newValue / this._max, 1) : 0;
             if (this._titleObject) {
                 switch (this._titleType) {
                     case ProgressTitleType.Percent:

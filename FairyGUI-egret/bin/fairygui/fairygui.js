@@ -116,6 +116,32 @@ var fairygui;
                     this.localToGlobalRect(0, 0, this.width, this.height, GObject.sGlobalRect);
             }
         };
+        Object.defineProperty(GObject.prototype, "xMin", {
+            get: function () {
+                return this._pivotAsAnchor ? (this._x - this._width * this._pivotX) : this._x;
+            },
+            set: function (value) {
+                if (this._pivotAsAnchor)
+                    this.setXY(value + this._width * this._pivotX, this._y);
+                else
+                    this.setXY(value, this._y);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GObject.prototype, "yMin", {
+            get: function () {
+                return this._pivotAsAnchor ? (this._y - this._height * this._pivotY) : this._y;
+            },
+            set: function (value) {
+                if (this._pivotAsAnchor)
+                    this.setXY(this._x, value + this._height * this._pivotY);
+                else
+                    this.setXY(this._x, value);
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(GObject.prototype, "pixelSnapping", {
             get: function () {
                 return this._pixelSnapping;
@@ -200,7 +226,7 @@ var fairygui;
                     this.resizeChildren(dWidth, dHeight);
                 this.updateGear(2);
                 if (this._parent) {
-                    this._relations.onOwnerSizeChanged(dWidth, dHeight);
+                    this._relations.onOwnerSizeChanged(dWidth, dHeight, this._pivotAsAnchor || !ignorePivot);
                     this._parent.setBoundsChangedFlag();
                     if (this._group != null)
                         this._group.setBoundsChangedFlag(true);
@@ -315,6 +341,13 @@ var fairygui;
                 this.handleXYChanged();
             }
         };
+        Object.defineProperty(GObject.prototype, "pivotAsAnchor", {
+            get: function () {
+                return this._pivotAsAnchor;
+            },
+            enumerable: true,
+            configurable: true
+        });
         GObject.prototype.internalSetPivot = function (xv, yv, asAnchor) {
             if (yv === void 0) { yv = 0; }
             this._pivotX = xv;
@@ -10961,7 +10994,7 @@ var fairygui;
             this.update(this._tweenValue);
         };
         GProgressBar.prototype.update = function (newValue) {
-            var percent = Math.min(newValue / this._max, 1);
+            var percent = this._max != 0 ? Math.min(newValue / this._max, 1) : 0;
             if (this._titleObject) {
                 switch (this._titleType) {
                     case fairygui.ProgressTitleType.Percent:
@@ -12514,6 +12547,7 @@ var fairygui;
             var info = new RelationDef();
             info.percent = usePercent;
             info.type = relationType;
+            info.axis = (relationType <= fairygui.RelationType.Right_Right || relationType == fairygui.RelationType.Width || relationType >= fairygui.RelationType.LeftExt_Left && relationType <= fairygui.RelationType.RightExt_Right) ? 0 : 1;
             this._defs.push(info);
             //当使用中线关联时，因为需要除以2，很容易因为奇数宽度/高度造成小数点坐标；当使用百分比时，也会造成小数坐标；
             //所以设置了这类关联的对象，自动启用pixelSnapping
@@ -12560,7 +12594,7 @@ var fairygui;
             enumerable: true,
             configurable: true
         });
-        RelationItem.prototype.applyOnSelfResized = function (dWidth, dHeight) {
+        RelationItem.prototype.applyOnSelfResized = function (dWidth, dHeight, applyPivot) {
             var ox = this._owner.x;
             var oy = this._owner.y;
             var length = this._defs.length;
@@ -12568,20 +12602,20 @@ var fairygui;
                 var info = this._defs[i];
                 switch (info.type) {
                     case fairygui.RelationType.Center_Center:
-                    case fairygui.RelationType.Right_Center:
-                        this._owner.x -= dWidth / 2;
+                        this._owner.x -= (0.5 - (applyPivot ? this._owner.pivotX : 0)) * dWidth;
                         break;
+                    case fairygui.RelationType.Right_Center:
                     case fairygui.RelationType.Right_Left:
                     case fairygui.RelationType.Right_Right:
-                        this._owner.x -= dWidth;
+                        this._owner.x -= (1 - (applyPivot ? this._owner.pivotX : 0)) * dWidth;
                         break;
                     case fairygui.RelationType.Middle_Middle:
-                    case fairygui.RelationType.Bottom_Middle:
-                        this._owner.y -= dHeight / 2;
+                        this._owner.y -= (0.5 - (applyPivot ? this._owner.pivotY : 0)) * dHeight;
                         break;
+                    case fairygui.RelationType.Bottom_Middle:
                     case fairygui.RelationType.Bottom_Top:
                     case fairygui.RelationType.Bottom_Bottom:
-                        this._owner.y -= dHeight;
+                        this._owner.y -= (1 - (applyPivot ? this._owner.pivotY : 0)) * dHeight;
                         break;
                 }
             }
@@ -12600,6 +12634,7 @@ var fairygui;
             }
         };
         RelationItem.prototype.applyOnXYChanged = function (info, dx, dy) {
+            var tmp;
             switch (info.type) {
                 case fairygui.RelationType.Left_Left:
                 case fairygui.RelationType.Left_Center:
@@ -12624,123 +12659,143 @@ var fairygui;
                     break;
                 case fairygui.RelationType.LeftExt_Left:
                 case fairygui.RelationType.LeftExt_Right:
-                    this._owner.x += dx;
+                    tmp = this._owner.xMin;
                     this._owner.width = this._owner._rawWidth - dx;
+                    this._owner.xMin = tmp + dx;
                     break;
                 case fairygui.RelationType.RightExt_Left:
                 case fairygui.RelationType.RightExt_Right:
+                    tmp = this._owner.xMin;
                     this._owner.width = this._owner._rawWidth + dx;
+                    this._owner.xMin = tmp;
                     break;
                 case fairygui.RelationType.TopExt_Top:
                 case fairygui.RelationType.TopExt_Bottom:
-                    this._owner.y += dy;
+                    tmp = this._owner.yMin;
                     this._owner.height = this._owner._rawHeight - dy;
+                    this._owner.yMin = tmp + dy;
                     break;
                 case fairygui.RelationType.BottomExt_Top:
                 case fairygui.RelationType.BottomExt_Bottom:
+                    tmp = this._owner.yMin;
                     this._owner.height = this._owner._rawHeight + dy;
+                    this._owner.yMin = tmp;
                     break;
             }
         };
         RelationItem.prototype.applyOnSizeChanged = function (info) {
-            var targetX, targetY;
-            if (this._target != this._owner.parent) {
-                targetX = this._target.x;
-                targetY = this._target.y;
+            var pos = 0, pivot = 0, delta = 0;
+            var v, tmp;
+            if (info.axis == 0) {
+                if (this._target != this._owner.parent) {
+                    pos = this._target.x;
+                    if (this._target.pivotAsAnchor)
+                        pivot = this._target.pivotX;
+                }
+                if (info.percent) {
+                    if (this._targetWidth != 0)
+                        delta = this._target._width / this._targetWidth;
+                }
+                else
+                    delta = this._target._width - this._targetWidth;
             }
             else {
-                targetX = 0;
-                targetY = 0;
+                if (this._target != this._owner.parent) {
+                    pos = this._target.y;
+                    if (this._target.pivotAsAnchor)
+                        pivot = this._target.pivotY;
+                }
+                if (info.percent) {
+                    if (this._targetHeight != 0)
+                        delta = this._target._height / this._targetHeight;
+                }
+                else
+                    delta = this._target._height - this._targetHeight;
             }
-            var v, tmp;
             switch (info.type) {
                 case fairygui.RelationType.Left_Left:
-                    if (info.percent && this._target == this._owner.parent) {
-                        v = this._owner.x - targetX;
-                        if (info.percent)
-                            v = v / this._targetWidth * this._target._width;
-                        this._owner.x = targetX + v;
-                    }
+                    if (info.percent)
+                        this._owner.xMin = pos + (this._owner.xMin - pos) * delta;
+                    else if (pivot != 0)
+                        this._owner.x += delta * (-pivot);
                     break;
                 case fairygui.RelationType.Left_Center:
-                    v = this._owner.x - (targetX + this._targetWidth / 2);
                     if (info.percent)
-                        v = v / this._targetWidth * this._target._width;
-                    this._owner.x = targetX + this._target._width / 2 + v;
+                        this._owner.xMin = pos + (this._owner.xMin - pos) * delta;
+                    else
+                        this._owner.x += delta * (0.5 - pivot);
                     break;
                 case fairygui.RelationType.Left_Right:
-                    v = this._owner.x - (targetX + this._targetWidth);
                     if (info.percent)
-                        v = v / this._targetWidth * this._target._width;
-                    this._owner.x = targetX + this._target._width + v;
+                        this._owner.xMin = pos + (this._owner.xMin - pos) * delta;
+                    else
+                        this._owner.x += delta * (1 - pivot);
                     break;
                 case fairygui.RelationType.Center_Center:
-                    v = this._owner.x + this._owner._rawWidth / 2 - (targetX + this._targetWidth / 2);
                     if (info.percent)
-                        v = v / this._targetWidth * this._target._width;
-                    this._owner.x = targetX + this._target._width / 2 + v - this._owner._rawWidth / 2;
+                        this._owner.xMin = pos + (this._owner.xMin + this._owner._rawWidth * 0.5 - pos) * delta - this._owner._rawWidth * 0.5;
+                    else
+                        this._owner.x += delta * (0.5 - pivot);
                     break;
                 case fairygui.RelationType.Right_Left:
-                    v = this._owner.x + this._owner._rawWidth - targetX;
                     if (info.percent)
-                        v = v / this._targetWidth * this._target._width;
-                    this._owner.x = targetX + v - this._owner._rawWidth;
+                        this._owner.xMin = pos + (this._owner.xMin + this._owner._rawWidth - pos) * delta - this._owner._rawWidth;
+                    else if (pivot != 0)
+                        this._owner.x += delta * (-pivot);
                     break;
                 case fairygui.RelationType.Right_Center:
-                    v = this._owner.x + this._owner._rawWidth - (targetX + this._targetWidth / 2);
                     if (info.percent)
-                        v = v / this._targetWidth * this._target._width;
-                    this._owner.x = targetX + this._target._width / 2 + v - this._owner._rawWidth;
+                        this._owner.xMin = pos + (this._owner.xMin + this._owner._rawWidth - pos) * delta - this._owner._rawWidth;
+                    else
+                        this._owner.x += delta * (0.5 - pivot);
                     break;
                 case fairygui.RelationType.Right_Right:
-                    v = this._owner.x + this._owner._rawWidth - (targetX + this._targetWidth);
                     if (info.percent)
-                        v = v / this._targetWidth * this._target._width;
-                    this._owner.x = targetX + this._target._width + v - this._owner._rawWidth;
+                        this._owner.xMin = pos + (this._owner.xMin + this._owner._rawWidth - pos) * delta - this._owner._rawWidth;
+                    else
+                        this._owner.x += delta * (1 - pivot);
                     break;
                 case fairygui.RelationType.Top_Top:
-                    if (info.percent && this._target == this._owner.parent) {
-                        v = this._owner.y - targetY;
-                        if (info.percent)
-                            v = v / this._targetHeight * this._target._height;
-                        this._owner.y = targetY + v;
-                    }
+                    if (info.percent)
+                        this._owner.yMin = pos + (this._owner.yMin - pos) * delta;
+                    else if (pivot != 0)
+                        this._owner.y += delta * (-pivot);
                     break;
                 case fairygui.RelationType.Top_Middle:
-                    v = this._owner.y - (targetY + this._targetHeight / 2);
                     if (info.percent)
-                        v = v / this._targetHeight * this._target._height;
-                    this._owner.y = targetY + this._target._height / 2 + v;
+                        this._owner.yMin = pos + (this._owner.yMin - pos) * delta;
+                    else
+                        this._owner.y += delta * (0.5 - pivot);
                     break;
                 case fairygui.RelationType.Top_Bottom:
-                    v = this._owner.y - (targetY + this._targetHeight);
                     if (info.percent)
-                        v = v / this._targetHeight * this._target._height;
-                    this._owner.y = targetY + this._target._height + v;
+                        this._owner.yMin = pos + (this._owner.yMin - pos) * delta;
+                    else
+                        this._owner.y += delta * (1 - pivot);
                     break;
                 case fairygui.RelationType.Middle_Middle:
-                    v = this._owner.y + this._owner._rawHeight / 2 - (targetY + this._targetHeight / 2);
                     if (info.percent)
-                        v = v / this._targetHeight * this._target._height;
-                    this._owner.y = targetY + this._target._height / 2 + v - this._owner._rawHeight / 2;
+                        this._owner.yMin = pos + (this._owner.yMin + this._owner._rawHeight * 0.5 - pos) * delta - this._owner._rawHeight * 0.5;
+                    else
+                        this._owner.y += delta * (0.5 - pivot);
                     break;
                 case fairygui.RelationType.Bottom_Top:
-                    v = this._owner.y + this._owner._rawHeight - targetY;
                     if (info.percent)
-                        v = v / this._targetHeight * this._target._height;
-                    this._owner.y = targetY + v - this._owner._rawHeight;
+                        this._owner.yMin = pos + (this._owner.yMin + this._owner._rawHeight - pos) * delta - this._owner._rawHeight;
+                    else if (pivot != 0)
+                        this._owner.y += delta * (-pivot);
                     break;
                 case fairygui.RelationType.Bottom_Middle:
-                    v = this._owner.y + this._owner._rawHeight - (targetY + this._targetHeight / 2);
                     if (info.percent)
-                        v = v / this._targetHeight * this._target._height;
-                    this._owner.y = targetY + this._target._height / 2 + v - this._owner._rawHeight;
+                        this._owner.yMin = pos + (this._owner.yMin + this._owner._rawHeight - pos) * delta - this._owner._rawHeight;
+                    else
+                        this._owner.y += delta * (0.5 - pivot);
                     break;
                 case fairygui.RelationType.Bottom_Bottom:
-                    v = this._owner.y + this._owner._rawHeight - (targetY + this._targetHeight);
                     if (info.percent)
-                        v = v / this._targetHeight * this._target._height;
-                    this._owner.y = targetY + this._target._height + v - this._owner._rawHeight;
+                        this._owner.yMin = pos + (this._owner.yMin + this._owner._rawHeight - pos) * delta - this._owner._rawHeight;
+                    else
+                        this._owner.y += delta * (1 - pivot);
                     break;
                 case fairygui.RelationType.Width:
                     if (this._owner._underConstruct && this._owner == this._target.parent)
@@ -12748,9 +12803,16 @@ var fairygui;
                     else
                         v = this._owner._rawWidth - this._targetWidth;
                     if (info.percent)
-                        v = v / this._targetWidth * this._target._width;
-                    if (this._target == this._owner.parent)
-                        this._owner.setSize(this._target._width + v, this._owner._rawHeight, true);
+                        v = v * delta;
+                    if (this._target == this._owner.parent) {
+                        if (this._owner.pivotAsAnchor) {
+                            tmp = this._owner.xMin;
+                            this._owner.setSize(this._target._width + v, this._owner._rawHeight, true);
+                            this._owner.xMin = tmp;
+                        }
+                        else
+                            this._owner.setSize(this._target._width + v, this._owner._rawHeight, true);
+                    }
                     else
                         this._owner.width = this._target._width + v;
                     break;
@@ -12760,63 +12822,132 @@ var fairygui;
                     else
                         v = this._owner._rawHeight - this._targetHeight;
                     if (info.percent)
-                        v = v / this._targetHeight * this._target._height;
-                    if (this._target == this._owner.parent)
-                        this._owner.setSize(this._owner._rawWidth, this._target._height + v, true);
+                        v = v * delta;
+                    if (this._target == this._owner.parent) {
+                        if (this._owner.pivotAsAnchor) {
+                            tmp = this._owner.yMin;
+                            this._owner.setSize(this._owner._rawWidth, this._target._height + v, true);
+                            this._owner.yMin = tmp;
+                        }
+                        else
+                            this._owner.setSize(this._owner._rawWidth, this._target._height + v, true);
+                    }
                     else
                         this._owner.height = this._target._height + v;
                     break;
                 case fairygui.RelationType.LeftExt_Left:
+                    tmp = this._owner.xMin;
+                    if (info.percent)
+                        v = pos + (tmp - pos) * delta - tmp;
+                    else
+                        v = delta * (-pivot);
+                    this._owner.width = this._owner._rawWidth - v;
+                    this._owner.xMin = tmp + v;
                     break;
                 case fairygui.RelationType.LeftExt_Right:
-                    v = this._owner.x - (targetX + this._targetWidth);
+                    tmp = this._owner.xMin;
                     if (info.percent)
-                        v = v / this._targetWidth * this._target._width;
-                    tmp = this._owner.x;
-                    this._owner.x = targetX + this._target._width + v;
-                    this._owner.width = this._owner._rawWidth - (this._owner.x - tmp);
+                        v = pos + (tmp - pos) * delta - tmp;
+                    else
+                        v = delta * (1 - pivot);
+                    this._owner.width = this._owner._rawWidth - v;
+                    this._owner.xMin = tmp + v;
                     break;
                 case fairygui.RelationType.RightExt_Left:
+                    tmp = this._owner.xMin;
+                    if (info.percent)
+                        v = pos + (tmp + this._owner._rawWidth - pos) * delta - (tmp + this._owner._rawWidth);
+                    else
+                        v = delta * (-pivot);
+                    this._owner.width = this._owner._rawWidth + v;
+                    this._owner.xMin = tmp;
                     break;
                 case fairygui.RelationType.RightExt_Right:
-                    if (this._owner._underConstruct && this._owner == this._target.parent)
-                        v = this._owner.sourceWidth - (targetX + this._target.initWidth);
-                    else
-                        v = this._owner.width - (targetX + this._targetWidth);
-                    if (this._owner != this._target.parent)
-                        v += this._owner.x;
-                    if (info.percent)
-                        v = v / this._targetWidth * this._target._width;
-                    if (this._owner != this._target.parent)
-                        this._owner.width = targetX + this._target._width + v - this._owner.x;
-                    else
-                        this._owner.width = targetX + this._target._width + v;
+                    tmp = this._owner.xMin;
+                    if (info.percent) {
+                        if (this._owner == this._target.parent) {
+                            if (this._owner._underConstruct)
+                                this._owner.width = pos + this._target._width - this._target._width * pivot +
+                                    (this._owner.sourceWidth - pos - this._target.initWidth + this._target.initWidth * pivot) * delta;
+                            else
+                                this._owner.width = pos + (this._owner._rawWidth - pos) * delta;
+                        }
+                        else {
+                            v = pos + (tmp + this._owner._rawWidth - pos) * delta - (tmp + this._owner._rawWidth);
+                            this._owner.width = this._owner._rawWidth + v;
+                            this._owner.xMin = tmp;
+                        }
+                    }
+                    else {
+                        if (this._owner == this._target.parent) {
+                            if (this._owner._underConstruct)
+                                this._owner.width = this._owner.sourceWidth + (this._target._width - this._target.initWidth) * (1 - pivot);
+                            else
+                                this._owner.width = this._owner._rawWidth + delta * (1 - pivot);
+                        }
+                        else {
+                            v = delta * (1 - pivot);
+                            this._owner.width = this._owner._rawWidth + v;
+                            this._owner.xMin = tmp;
+                        }
+                    }
                     break;
                 case fairygui.RelationType.TopExt_Top:
+                    tmp = this._owner.yMin;
+                    if (info.percent)
+                        v = pos + (tmp - pos) * delta - tmp;
+                    else
+                        v = delta * (-pivot);
+                    this._owner.height = this._owner._rawHeight - v;
+                    this._owner.yMin = tmp + v;
                     break;
                 case fairygui.RelationType.TopExt_Bottom:
-                    v = this._owner.y - (targetY + this._targetHeight);
+                    tmp = this._owner.yMin;
                     if (info.percent)
-                        v = v / this._targetHeight * this._target._height;
-                    tmp = this._owner.y;
-                    this._owner.y = targetY + this._target._height + v;
-                    this._owner.height = this._owner._rawHeight - (this._owner.y - tmp);
+                        v = pos + (tmp - pos) * delta - tmp;
+                    else
+                        v = delta * (1 - pivot);
+                    this._owner.height = this._owner._rawHeight - v;
+                    this._owner.yMin = tmp + v;
                     break;
                 case fairygui.RelationType.BottomExt_Top:
+                    tmp = this._owner.yMin;
+                    if (info.percent)
+                        v = pos + (tmp + this._owner._rawHeight - pos) * delta - (tmp + this._owner._rawHeight);
+                    else
+                        v = delta * (-pivot);
+                    this._owner.height = this._owner._rawHeight + v;
+                    this._owner.yMin = tmp;
                     break;
                 case fairygui.RelationType.BottomExt_Bottom:
-                    if (this._owner._underConstruct && this._owner == this._target.parent)
-                        v = this._owner.sourceHeight - (targetY + this._target.initHeight);
-                    else
-                        v = this._owner._rawHeight - (targetY + this._targetHeight);
-                    if (this._owner != this._target.parent)
-                        v += this._owner.y;
-                    if (info.percent)
-                        v = v / this._targetHeight * this._target._height;
-                    if (this._owner != this._target.parent)
-                        this._owner.height = targetY + this._target._height + v - this._owner.y;
-                    else
-                        this._owner.height = targetY + this._target._height + v;
+                    tmp = this._owner.yMin;
+                    if (info.percent) {
+                        if (this._owner == this._target.parent) {
+                            if (this._owner._underConstruct)
+                                this._owner.height = pos + this._target._height - this._target._height * pivot +
+                                    (this._owner.sourceHeight - pos - this._target.initHeight + this._target.initHeight * pivot) * delta;
+                            else
+                                this._owner.height = pos + (this._owner._rawHeight - pos) * delta;
+                        }
+                        else {
+                            v = pos + (tmp + this._owner._rawHeight - pos) * delta - (tmp + this._owner._rawHeight);
+                            this._owner.height = this._owner._rawHeight + v;
+                            this._owner.yMin = tmp;
+                        }
+                    }
+                    else {
+                        if (this._owner == this._target.parent) {
+                            if (this._owner._underConstruct)
+                                this._owner.height = this._owner.sourceHeight + (this._target._height - this._target.initHeight) * (1 - pivot);
+                            else
+                                this._owner.height = this._owner._rawHeight + delta * (1 - pivot);
+                        }
+                        else {
+                            v = delta * (1 - pivot);
+                            this._owner.height = this._owner._rawHeight + v;
+                            this._owner.yMin = tmp;
+                        }
+                    }
                     break;
             }
         };
@@ -12916,6 +13047,7 @@ var fairygui;
         RelationDef.prototype.copyFrom = function (source) {
             this.percent = source.percent;
             this.type = source.type;
+            this.axis = source.axis;
         };
         return RelationDef;
     }());
@@ -13033,13 +13165,13 @@ var fairygui;
         Relations.prototype.dispose = function () {
             this.clearAll();
         };
-        Relations.prototype.onOwnerSizeChanged = function (dWidth, dHeight) {
+        Relations.prototype.onOwnerSizeChanged = function (dWidth, dHeight, applyPivot) {
             if (this._items.length == 0)
                 return;
             var length = this._items.length;
             for (var i = 0; i < length; i++) {
                 var item = this._items[i];
-                item.applyOnSelfResized(dWidth, dHeight);
+                item.applyOnSelfResized(dWidth, dHeight, applyPivot);
             }
         };
         Relations.prototype.ensureRelationsSizeCorrect = function () {

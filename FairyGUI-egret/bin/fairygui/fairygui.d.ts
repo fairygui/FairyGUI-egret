@@ -62,6 +62,8 @@ declare module fairygui {
         x: number;
         y: number;
         setXY(xv: number, yv: number): void;
+        xMin: number;
+        yMin: number;
         pixelSnapping: boolean;
         center(restraint?: boolean): void;
         width: number;
@@ -79,6 +81,7 @@ declare module fairygui {
         pivotX: number;
         pivotY: number;
         setPivot(xv: number, yv?: number, asAnchor?: boolean): void;
+        readonly pivotAsAnchor: boolean;
         protected internalSetPivot(xv: number, yv: number, asAnchor: boolean): void;
         private updatePivotOffset();
         private applyPivot();
@@ -1641,7 +1644,7 @@ declare module fairygui {
         copyFrom(source: RelationItem): void;
         dispose(): void;
         readonly isEmpty: boolean;
-        applyOnSelfResized(dWidth: number, dHeight: number): void;
+        applyOnSelfResized(dWidth: number, dHeight: number, applyPivot: boolean): void;
         private applyOnXYChanged(info, dx, dy);
         private applyOnSizeChanged(info);
         private addRefTarget(target);
@@ -1653,6 +1656,7 @@ declare module fairygui {
     class RelationDef {
         percent: boolean;
         type: number;
+        axis: number;
         constructor();
         copyFrom(source: RelationDef): void;
     }
@@ -1673,7 +1677,7 @@ declare module fairygui {
         clearAll(): void;
         copyFrom(source: Relations): void;
         dispose(): void;
-        onOwnerSizeChanged(dWidth: number, dHeight: number): void;
+        onOwnerSizeChanged(dWidth: number, dHeight: number, applyPivot: boolean): void;
         ensureRelationsSizeCorrect(): void;
         readonly empty: boolean;
         setup(xml: any): void;

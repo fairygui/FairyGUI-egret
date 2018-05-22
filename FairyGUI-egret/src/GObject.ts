@@ -131,6 +131,28 @@ module fairygui {
             }
         }
 
+        public get xMin(): number {
+            return this._pivotAsAnchor ? (this._x - this._width * this._pivotX) : this._x;
+        }
+
+        public set xMin(value: number) {
+            if (this._pivotAsAnchor)
+                this.setXY(value + this._width * this._pivotX, this._y);
+            else
+                this.setXY(value, this._y);
+        }
+
+        public get yMin(): number {
+            return this._pivotAsAnchor ? (this._y - this._height * this._pivotY) : this._y;
+        }
+
+        public set yMin(value: number) {
+            if (this._pivotAsAnchor)
+                this.setXY(this._x, value + this._height * this._pivotY);
+            else
+                this.setXY(this._x, value);
+        }
+
         public get pixelSnapping(): boolean {
             return this._pixelSnapping;
         }
@@ -213,7 +235,7 @@ module fairygui {
                 this.updateGear(2);
 
                 if (this._parent) {
-                    this._relations.onOwnerSizeChanged(dWidth, dHeight);
+                    this._relations.onOwnerSizeChanged(dWidth, dHeight, this._pivotAsAnchor || !ignorePivot);
                     this._parent.setBoundsChangedFlag();
                     if (this._group != null)
                         this._group.setBoundsChangedFlag(true);
@@ -313,6 +335,10 @@ module fairygui {
                 this.updatePivotOffset();
                 this.handleXYChanged();
             }
+        }
+
+        public get pivotAsAnchor(): boolean {
+            return this._pivotAsAnchor;
         }
 
         protected internalSetPivot(xv: number, yv: number = 0, asAnchor: boolean): void {
