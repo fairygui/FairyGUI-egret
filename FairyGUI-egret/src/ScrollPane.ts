@@ -397,8 +397,7 @@ module fairygui {
 		}
 
 		public set currentPageX(value: number) {
-			if (this._pageMode && this._overlapSize.x > 0)
-				this.setPosX(value * this._pageSize.x, false);
+			this.setCurrentPageX(value, false);
 		}
 
 		public get currentPageY(): number {
@@ -413,8 +412,17 @@ module fairygui {
 		}
 
 		public set currentPageY(value: number) {
+			this.setCurrentPageY(value, false);
+		}
+
+		public setCurrentPageX(value: number, ani: boolean): void {
+			if (this._pageMode && this._overlapSize.x > 0)
+				this.setPosX(value * this._pageSize.x, ani);
+		}
+
+		public setCurrentPageY(value: number, ani: boolean): void {
 			if (this._pageMode && this._overlapSize.y > 0)
-				this.setPosY(value * this._pageSize.y, false);
+				this.setPosY(value * this._pageSize.y, ani);
 		}
 
 		public get isBottomMost(): boolean {
@@ -613,9 +621,9 @@ module fairygui {
 		public handleControllerChanged(c: Controller): void {
 			if (this._pageController == c) {
 				if (this._scrollType == ScrollType.Horizontal)
-					this.currentPageX = c.selectedIndex;
+					this.setCurrentPageX(c.selectedIndex, true);
 				else
-					this.currentPageY = c.selectedIndex;
+					this.setCurrentPageY(c.selectedIndex, true);
 			}
 		}
 
@@ -1342,28 +1350,22 @@ module fairygui {
 
 		private loopCheckingCurrent(): boolean {
 			var changed: boolean = false;
-			if (this._loop == 1 && this._overlapSize.x > 0)
-			{
-				if (this._xPos < 0.001)
-				{
+			if (this._loop == 1 && this._overlapSize.x > 0) {
+				if (this._xPos < 0.001) {
 					this._xPos += this.getLoopPartSize(2, "x");
 					changed = true;
 				}
-				else if (this._xPos >= this._overlapSize.x)
-				{
+				else if (this._xPos >= this._overlapSize.x) {
 					this._xPos -= this.getLoopPartSize(2, "x");
 					changed = true;
 				}
 			}
-			else if (this._loop == 2 && this._overlapSize.y > 0)
-			{
-				if (this._yPos < 0.001)
-				{
+			else if (this._loop == 2 && this._overlapSize.y > 0) {
+				if (this._yPos < 0.001) {
 					this._yPos += this.getLoopPartSize(2, "y");
 					changed = true;
 				}
-				else if (this._yPos >= this._overlapSize.y)
-				{
+				else if (this._yPos >= this._overlapSize.y) {
 					this._yPos -= this.getLoopPartSize(2, "y");
 					changed = true;
 				}
