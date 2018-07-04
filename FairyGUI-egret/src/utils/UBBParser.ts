@@ -94,55 +94,87 @@ module fairygui {
                 return "</font>";
         }
 
-        protected getTagText(remove: boolean = false): string {
-            var pos: number = this._text.indexOf("[", this._readPos);
-            if (pos == -1)
-                return null;
-
-            var ret: string = this._text.substring(this._readPos, pos);
-            if (remove)
-                this._readPos = pos;
-            return ret;
-        }
-
-        public parse(text: string): string {
-            this._text = text;
-            var pos1: number = 0, pos2: number, pos3: number = 0;
-            var end: boolean;
-            var tag: string, attr: string;
-            var repl: string;
-            var func: Function;
-            while ((pos2 = this._text.indexOf("[", pos1)) != -1) {
-                pos1 = pos2;
-                pos2 = this._text.indexOf("]", pos1);
-                if (pos2 == -1)
-                    break;
-
-                end = this._text.charAt(pos1 + 1) == '/';
-                tag = this._text.substring(end ? pos1 + 2 : pos1 + 1, pos2);
-                pos2++;
-                this._readPos = pos2;
-                attr = null;
-                repl = null;
-                pos3 = tag.indexOf("=");
-                if (pos3 != -1) {
-                    attr = tag.substring(pos3 + 1);
-                    tag = tag.substring(0, pos3);
-                }
-                tag = tag.toLowerCase();
-                func = this._handlers[tag];
-                if (func != null) {
-                    repl = func.call(this, tag, end, attr);
-                    if (repl == null)
-                        repl = "";
-                }
-                else {
-                    pos1 = pos2;
-                    continue;
-                }
-                this._text = this._text.substring(0, pos1) + repl + this._text.substring(this._readPos);
-            }
-            return this._text;
-        }
+        protected getTagText(remove:boolean=false):string {
+			var pos1:number = this._readPos;
+			var pos2:number;
+			var result:string = "";
+			while ((pos2 = this._text.indexOf("[", pos1)) != -1)
+			{
+				if (this._text.charCodeAt(pos2 - 1) == 92 )//\
+				{
+					result += this._text.substring(pos1, pos2 - 1);
+					result += "[";
+					pos1 = pos2 + 1;
+				}
+				else
+				{
+					result += this._text.substring(pos1, pos2);
+					break;
+				}
+			}
+			if (pos2 == -1)
+				return null;
+			
+			if (remove)
+				this._readPos = pos2;
+			
+			return result;
+		}		
+		
+		public parse(text:string, remove:boolean=false):string {
+			this._text = text;
+			var pos1:number = 0, pos2:number, pos3:number;
+			var end:boolean;
+			var tag:string, attr:string;
+			var repl:string;
+			var func:Function;
+			var result:string = "";
+			while((pos2=this._text.indexOf("[", pos1))!=-1) {
+				if (pos2 > 0 && this._text.charCodeAt(pos2 - 1) == 92 )//\
+				{
+					result += this._text.substring(pos1, pos2 - 1);
+					result += "[";
+					pos1 = pos2 + 1;
+					continue;
+				}
+				
+				result += this._text.substring(pos1, pos2);
+				pos1 = pos2;
+				pos2 = this._text.indexOf("]", pos1);
+				if(pos2==-1)
+					break;
+				
+				end = this._text.charAt(pos1+1)=='/';
+				tag = this._text.substring(end?pos1+2:pos1+1, pos2);
+				this._readPos = pos2 + 1;
+				attr = null;
+				repl = null;
+				pos3 = tag.indexOf("=");
+				if(pos3!=-1) {
+					attr = tag.substring(pos3+1);
+					tag = tag.substring(0, pos3);
+				}
+				tag = tag.toLowerCase();
+				func = this._handlers[tag];
+				if(func!=null) {
+					if(!remove)
+					{
+						repl = func(tag, end, attr);
+						if(repl!=null)
+							result += repl;
+					}
+				}
+				else
+					result += this._text.substring(pos1, this._readPos);
+				pos1 = this._readPos;
+			}
+			
+			if (pos1 < this._text.length)
+				result += this._text.substr(pos1);
+			
+			this._text = null;
+			
+			return result;
+		}
     }
 }

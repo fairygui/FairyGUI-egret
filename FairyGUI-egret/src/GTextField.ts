@@ -13,6 +13,7 @@ module fairygui {
         protected _letterSpacing: number = 0;
         protected _text: string;
         protected _ubbEnabled: boolean;
+        protected _templateVars: any;
 
         protected _autoSize: AutoSizeType;
         protected _widthAutoSize: boolean;
@@ -40,6 +41,7 @@ module fairygui {
             this._text = "";
             this._leading = 3;
             this._color = 0;
+            this._templateVars = null;
 
             this._autoSize = AutoSizeType.Both;
             this._widthAutoSize = true;
@@ -86,10 +88,13 @@ module fairygui {
         }
 
         protected updateTextFieldText(): void {
+            var text2: string = this._text;
+            if (this._templateVars != null)
+                text2 = this.parseTemplate(text2);
             if (this._ubbEnabled)
-                this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(ToolSet.encodeHTML(this._text)));
+                this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(ToolSet.encodeHTML(text2)));
             else
-                this._textField.text = this._text;
+                this._textField.text = text2;
         }
 
         public get text(): string {
@@ -387,9 +392,12 @@ module fairygui {
             this._textWidth = 0;
             this._textHeight = 0;
 
-            var textLength: number = this._text.length;
+			var text2:string = this._text;
+			if (this._templateVars != null)
+				text2 = this.parseTemplate(text2);
+            var textLength: number = text2.length;
             for (var offset: number = 0; offset < textLength; ++offset) {
-                var ch: string = this._text.charAt(offset);
+                var ch: string = text2.charAt(offset);
                 var cc: number = ch.charCodeAt(0);
 
                 if (cc == 10) {
@@ -638,6 +646,79 @@ module fairygui {
             }
         }
 
+        protected parseTemplate(template: string): string {
+            var pos1: number = 0, pos2: number, pos3: number;
+            var tag: string;
+            var value: string;
+            var result: string = "";
+            while ((pos2 = template.indexOf("{", pos1)) != -1) {
+                if (pos2 > 0 && template.charCodeAt(pos2 - 1) == 92)//\
+                {
+                    result += template.substring(pos1, pos2 - 1);
+                    result += "{";
+                    pos1 = pos2 + 1;
+                    continue;
+                }
+
+                result += template.substring(pos1, pos2);
+                pos1 = pos2;
+                pos2 = template.indexOf("}", pos1);
+                if (pos2 == -1)
+                    break;
+
+                if (pos2 == pos1 + 1) {
+                    result += template.substr(pos1, 2);
+                    pos1 = pos2 + 1;
+                    continue;
+                }
+
+                tag = template.substring(pos1 + 1, pos2);
+                pos3 = tag.indexOf("=");
+                if (pos3 != -1) {
+                    value = this._templateVars[tag.substring(0, pos3)];
+                    if (value == null)
+                        result += tag.substring(pos3 + 1);
+                    else
+                        result += value;
+                }
+                else {
+                    value = this._templateVars[tag];
+                    if (value != null)
+                        result += value;
+                }
+                pos1 = pos2 + 1;
+            }
+
+            if (pos1 < template.length)
+                result += template.substr(pos1);
+
+            return result;
+        }
+
+        public get templateVars(): any {
+            return this._templateVars;
+        }
+
+        public set templateVars(value: any) {
+            if (this._templateVars == null && value == null)
+                return;
+
+            this._templateVars = value;
+            this.flushVars();
+        }
+
+        public setVar(name: string, value: string): GTextField {
+            if (!this._templateVars)
+                this._templateVars = {};
+            this._templateVars[name] = value;
+
+            return this;
+        }
+
+        public flushVars(): void {
+            this.render();
+        }
+
         protected handleGrayedChanged(): void {
             super.handleGrayedChanged();
             this.updateTextFormat();
@@ -715,6 +796,9 @@ module fairygui {
                 else
                     this.stroke = 2;
             }
+
+            if (xml.attributes.vars == "true")
+                this._templateVars = {};
         }
 
         public setup_afterAdd(xml: any): void {
