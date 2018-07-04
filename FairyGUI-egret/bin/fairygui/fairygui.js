@@ -1139,7 +1139,7 @@ var fairygui;
             }
             str = xml.attributes.rotation;
             if (str)
-                this.rotation = parseInt(str);
+                this.rotation = parseFloat(str);
             str = xml.attributes.skew;
             if (str) {
                 arr = str.split(",");
@@ -1413,30 +1413,50 @@ var fairygui;
         };
         UBBParser.prototype.getTagText = function (remove) {
             if (remove === void 0) { remove = false; }
-            var pos = this._text.indexOf("[", this._readPos);
-            if (pos == -1)
+            var pos1 = this._readPos;
+            var pos2;
+            var result = "";
+            while ((pos2 = this._text.indexOf("[", pos1)) != -1) {
+                if (this._text.charCodeAt(pos2 - 1) == 92) {
+                    result += this._text.substring(pos1, pos2 - 1);
+                    result += "[";
+                    pos1 = pos2 + 1;
+                }
+                else {
+                    result += this._text.substring(pos1, pos2);
+                    break;
+                }
+            }
+            if (pos2 == -1)
                 return null;
-            var ret = this._text.substring(this._readPos, pos);
             if (remove)
-                this._readPos = pos;
-            return ret;
+                this._readPos = pos2;
+            return result;
         };
-        UBBParser.prototype.parse = function (text) {
+        UBBParser.prototype.parse = function (text, remove) {
+            if (remove === void 0) { remove = false; }
             this._text = text;
-            var pos1 = 0, pos2, pos3 = 0;
+            var pos1 = 0, pos2, pos3;
             var end;
             var tag, attr;
             var repl;
             var func;
+            var result = "";
             while ((pos2 = this._text.indexOf("[", pos1)) != -1) {
+                if (pos2 > 0 && this._text.charCodeAt(pos2 - 1) == 92) {
+                    result += this._text.substring(pos1, pos2 - 1);
+                    result += "[";
+                    pos1 = pos2 + 1;
+                    continue;
+                }
+                result += this._text.substring(pos1, pos2);
                 pos1 = pos2;
                 pos2 = this._text.indexOf("]", pos1);
                 if (pos2 == -1)
                     break;
                 end = this._text.charAt(pos1 + 1) == '/';
                 tag = this._text.substring(end ? pos1 + 2 : pos1 + 1, pos2);
-                pos2++;
-                this._readPos = pos2;
+                this._readPos = pos2 + 1;
                 attr = null;
                 repl = null;
                 pos3 = tag.indexOf("=");
@@ -1447,17 +1467,20 @@ var fairygui;
                 tag = tag.toLowerCase();
                 func = this._handlers[tag];
                 if (func != null) {
-                    repl = func.call(this, tag, end, attr);
-                    if (repl == null)
-                        repl = "";
+                    if (!remove) {
+                        repl = func(tag, end, attr);
+                        if (repl != null)
+                            result += repl;
+                    }
                 }
-                else {
-                    pos1 = pos2;
-                    continue;
-                }
-                this._text = this._text.substring(0, pos1) + repl + this._text.substring(this._readPos);
+                else
+                    result += this._text.substring(pos1, this._readPos);
+                pos1 = this._readPos;
             }
-            return this._text;
+            if (pos1 < this._text.length)
+                result += this._text.substr(pos1);
+            this._text = null;
+            return result;
         };
         UBBParser.inst = new UBBParser();
         return UBBParser;
@@ -3106,6 +3129,7 @@ var fairygui;
             _this._text = "";
             _this._leading = 3;
             _this._color = 0;
+            _this._templateVars = null;
             _this._autoSize = fairygui.AutoSizeType.Both;
             _this._widthAutoSize = true;
             _this._heightAutoSize = true;
@@ -3151,10 +3175,13 @@ var fairygui;
             configurable: true
         });
         GTextField.prototype.updateTextFieldText = function () {
+            var text2 = this._text;
+            if (this._templateVars != null)
+                text2 = this.parseTemplate(text2);
             if (this._ubbEnabled)
-                this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(fairygui.ToolSet.encodeHTML(this._text)));
+                this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(fairygui.ToolSet.encodeHTML(text2)));
             else
-                this._textField.text = this._text;
+                this._textField.text = text2;
         };
         Object.defineProperty(GTextField.prototype, "font", {
             get: function () {
@@ -3462,9 +3489,12 @@ var fairygui;
             var fontScale = this._bitmapFont.resizable ? this._fontSize / this._bitmapFont.size : 1;
             this._textWidth = 0;
             this._textHeight = 0;
-            var textLength = this._text.length;
+            var text2 = this._text;
+            if (this._templateVars != null)
+                text2 = this.parseTemplate(text2);
+            var textLength = text2.length;
             for (var offset = 0; offset < textLength; ++offset) {
-                var ch = this._text.charAt(offset);
+                var ch = text2.charAt(offset);
                 var cc = ch.charCodeAt(0);
                 if (cc == 10) {
                     lineBuffer += ch;
@@ -3687,6 +3717,70 @@ var fairygui;
                 }
             }
         };
+        GTextField.prototype.parseTemplate = function (template) {
+            var pos1 = 0, pos2, pos3;
+            var tag;
+            var value;
+            var result = "";
+            while ((pos2 = template.indexOf("{", pos1)) != -1) {
+                if (pos2 > 0 && template.charCodeAt(pos2 - 1) == 92) {
+                    result += template.substring(pos1, pos2 - 1);
+                    result += "{";
+                    pos1 = pos2 + 1;
+                    continue;
+                }
+                result += template.substring(pos1, pos2);
+                pos1 = pos2;
+                pos2 = template.indexOf("}", pos1);
+                if (pos2 == -1)
+                    break;
+                if (pos2 == pos1 + 1) {
+                    result += template.substr(pos1, 2);
+                    pos1 = pos2 + 1;
+                    continue;
+                }
+                tag = template.substring(pos1 + 1, pos2);
+                pos3 = tag.indexOf("=");
+                if (pos3 != -1) {
+                    value = this._templateVars[tag.substring(0, pos3)];
+                    if (value == null)
+                        result += tag.substring(pos3 + 1);
+                    else
+                        result += value;
+                }
+                else {
+                    value = this._templateVars[tag];
+                    if (value != null)
+                        result += value;
+                }
+                pos1 = pos2 + 1;
+            }
+            if (pos1 < template.length)
+                result += template.substr(pos1);
+            return result;
+        };
+        Object.defineProperty(GTextField.prototype, "templateVars", {
+            get: function () {
+                return this._templateVars;
+            },
+            set: function (value) {
+                if (this._templateVars == null && value == null)
+                    return;
+                this._templateVars = value;
+                this.flushVars();
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GTextField.prototype.setVar = function (name, value) {
+            if (!this._templateVars)
+                this._templateVars = {};
+            this._templateVars[name] = value;
+            return this;
+        };
+        GTextField.prototype.flushVars = function () {
+            this.render();
+        };
         GTextField.prototype.handleGrayedChanged = function () {
             _super.prototype.handleGrayedChanged.call(this);
             this.updateTextFormat();
@@ -3751,6 +3845,8 @@ var fairygui;
                 else
                     this.stroke = 2;
             }
+            if (xml.attributes.vars == "true")
+                this._templateVars = {};
         };
         GTextField.prototype.setup_afterAdd = function (xml) {
             _super.prototype.setup_afterAdd.call(this, xml);
@@ -5167,7 +5263,7 @@ var fairygui;
                         value.f1 = parseFloat(args[0]);
                         break;
                     case TransitionActionType.Rotation:
-                        value.i = parseInt(args[0]);
+                        value.i = parseFloat(args[0]);
                         break;
                     case TransitionActionType.Color:
                         value.c = parseFloat(args[0]);
@@ -5306,8 +5402,11 @@ var fairygui;
                         startTime = delay + this._maxTime - item.time;
                     else
                         startTime = delay + item.time;
-                    if (startTime == 0)
+                    if (startTime == 0) {
                         this.applyValue(item, item.value);
+                        if (item.hook != null)
+                            item.hook.call(item.hookObj);
+                    }
                     else {
                         this._totalTasks++;
                         item.completed = false;
@@ -6476,8 +6575,8 @@ var fairygui;
             if (downEffect === void 0) { downEffect = true; }
             if (downEffect && this._mode == fairygui.ButtonMode.Common) {
                 this.setState(GButton.OVER);
-                fairygui.GTimers.inst.add(100, 1, this.setState, this, GButton.DOWN);
-                fairygui.GTimers.inst.add(200, 1, this.setState, this, GButton.UP);
+                fairygui.GTimers.inst.add(100, 1, function () { this.setState(GButton.DOWN); }, this);
+                fairygui.GTimers.inst.add(200, 1, function () { this.setState(GButton.UP); }, this);
             }
             this.__click(null);
         };
@@ -10433,6 +10532,8 @@ var fairygui;
                 if (texture != null)
                     this.freeExternal(texture);
             }
+            if (this._content2 != null)
+                this._content2.dispose();
             _super.prototype.dispose.call(this);
         };
         Object.defineProperty(GLoader.prototype, "url", {
@@ -10492,6 +10593,19 @@ var fairygui;
             set: function (value) {
                 if (this._fill != value) {
                     this._fill = value;
+                    this.updateLayout();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GLoader.prototype, "shrinkOnly", {
+            get: function () {
+                return this._shrinkOnly;
+            },
+            set: function (value) {
+                if (this._shrinkOnly != value) {
+                    this._shrinkOnly = value;
                     this.updateLayout();
                 }
             },
@@ -10575,6 +10689,13 @@ var fairygui;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(GLoader.prototype, "component", {
+            get: function () {
+                return this._content2;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(GLoader.prototype, "texture", {
             get: function () {
                 if (this._content instanceof egret.Bitmap)
@@ -10642,6 +10763,22 @@ var fairygui;
                     mc.frames = this._contentItem.frames;
                     this.updateLayout();
                 }
+                else if (this._contentItem.type == fairygui.PackageItemType.Component) {
+                    var obj = fairygui.UIPackage.createObjectFromURL(itemURL);
+                    if (!obj)
+                        this.setErrorState();
+                    else if (!(obj instanceof fairygui.GComponent)) {
+                        obj.dispose();
+                        this.setErrorState();
+                    }
+                    else {
+                        this._content2 = obj.asCom;
+                        this._container.addChild(this._content2.displayObject);
+                        this._contentSourceWidth = this._contentItem.width;
+                        this._contentSourceHeight = this._contentItem.height;
+                        this.updateLayout();
+                    }
+                }
                 else
                     this.setErrorState();
             }
@@ -10708,7 +10845,7 @@ var fairygui;
             }
         };
         GLoader.prototype.updateLayout = function () {
-            if (this._content == null) {
+            if (this._content2 == null && this._content == null) {
                 if (this._autoSize) {
                     this._updatingLayout = true;
                     this.setSize(50, 30);
@@ -10716,10 +10853,6 @@ var fairygui;
                 }
                 return;
             }
-            this._content.x = 0;
-            this._content.y = 0;
-            this._content.scaleX = 1;
-            this._content.scaleY = 1;
             this._contentWidth = this._contentSourceWidth;
             this._contentHeight = this._contentSourceHeight;
             if (this._autoSize) {
@@ -10730,8 +10863,19 @@ var fairygui;
                     this._contentHeight = 30;
                 this.setSize(this._contentWidth, this._contentHeight);
                 this._updatingLayout = false;
-                if (this._contentWidth == this._width && this._contentHeight == this._height)
+                if (this._contentWidth == this._width && this._contentHeight == this._height) {
+                    if (this._content2 != null) {
+                        this._content2.setXY(0, 0);
+                        this._content2.setScale(1, 1);
+                    }
+                    else {
+                        this._content.x = 0;
+                        this._content.y = 0;
+                        this._content.scaleX = 1;
+                        this._content.scaleY = 1;
+                    }
                     return;
+                }
             }
             var sx = 1, sy = 1;
             if (this._fill != fairygui.LoaderFillType.None) {
@@ -10754,11 +10898,20 @@ var fairygui;
                         else
                             sx = sy;
                     }
+                    if (this._shrinkOnly) {
+                        if (sx > 1)
+                            sx = 1;
+                        if (sy > 1)
+                            sy = 1;
+                    }
                     this._contentWidth = this._contentSourceWidth * sx;
                     this._contentHeight = this._contentSourceHeight * sy;
                 }
             }
-            if (this._content instanceof egret.Bitmap) {
+            if (this._content2 != null) {
+                this._content2.setScale(sx, sy);
+            }
+            else if (this._content instanceof egret.Bitmap) {
                 this._content.width = this._contentWidth;
                 this._content.height = this._contentHeight;
             }
@@ -10766,14 +10919,25 @@ var fairygui;
                 this._content.scaleX = sx;
                 this._content.scaleY = sy;
             }
+            var nx, ny;
             if (this._align == fairygui.AlignType.Center)
-                this._content.x = Math.floor((this.width - this._contentWidth) / 2);
+                nx = Math.floor((this.width - this._contentWidth) / 2);
             else if (this._align == fairygui.AlignType.Right)
-                this._content.x = this.width - this._contentWidth;
+                nx = this.width - this._contentWidth;
+            else
+                nx = 0;
             if (this._verticalAlign == fairygui.VertAlignType.Middle)
-                this._content.y = Math.floor((this.height - this._contentHeight) / 2);
+                ny = Math.floor((this.height - this._contentHeight) / 2);
             else if (this._verticalAlign == fairygui.VertAlignType.Bottom)
-                this._content.y = this.height - this._contentHeight;
+                ny = this.height - this._contentHeight;
+            else
+                ny = 0;
+            if (this._content2 != null)
+                this._content2.setXY(nx, ny);
+            else {
+                this._content.x = nx;
+                this._content.y = ny;
+            }
         };
         GLoader.prototype.clearContent = function () {
             this.clearErrorState();
@@ -10783,6 +10947,10 @@ var fairygui;
                 var texture = this._content.texture;
                 if (texture != null)
                     this.freeExternal(texture);
+            }
+            if (this._content2 != null) {
+                this._content2.dispose();
+                this._content2 = null;
             }
             this._contentItem = null;
         };
@@ -10806,6 +10974,7 @@ var fairygui;
             str = xml.attributes.fill;
             if (str)
                 this._fill = fairygui.parseLoaderFillType(str);
+            this._shrinkOnly = xml.attributes.shrinkOnly == "true";
             this._autoSize = xml.attributes.autoSize == "true";
             str = xml.attributes.errorSign;
             if (str)
@@ -11141,10 +11310,13 @@ var fairygui;
             return _this;
         }
         GRichTextField.prototype.updateTextFieldText = function () {
+            var text2 = this._text;
+            if (this._templateVars != null)
+                text2 = this.parseTemplate(text2);
             if (this._ubbEnabled)
-                this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(this._text));
+                this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(text2));
             else
-                this._textField.textFlow = (new egret.HtmlTextParser).parser(this._text);
+                this._textField.textFlow = (new egret.HtmlTextParser).parser(text2);
         };
         return GRichTextField;
     }(fairygui.GTextField));
@@ -13578,8 +13750,7 @@ var fairygui;
                 return page;
             },
             set: function (value) {
-                if (this._pageMode && this._overlapSize.x > 0)
-                    this.setPosX(value * this._pageSize.x, false);
+                this.setCurrentPageX(value, false);
             },
             enumerable: true,
             configurable: true
@@ -13594,12 +13765,19 @@ var fairygui;
                 return page;
             },
             set: function (value) {
-                if (this._pageMode && this._overlapSize.y > 0)
-                    this.setPosY(value * this._pageSize.y, false);
+                this.setCurrentPageY(value, false);
             },
             enumerable: true,
             configurable: true
         });
+        ScrollPane.prototype.setCurrentPageX = function (value, ani) {
+            if (this._pageMode && this._overlapSize.x > 0)
+                this.setPosX(value * this._pageSize.x, ani);
+        };
+        ScrollPane.prototype.setCurrentPageY = function (value, ani) {
+            if (this._pageMode && this._overlapSize.y > 0)
+                this.setPosY(value * this._pageSize.y, ani);
+        };
         Object.defineProperty(ScrollPane.prototype, "isBottomMost", {
             get: function () {
                 return this._yPos == this._overlapSize.y || this._overlapSize.y == 0;
@@ -13798,9 +13976,9 @@ var fairygui;
         ScrollPane.prototype.handleControllerChanged = function (c) {
             if (this._pageController == c) {
                 if (this._scrollType == fairygui.ScrollType.Horizontal)
-                    this.currentPageX = c.selectedIndex;
+                    this.setCurrentPageX(c.selectedIndex, true);
                 else
-                    this.currentPageY = c.selectedIndex;
+                    this.setCurrentPageY(c.selectedIndex, true);
             }
         };
         ScrollPane.prototype.updatePageController = function () {

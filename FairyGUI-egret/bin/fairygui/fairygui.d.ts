@@ -209,7 +209,7 @@ declare module fairygui {
         protected onTag_FONT(tagName: string, end: boolean, attr: string): string;
         protected onTag_SIZE(tagName: string, end: boolean, attr: string): string;
         protected getTagText(remove?: boolean): string;
-        parse(text: string): string;
+        parse(text: string, remove?: boolean): string;
     }
 }
 declare module fairygui {
@@ -494,6 +494,7 @@ declare module fairygui {
         protected _letterSpacing: number;
         protected _text: string;
         protected _ubbEnabled: boolean;
+        protected _templateVars: any;
         protected _autoSize: AutoSizeType;
         protected _widthAutoSize: boolean;
         protected _heightAutoSize: boolean;
@@ -536,6 +537,10 @@ declare module fairygui {
         protected renderNow(updateBounds?: boolean): void;
         private renderWithBitmapFont(updateBounds);
         protected handleSizeChanged(): void;
+        protected parseTemplate(template: string): string;
+        templateVars: any;
+        setVar(name: string, value: string): GTextField;
+        flushVars(): void;
         protected handleGrayedChanged(): void;
         private doAlign();
         setup_beforeAdd(xml: any): void;
@@ -1299,6 +1304,7 @@ declare module fairygui {
         private _verticalAlign;
         private _autoSize;
         private _fill;
+        private _shrinkOnly;
         private _showErrorSign;
         private _playing;
         private _frame;
@@ -1311,6 +1317,7 @@ declare module fairygui {
         private _container;
         private _content;
         private _errorSign;
+        private _content2;
         private _updatingLayout;
         private static _errorSignPool;
         constructor();
@@ -1321,6 +1328,7 @@ declare module fairygui {
         align: AlignType;
         verticalAlign: VertAlignType;
         fill: LoaderFillType;
+        shrinkOnly: boolean;
         autoSize: boolean;
         playing: boolean;
         frame: number;
@@ -1328,6 +1336,7 @@ declare module fairygui {
         private applyColor();
         showErrorSign: boolean;
         readonly content: egret.Bitmap | fairygui.MovieClip;
+        readonly component: GComponent;
         texture: egret.Texture;
         protected loadContent(): void;
         protected loadFromPackage(itemURL: string): void;
@@ -1778,6 +1787,8 @@ declare module fairygui {
         viewHeight: number;
         currentPageX: number;
         currentPageY: number;
+        setCurrentPageX(value: number, ani: boolean): void;
+        setCurrentPageY(value: number, ani: boolean): void;
         readonly isBottomMost: boolean;
         readonly isRightMost: boolean;
         pageController: Controller;
