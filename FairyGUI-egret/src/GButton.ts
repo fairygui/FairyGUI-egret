@@ -252,8 +252,8 @@ module fairygui {
         public fireClick(downEffect: boolean = true): void {
             if (downEffect && this._mode == ButtonMode.Common) {
                 this.setState(GButton.OVER);
-                GTimers.inst.add(100, 1, this.setState, this, GButton.DOWN);
-                GTimers.inst.add(200, 1, this.setState, this, GButton.UP);
+                GTimers.inst.add(100, 1, function () { this.setState(GButton.DOWN); }, this);
+                GTimers.inst.add(200, 1, function () { this.setState(GButton.UP); }, this);
             }
             this.__click(null);
         }
