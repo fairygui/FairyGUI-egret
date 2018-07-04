@@ -244,7 +244,7 @@ module fairygui {
                         value.f1 = parseFloat(args[0]);
                         break;
                     case TransitionActionType.Rotation:
-                        value.i = parseInt(args[0]);
+                        value.i = parseFloat(args[0]);
                         break;
                     case TransitionActionType.Color:
                         value.c = parseFloat(args[0]);
@@ -390,8 +390,11 @@ module fairygui {
                         startTime = delay + this._maxTime - item.time;
                     else
                         startTime = delay + item.time;
-                    if (startTime == 0)
+                    if (startTime == 0) {
                         this.applyValue(item, item.value);
+                        if (item.hook != null)
+                            item.hook.call(item.hookObj);
+                    }
                     else {
                         this._totalTasks++;
                         item.completed = false;

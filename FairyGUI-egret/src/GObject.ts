@@ -1060,7 +1060,7 @@ module fairygui {
 
             str = xml.attributes.rotation;
             if (str)
-                this.rotation = parseInt(str);
+                this.rotation = parseFloat(str);
 
             str = xml.attributes.skew;
             if (str) {
