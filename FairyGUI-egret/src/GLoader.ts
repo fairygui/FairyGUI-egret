@@ -10,6 +10,7 @@ module fairygui {
         private _verticalAlign: VertAlignType;
         private _autoSize: boolean;
         private _fill: LoaderFillType;
+        private _shrinkOnly: boolean;
         private _showErrorSign: boolean;
         private _playing: boolean;
         private _frame: number = 0;
@@ -24,6 +25,7 @@ module fairygui {
         private _container: UIContainer;
         private _content: egret.Bitmap | fairygui.MovieClip;
         private _errorSign: GObject;
+        private _content2: GComponent;
 
         private _updatingLayout: boolean;
 
@@ -56,7 +58,8 @@ module fairygui {
                 if (texture != null)
                     this.freeExternal(texture);
             }
-
+            if (this._content2 != null)
+                this._content2.dispose();
             super.dispose();
         }
 
@@ -110,6 +113,17 @@ module fairygui {
         public set fill(value: LoaderFillType) {
             if (this._fill != value) {
                 this._fill = value;
+                this.updateLayout();
+            }
+        }
+
+        public get shrinkOnly(): boolean {
+            return this._shrinkOnly;
+        }
+
+        public set shrinkOnly(value: boolean) {
+            if (this._shrinkOnly != value) {
+                this._shrinkOnly = value;
                 this.updateLayout();
             }
         }
@@ -177,6 +191,10 @@ module fairygui {
 
         public get content(): egret.Bitmap | fairygui.MovieClip {
             return this._content;
+        }
+
+        public get component(): GComponent {
+            return this._content2;
         }
 
         public get texture(): egret.Texture {
@@ -250,6 +268,22 @@ module fairygui {
                     mc.repeatDelay = this._contentItem.repeatDelay;
                     mc.frames = this._contentItem.frames;
                     this.updateLayout();
+                }
+                else if (this._contentItem.type == PackageItemType.Component) {
+                    var obj: GObject = UIPackage.createObjectFromURL(itemURL);
+                    if (!obj)
+                        this.setErrorState();
+                    else if (!(obj instanceof GComponent)) {
+                        obj.dispose();
+                        this.setErrorState();
+                    }
+                    else {
+                        this._content2 = obj.asCom;
+                        this._container.addChild(this._content2.displayObject);
+                        this._contentSourceWidth = this._contentItem.width;
+                        this._contentSourceHeight = this._contentItem.height;
+                        this.updateLayout();
+                    }
                 }
                 else
                     this.setErrorState();
@@ -328,7 +362,7 @@ module fairygui {
         }
 
         private updateLayout(): void {
-            if (this._content == null) {
+            if (this._content2 == null && this._content == null) {
                 if (this._autoSize) {
                     this._updatingLayout = true;
                     this.setSize(50, 30);
@@ -337,10 +371,6 @@ module fairygui {
                 return;
             }
 
-            this._content.x = 0;
-            this._content.y = 0;
-            this._content.scaleX = 1;
-            this._content.scaleY = 1;
             this._contentWidth = this._contentSourceWidth;
             this._contentHeight = this._contentSourceHeight;
 
@@ -353,8 +383,19 @@ module fairygui {
                 this.setSize(this._contentWidth, this._contentHeight);
                 this._updatingLayout = false;
 
-                if (this._contentWidth == this._width && this._contentHeight == this._height)
+                if (this._contentWidth == this._width && this._contentHeight == this._height) {
+                    if (this._content2 != null) {
+                        this._content2.setXY(0, 0);
+                        this._content2.setScale(1, 1);
+                    }
+                    else {
+                        this._content.x = 0;
+                        this._content.y = 0;
+                        this._content.scaleX = 1;
+                        this._content.scaleY = 1;
+                    }
                     return;
+                }
             }
 
             var sx: number = 1, sy: number = 1;
@@ -379,12 +420,21 @@ module fairygui {
                         else
                             sx = sy;
                     }
+                    if (this._shrinkOnly) {
+                        if (sx > 1)
+                            sx = 1;
+                        if (sy > 1)
+                            sy = 1;
+                    }
                     this._contentWidth = this._contentSourceWidth * sx;
                     this._contentHeight = this._contentSourceHeight * sy;
                 }
             }
 
-            if (this._content instanceof egret.Bitmap) {
+            if (this._content2 != null) {
+                this._content2.setScale(sx, sy);
+            }
+            else if (this._content instanceof egret.Bitmap) {
                 this._content.width = this._contentWidth;
                 this._content.height = this._contentHeight;
             }
@@ -393,14 +443,26 @@ module fairygui {
                 this._content.scaleY = sy;
             }
 
+            var nx: number, ny: number;
             if (this._align == AlignType.Center)
-                this._content.x = Math.floor((this.width - this._contentWidth) / 2);
+                nx = Math.floor((this.width - this._contentWidth) / 2);
             else if (this._align == AlignType.Right)
-                this._content.x = this.width - this._contentWidth;
+                nx = this.width - this._contentWidth;
+            else
+                nx = 0;
             if (this._verticalAlign == VertAlignType.Middle)
-                this._content.y = Math.floor((this.height - this._contentHeight) / 2);
+                ny = Math.floor((this.height - this._contentHeight) / 2);
             else if (this._verticalAlign == VertAlignType.Bottom)
-                this._content.y = this.height - this._contentHeight;
+                ny = this.height - this._contentHeight;
+            else
+                ny = 0;
+
+            if (this._content2 != null)
+                this._content2.setXY(nx, ny);
+            else {
+                this._content.x = nx;
+                this._content.y = ny;
+            }
         }
 
         private clearContent(): void {
@@ -414,7 +476,10 @@ module fairygui {
                 if (texture != null)
                     this.freeExternal(texture);
             }
-
+            if (this._content2 != null) {
+                this._content2.dispose();
+                this._content2 = null;
+            }
             this._contentItem = null;
         }
 
@@ -445,6 +510,7 @@ module fairygui {
             if (str)
                 this._fill = parseLoaderFillType(str);
 
+            this._shrinkOnly = xml.attributes.shrinkOnly == "true"
             this._autoSize = xml.attributes.autoSize == "true";
 
             str = xml.attributes.errorSign;
