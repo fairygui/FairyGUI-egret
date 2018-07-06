@@ -1491,8 +1491,7 @@ module fairygui {
 
         private handleScroll2(forceUpdate: boolean): void {
             this.enterCounter++;
-            if (this.enterCounter > 3)
-            {
+            if (this.enterCounter > 3) {
                 console.log("FairyGUI: list will never be filled as the item renderer function always returns a different size.");
                 return;
             }
@@ -2314,6 +2313,20 @@ module fairygui {
                         str = cxml.attributes.selectedIcon;
                         if (str && (obj instanceof GButton))
                             (<GButton><any>obj).selectedIcon = str;
+                        str = cxml.attributes.selectedTitle;
+                        if (str && (obj instanceof GButton))
+                            (<GButton><any>obj).selectedTitle = str;
+                        if (obj instanceof GComponent) {
+                            str = cxml.attributes.controllers;
+                            if (str) {
+                                arr = str.split(",");
+                                for (var j: number = 0; j < arr.length; j += 2) {
+                                    var cc: Controller = (<GComponent><any>obj).getController(arr[j]);
+                                    if (cc != null)
+                                        cc.selectedPageId = arr[j + 1];
+                                }
+                            }
+                        }
                     }
                 }
             }
