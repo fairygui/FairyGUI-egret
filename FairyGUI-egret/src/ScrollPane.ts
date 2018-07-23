@@ -895,7 +895,7 @@ module fairygui {
 				this._container.y = ToolSet.clamp(this._container.y, -this._overlapSize.y, 0);
 			}
 
-			this.syncScrollBar();
+			this.syncScrollBar(true);
 			this.checkRefreshBar();
 			if (this._pageMode)
 				this.updatePageController();
