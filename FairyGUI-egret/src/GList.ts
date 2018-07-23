@@ -1806,7 +1806,7 @@ module fairygui {
         }
 
         private handleArchOrder1(): void {
-            if (this.childrenRenderOrder == ChildrenRenderOrder.Arch) {
+            if (this._childrenRenderOrder == ChildrenRenderOrder.Arch) {
                 var mid: number = this._scrollPane.posY + this.viewHeight / 2;
                 var minDist: number = Number.POSITIVE_INFINITY;
                 var dist: number = 0;
@@ -1827,7 +1827,7 @@ module fairygui {
         }
 
         private handleArchOrder2(): void {
-            if (this.childrenRenderOrder == ChildrenRenderOrder.Arch) {
+            if (this._childrenRenderOrder == ChildrenRenderOrder.Arch) {
                 var mid: number = this._scrollPane.posX + this.viewWidth / 2;
                 var minDist: number = Number.POSITIVE_INFINITY;
                 var dist: number = 0;
@@ -2083,6 +2083,15 @@ module fairygui {
                         if (this.foldInvisibleItems && !child.visible)
                             continue;
 
+
+                        if (j == 0 && (this._lineCount != 0 && k >= this._lineCount
+                            || this._lineCount == 0 && curY + (this._lineCount > 0 ? eachHeight : child.height) > viewHeight)) {
+                            //new page
+                            page++;
+                            curY = 0;
+                            k = 0;
+                        }
+
                         lineSize += child.sourceWidth;
                         j++;
                         if (j == this._columnCount || i == cnt - 1) {
@@ -2114,14 +2123,6 @@ module fairygui {
                             lineSize = 0;
 
                             k++;
-
-                            if (this._lineCount != 0 && k >= this._lineCount
-                                || this._lineCount == 0 && curY + child.height > viewHeight) {
-                                //new page
-                                page++;
-                                curY = 0;
-                                k = 0;
-                            }
                         }
                     }
                 }
@@ -2283,6 +2284,16 @@ module fairygui {
                 this._autoResizeItem = str != "false";
             else
                 this._autoResizeItem = str == "true";
+
+            str = xml.attributes.renderOrder;
+            if (str) {
+                this._childrenRenderOrder = parseChildrenRenderOrder(str);
+                if (this._childrenRenderOrder == ChildrenRenderOrder.Arch) {
+                    str = xml.attributes.apex;
+                    if (str)
+                        this._apexIndex = parseInt(str);
+                }
+            }
 
             var col: any = xml.children;
             if (col) {

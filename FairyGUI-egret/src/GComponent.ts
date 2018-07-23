@@ -4,14 +4,14 @@ module fairygui {
     export class GComponent extends GObject {
         private _sortingChildCount: number = 0;
         private _opaque: boolean;
-        private _childrenRenderOrder: ChildrenRenderOrder = ChildrenRenderOrder.Ascent;
-        private _apexIndex: number = 0;
         private _applyingController: Controller;
 
         protected _margin: Margin;
         protected _trackBounds: boolean;
         protected _boundsChanged: boolean;
-
+        protected _childrenRenderOrder: ChildrenRenderOrder = ChildrenRenderOrder.Ascent;
+        protected _apexIndex: number = 0;
+        
         public _buildingDisplayList: boolean;
         public _children: Array<GObject>;
         public _controllers: Array<Controller>;

@@ -255,6 +255,19 @@ module fairygui {
         }
     }
 
+    export function parseChildrenRenderOrder(value: string): ChildrenRenderOrder {
+        switch (value) {
+            case "ascent":
+                return ChildrenRenderOrder.Ascent;
+            case "descent":
+                return ChildrenRenderOrder.Descent;
+            case "arch":
+                return ChildrenRenderOrder.Arch;
+            default:
+                return ChildrenRenderOrder.Ascent;
+        }
+    }
+
     var EaseMap: any =
         {
             "Linear": egret.Ease.getPowIn(1),
