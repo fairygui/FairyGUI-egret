@@ -346,6 +346,7 @@ declare module fairygui {
     function parseScrollBarDisplayType(value: string): ScrollBarDisplayType;
     function parseScrollType(value: string): ScrollType;
     function parseFlipType(value: string): FlipType;
+    function parseChildrenRenderOrder(value: string): ChildrenRenderOrder;
     function parseEaseType(value: string): Function;
     function parseGroupLayoutType(value: string): GroupLayoutType;
 }
@@ -377,12 +378,12 @@ declare module fairygui {
     class GComponent extends GObject {
         private _sortingChildCount;
         private _opaque;
-        private _childrenRenderOrder;
-        private _apexIndex;
         private _applyingController;
         protected _margin: Margin;
         protected _trackBounds: boolean;
         protected _boundsChanged: boolean;
+        protected _childrenRenderOrder: ChildrenRenderOrder;
+        protected _apexIndex: number;
         _buildingDisplayList: boolean;
         _children: Array<GObject>;
         _controllers: Array<Controller>;

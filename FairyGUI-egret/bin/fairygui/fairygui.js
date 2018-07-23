@@ -1468,7 +1468,7 @@ var fairygui;
                 func = this._handlers[tag];
                 if (func != null) {
                     if (!remove) {
-                        repl = func(tag, end, attr);
+                        repl = func.call(this, tag, end, attr);
                         if (repl != null)
                             result += repl;
                     }
@@ -1847,6 +1847,19 @@ var fairygui;
         }
     }
     fairygui.parseFlipType = parseFlipType;
+    function parseChildrenRenderOrder(value) {
+        switch (value) {
+            case "ascent":
+                return ChildrenRenderOrder.Ascent;
+            case "descent":
+                return ChildrenRenderOrder.Descent;
+            case "arch":
+                return ChildrenRenderOrder.Arch;
+            default:
+                return ChildrenRenderOrder.Ascent;
+        }
+    }
+    fairygui.parseChildrenRenderOrder = parseChildrenRenderOrder;
     var EaseMap = {
         "Linear": egret.Ease.getPowIn(1),
         "Elastic.In": egret.Ease.elasticIn,
@@ -3066,8 +3079,7 @@ var fairygui;
             this._pool = {};
         }
         GObjectPool.prototype.clear = function () {
-            var length1 = this._pool.length;
-            for (var i1 = 0; i1 < length1; i1++) {
+            for (var i1 in this._pool) {
                 var arr = this._pool[i1];
                 var cnt = arr.length;
                 for (var i = 0; i < cnt; i++)
@@ -9976,7 +9988,7 @@ var fairygui;
             }
         };
         GList.prototype.handleArchOrder1 = function () {
-            if (this.childrenRenderOrder == fairygui.ChildrenRenderOrder.Arch) {
+            if (this._childrenRenderOrder == fairygui.ChildrenRenderOrder.Arch) {
                 var mid = this._scrollPane.posY + this.viewHeight / 2;
                 var minDist = Number.POSITIVE_INFINITY;
                 var dist = 0;
@@ -9996,7 +10008,7 @@ var fairygui;
             }
         };
         GList.prototype.handleArchOrder2 = function () {
-            if (this.childrenRenderOrder == fairygui.ChildrenRenderOrder.Arch) {
+            if (this._childrenRenderOrder == fairygui.ChildrenRenderOrder.Arch) {
                 var mid = this._scrollPane.posX + this.viewWidth / 2;
                 var minDist = Number.POSITIVE_INFINITY;
                 var dist = 0;
@@ -10229,6 +10241,13 @@ var fairygui;
                         child = this.getChildAt(i);
                         if (this.foldInvisibleItems && !child.visible)
                             continue;
+                        if (j == 0 && (this._lineCount != 0 && k >= this._lineCount
+                            || this._lineCount == 0 && curY + (this._lineCount > 0 ? eachHeight : child.height) > viewHeight)) {
+                            //new page
+                            page++;
+                            curY = 0;
+                            k = 0;
+                        }
                         lineSize += child.sourceWidth;
                         j++;
                         if (j == this._columnCount || i == cnt - 1) {
@@ -10256,13 +10275,6 @@ var fairygui;
                             lineStart = i + 1;
                             lineSize = 0;
                             k++;
-                            if (this._lineCount != 0 && k >= this._lineCount
-                                || this._lineCount == 0 && curY + child.height > viewHeight) {
-                                //new page
-                                page++;
-                                curY = 0;
-                                k = 0;
-                            }
                         }
                     }
                 }
@@ -10397,6 +10409,15 @@ var fairygui;
                 this._autoResizeItem = str != "false";
             else
                 this._autoResizeItem = str == "true";
+            str = xml.attributes.renderOrder;
+            if (str) {
+                this._childrenRenderOrder = fairygui.parseChildrenRenderOrder(str);
+                if (this._childrenRenderOrder == fairygui.ChildrenRenderOrder.Arch) {
+                    str = xml.attributes.apex;
+                    if (str)
+                        this._apexIndex = parseInt(str);
+                }
+            }
             var col = xml.children;
             if (col) {
                 var length = col.length;
@@ -14237,7 +14258,7 @@ var fairygui;
                 this._container.x = fairygui.ToolSet.clamp(this._container.x, -this._overlapSize.x, 0);
                 this._container.y = fairygui.ToolSet.clamp(this._container.y, -this._overlapSize.y, 0);
             }
-            this.syncScrollBar();
+            this.syncScrollBar(true);
             this.checkRefreshBar();
             if (this._pageMode)
                 this.updatePageController();

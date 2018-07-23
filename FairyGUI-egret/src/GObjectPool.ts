@@ -10,15 +10,14 @@ module fairygui {
         }
 
         public clear(): void {
-            var length1: number = this._pool.length;
-            for (var i1: number = 0; i1 < length1; i1++) {
-                var arr: Array<GObject> = this._pool[i1];
-                var cnt: number = arr.length;
-                for (var i: number = 0; i < cnt; i++)
-                    arr[i].dispose();
-            }
-            this._pool = {};
-            this._count = 0;
+            for (var i1 in this._pool) {
+				var arr: Array<GObject> = this._pool[i1];
+				var cnt: number = arr.length;
+				for (var i: number = 0; i < cnt; i++)
+					arr[i].dispose();
+			}
+			this._pool = {};
+			this._count = 0;
         }
 
         public get count(): number {
