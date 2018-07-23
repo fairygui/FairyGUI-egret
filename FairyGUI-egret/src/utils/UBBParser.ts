@@ -159,7 +159,7 @@ module fairygui {
 				if(func!=null) {
 					if(!remove)
 					{
-						repl = func(tag, end, attr);
+						repl = func.call(this, tag, end, attr);
 						if(repl!=null)
 							result += repl;
 					}
