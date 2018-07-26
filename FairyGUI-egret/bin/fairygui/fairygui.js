@@ -10984,6 +10984,7 @@ var fairygui;
                     this.freeExternal(texture);
             }
             if (this._content2 != null) {
+                this._container.removeChild(this._content2.displayObject);
                 this._content2.dispose();
                 this._content2 = null;
             }
