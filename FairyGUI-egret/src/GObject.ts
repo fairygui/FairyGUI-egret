@@ -615,7 +615,7 @@ module fairygui {
                 gear.updateState();
         }
 
-        public checkGearController(index: number, c: Controller): Boolean {
+        public checkGearController(index: number, c: Controller): boolean {
             return this._gears[index] != null && this._gears[index].controller == c;
         }
 

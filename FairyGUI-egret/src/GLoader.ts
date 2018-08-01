@@ -160,10 +160,30 @@ module fairygui {
             if (this._frame != value) {
                 this._frame = value;
                 if (this._content instanceof MovieClip)
-                    (<MovieClip>this._content).currentFrame = value;
+                    (<MovieClip>this._content).frame = value;
                 this.updateGear(5);
             }
         }
+
+        public get timeScale():number
+		{
+			if(this._content instanceof MovieClip)
+				return (<MovieClip>this._content).timeScale;
+			else
+				return 1;
+		}
+		
+		public set timeScale(value:number)
+		{
+			if(this._content instanceof MovieClip)
+				(<MovieClip>this._content).timeScale = value;
+		}
+		
+		public advance(timeInMiniseconds:number):void
+		{
+			if(this._content instanceof MovieClip)
+				(<MovieClip>this._content).advance(timeInMiniseconds);
+		}
 
         public get color(): number {
             return this._color;

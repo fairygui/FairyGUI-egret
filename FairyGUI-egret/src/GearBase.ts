@@ -5,7 +5,7 @@ module fairygui {
         public static disableAllTweenEffect: boolean = false;
 
         protected _tween: boolean;
-        protected _easeType: Function;
+        protected _easeType: number;
         protected _tweenTime: number;
         protected _tweenDelay: number;
         protected _displayLockToken: number;
@@ -15,7 +15,7 @@ module fairygui {
 
         public constructor(owner: GObject) {
             this._owner = owner;
-            this._easeType = egret.Ease.quadOut;
+            this._easeType = tween.EaseType.QuadOut;
             this._tweenTime = 0.3;
             this._tweenDelay = 0;
             this._displayLockToken = 0;
@@ -57,11 +57,11 @@ module fairygui {
             this._tweenTime = value;
         }
 
-        public get easeType(): Function {
+        public get easeType(): number {
             return this._easeType;
         }
 
-        public set easeType(value: Function) {
+        public set easeType(value: number) {
             this._easeType = value;
         }
 
@@ -80,7 +80,7 @@ module fairygui {
 
             str = xml.attributes.ease;
             if (str)
-                this._easeType = parseEaseType(str);
+                this._easeType = tween.EaseType.parseEaseType(str);
 
             str = xml.attributes.duration;
             if (str)

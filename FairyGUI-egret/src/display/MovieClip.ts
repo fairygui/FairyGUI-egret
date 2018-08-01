@@ -5,16 +5,16 @@ module fairygui {
         public interval: number = 0;
         public swing: boolean;
         public repeatDelay: number = 0;
-        private playState: PlayState;
+        public timeScale: number = 1;
 
         private _texture: egret.Texture;
         private _needRebuild: boolean;
         private _frameRect: egret.Rectangle;
 
-        private _playing: boolean;
+        private _playing: boolean = true;
         private _frameCount: number = 0;
         private _frames: Array<Frame>;
-        private _currentFrame: number = 0;
+        private _frame: number = 0;
         private _start: number = 0;
         private _end: number = 0;
         private _times: number = 0;
@@ -24,6 +24,10 @@ module fairygui {
         private _callbackObj: any;
         private _smoothing: boolean = true;
 
+        private _frameElapsed: number = 0; //当前帧延迟
+        private _reversed: boolean = false;
+        private _repeatedCount: number = 0;
+
         public constructor() {
             super();
 
@@ -32,8 +36,6 @@ module fairygui {
             //comment out below line after 5.1.0
             //this.$renderNode = new egret.sys.BitmapNode();
 
-            this.playState = new PlayState();
-            this._playing = true;
             this.touchEnabled = false;
 
             this.setPlaySettings();
@@ -55,29 +57,34 @@ module fairygui {
             if (this._endAt == -1 || this._endAt > this._frameCount - 1)
                 this._endAt = this._frameCount - 1;
 
-            if (this._currentFrame < 0 || this._currentFrame > this._frameCount - 1)
-                this._currentFrame = this._frameCount - 1;
+            if (this._frame < 0 || this._frame > this._frameCount - 1)
+                this._frame = this._frameCount - 1;
 
-            if (this._frameCount > 0)
-                this.setFrame(this._frames[this._currentFrame]);
-            else
-                this.setFrame(null);
-            this.playState.rewind();
+            this.drawFrame();
+
+            this._frameElapsed = 0;
+            this._repeatedCount = 0;
+            this._reversed = false;
+
+            this.checkTimer();
         }
 
         public get frameCount(): number {
             return this._frameCount;
         }
 
-        public get currentFrame(): number {
-            return this._currentFrame;
+        public get frame(): number {
+            return this._frame;
         }
 
-        public set currentFrame(value: number) {
-            if (this._currentFrame != value) {
-                this._currentFrame = value;
-                this.playState.currentFrame = value;
-                this.setFrame(this._currentFrame < this._frameCount ? this._frames[this._currentFrame] : null);
+        public set frame(value: number) {
+            if (this._frame != value) {
+                if (this._frames != null && value >= this._frameCount)
+                    value = this._frameCount - 1;
+
+                this._frame = value;
+                this._frameElapsed = 0;
+                this.drawFrame();
             }
         }
 
@@ -86,12 +93,9 @@ module fairygui {
         }
 
         public set playing(value: boolean) {
-            this._playing = value;
-
-            if (value && this.stage != null) {
-                GTimers.inst.add(0, 0, this.update, this);
-            } else {
-                GTimers.inst.remove(this.update, this);
+            if (this._playing != value) {
+                this._playing = value;
+                this.checkTimer();
             }
         }
 
@@ -101,6 +105,76 @@ module fairygui {
 
         public set smoothing(value: boolean) {
             this._smoothing = value;
+        }
+
+        public rewind(): void {
+            this._frame = 0;
+            this._frameElapsed = 0;
+            this._reversed = false;
+            this._repeatedCount = 0;
+
+            this.drawFrame();
+        }
+
+        public syncStatus(anotherMc: MovieClip): void {
+            this._frame = anotherMc._frame;
+            this._frameElapsed = anotherMc._frameElapsed;
+            this._reversed = anotherMc._reversed;
+            this._repeatedCount = anotherMc._repeatedCount;
+
+            this.drawFrame();
+        }
+
+        public advance(timeInMiniseconds: number): void {
+            var beginFrame: number = this._frame;
+            var beginReversed: boolean = this._reversed;
+            var backupTime: number = timeInMiniseconds;
+
+            while (true) {
+                var tt: number = this.interval + this._frames[this._frame].addDelay;
+                if (this._frame == 0 && this._repeatedCount > 0)
+                    tt += this.repeatDelay;
+                if (timeInMiniseconds < tt) {
+                    this._frameElapsed = 0;
+                    break;
+                }
+
+                timeInMiniseconds -= tt;
+
+                if (this.swing) {
+                    if (this._reversed) {
+                        this._frame--;
+                        if (this._frame <= 0) {
+                            this._frame = 0;
+                            this._repeatedCount++;
+                            this._reversed = !this._reversed;
+                        }
+                    }
+                    else {
+                        this._frame++;
+                        if (this._frame > this._frameCount - 1) {
+                            this._frame = Math.max(0, this._frameCount - 2);
+                            this._repeatedCount++;
+                            this._reversed = !this._reversed;
+                        }
+                    }
+                }
+                else {
+                    this._frame++;
+                    if (this._frame > this._frameCount - 1) {
+                        this._frame = 0;
+                        this._repeatedCount++;
+                    }
+                }
+
+                if (this._frame == beginFrame && this._reversed == beginReversed) //走了一轮了
+                {
+                    var roundTime: number = backupTime - timeInMiniseconds; //这就是一轮需要的时间
+                    timeInMiniseconds -= Math.floor(timeInMiniseconds / roundTime) * roundTime; //跳过
+                }
+            }
+
+            this.drawFrame();
         }
 
         //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
@@ -119,72 +193,102 @@ module fairygui {
             this._callback = endCallback;
             this._callbackObj = callbackObj;
 
-            this.currentFrame = start;
+            this.frame = start;
         }
 
         private update(): void {
-            if (this._playing && this._frameCount != 0 && this._status != 3) {
-                this.playState.update(this);
-                if (this._currentFrame != this.playState.currentFrame) {
-                    if (this._status == 1) {
-                        this._currentFrame = this._start;
-                        this.playState.currentFrame = this._currentFrame;
-                        this._status = 0;
-                    }
-                    else if (this._status == 2) {
-                        this._currentFrame = this._endAt;
-                        this.playState.currentFrame = this._currentFrame;
-                        this._status = 3;
+            if (!this._playing || this._frameCount == 0 || this._status == 3)
+                return;
 
-                        //play end
-                        if (this._callback != null) {
-                            GTimers.inst.callLater(this.__playEnd, this);
-                        }
-                    }
-                    else {
-                        this._currentFrame = this.playState.currentFrame;
-                        if (this._currentFrame == this._end) {
-                            if (this._times > 0) {
-                                this._times--;
-                                if (this._times == 0)
-                                    this._status = 2;
-                                else
-                                    this._status = 1;
-                            }
-                            else if (this._start != 0)
-                                this._status = 1;
-                        }
-                    }
+            var dt: number = GTimers.deltaTime;
+            if (this.timeScale != 1)
+                dt *= this.timeScale;
 
-                    //draw
-                    this.setFrame(this._frames[this._currentFrame]);
+            this._frameElapsed += dt;
+            var tt: number = this.interval + this._frames[this._frame].addDelay;
+            if (this._frame == 0 && this._repeatedCount > 0)
+                tt += this.repeatDelay;
+            if (this._frameElapsed < tt)
+                return;
+
+            this._frameElapsed -= tt;
+            if (this._frameElapsed > this.interval)
+                this._frameElapsed = this.interval;
+
+            if (this.swing) {
+                if (this._reversed) {
+                    this._frame--;
+                    if (this._frame <= 0) {
+                        this._frame = 0;
+                        this._repeatedCount++;
+                        this._reversed = !this._reversed;
+                    }
+                }
+                else {
+                    this._frame++;
+                    if (this._frame > this._frameCount - 1) {
+                        this._frame = Math.max(0, this._frameCount - 2);
+                        this._repeatedCount++;
+                        this._reversed = !this._reversed;
+                    }
                 }
             }
-        }
-
-        private __playEnd(): void {
-            if (this._callback != null) {
-                var f: Function = this._callback;
-                var fObj: any = this._callbackObj;
-                this._callback = null;
-                this._callbackObj = null;
-                if (f.length == 1)
-                    f.call(fObj, this);
-                else
-                    f.call(fObj);
+            else {
+                this._frame++;
+                if (this._frame > this._frameCount - 1) {
+                    this._frame = 0;
+                    this._repeatedCount++;
+                }
             }
-        }
 
-        private setFrame(frame: Frame): void {
-            if (frame == null) {
-                this._texture = null;
+            if (this._status == 1) //new loop
+            {
+                this._frame = this._start;
+                this._frameElapsed = 0;
+                this._status = 0;
+            }
+            else if (this._status == 2) //ending
+            {
+                this._frame = this._endAt;
+                this._frameElapsed = 0;
+                this._status = 3; //ended
+
+                //play end
+                if (this._callback != null) {
+                    var callback: Function = this._callback;
+                    var caller: any = this._callbackObj;
+                    this._callback = null;
+                    this._callbackObj = null;
+                    callback.call(caller);
+                }
             }
             else {
+                if (this._frame == this._end) {
+                    if (this._times > 0) {
+                        this._times--;
+                        if (this._times == 0)
+                            this._status = 2;  //ending
+                        else
+                            this._status = 1; //new loop
+                    }
+                    else if (this._start != 0)
+                        this._status = 1; //new loop
+                }
+            }
+
+            this.drawFrame();
+        }
+
+        private drawFrame(): void {
+            if (this._frameCount > 0 && this._frame < this._frames.length) {
+                var frame: Frame = this._frames[this._frame];
                 this._texture = frame.texture;
                 this._frameRect = frame.rect;
             }
+            else
+                this._texture = null;
 
-            if(this["$updateRenderNode"]) {
+            if (this["$updateRenderNode"]) {
                 let self = <any>this;
                 self.$renderDirty = true;
                 let p = self.$parent;
@@ -204,8 +308,15 @@ module fairygui {
             }
         }
 
+        private checkTimer(): void {
+            if (this._playing && this._frameCount > 0 && this.stage != null)
+                GTimers.inst.add(1, 0, this.update, this);
+            else
+                GTimers.inst.remove(this.update, this);
+        }
+
         //comment this function before 5.1.0
-         $updateRenderNode(): void {
+        $updateRenderNode(): void {
             var texture = this._texture;
             if (texture) {
                 var offsetX: number = Math.round(texture.$offsetX) + this._frameRect.x;
@@ -222,9 +333,9 @@ module fairygui {
                 egret.sys.BitmapNode.$updateTextureData(<egret.sys.NormalBitmapNode>this.$renderNode, texture.$bitmapData, texture.$bitmapX, texture.$bitmapY,
                     bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight, destW, destH, sourceWidth, sourceHeight, egret.BitmapFillMode.SCALE, this._smoothing);
             }
-         }
+        }
 
-         //comment out this function after 5.1.0
+        //comment out this function after 5.1.0
         /*
         $render(): void {
             var texture = this._texture;
@@ -270,15 +381,14 @@ module fairygui {
         $onAddToStage(stage: egret.Stage, nestLevel: number): void {
             super.$onAddToStage(stage, nestLevel);
 
-            if (this._playing)
-                GTimers.inst.add(0, 0, this.update, this);
+            if (this._playing && this._frameCount > 0)
+                GTimers.inst.add(1, 0, this.update, this);
         }
 
         $onRemoveFromStage(): void {
             super.$onRemoveFromStage();
 
-            if (this._playing)
-                GTimers.inst.remove(this.update, this);
+            GTimers.inst.remove(this.update, this);
         }
     }
 }

@@ -18,10 +18,7 @@ module fairygui {
         private _barStartX: number = 0;
         private _barStartY: number = 0;
 
-        private _tweener: egret.Tween;
-        private _tweenValue: number = 0;
-
-        private static easeLinear: Function = egret.Ease.getPowIn(1);
+        private _tweening: boolean = false;
 
         public constructor() {
             super();
@@ -58,9 +55,9 @@ module fairygui {
         }
 
         public set value(value: number) {
-            if (this._tweener != null) {
-                this._tweener.setPaused(true);
-                this._tweener = null;
+            if (this._tweening) {
+                tween.GTween.kill(this, true, this.update);
+                this._tweening = false;
             }
 
             if (this._value != value) {
@@ -69,23 +66,22 @@ module fairygui {
             }
         }
 
-        public tweenValue(value: number, duration: number): egret.Tween {
+        public tweenValue(value: number, duration: number): tween.GTweener {
             if (this._value != value) {
-                if (this._tweener)
-                    this._tweener.setPaused(true);
+                if (this._tweening) {
+                    tween.GTween.kill(this, false, this.update);
+                    this._tweening = false;
+                }
 
-                this._tweenValue = this._value;
+                var oldValule: number = this._value;
                 this._value = value;
-                this._tweener = egret.Tween.get(this, { onChange: this.onUpdateTween, onChangeObj: this })
-                    .to({ _tweenValue: value }, duration * 1000, GProgressBar.easeLinear).call(() => { this._tweener = null; }, this);
-                return this._tweener;
+
+                this._tweening = true;
+                return tween.GTween.to(oldValule, this._value, duration).setTarget(this, this.update).setEase(tween.EaseType.Linear)
+                    .onComplete(function (): void { this._tweening = false; }, this);
             }
             else
                 return null;
-        }
-
-        private onUpdateTween(): void {
-            this.update(this._tweenValue);
         }
 
         public update(newValue: number): void {
@@ -185,8 +181,8 @@ module fairygui {
         }
 
         public dispose(): void {
-            if (this._tweener)
-                this._tweener.setPaused(true);
+            if (this._tweening)
+                tween.GTween.kill(this);
             super.dispose();
         }
     }

@@ -3,7 +3,7 @@ module fairygui {
     export class PlayTransitionAction extends ControllerAction {
 
         public transitionName: string;
-        public repeat: number;
+        public playTimes: number;
         public delay: number;
         public stopOnExit: boolean;
 
@@ -12,7 +12,7 @@ module fairygui {
         public constructor() {
             super();
 
-            this.repeat = 1;
+            this.playTimes = 1;
             this.delay = 0;
             this.stopOnExit = false;
         }
@@ -21,9 +21,9 @@ module fairygui {
             var trans: Transition = controller.parent.getTransition(this.transitionName);
             if (trans) {
                 if (this._currentTransition && this._currentTransition.playing)
-                    trans.changeRepeat(this.repeat);
+                    trans.changePlayTimes(this.playTimes);
                 else
-                    trans.play(null, null, null, this.repeat, this.delay);
+                    trans.play(null, null, null, this.playTimes, this.delay);
                 this._currentTransition = trans;
             }
         }
@@ -44,7 +44,7 @@ module fairygui {
 
             str = xml.attributes.repeat;
             if (str)
-                this.repeat = parseInt(str);
+                this.playTimes = parseInt(str);
 
             str = xml.attributes.delay;
             if (str)

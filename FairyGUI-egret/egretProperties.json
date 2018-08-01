@@ -9,9 +9,6 @@
 			"name": "res"
 		},
 		{
-			"name": "tween"
-		},
-		{
 			"name": "rawinflate",
 			"path": "./libs/rawinflate"
 		}

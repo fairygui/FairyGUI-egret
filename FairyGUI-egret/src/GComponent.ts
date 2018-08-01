@@ -1119,16 +1119,14 @@ module fairygui {
         private ___added(evt: egret.Event): void {
             var cnt: number = this._transitions.length;
             for (var i: number = 0; i < cnt; ++i) {
-                var trans: Transition = this._transitions[i];
-                if (trans.autoPlay)
-                    trans.play(null, null, null, trans.autoPlayRepeat, trans.autoPlayDelay);
+                this._transitions[i].onOwnerAddedToStage();
             }
         }
 
         private ___removed(evt: egret.Event): void {
             var cnt: number = this._transitions.length;
             for (var i: number = 0; i < cnt; ++i) {
-                this._transitions[i].OnOwnerRemovedFromStage();
+                this._transitions[i].onOwnerRemovedFromStage();
             }
         }
     }

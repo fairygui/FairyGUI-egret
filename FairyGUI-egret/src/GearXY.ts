@@ -2,12 +2,9 @@
 module fairygui {
 
     export class GearXY extends GearBase {
-        public tweener: egret.Tween;
-
         private _storage: any;
         private _default: egret.Point;
-        private _tweenValue: egret.Point;
-        private _tweenTarget: egret.Point;
+        private _tweener: tween.GTweener;
 
         public constructor(owner: GObject) {
             super(owner);
@@ -40,42 +37,25 @@ module fairygui {
                 pt = this._default;
 
             if (this._tween && !UIPackage._constructing && !GearBase.disableAllTweenEffect) {
-                if (this.tweener) {
-                    if (this._tweenTarget.x != pt.x || this._tweenTarget.y != pt.y) {
-                        this.tweener["tick"] ? this.tweener["tick"](100000000) : this.tweener["$tick"](100000000);
-                        this.tweener = null;
+                if (this._tweener != null) {
+                    if (this._tweener.endValue.x != pt.x || this._tweener.endValue.y != pt.y) {
+                        this._tweener.kill(true);
+                        this._tweener = null;
                     }
                     else
                         return;
                 }
+
                 if (this._owner.x != pt.x || this._owner.y != pt.y) {
                     if (this._owner.checkGearController(0, this._controller))
                         this._displayLockToken = this._owner.addDisplayLock();
-                    this._tweenTarget = pt;
 
-                    var vars: any = {
-                        onChange: function (): void {
-                            this._owner._gearLocked = true;
-                            this._owner.setXY(this._tweenValue.x, this._tweenValue.y);
-                            this._owner._gearLocked = false;
-                        },
-                        onChangeObj: this
-                    };
-                    if (this._tweenValue == null)
-                        this._tweenValue = new egret.Point();
-                    this._tweenValue.x = this._owner.x;
-                    this._tweenValue.y = this._owner.y;
-                    this.tweener = egret.Tween.get(this._tweenValue, vars)
-                        .wait(this._tweenDelay * 1000)
-                        .to({ x: pt.x, y: pt.y }, this._tweenTime * 1000, this._easeType)
-                        .call(function (): void {
-                            if (this._displayLockToken != 0) {
-                                this._owner.releaseDisplayLock(this._displayLockToken);
-                                this._displayLockToken = 0;
-                            }
-                            this._tweener = null;
-                            this._owner.dispatchEventWith(GObject.GEAR_STOP, false);
-                        }, this);
+                    this._tweener = tween.GTween.to2(this._owner.x, this._owner.y, pt.x, pt.y, this._tweenTime)
+                        .setDelay(this._tweenDelay)
+                        .setEase(this._easeType)
+                        .setTarget(this)
+                        .onUpdate(this.__tweenUpdate, this)
+                        .onComplete(this.__tweenComplete, this);
                 }
             }
             else {
@@ -83,6 +63,20 @@ module fairygui {
                 this._owner.setXY(pt.x, pt.y);
                 this._owner._gearLocked = false;
             }
+        }
+
+        private __tweenUpdate(tweener: tween.GTweener): void {
+            this._owner._gearLocked = true;
+            this._owner.setXY(tweener.value.x, tweener.value.y);
+            this._owner._gearLocked = false;
+        }
+
+        private __tweenComplete(): void {
+            if (this._displayLockToken != 0) {
+                this._owner.releaseDisplayLock(this._displayLockToken);
+                this._displayLockToken = 0;
+            }
+            this._tweener = null;
         }
 
         public updateState(): void {

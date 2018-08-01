@@ -1917,7 +1917,7 @@ var fairygui;
     var GearBase = (function () {
         function GearBase(owner) {
             this._owner = owner;
-            this._easeType = egret.Ease.quadOut;
+            this._easeType = fairygui.tween.EaseType.QuadOut;
             this._tweenTime = 0.3;
             this._tweenDelay = 0;
             this._displayLockToken = 0;
@@ -1987,7 +1987,7 @@ var fairygui;
                 this._tween = true;
             str = xml.attributes.ease;
             if (str)
-                this._easeType = fairygui.parseEaseType(str);
+                this._easeType = fairygui.tween.EaseType.parseEaseType(str);
             str = xml.attributes.duration;
             if (str)
                 this._tweenTime = parseFloat(str);
@@ -3016,15 +3016,13 @@ var fairygui;
         GComponent.prototype.___added = function (evt) {
             var cnt = this._transitions.length;
             for (var i = 0; i < cnt; ++i) {
-                var trans = this._transitions[i];
-                if (trans.autoPlay)
-                    trans.play(null, null, null, trans.autoPlayRepeat, trans.autoPlayDelay);
+                this._transitions[i].onOwnerAddedToStage();
             }
         };
         GComponent.prototype.___removed = function (evt) {
             var cnt = this._transitions.length;
             for (var i = 0; i < cnt; ++i) {
-                this._transitions[i].OnOwnerRemovedFromStage();
+                this._transitions[i].onOwnerRemovedFromStage();
             }
         };
         return GComponent;
@@ -3913,85 +3911,472 @@ var fairygui;
 })(fairygui || (fairygui = {}));
 var fairygui;
 (function (fairygui) {
-    var GearColor = (function (_super) {
-        __extends(GearColor, _super);
-        function GearColor(owner) {
-            return _super.call(this, owner) || this;
+    var GButton = (function (_super) {
+        __extends(GButton, _super);
+        function GButton() {
+            var _this = _super.call(this) || this;
+            _this._mode = fairygui.ButtonMode.Common;
+            _this._title = "";
+            _this._icon = "";
+            _this._sound = fairygui.UIConfig.buttonSound;
+            _this._soundVolumeScale = fairygui.UIConfig.buttonSoundVolumeScale;
+            _this._pageOption = new fairygui.PageOption();
+            _this._changeStateOnClick = true;
+            _this._downEffect = 0;
+            _this._downEffectValue = 0.8;
+            return _this;
         }
-        GearColor.prototype.init = function () {
-            if (this._owner["strokeColor"] != undefined)
-                this._default = new GearColorValue(this._owner.color, this._owner.strokeColor);
-            else
-                this._default = new GearColorValue(this._owner.color);
-            this._storage = {};
+        Object.defineProperty(GButton.prototype, "icon", {
+            get: function () {
+                return this._icon;
+            },
+            set: function (value) {
+                this._icon = value;
+                value = (this._selected && this._selectedIcon) ? this._selectedIcon : this._icon;
+                if (this._iconObject != null)
+                    this._iconObject.icon = value;
+                this.updateGear(7);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "selectedIcon", {
+            get: function () {
+                return this._selectedIcon;
+            },
+            set: function (value) {
+                this._selectedIcon = value;
+                value = (this._selected && this._selectedIcon) ? this._selectedIcon : this._icon;
+                if (this._iconObject != null)
+                    this._iconObject.icon = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "title", {
+            get: function () {
+                return this._title;
+            },
+            set: function (value) {
+                this._title = value;
+                if (this._titleObject)
+                    this._titleObject.text = (this._selected && this._selectedTitle) ? this._selectedTitle : this._title;
+                this.updateGear(6);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "text", {
+            get: function () {
+                return this.title;
+            },
+            set: function (value) {
+                this.title = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "selectedTitle", {
+            get: function () {
+                return this._selectedTitle;
+            },
+            set: function (value) {
+                this._selectedTitle = value;
+                if (this._titleObject)
+                    this._titleObject.text = (this._selected && this._selectedTitle) ? this._selectedTitle : this._title;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "titleColor", {
+            get: function () {
+                if (this._titleObject instanceof fairygui.GTextField)
+                    return this._titleObject.color;
+                else if (this._titleObject instanceof fairygui.GLabel)
+                    return this._titleObject.titleColor;
+                else if (this._titleObject instanceof GButton)
+                    return this._titleObject.titleColor;
+                else
+                    return 0;
+            },
+            set: function (value) {
+                if (this._titleObject instanceof fairygui.GTextField)
+                    this._titleObject.color = value;
+                else if (this._titleObject instanceof fairygui.GLabel)
+                    this._titleObject.titleColor = value;
+                else if (this._titleObject instanceof GButton)
+                    this._titleObject.titleColor = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "titleFontSize", {
+            get: function () {
+                if (this._titleObject instanceof fairygui.GTextField)
+                    return this._titleObject.fontSize;
+                else if (this._titleObject instanceof fairygui.GLabel)
+                    return this._titleObject.titleFontSize;
+                else if (this._titleObject instanceof GButton)
+                    return this._titleObject.titleFontSize;
+                else
+                    return 0;
+            },
+            set: function (value) {
+                if (this._titleObject instanceof fairygui.GTextField)
+                    this._titleObject.fontSize = value;
+                else if (this._titleObject instanceof fairygui.GLabel)
+                    this._titleObject.titleFontSize = value;
+                else if (this._titleObject instanceof GButton)
+                    this._titleObject.titleFontSize = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "sound", {
+            get: function () {
+                return this._sound;
+            },
+            set: function (val) {
+                this._sound = val;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "soundVolumeScale", {
+            get: function () {
+                return this._soundVolumeScale;
+            },
+            set: function (value) {
+                this._soundVolumeScale = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "selected", {
+            get: function () {
+                return this._selected;
+            },
+            set: function (val) {
+                if (this._mode == fairygui.ButtonMode.Common)
+                    return;
+                if (this._selected != val) {
+                    this._selected = val;
+                    if (this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED)) {
+                        if (this._selected)
+                            this.setState(GButton.SELECTED_DISABLED);
+                        else
+                            this.setState(GButton.DISABLED);
+                    }
+                    else {
+                        if (this._selected)
+                            this.setState(this._over ? GButton.SELECTED_OVER : GButton.DOWN);
+                        else
+                            this.setState(this._over ? GButton.OVER : GButton.UP);
+                    }
+                    if (this._selectedTitle && this._titleObject)
+                        this._titleObject.text = this._selected ? this._selectedTitle : this._title;
+                    if (this._selectedIcon) {
+                        var str = this._selected ? this._selectedIcon : this._icon;
+                        if (this._iconObject != null)
+                            this._iconObject.icon = str;
+                    }
+                    if (this._relatedController
+                        && this._parent
+                        && !this._parent._buildingDisplayList) {
+                        if (this._selected) {
+                            this._relatedController.selectedPageId = this._pageOption.id;
+                            if (this._relatedController._autoRadioGroupDepth)
+                                this._parent.adjustRadioGroupDepth(this, this._relatedController);
+                        }
+                        else if (this._mode == fairygui.ButtonMode.Check && this._relatedController.selectedPageId == this._pageOption.id)
+                            this._relatedController.oppositePageId = this._pageOption.id;
+                    }
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "mode", {
+            get: function () {
+                return this._mode;
+            },
+            set: function (value) {
+                if (this._mode != value) {
+                    if (value == fairygui.ButtonMode.Common)
+                        this.selected = false;
+                    this._mode = value;
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "relatedController", {
+            get: function () {
+                return this._relatedController;
+            },
+            set: function (val) {
+                if (val != this._relatedController) {
+                    this._relatedController = val;
+                    this._pageOption.controller = val;
+                    this._pageOption.clear();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "pageOption", {
+            get: function () {
+                return this._pageOption;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "changeStateOnClick", {
+            get: function () {
+                return this._changeStateOnClick;
+            },
+            set: function (value) {
+                this._changeStateOnClick = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GButton.prototype, "linkedPopup", {
+            get: function () {
+                return this._linkedPopup;
+            },
+            set: function (value) {
+                this._linkedPopup = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GButton.prototype.addStateListener = function (listener, thisObj) {
+            this.addEventListener(fairygui.StateChangeEvent.CHANGED, listener, thisObj);
         };
-        GearColor.prototype.addStatus = function (pageId, value) {
-            if (value == "-" || value.length == 0)
+        GButton.prototype.removeStateListener = function (listener, thisObj) {
+            this.removeEventListener(fairygui.StateChangeEvent.CHANGED, listener, thisObj);
+        };
+        GButton.prototype.fireClick = function (downEffect) {
+            if (downEffect === void 0) { downEffect = true; }
+            if (downEffect && this._mode == fairygui.ButtonMode.Common) {
+                this.setState(GButton.OVER);
+                fairygui.GTimers.inst.add(100, 1, function () { this.setState(GButton.DOWN); }, this);
+                fairygui.GTimers.inst.add(200, 1, function () { this.setState(GButton.UP); }, this);
+            }
+            this.__click(null);
+        };
+        GButton.prototype.setState = function (val) {
+            if (this._buttonController)
+                this._buttonController.selectedPage = val;
+            if (this._downEffect == 1) {
+                var cnt = this.numChildren;
+                if (val == GButton.DOWN || val == GButton.SELECTED_OVER || val == GButton.SELECTED_DISABLED) {
+                    var r = this._downEffectValue * 255;
+                    var color = (r << 16) + (r << 8) + r;
+                    for (var i = 0; i < cnt; i++) {
+                        var obj = this.getChildAt(i);
+                        if (obj["color"] != undefined && !(obj instanceof fairygui.GTextField))
+                            obj.color = color;
+                    }
+                }
+                else {
+                    for (var i = 0; i < cnt; i++) {
+                        var obj = this.getChildAt(i);
+                        if (obj["color"] != undefined && !(obj instanceof fairygui.GTextField))
+                            obj.color = 0xFFFFFF;
+                    }
+                }
+            }
+            else if (this._downEffect == 2) {
+                if (val == GButton.DOWN || val == GButton.SELECTED_OVER || val == GButton.SELECTED_DISABLED) {
+                    if (!this._downScaled) {
+                        this._downScaled = true;
+                        this.setScale(this.scaleX * this._downEffectValue, this.scaleY * this._downEffectValue);
+                    }
+                }
+                else {
+                    if (this._downScaled) {
+                        this._downScaled = false;
+                        this.setScale(this.scaleX / this._downEffectValue, this.scaleY / this._downEffectValue);
+                    }
+                }
+            }
+        };
+        GButton.prototype.handleControllerChanged = function (c) {
+            _super.prototype.handleControllerChanged.call(this, c);
+            if (this._relatedController == c)
+                this.selected = this._pageOption.id == c.selectedPageId;
+        };
+        GButton.prototype.handleGrayedChanged = function () {
+            if (this._buttonController && this._buttonController.hasPage(GButton.DISABLED)) {
+                if (this.grayed) {
+                    if (this._selected && this._buttonController.hasPage(GButton.SELECTED_DISABLED))
+                        this.setState(GButton.SELECTED_DISABLED);
+                    else
+                        this.setState(GButton.DISABLED);
+                }
+                else if (this._selected)
+                    this.setState(GButton.DOWN);
+                else
+                    this.setState(GButton.UP);
+            }
+            else
+                _super.prototype.handleGrayedChanged.call(this);
+        };
+        GButton.prototype.constructFromXML = function (xml) {
+            _super.prototype.constructFromXML.call(this, xml);
+            xml = fairygui.ToolSet.findChildNode(xml, "Button");
+            var str;
+            str = xml.attributes.mode;
+            if (str)
+                this._mode = fairygui.parseButtonMode(str);
+            str = xml.attributes.sound;
+            if (str != null)
+                this._sound = str;
+            str = xml.attributes.volume;
+            if (str)
+                this._soundVolumeScale = parseInt(str) / 100;
+            str = xml.attributes.downEffect;
+            if (str) {
+                this._downEffect = str == "dark" ? 1 : (str == "scale" ? 2 : 0);
+                str = xml.attributes.downEffectValue;
+                this._downEffectValue = parseFloat(str);
+                if (this._downEffect == 2)
+                    this.setPivot(0.5, 0.5);
+            }
+            this._buttonController = this.getController("button");
+            this._titleObject = this.getChild("title");
+            this._iconObject = this.getChild("icon");
+            if (this._titleObject != null)
+                this._title = this._titleObject.text;
+            if (this._iconObject != null)
+                this._icon = this._iconObject.icon;
+            if (this._mode == fairygui.ButtonMode.Common)
+                this.setState(GButton.UP);
+            this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__mousedown, this);
+            this.addEventListener(egret.TouchEvent.TOUCH_TAP, this.__click, this);
+        };
+        GButton.prototype.setup_afterAdd = function (xml) {
+            _super.prototype.setup_afterAdd.call(this, xml);
+            xml = fairygui.ToolSet.findChildNode(xml, "Button");
+            if (xml) {
+                var str;
+                str = xml.attributes.title;
+                if (str)
+                    this.title = str;
+                str = xml.attributes.icon;
+                if (str)
+                    this.icon = str;
+                str = xml.attributes.selectedTitle;
+                if (str)
+                    this.selectedTitle = str;
+                str = xml.attributes.selectedIcon;
+                if (str)
+                    this.selectedIcon = str;
+                str = xml.attributes.titleColor;
+                if (str)
+                    this.titleColor = fairygui.ToolSet.convertFromHtmlColor(str);
+                str = xml.attributes.titleFontSize;
+                if (str)
+                    this.titleFontSize = parseInt(str);
+                str = xml.attributes.sound;
+                if (str != null)
+                    this._sound = str;
+                str = xml.attributes.volume;
+                if (str)
+                    this._soundVolumeScale = parseInt(str) / 100;
+                str = xml.attributes.controller;
+                if (str)
+                    this._relatedController = this._parent.getController(str);
+                else
+                    this._relatedController = null;
+                this._pageOption.id = xml.attributes.page;
+                this.selected = xml.attributes.checked == "true";
+            }
+        };
+        GButton.prototype.__rollover = function (evt) {
+            if (!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
                 return;
-            var pos = value.indexOf(",");
-            var col1;
-            var col2;
-            if (pos == -1) {
-                col1 = fairygui.ToolSet.convertFromHtmlColor(value);
-                col2 = NaN;
+            this._over = true;
+            if (this._down)
+                return;
+            this.setState(this._selected ? GButton.SELECTED_OVER : GButton.OVER);
+        };
+        GButton.prototype.__rollout = function (evt) {
+            if (!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
+                return;
+            this._over = false;
+            if (this._down)
+                return;
+            this.setState(this._selected ? GButton.DOWN : GButton.UP);
+        };
+        GButton.prototype.__mousedown = function (evt) {
+            this._down = true;
+            fairygui.GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
+            if (this._mode == fairygui.ButtonMode.Common) {
+                if (this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED))
+                    this.setState(GButton.SELECTED_DISABLED);
+                else
+                    this.setState(GButton.DOWN);
+            }
+            if (this._linkedPopup != null) {
+                if (this._linkedPopup instanceof fairygui.Window)
+                    (this._linkedPopup).toggleStatus();
+                else
+                    this.root.togglePopup(this._linkedPopup, this);
+            }
+        };
+        GButton.prototype.__mouseup = function (evt) {
+            if (this._down) {
+                fairygui.GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
+                this._down = false;
+                if (this._mode == fairygui.ButtonMode.Common) {
+                    if (this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED))
+                        this.setState(GButton.DISABLED);
+                    else if (this._over)
+                        this.setState(GButton.OVER);
+                    else
+                        this.setState(GButton.UP);
+                }
+            }
+        };
+        GButton.prototype.__click = function (evt) {
+            if (this._sound) {
+                var pi = fairygui.UIPackage.getItemByURL(this._sound);
+                if (pi) {
+                    var sound = pi.owner.getItemAsset(pi);
+                    if (sound)
+                        fairygui.GRoot.inst.playOneShotSound(sound, this._soundVolumeScale);
+                }
+            }
+            if (this._mode == fairygui.ButtonMode.Check) {
+                if (this._changeStateOnClick) {
+                    this.selected = !this._selected;
+                    this.dispatchEvent(new fairygui.StateChangeEvent(fairygui.StateChangeEvent.CHANGED));
+                }
+            }
+            else if (this._mode == fairygui.ButtonMode.Radio) {
+                if (this._changeStateOnClick && !this._selected) {
+                    this.selected = true;
+                    this.dispatchEvent(new fairygui.StateChangeEvent(fairygui.StateChangeEvent.CHANGED));
+                }
             }
             else {
-                col1 = fairygui.ToolSet.convertFromHtmlColor(value.substr(0, pos));
-                col2 = fairygui.ToolSet.convertFromHtmlColor(value.substr(pos + 1));
+                if (this._relatedController)
+                    this._relatedController.selectedPageId = this._pageOption.id;
             }
-            if (pageId == null) {
-                this._default.color = col1;
-                this._default.strokeColor = col2;
-            }
-            else
-                this._storage[pageId] = new GearColorValue(col1, col2);
         };
-        GearColor.prototype.apply = function () {
-            this._owner._gearLocked = true;
-            var gv = this._storage[this._controller.selectedPageId];
-            if (!gv)
-                gv = this._default;
-            this._owner.color = gv.color;
-            if (this._owner["strokeColor"] != undefined && !isNaN(gv.strokeColor))
-                this._owner.strokeColor = gv.strokeColor;
-            this._owner._gearLocked = false;
-        };
-        GearColor.prototype.updateState = function () {
-            var gv = this._storage[this._controller.selectedPageId];
-            if (!gv) {
-                gv = new GearColorValue(null, null);
-                this._storage[this._controller.selectedPageId] = gv;
-            }
-            gv.color = this._owner.color;
-            if (this._owner["strokeColor"] != undefined)
-                gv.strokeColor = this._owner.strokeColor;
-        };
-        return GearColor;
-    }(fairygui.GearBase));
-    fairygui.GearColor = GearColor;
-    __reflect(GearColor.prototype, "fairygui.GearColor");
-    var GearColorValue = (function () {
-        function GearColorValue(color, strokeColor) {
-            if (color === void 0) { color = 0; }
-            if (strokeColor === void 0) { strokeColor = 0; }
-            this.color = color;
-            this.strokeColor = strokeColor;
-        }
-        return GearColorValue;
-    }());
-    __reflect(GearColorValue.prototype, "GearColorValue");
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var BitmapFont = (function () {
-        function BitmapFont() {
-            this.size = 0;
-            this.glyphs = {};
-        }
-        return BitmapFont;
-    }());
-    fairygui.BitmapFont = BitmapFont;
-    __reflect(BitmapFont.prototype, "fairygui.BitmapFont");
+        GButton.UP = "up";
+        GButton.DOWN = "down";
+        GButton.OVER = "over";
+        GButton.SELECTED_OVER = "selectedOver";
+        GButton.DISABLED = "disabled";
+        GButton.SELECTED_DISABLED = "selectedDisabled";
+        return GButton;
+    }(fairygui.GComponent));
+    fairygui.GButton = GButton;
+    __reflect(GButton.prototype, "fairygui.GButton");
 })(fairygui || (fairygui = {}));
 var fairygui;
 (function (fairygui) {
@@ -4665,13 +5050,970 @@ var fairygui;
     fairygui.ColorMatrix = ColorMatrix;
     __reflect(ColorMatrix.prototype, "fairygui.ColorMatrix");
 })(fairygui || (fairygui = {}));
+// Author: Daniele Giardini - http://www.demigiant.com
+// Created: 2014/07/19 14:11
+// 
+// License Copyright (c) Daniele Giardini.
+// This work is subject to the terms at http://dotween.demigiant.com/license.php
+// 
+// =============================================================
+// Contains Daniele Giardini's C# port of the easing equations created by Robert Penner
+// (all easing equations except for Flash, InFlash, OutFlash, InOutFlash,
+// which use some parts of Robert Penner's equations but were created by Daniele Giardini)
+// http://robertpenner.com/easing, see license below:
+// =============================================================
+//
+// TERMS OF USE - EASING EQUATIONS
+//
+// Open source under the BSD License.
+//
+// Copyright ? 2001 Robert Penner
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without modification,
+// are permitted provided that the following conditions are met:
+//
+// - Redistributions of source code must retain the above copyright notice,
+// this list of conditions and the following disclaimer.
+// - Redistributions in binary form must reproduce the above copyright notice,
+// this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+// - Neither the name of the author nor the names of contributors may be used to endorse
+// or promote products derived from this software without specific prior written permission.
+// - THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+// STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+// EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+var fairygui;
+(function (fairygui) {
+    var tween;
+    (function (tween) {
+        var EaseManager = (function () {
+            function EaseManager() {
+            }
+            EaseManager.evaluate = function (easeType, time, duration, overshootOrAmplitude, period) {
+                switch (easeType) {
+                    case tween.EaseType.Linear:
+                        return time / duration;
+                    case tween.EaseType.SineIn:
+                        return -Math.cos(time / duration * EaseManager._PiOver2) + 1;
+                    case tween.EaseType.SineOut:
+                        return Math.sin(time / duration * EaseManager._PiOver2);
+                    case tween.EaseType.SineInOut:
+                        return -0.5 * (Math.cos(Math.PI * time / duration) - 1);
+                    case tween.EaseType.QuadIn:
+                        return (time /= duration) * time;
+                    case tween.EaseType.QuadOut:
+                        return -(time /= duration) * (time - 2);
+                    case tween.EaseType.QuadInOut:
+                        if ((time /= duration * 0.5) < 1)
+                            return 0.5 * time * time;
+                        return -0.5 * ((--time) * (time - 2) - 1);
+                    case tween.EaseType.CubicIn:
+                        return (time /= duration) * time * time;
+                    case tween.EaseType.CubicOut:
+                        return ((time = time / duration - 1) * time * time + 1);
+                    case tween.EaseType.CubicInOut:
+                        if ((time /= duration * 0.5) < 1)
+                            return 0.5 * time * time * time;
+                        return 0.5 * ((time -= 2) * time * time + 2);
+                    case tween.EaseType.QuartIn:
+                        return (time /= duration) * time * time * time;
+                    case tween.EaseType.QuartOut:
+                        return -((time = time / duration - 1) * time * time * time - 1);
+                    case tween.EaseType.QuartInOut:
+                        if ((time /= duration * 0.5) < 1)
+                            return 0.5 * time * time * time * time;
+                        return -0.5 * ((time -= 2) * time * time * time - 2);
+                    case tween.EaseType.QuintIn:
+                        return (time /= duration) * time * time * time * time;
+                    case tween.EaseType.QuintOut:
+                        return ((time = time / duration - 1) * time * time * time * time + 1);
+                    case tween.EaseType.QuintInOut:
+                        if ((time /= duration * 0.5) < 1)
+                            return 0.5 * time * time * time * time * time;
+                        return 0.5 * ((time -= 2) * time * time * time * time + 2);
+                    case tween.EaseType.ExpoIn:
+                        return (time == 0) ? 0 : Math.pow(2, 10 * (time / duration - 1));
+                    case tween.EaseType.ExpoOut:
+                        if (time == duration)
+                            return 1;
+                        return (-Math.pow(2, -10 * time / duration) + 1);
+                    case tween.EaseType.ExpoInOut:
+                        if (time == 0)
+                            return 0;
+                        if (time == duration)
+                            return 1;
+                        if ((time /= duration * 0.5) < 1)
+                            return 0.5 * Math.pow(2, 10 * (time - 1));
+                        return 0.5 * (-Math.pow(2, -10 * --time) + 2);
+                    case tween.EaseType.CircIn:
+                        return -(Math.sqrt(1 - (time /= duration) * time) - 1);
+                    case tween.EaseType.CircOut:
+                        return Math.sqrt(1 - (time = time / duration - 1) * time);
+                    case tween.EaseType.CircInOut:
+                        if ((time /= duration * 0.5) < 1)
+                            return -0.5 * (Math.sqrt(1 - time * time) - 1);
+                        return 0.5 * (Math.sqrt(1 - (time -= 2) * time) + 1);
+                    case tween.EaseType.ElasticIn:
+                        var s0;
+                        if (time == 0)
+                            return 0;
+                        if ((time /= duration) == 1)
+                            return 1;
+                        if (period == 0)
+                            period = duration * 0.3;
+                        if (overshootOrAmplitude < 1) {
+                            overshootOrAmplitude = 1;
+                            s0 = period / 4;
+                        }
+                        else
+                            s0 = period / EaseManager._TwoPi * Math.asin(1 / overshootOrAmplitude);
+                        return -(overshootOrAmplitude * Math.pow(2, 10 * (time -= 1)) * Math.sin((time * duration - s0) * EaseManager._TwoPi / period));
+                    case tween.EaseType.ElasticOut:
+                        var s1;
+                        if (time == 0)
+                            return 0;
+                        if ((time /= duration) == 1)
+                            return 1;
+                        if (period == 0)
+                            period = duration * 0.3;
+                        if (overshootOrAmplitude < 1) {
+                            overshootOrAmplitude = 1;
+                            s1 = period / 4;
+                        }
+                        else
+                            s1 = period / EaseManager._TwoPi * Math.asin(1 / overshootOrAmplitude);
+                        return (overshootOrAmplitude * Math.pow(2, -10 * time) * Math.sin((time * duration - s1) * EaseManager._TwoPi / period) + 1);
+                    case tween.EaseType.ElasticInOut:
+                        var s;
+                        if (time == 0)
+                            return 0;
+                        if ((time /= duration * 0.5) == 2)
+                            return 1;
+                        if (period == 0)
+                            period = duration * (0.3 * 1.5);
+                        if (overshootOrAmplitude < 1) {
+                            overshootOrAmplitude = 1;
+                            s = period / 4;
+                        }
+                        else
+                            s = period / EaseManager._TwoPi * Math.asin(1 / overshootOrAmplitude);
+                        if (time < 1)
+                            return -0.5 * (overshootOrAmplitude * Math.pow(2, 10 * (time -= 1)) * Math.sin((time * duration - s) * EaseManager._TwoPi / period));
+                        return overshootOrAmplitude * Math.pow(2, -10 * (time -= 1)) * Math.sin((time * duration - s) * EaseManager._TwoPi / period) * 0.5 + 1;
+                    case tween.EaseType.BackIn:
+                        return (time /= duration) * time * ((overshootOrAmplitude + 1) * time - overshootOrAmplitude);
+                    case tween.EaseType.BackOut:
+                        return ((time = time / duration - 1) * time * ((overshootOrAmplitude + 1) * time + overshootOrAmplitude) + 1);
+                    case tween.EaseType.BackInOut:
+                        if ((time /= duration * 0.5) < 1)
+                            return 0.5 * (time * time * (((overshootOrAmplitude *= (1.525)) + 1) * time - overshootOrAmplitude));
+                        return 0.5 * ((time -= 2) * time * (((overshootOrAmplitude *= (1.525)) + 1) * time + overshootOrAmplitude) + 2);
+                    case tween.EaseType.BounceIn:
+                        return Bounce.easeIn(time, duration);
+                    case tween.EaseType.BounceOut:
+                        return Bounce.easeOut(time, duration);
+                    case tween.EaseType.BounceInOut:
+                        return Bounce.easeInOut(time, duration);
+                    default:
+                        return -(time /= duration) * (time - 2);
+                }
+            };
+            EaseManager._PiOver2 = Math.PI * 0.5;
+            EaseManager._TwoPi = Math.PI * 2;
+            return EaseManager;
+        }());
+        tween.EaseManager = EaseManager;
+        __reflect(EaseManager.prototype, "fairygui.tween.EaseManager");
+        var Bounce = (function () {
+            function Bounce() {
+            }
+            Bounce.easeIn = function (time, duration) {
+                return 1 - Bounce.easeOut(duration - time, duration);
+            };
+            Bounce.easeOut = function (time, duration) {
+                if ((time /= duration) < (1 / 2.75)) {
+                    return (7.5625 * time * time);
+                }
+                if (time < (2 / 2.75)) {
+                    return (7.5625 * (time -= (1.5 / 2.75)) * time + 0.75);
+                }
+                if (time < (2.5 / 2.75)) {
+                    return (7.5625 * (time -= (2.25 / 2.75)) * time + 0.9375);
+                }
+                return (7.5625 * (time -= (2.625 / 2.75)) * time + 0.984375);
+            };
+            Bounce.easeInOut = function (time, duration) {
+                if (time < duration * 0.5) {
+                    return Bounce.easeIn(time * 2, duration) * 0.5;
+                }
+                return Bounce.easeOut(time * 2 - duration, duration) * 0.5 + 0.5;
+            };
+            return Bounce;
+        }());
+        __reflect(Bounce.prototype, "Bounce");
+    })(tween = fairygui.tween || (fairygui.tween = {}));
+})(fairygui || (fairygui = {}));
+var fairygui;
+(function (fairygui) {
+    var tween;
+    (function (tween) {
+        var EaseType = (function () {
+            function EaseType() {
+            }
+            EaseType.parseEaseType = function (value) {
+                var type = EaseType.easeTypeMap[value];
+                if (type == undefined)
+                    return EaseType.ExpoOut;
+                else
+                    return type;
+            };
+            EaseType.Linear = 0;
+            EaseType.SineIn = 1;
+            EaseType.SineOut = 2;
+            EaseType.SineInOut = 3;
+            EaseType.QuadIn = 4;
+            EaseType.QuadOut = 5;
+            EaseType.QuadInOut = 6;
+            EaseType.CubicIn = 7;
+            EaseType.CubicOut = 8;
+            EaseType.CubicInOut = 9;
+            EaseType.QuartIn = 10;
+            EaseType.QuartOut = 11;
+            EaseType.QuartInOut = 12;
+            EaseType.QuintIn = 13;
+            EaseType.QuintOut = 14;
+            EaseType.QuintInOut = 15;
+            EaseType.ExpoIn = 16;
+            EaseType.ExpoOut = 17;
+            EaseType.ExpoInOut = 18;
+            EaseType.CircIn = 19;
+            EaseType.CircOut = 20;
+            EaseType.CircInOut = 21;
+            EaseType.ElasticIn = 22;
+            EaseType.ElasticOut = 23;
+            EaseType.ElasticInOut = 24;
+            EaseType.BackIn = 25;
+            EaseType.BackOut = 26;
+            EaseType.BackInOut = 27;
+            EaseType.BounceIn = 28;
+            EaseType.BounceOut = 29;
+            EaseType.BounceInOut = 30;
+            EaseType.Custom = 31;
+            EaseType.easeTypeMap = {
+                "Linear": EaseType.Linear,
+                "Elastic.In": EaseType.ElasticIn,
+                "Elastic.Out": EaseType.ElasticInOut,
+                "Elastic.InOut": EaseType.ElasticInOut,
+                "Quad.In": EaseType.QuadIn,
+                "Quad.Out": EaseType.QuadOut,
+                "Quad.InOut": EaseType.QuadInOut,
+                "Cube.In": EaseType.CubicIn,
+                "Cube.Out": EaseType.CubicOut,
+                "Cube.InOut": EaseType.CubicInOut,
+                "Quart.In": EaseType.QuartIn,
+                "Quart.Out": EaseType.QuartOut,
+                "Quart.InOut": EaseType.QuartInOut,
+                "Quint.In": EaseType.QuintIn,
+                "Quint.Out": EaseType.QuintOut,
+                "Quint.InOut": EaseType.QuintInOut,
+                "Sine.In": EaseType.SineIn,
+                "Sine.Out": EaseType.SineOut,
+                "Sine.InOut": EaseType.SineInOut,
+                "Bounce.In": EaseType.BounceIn,
+                "Bounce.Out": EaseType.BounceOut,
+                "Bounce.InOut": EaseType.BounceInOut,
+                "Circ.In": EaseType.CircIn,
+                "Circ.Out": EaseType.CircOut,
+                "Circ.InOut": EaseType.CircInOut,
+                "Expo.In": EaseType.ExpoIn,
+                "Expo.Out": EaseType.ExpoOut,
+                "Expo.InOut": EaseType.ExpoInOut,
+                "Back.In": EaseType.BackIn,
+                "Back.Out": EaseType.BackOut,
+                "Back.InOut": EaseType.BackInOut
+            };
+            return EaseType;
+        }());
+        tween.EaseType = EaseType;
+        __reflect(EaseType.prototype, "fairygui.tween.EaseType");
+    })(tween = fairygui.tween || (fairygui.tween = {}));
+})(fairygui || (fairygui = {}));
+var fairygui;
+(function (fairygui) {
+    var tween;
+    (function (tween) {
+        var GTween = (function () {
+            function GTween() {
+            }
+            GTween.to = function (start, end, duration) {
+                return tween.TweenManager.createTween()._to(start, end, duration);
+            };
+            GTween.to2 = function (start, start2, end, end2, duration) {
+                return tween.TweenManager.createTween()._to2(start, start2, end, end2, duration);
+            };
+            GTween.to3 = function (start, start2, start3, end, end2, end3, duration) {
+                return tween.TweenManager.createTween()._to3(start, start2, start3, end, end2, end3, duration);
+            };
+            GTween.to4 = function (start, start2, start3, start4, end, end2, end3, end4, duration) {
+                return tween.TweenManager.createTween()._to4(start, start2, start3, start4, end, end2, end3, end4, duration);
+            };
+            GTween.toColor = function (start, end, duration) {
+                return tween.TweenManager.createTween()._toColor(start, end, duration);
+            };
+            GTween.delayedCall = function (delay) {
+                return tween.TweenManager.createTween().setDelay(delay);
+            };
+            GTween.shake = function (startX, startY, amplitude, duration) {
+                return tween.TweenManager.createTween()._shake(startX, startY, amplitude, duration);
+            };
+            GTween.isTweening = function (target, propType) {
+                return tween.TweenManager.isTweening(target, propType);
+            };
+            GTween.kill = function (target, complete, propType) {
+                if (complete === void 0) { complete = false; }
+                if (propType === void 0) { propType = null; }
+                tween.TweenManager.killTweens(target, false, null);
+            };
+            GTween.getTween = function (target, propType) {
+                if (propType === void 0) { propType = null; }
+                return tween.TweenManager.getTween(target, propType);
+            };
+            GTween.safeMode = true;
+            return GTween;
+        }());
+        tween.GTween = GTween;
+        __reflect(GTween.prototype, "fairygui.tween.GTween");
+    })(tween = fairygui.tween || (fairygui.tween = {}));
+})(fairygui || (fairygui = {}));
+var fairygui;
+(function (fairygui) {
+    var tween;
+    (function (tween) {
+        var GTweener = (function () {
+            function GTweener() {
+                this._startValue = new tween.TweenValue();
+                this._endValue = new tween.TweenValue();
+                this._value = new tween.TweenValue();
+                this._deltaValue = new tween.TweenValue();
+                this._reset();
+            }
+            GTweener.prototype.setDelay = function (value) {
+                this._delay = value;
+                return this;
+            };
+            Object.defineProperty(GTweener.prototype, "delay", {
+                get: function () {
+                    return this._delay;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            GTweener.prototype.setDuration = function (value) {
+                this._duration = value;
+                return this;
+            };
+            Object.defineProperty(GTweener.prototype, "duration", {
+                get: function () {
+                    return this._duration;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            GTweener.prototype.setBreakpoint = function (value) {
+                this._breakpoint = value;
+                return this;
+            };
+            GTweener.prototype.setEase = function (value) {
+                this._easeType = value;
+                return this;
+            };
+            GTweener.prototype.setEasePeriod = function (value) {
+                this._easePeriod = value;
+                return this;
+            };
+            GTweener.prototype.setEaseOvershootOrAmplitude = function (value) {
+                this._easeOvershootOrAmplitude = value;
+                return this;
+            };
+            GTweener.prototype.setRepeat = function (repeat, yoyo) {
+                if (yoyo === void 0) { yoyo = false; }
+                this._repeat = repeat;
+                this._yoyo = yoyo;
+                return this;
+            };
+            Object.defineProperty(GTweener.prototype, "repeat", {
+                get: function () {
+                    return this._repeat;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            GTweener.prototype.setTimeScale = function (value) {
+                this._timeScale = value;
+                return this;
+            };
+            GTweener.prototype.setSnapping = function (value) {
+                this._snapping = value;
+                return this;
+            };
+            GTweener.prototype.setTarget = function (value, propType) {
+                if (propType === void 0) { propType = null; }
+                this._target = value;
+                this._propType = propType;
+                return this;
+            };
+            Object.defineProperty(GTweener.prototype, "target", {
+                get: function () {
+                    return this._target;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            GTweener.prototype.setUserData = function (value) {
+                this._userData = value;
+                return this;
+            };
+            Object.defineProperty(GTweener.prototype, "userData", {
+                get: function () {
+                    return this._userData;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            GTweener.prototype.onUpdate = function (callback, caller) {
+                this._onUpdate = callback;
+                this._onUpdateCaller = caller;
+                return this;
+            };
+            GTweener.prototype.onStart = function (callback, caller) {
+                this._onStart = callback;
+                this._onStartCaller = caller;
+                return this;
+            };
+            GTweener.prototype.onComplete = function (callback, caller) {
+                this._onComplete = callback;
+                this._onCompleteCaller = caller;
+                return this;
+            };
+            Object.defineProperty(GTweener.prototype, "startValue", {
+                get: function () {
+                    return this._startValue;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(GTweener.prototype, "endValue", {
+                get: function () {
+                    return this._endValue;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(GTweener.prototype, "value", {
+                get: function () {
+                    return this._value;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(GTweener.prototype, "deltaValue", {
+                get: function () {
+                    return this._deltaValue;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(GTweener.prototype, "normalizedTime", {
+                get: function () {
+                    return this._normalizedTime;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(GTweener.prototype, "completed", {
+                get: function () {
+                    return this._ended != 0;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(GTweener.prototype, "allCompleted", {
+                get: function () {
+                    return this._ended == 1;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            GTweener.prototype.setPaused = function (paused) {
+                this._paused = paused;
+                return this;
+            };
+            /**
+             * seek position of the tween, in seconds.
+             */
+            GTweener.prototype.seek = function (time) {
+                if (this._killed)
+                    return;
+                this._elapsedTime = time;
+                if (this._elapsedTime < this._delay) {
+                    if (this._started)
+                        this._elapsedTime = this._delay;
+                    else
+                        return;
+                }
+                this.update();
+            };
+            GTweener.prototype.kill = function (complete) {
+                if (complete === void 0) { complete = false; }
+                if (this._killed)
+                    return;
+                if (complete) {
+                    if (this._ended == 0) {
+                        if (this._breakpoint >= 0)
+                            this._elapsedTime = this._delay + this._breakpoint;
+                        else if (this._repeat >= 0)
+                            this._elapsedTime = this._delay + this._duration * (this._repeat + 1);
+                        else
+                            this._elapsedTime = this._delay + this._duration * 3;
+                        this.update();
+                    }
+                    this.callCompleteCallback();
+                }
+                this._killed = true;
+            };
+            GTweener.prototype._to = function (start, end, duration) {
+                this._valueSize = 1;
+                this._startValue.x = start;
+                this._endValue.x = end;
+                this._duration = duration;
+                return this;
+            };
+            GTweener.prototype._to2 = function (start, start2, end, end2, duration) {
+                this._valueSize = 2;
+                this._startValue.x = start;
+                this._endValue.x = end;
+                this._startValue.y = start2;
+                this._endValue.y = end2;
+                this._duration = duration;
+                return this;
+            };
+            GTweener.prototype._to3 = function (start, start2, start3, end, end2, end3, duration) {
+                this._valueSize = 3;
+                this._startValue.x = start;
+                this._endValue.x = end;
+                this._startValue.y = start2;
+                this._endValue.y = end2;
+                this._startValue.z = start3;
+                this._endValue.z = end3;
+                this._duration = duration;
+                return this;
+            };
+            GTweener.prototype._to4 = function (start, start2, start3, start4, end, end2, end3, end4, duration) {
+                this._valueSize = 4;
+                this._startValue.x = start;
+                this._endValue.x = end;
+                this._startValue.y = start2;
+                this._endValue.y = end2;
+                this._startValue.z = start3;
+                this._endValue.z = end3;
+                this._startValue.w = start4;
+                this._endValue.w = end4;
+                this._duration = duration;
+                return this;
+            };
+            GTweener.prototype._toColor = function (start, end, duration) {
+                this._valueSize = 4;
+                this._startValue.color = start;
+                this._endValue.color = end;
+                this._duration = duration;
+                return this;
+            };
+            GTweener.prototype._shake = function (startX, startY, amplitude, duration) {
+                this._valueSize = 5;
+                this._startValue.x = startX;
+                this._startValue.y = startY;
+                this._startValue.w = amplitude;
+                this._duration = duration;
+                return this;
+            };
+            GTweener.prototype._init = function () {
+                this._delay = 0;
+                this._duration = 0;
+                this._breakpoint = -1;
+                this._easeType = tween.EaseType.QuadOut;
+                this._timeScale = 1;
+                this._easePeriod = 0;
+                this._easeOvershootOrAmplitude = 1.70158;
+                this._snapping = false;
+                this._repeat = 0;
+                this._yoyo = false;
+                this._valueSize = 0;
+                this._started = false;
+                this._paused = false;
+                this._killed = false;
+                this._elapsedTime = 0;
+                this._normalizedTime = 0;
+                this._ended = 0;
+            };
+            GTweener.prototype._reset = function () {
+                this._target = null;
+                this._userData = null;
+                this._onStart = this._onUpdate = this._onComplete = null;
+                this._onStartCaller = this._onUpdateCaller = this._onCompleteCaller = null;
+            };
+            GTweener.prototype._update = function (dt) {
+                if (this._timeScale != 1)
+                    dt *= this._timeScale;
+                if (dt == 0)
+                    return;
+                if (this._ended != 0) {
+                    this.callCompleteCallback();
+                    this._killed = true;
+                    return;
+                }
+                this._elapsedTime += dt;
+                this.update();
+                if (this._ended != 0) {
+                    if (!this._killed) {
+                        this.callCompleteCallback();
+                        this._killed = true;
+                    }
+                }
+            };
+            GTweener.prototype.update = function () {
+                this._ended = 0;
+                if (this._valueSize == 0) {
+                    if (this._elapsedTime >= this._delay + this._duration)
+                        this._ended = 1;
+                    return;
+                }
+                if (!this._started) {
+                    if (this._elapsedTime < this._delay)
+                        return;
+                    this._started = true;
+                    this.callStartCallback();
+                    if (this._killed)
+                        return;
+                }
+                var reversed = false;
+                var tt = this._elapsedTime - this._delay;
+                if (this._breakpoint >= 0 && tt >= this._breakpoint) {
+                    tt = this._breakpoint;
+                    this._ended = 2;
+                }
+                if (this._repeat != 0) {
+                    var round = Math.floor(tt / this._duration);
+                    tt -= this._duration * round;
+                    if (this._yoyo)
+                        reversed = round % 2 == 1;
+                    if (this._repeat > 0 && this._repeat - round < 0) {
+                        if (this._yoyo)
+                            reversed = this._repeat % 2 == 1;
+                        tt = this._duration;
+                        this._ended = 1;
+                    }
+                }
+                else if (tt >= this._duration) {
+                    tt = this._duration;
+                    this._ended = 1;
+                }
+                this._normalizedTime = tween.EaseManager.evaluate(this._easeType, reversed ? (this._duration - tt) : tt, this._duration, this._easeOvershootOrAmplitude, this._easePeriod);
+                this._value.setZero();
+                this._deltaValue.setZero();
+                if (this._valueSize == 5) {
+                    if (this._ended == 0) {
+                        var r = this._startValue.w * (1 - this._normalizedTime);
+                        var rx = (Math.random() * 2 - 1) * r;
+                        var ry = (Math.random() * 2 - 1) * r;
+                        rx = rx > 0 ? Math.ceil(rx) : Math.floor(rx);
+                        ry = ry > 0 ? Math.ceil(ry) : Math.floor(ry);
+                        this._deltaValue.x = rx;
+                        this._deltaValue.y = ry;
+                        this._value.x = this._startValue.x + rx;
+                        this._value.y = this._startValue.y + ry;
+                    }
+                    else {
+                        this._value.x = this._startValue.x;
+                        this._value.y = this._startValue.y;
+                    }
+                }
+                else {
+                    for (var i = 0; i < this._valueSize; i++) {
+                        var n1 = this._startValue.getField(i);
+                        var n2 = this._endValue.getField(i);
+                        var f = n1 + (n2 - n1) * this._normalizedTime;
+                        if (this._snapping)
+                            f = Math.round(f);
+                        this._deltaValue.setField(i, f - this._value.getField(i));
+                        this._value.setField(i, f);
+                    }
+                }
+                if (this._target != null && this._propType != null) {
+                    if (this._propType instanceof Function) {
+                        switch (this._valueSize) {
+                            case 1:
+                                this._propType.call(this._target, this._value.x);
+                                break;
+                            case 2:
+                                this._propType.call(this._target, this._value.x, this._value.y);
+                                break;
+                            case 3:
+                                this._propType.call(this._target, this._value.x, this._value.y, this._value.z);
+                                break;
+                            case 4:
+                                this._propType.call(this._target, this._value.x, this._value.y, this._value.z, this._value.w);
+                                break;
+                            case 5:
+                                this._propType.call(this._target, this._value.color);
+                                break;
+                            case 6:
+                                this._propType.call(this._target, this._value.x, this._value.y);
+                                break;
+                        }
+                    }
+                    else {
+                        if (this._valueSize == 5)
+                            this._target[this._propType] = this._value.color;
+                        else
+                            this._target[this._propType] = this._value.x;
+                    }
+                }
+                this.callUpdateCallback();
+            };
+            GTweener.prototype.callStartCallback = function () {
+                if (this._onStart != null) {
+                    try {
+                        this._onStart.call(this._onStartCaller, this);
+                    }
+                    catch (err) {
+                        console.log("FairyGUI: error in start callback > " + err);
+                    }
+                }
+            };
+            GTweener.prototype.callUpdateCallback = function () {
+                if (this._onUpdate != null) {
+                    try {
+                        this._onUpdate.call(this._onUpdateCaller, this);
+                    }
+                    catch (err) {
+                        console.log("FairyGUI: error in update callback > " + err);
+                    }
+                }
+            };
+            GTweener.prototype.callCompleteCallback = function () {
+                if (this._onComplete != null) {
+                    try {
+                        this._onComplete.call(this._onCompleteCaller, this);
+                    }
+                    catch (err) {
+                        console.log("FairyGUI: error in complete callback > " + err);
+                    }
+                }
+            };
+            return GTweener;
+        }());
+        tween.GTweener = GTweener;
+        __reflect(GTweener.prototype, "fairygui.tween.GTweener");
+    })(tween = fairygui.tween || (fairygui.tween = {}));
+})(fairygui || (fairygui = {}));
+var fairygui;
+(function (fairygui) {
+    var tween;
+    (function (tween) {
+        var TweenManager = (function () {
+            function TweenManager() {
+            }
+            TweenManager.createTween = function () {
+                if (!TweenManager._inited) {
+                    egret.startTick(TweenManager.update, null);
+                    TweenManager._inited = true;
+                    TweenManager._lastTime = egret.getTimer();
+                }
+                var tweener;
+                var cnt = TweenManager._tweenerPool.length;
+                if (cnt > 0) {
+                    tweener = TweenManager._tweenerPool.pop();
+                }
+                else
+                    tweener = new tween.GTweener();
+                tweener._init();
+                TweenManager._activeTweens[TweenManager._totalActiveTweens++] = tweener;
+                if (TweenManager._totalActiveTweens == TweenManager._activeTweens.length)
+                    TweenManager._activeTweens.length = TweenManager._activeTweens.length + Math.ceil(TweenManager._activeTweens.length * 0.5);
+                return tweener;
+            };
+            TweenManager.isTweening = function (target, propType) {
+                if (target == null)
+                    return false;
+                var anyType = propType == null || propType == undefined;
+                for (var i = 0; i < TweenManager._totalActiveTweens; i++) {
+                    var tweener = TweenManager._activeTweens[i];
+                    if (tweener != null && tweener.target == target && !tweener._killed
+                        && (anyType || tweener._propType == propType))
+                        return true;
+                }
+                return false;
+            };
+            TweenManager.killTweens = function (target, completed, propType) {
+                if (target == null)
+                    return false;
+                var flag = false;
+                var cnt = TweenManager._totalActiveTweens;
+                var anyType = propType == null || propType == undefined;
+                for (var i = 0; i < cnt; i++) {
+                    var tweener = TweenManager._activeTweens[i];
+                    if (tweener != null && tweener.target == target && !tweener._killed
+                        && (anyType || tweener._propType == propType)) {
+                        tweener.kill(completed);
+                        flag = true;
+                    }
+                }
+                return flag;
+            };
+            TweenManager.getTween = function (target, propType) {
+                if (target == null)
+                    return null;
+                var cnt = TweenManager._totalActiveTweens;
+                var anyType = propType == null || propType == undefined;
+                for (var i = 0; i < cnt; i++) {
+                    var tweener = TweenManager._activeTweens[i];
+                    if (tweener != null && tweener.target == target && !tweener._killed
+                        && (anyType || tweener._propType == propType)) {
+                        return tweener;
+                    }
+                }
+                return null;
+            };
+            TweenManager.update = function (timestamp) {
+                var dt = timestamp - TweenManager._lastTime;
+                TweenManager._lastTime = timestamp;
+                if (dt > 125)
+                    dt = 125;
+                dt /= 1000;
+                var cnt = TweenManager._totalActiveTweens;
+                var freePosStart = -1;
+                var freePosCount = 0;
+                for (var i = 0; i < cnt; i++) {
+                    var tweener = TweenManager._activeTweens[i];
+                    if (tweener == null) {
+                        if (freePosStart == -1)
+                            freePosStart = i;
+                        freePosCount++;
+                    }
+                    else if (tweener._killed) {
+                        tweener._reset();
+                        TweenManager._tweenerPool.push(tweener);
+                        TweenManager._activeTweens[i] = null;
+                        if (freePosStart == -1)
+                            freePosStart = i;
+                        freePosCount++;
+                    }
+                    else {
+                        if (!tweener._paused)
+                            tweener._update(dt);
+                        if (freePosStart != -1) {
+                            TweenManager._activeTweens[freePosStart] = tweener;
+                            TweenManager._activeTweens[i] = null;
+                            freePosStart++;
+                        }
+                    }
+                }
+                if (freePosStart >= 0) {
+                    if (TweenManager._totalActiveTweens != cnt) {
+                        var j = cnt;
+                        cnt = TweenManager._totalActiveTweens - cnt;
+                        for (i = 0; i < cnt; i++)
+                            TweenManager._activeTweens[freePosStart++] = TweenManager._activeTweens[j++];
+                    }
+                    TweenManager._totalActiveTweens = freePosStart;
+                }
+                return false;
+            };
+            TweenManager._activeTweens = new Array(30);
+            TweenManager._tweenerPool = new Array();
+            TweenManager._totalActiveTweens = 0;
+            TweenManager._lastTime = 0;
+            TweenManager._inited = false;
+            return TweenManager;
+        }());
+        tween.TweenManager = TweenManager;
+        __reflect(TweenManager.prototype, "fairygui.tween.TweenManager");
+    })(tween = fairygui.tween || (fairygui.tween = {}));
+})(fairygui || (fairygui = {}));
+var fairygui;
+(function (fairygui) {
+    var tween;
+    (function (tween) {
+        var TweenValue = (function () {
+            function TweenValue() {
+                this.x = this.y = this.z = this.w = 0;
+            }
+            Object.defineProperty(TweenValue.prototype, "color", {
+                get: function () {
+                    return (this.w << 24) + (this.x << 16) + (this.y << 8) + this.z;
+                },
+                set: function (value) {
+                    this.x = (value & 0xFF0000) >> 16;
+                    this.y = (value & 0x00FF00) >> 8;
+                    this.z = (value & 0x0000FF);
+                    this.w = (value & 0xFF000000) >> 24;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            TweenValue.prototype.getField = function (index) {
+                switch (index) {
+                    case 0:
+                        return this.x;
+                    case 1:
+                        return this.y;
+                    case 2:
+                        return this.z;
+                    case 3:
+                        return this.w;
+                    default:
+                        throw new Error("Index out of bounds: " + index);
+                }
+            };
+            TweenValue.prototype.setField = function (index, value) {
+                switch (index) {
+                    case 0:
+                        this.x = value;
+                        break;
+                    case 1:
+                        this.y = value;
+                        break;
+                    case 2:
+                        this.z = value;
+                        break;
+                    case 3:
+                        this.w = value;
+                        break;
+                    default:
+                        throw new Error("Index out of bounds: " + index);
+                }
+            };
+            TweenValue.prototype.setZero = function () {
+                this.x = this.y = this.z = this.w = 0;
+            };
+            return TweenValue;
+        }());
+        tween.TweenValue = TweenValue;
+        __reflect(TweenValue.prototype, "fairygui.tween.TweenValue");
+    })(tween = fairygui.tween || (fairygui.tween = {}));
+})(fairygui || (fairygui = {}));
 var fairygui;
 (function (fairygui) {
     var PlayTransitionAction = (function (_super) {
         __extends(PlayTransitionAction, _super);
         function PlayTransitionAction() {
             var _this = _super.call(this) || this;
-            _this.repeat = 1;
+            _this.playTimes = 1;
             _this.delay = 0;
             _this.stopOnExit = false;
             return _this;
@@ -4680,9 +6022,9 @@ var fairygui;
             var trans = controller.parent.getTransition(this.transitionName);
             if (trans) {
                 if (this._currentTransition && this._currentTransition.playing)
-                    trans.changeRepeat(this.repeat);
+                    trans.changePlayTimes(this.playTimes);
                 else
-                    trans.play(null, null, null, this.repeat, this.delay);
+                    trans.play(null, null, null, this.playTimes, this.delay);
                 this._currentTransition = trans;
             }
         };
@@ -4698,7 +6040,7 @@ var fairygui;
             var str;
             str = xml.attributes.repeat;
             if (str)
-                this.repeat = parseInt(str);
+                this.playTimes = parseInt(str);
             str = xml.attributes.delay;
             if (str)
                 this.delay = parseFloat(str);
@@ -4781,11 +6123,11 @@ var fairygui;
             if (!gv)
                 gv = this._default;
             if (this._tween && !fairygui.UIPackage._constructing && !fairygui.GearBase.disableAllTweenEffect) {
-                if (this.tweener != null) {
-                    if (this._tweenTarget.width != gv.width || this._tweenTarget.height != gv.height
-                        || this._tweenTarget.scaleX != gv.scaleX || this._tweenTarget.scaleY != gv.scaleY) {
-                        this.tweener["tick"] ? this.tweener["tick"](100000000) : this.tweener["$tick"](100000000);
-                        this.tweener = null;
+                if (this._tweener != null) {
+                    if (this._tweener.endValue.x != gv.width || this._tweener.endValue.y != gv.height
+                        || this._tweener.endValue.z != gv.scaleX || this._tweener.endValue.w != gv.scaleY) {
+                        this._tweener.kill(true);
+                        this._tweener = null;
                     }
                     else
                         return;
@@ -4795,35 +6137,13 @@ var fairygui;
                 if (a || b) {
                     if (this._owner.checkGearController(0, this._controller))
                         this._displayLockToken = this._owner.addDisplayLock();
-                    this._tweenTarget = gv;
-                    var vars = {
-                        onChange: function () {
-                            this._owner._gearLocked = true;
-                            if (a)
-                                this._owner.setSize(this._tweenValue.width, this._tweenValue.height, this._owner.gearXY.controller == this._controller);
-                            if (b)
-                                this._owner.setScale(this._tweenValue.scaleX, this._tweenValue.scaleY);
-                            this._owner._gearLocked = false;
-                        },
-                        onChangeObj: this
-                    };
-                    if (this._tweenValue == null)
-                        this._tweenValue = new GearSizeValue();
-                    this._tweenValue.width = this._owner.width;
-                    this._tweenValue.height = this._owner.height;
-                    this._tweenValue.scaleX = this._owner.scaleX;
-                    this._tweenValue.scaleY = this._owner.scaleY;
-                    this.tweener = egret.Tween.get(this._tweenValue, vars)
-                        .wait(this._tweenDelay * 1000)
-                        .to({ width: gv.width, height: gv.height, scaleX: gv.scaleX, scaleY: gv.scaleY }, this._tweenTime * 1000, this._easeType)
-                        .call(function () {
-                        if (this._displayLockToken != 0) {
-                            this._owner.releaseDisplayLock(this._displayLockToken);
-                            this._displayLockToken = 0;
-                        }
-                        this._tweener = null;
-                        this._owner.dispatchEventWith(fairygui.GObject.GEAR_STOP, false);
-                    }, this);
+                    this._tweener = fairygui.tween.GTween.to4(this._owner.width, this._owner.height, this._owner.scaleX, this._owner.scaleY, gv.width, gv.height, gv.scaleX, gv.scaleY, this.tweenTime)
+                        .setDelay(this._tweenDelay)
+                        .setEase(this._easeType)
+                        .setUserData((a ? 1 : 0) + (b ? 2 : 0))
+                        .setTarget(this)
+                        .onUpdate(this.__tweenUpdate, this)
+                        .onComplete(this.__tweenComplete, this);
                 }
             }
             else {
@@ -4832,6 +6152,22 @@ var fairygui;
                 this._owner.setScale(gv.scaleX, gv.scaleY);
                 this._owner._gearLocked = false;
             }
+        };
+        GearSize.prototype.__tweenUpdate = function (tweener) {
+            var flag = tweener.userData;
+            this._owner._gearLocked = true;
+            if ((flag & 1) != 0)
+                this._owner.setSize(tweener.value.x, tweener.value.y, this._owner.checkGearController(1, this._controller));
+            if ((flag & 2) != 0)
+                this._owner.setScale(tweener.value.z, tweener.value.w);
+            this._owner._gearLocked = false;
+        };
+        GearSize.prototype.__tweenComplete = function () {
+            if (this._displayLockToken != 0) {
+                this._owner.releaseDisplayLock(this._displayLockToken);
+                this._displayLockToken = 0;
+            }
+            this._tweener = null;
         };
         GearSize.prototype.updateState = function () {
             var gv = this._storage[this._controller.selectedPageId];
@@ -4905,10 +6241,10 @@ var fairygui;
             if (!pt)
                 pt = this._default;
             if (this._tween && !fairygui.UIPackage._constructing && !fairygui.GearBase.disableAllTweenEffect) {
-                if (this.tweener) {
-                    if (this._tweenTarget.x != pt.x || this._tweenTarget.y != pt.y) {
-                        this.tweener["tick"] ? this.tweener["tick"](100000000) : this.tweener["$tick"](100000000);
-                        this.tweener = null;
+                if (this._tweener != null) {
+                    if (this._tweener.endValue.x != pt.x || this._tweener.endValue.y != pt.y) {
+                        this._tweener.kill(true);
+                        this._tweener = null;
                     }
                     else
                         return;
@@ -4916,30 +6252,12 @@ var fairygui;
                 if (this._owner.x != pt.x || this._owner.y != pt.y) {
                     if (this._owner.checkGearController(0, this._controller))
                         this._displayLockToken = this._owner.addDisplayLock();
-                    this._tweenTarget = pt;
-                    var vars = {
-                        onChange: function () {
-                            this._owner._gearLocked = true;
-                            this._owner.setXY(this._tweenValue.x, this._tweenValue.y);
-                            this._owner._gearLocked = false;
-                        },
-                        onChangeObj: this
-                    };
-                    if (this._tweenValue == null)
-                        this._tweenValue = new egret.Point();
-                    this._tweenValue.x = this._owner.x;
-                    this._tweenValue.y = this._owner.y;
-                    this.tweener = egret.Tween.get(this._tweenValue, vars)
-                        .wait(this._tweenDelay * 1000)
-                        .to({ x: pt.x, y: pt.y }, this._tweenTime * 1000, this._easeType)
-                        .call(function () {
-                        if (this._displayLockToken != 0) {
-                            this._owner.releaseDisplayLock(this._displayLockToken);
-                            this._displayLockToken = 0;
-                        }
-                        this._tweener = null;
-                        this._owner.dispatchEventWith(fairygui.GObject.GEAR_STOP, false);
-                    }, this);
+                    this._tweener = fairygui.tween.GTween.to2(this._owner.x, this._owner.y, pt.x, pt.y, this._tweenTime)
+                        .setDelay(this._tweenDelay)
+                        .setEase(this._easeType)
+                        .setTarget(this)
+                        .onUpdate(this.__tweenUpdate, this)
+                        .onComplete(this.__tweenComplete, this);
                 }
             }
             else {
@@ -4947,6 +6265,18 @@ var fairygui;
                 this._owner.setXY(pt.x, pt.y);
                 this._owner._gearLocked = false;
             }
+        };
+        GearXY.prototype.__tweenUpdate = function (tweener) {
+            this._owner._gearLocked = true;
+            this._owner.setXY(tweener.value.x, tweener.value.y);
+            this._owner._gearLocked = false;
+        };
+        GearXY.prototype.__tweenComplete = function () {
+            if (this._displayLockToken != 0) {
+                this._owner.releaseDisplayLock(this._displayLockToken);
+                this._displayLockToken = 0;
+            }
+            this._tweener = null;
         };
         GearXY.prototype.updateState = function () {
             var pt = this._storage[this._controller.selectedPageId];
@@ -5046,45 +6376,33 @@ var fairygui;
 (function (fairygui) {
     var Transition = (function () {
         function Transition(owner) {
-            this.autoPlayRepeat = 1;
-            this.autoPlayDelay = 0;
             this._ownerBaseX = 0;
             this._ownerBaseY = 0;
             this._totalTimes = 0;
             this._totalTasks = 0;
             this._playing = false;
+            this._paused = false;
             this._options = 0;
-            this._maxTime = 0;
+            this._reversed = false;
+            this._totalDuration = 0;
+            this._autoPlay = false;
+            this._autoPlayTimes = 1;
+            this._autoPlayDelay = 0;
+            this._timeScale = 1;
+            this._startTime = 0;
+            this._endTime = 0;
             this._owner = owner;
             this._items = new Array();
         }
-        Object.defineProperty(Transition.prototype, "autoPlay", {
-            get: function () {
-                return this._autoPlay;
-            },
-            set: function (value) {
-                if (this._autoPlay != value) {
-                    this._autoPlay = value;
-                    if (this._autoPlay) {
-                        if (this._owner.onStage)
-                            this.play(null, null, this.autoPlayRepeat, this.autoPlayDelay);
-                    }
-                    else {
-                        if (!this._owner.onStage)
-                            this.stop(false, true);
-                    }
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Transition.prototype.play = function (onComplete, onCompleteObj, onCompleteParam, times, delay) {
+        Transition.prototype.play = function (onComplete, onCompleteObj, onCompleteParam, times, delay, startTime, endTime) {
             if (onComplete === void 0) { onComplete = null; }
             if (onCompleteObj === void 0) { onCompleteObj = null; }
             if (onCompleteParam === void 0) { onCompleteParam = null; }
             if (times === void 0) { times = 1; }
             if (delay === void 0) { delay = 0; }
-            this._play(onComplete, onCompleteObj, onCompleteParam, times, delay, false);
+            if (startTime === void 0) { startTime = 0; }
+            if (endTime === void 0) { endTime = -1; }
+            this._play(onComplete, onCompleteObj, onCompleteParam, times, delay, startTime, endTime, false);
         };
         Transition.prototype.playReverse = function (onComplete, onCompleteObj, onCompleteParam, times, delay) {
             if (onComplete === void 0) { onComplete = null; }
@@ -5092,81 +6410,124 @@ var fairygui;
             if (onCompleteParam === void 0) { onCompleteParam = null; }
             if (times === void 0) { times = 1; }
             if (delay === void 0) { delay = 0; }
-            this._play(onComplete, onCompleteObj, onCompleteParam, times, delay, true);
+            this._play(onComplete, onCompleteObj, onCompleteParam, times, delay, 0, -1, true);
         };
-        Transition.prototype.changeRepeat = function (value) {
+        Transition.prototype.changePlayTimes = function (value) {
             this._totalTimes = value;
         };
-        Transition.prototype._play = function (onComplete, onCompleteObj, onCompleteParam, times, delay, reversed) {
+        Transition.prototype.setAutoPlay = function (value, times, delay) {
+            if (times === void 0) { times = -1; }
+            if (delay === void 0) { delay = 0; }
+            if (this._autoPlay != value) {
+                this._autoPlay = value;
+                this._autoPlayTimes = times;
+                this._autoPlayDelay = delay;
+                if (this._autoPlay) {
+                    if (this._owner.onStage)
+                        this.play(null, null, this._autoPlayTimes, this._autoPlayDelay);
+                }
+                else {
+                    if (!this._owner.onStage)
+                        this.stop(false, true);
+                }
+            }
+        };
+        Transition.prototype._play = function (onComplete, onCompleteCaller, onCompleteParam, times, delay, startTime, endTime, reversed) {
             if (onComplete === void 0) { onComplete = null; }
-            if (onCompleteObj === void 0) { onCompleteObj = null; }
+            if (onCompleteCaller === void 0) { onCompleteCaller = null; }
             if (onCompleteParam === void 0) { onCompleteParam = null; }
             if (times === void 0) { times = 1; }
             if (delay === void 0) { delay = 0; }
+            if (startTime === void 0) { startTime = 0; }
+            if (endTime === void 0) { endTime = -1; }
             if (reversed === void 0) { reversed = false; }
-            this.stop();
+            this.stop(true, true);
             this._totalTimes = times;
             this._reversed = reversed;
-            this.internalPlay(delay);
-            this._playing = this._totalTasks > 0;
-            if (this._playing) {
-                this._onComplete = onComplete;
-                this._onCompleteParam = onCompleteParam;
-                this._onCompleteObj = onCompleteObj;
-                if ((this._options & Transition.OPTION_IGNORE_DISPLAY_CONTROLLER) != 0) {
-                    var cnt = this._items.length;
-                    for (var i = 0; i < cnt; i++) {
-                        var item = this._items[i];
-                        if (item.target != null && item.target != this._owner)
-                            item.displayLockToken = item.target.addDisplayLock();
+            this._startTime = startTime;
+            this._endTime = endTime;
+            this._playing = true;
+            this._paused = false;
+            this._onComplete = onComplete;
+            this._onCompleteParam = onCompleteParam;
+            this._onCompleteCaller = onCompleteCaller;
+            var cnt = this._items.length;
+            for (var i = 0; i < cnt; i++) {
+                var item = this._items[i];
+                if (item.target == null) {
+                    if (item.targetId)
+                        item.target = this._owner.getChildById(item.targetId);
+                    else
+                        item.target = this._owner;
+                }
+                else if (item.target != this._owner && item.target.parent != this._owner)
+                    item.target = null;
+                if (item.target != null && item.type == TransitionActionType.Transition) {
+                    var trans = item.target.getTransition(item.value.transName);
+                    if (trans == this)
+                        trans = null;
+                    if (trans != null) {
+                        if (item.value.playTimes == 0) {
+                            var j;
+                            for (j = i - 1; j >= 0; j--) {
+                                var item2 = this._items[j];
+                                if (item2.type == TransitionActionType.Transition) {
+                                    if (item2.value.trans == trans) {
+                                        item2.value.stopTime = item.time - item2.time;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (j < 0)
+                                item.value.stopTime = 0;
+                            else
+                                trans = null; //no need to handle stop anymore
+                        }
+                        else
+                            item.value.stopTime = -1;
                     }
+                    item.value.trans = trans;
                 }
             }
-            else if (onComplete != null) {
-                if (onComplete.length > 0)
-                    onComplete.call(onCompleteObj, onCompleteParam);
-                else
-                    onComplete(onCompleteObj);
-            }
+            if (delay == 0)
+                this.onDelayedPlay();
+            else
+                fairygui.tween.GTween.delayedCall(delay).onComplete(this.onDelayedPlay, this);
         };
         Transition.prototype.stop = function (setToComplete, processCallback) {
             if (setToComplete === void 0) { setToComplete = true; }
             if (processCallback === void 0) { processCallback = false; }
-            if (this._playing) {
-                this._playing = false;
-                this._totalTasks = 0;
-                this._totalTimes = 0;
-                var func = this._onComplete;
-                var param = this._onCompleteParam;
-                var thisObj = this._onCompleteObj;
-                this._onComplete = null;
-                this._onCompleteParam = null;
-                this._onCompleteObj = null;
-                var cnt = this._items.length;
-                var i;
-                var item;
-                if (this._reversed) {
-                    for (i = cnt - 1; i >= 0; i--) {
-                        item = this._items[i];
-                        if (item.target == null)
-                            continue;
-                        this.stopItem(item, setToComplete);
-                    }
+            if (!this._playing)
+                return;
+            this._playing = false;
+            this._totalTasks = 0;
+            this._totalTimes = 0;
+            var func = this._onComplete;
+            var param = this._onCompleteParam;
+            var thisObj = this._onCompleteCaller;
+            this._onComplete = null;
+            this._onCompleteParam = null;
+            this._onCompleteCaller = null;
+            fairygui.tween.GTween.kill(this); //delay start
+            var cnt = this._items.length;
+            if (this._reversed) {
+                for (var i = cnt - 1; i >= 0; i--) {
+                    var item = this._items[i];
+                    if (item.target == null)
+                        continue;
+                    this.stopItem(item, setToComplete);
                 }
-                else {
-                    for (i = 0; i < cnt; i++) {
-                        item = this._items[i];
-                        if (item.target == null)
-                            continue;
-                        this.stopItem(item, setToComplete);
-                    }
+            }
+            else {
+                for (i = 0; i < cnt; i++) {
+                    item = this._items[i];
+                    if (item.target == null)
+                        continue;
+                    this.stopItem(item, setToComplete);
                 }
-                if (processCallback && func != null) {
-                    if (func.length > 0)
-                        func.call(thisObj, param);
-                    else
-                        func.call(thisObj);
-                }
+            }
+            if (processCallback && func != null) {
+                func.call(thisObj, param);
             }
         };
         Transition.prototype.stopItem = function (item, setToComplete) {
@@ -5174,62 +6535,69 @@ var fairygui;
                 item.target.releaseDisplayLock(item.displayLockToken);
                 item.displayLockToken = 0;
             }
-            if (item.type == TransitionActionType.ColorFilter && item.filterCreated)
-                item.target.filters = null;
-            if (item.completed)
-                return;
             if (item.tweener != null) {
-                item.tweener.setPaused(true);
+                item.tweener.kill(setToComplete);
                 item.tweener = null;
-            }
-            if (item.type == TransitionActionType.Transition) {
-                var trans = (item.target).getTransition(item.value.s);
-                if (trans != null)
-                    trans.stop(setToComplete, false);
-            }
-            else if (item.type == TransitionActionType.Shake) {
-                if (fairygui.GTimers.inst.exists(this.__shake, item)) {
-                    fairygui.GTimers.inst.remove(this.__shake, item);
+                if (item.type == TransitionActionType.Shake && !setToComplete) {
                     item.target._gearLocked = true;
-                    item.target.setXY(item.target.x - item.startValue.f1, item.target.y - item.startValue.f2);
+                    item.target.setXY(item.target.x - item.value.lastOffsetX, item.target.y - item.value.lastOffsetY);
                     item.target._gearLocked = false;
                 }
             }
-            else {
-                if (setToComplete) {
-                    if (item.tween) {
-                        if (!item.yoyo || item.repeat % 2 == 0)
-                            this.applyValue(item, this._reversed ? item.startValue : item.endValue);
-                        else
-                            this.applyValue(item, this._reversed ? item.endValue : item.startValue);
-                    }
-                    else if (item.type != TransitionActionType.Sound)
-                        this.applyValue(item, item.value);
-                }
+            if (item.type == TransitionActionType.Transition) {
+                var trans = item.value.trans;
+                if (trans != null)
+                    trans.stop(setToComplete, false);
             }
         };
-        Transition.prototype.dispose = function () {
-            if (!this._playing)
+        Transition.prototype.setPaused = function (paused) {
+            if (!this._playing || this._paused == paused)
                 return;
-            this._playing = false;
+            this._paused = paused;
+            var tweener = fairygui.tween.GTween.getTween(this);
+            if (tweener != null)
+                tweener.setPaused(paused);
             var cnt = this._items.length;
             for (var i = 0; i < cnt; i++) {
                 var item = this._items[i];
-                if (item.target == null || item.completed)
+                if (item.target == null)
                     continue;
+                if (item.type == TransitionActionType.Transition) {
+                    if (item.value.trans != null)
+                        item.value.trans.setPaused(paused);
+                }
+                else if (item.type == TransitionActionType.Animation) {
+                    if (paused) {
+                        item.value.flag = (item.target).playing;
+                        (item.target).playing = false;
+                    }
+                    else
+                        (item.target).playing = item.value.flag;
+                }
+                if (item.tweener != null)
+                    item.tweener.setPaused(paused);
+            }
+        };
+        Transition.prototype.dispose = function () {
+            if (this._playing)
+                fairygui.tween.GTween.kill(this); //delay start
+            var cnt = this._items.length;
+            for (var i = 0; i < cnt; i++) {
+                var item = this._items[i];
                 if (item.tweener != null) {
-                    item.tweener.setPaused(true);
+                    item.tweener.kill();
                     item.tweener = null;
                 }
-                if (item.type == TransitionActionType.Transition) {
-                    var trans = item.target.getTransition(item.value.s);
-                    if (trans != null)
-                        trans.dispose();
-                }
-                else if (item.type == TransitionActionType.Shake) {
-                    fairygui.GTimers.inst.remove(this.__shake, item);
-                }
+                item.target = null;
+                item.hook = null;
+                if (item.tweenConfig != null)
+                    item.tweenConfig.endHook = null;
             }
+            this._items.length = 0;
+            this._playing = false;
+            this._onComplete = null;
+            this._onCompleteCaller = null;
+            this._onCompleteParam = null;
         };
         Object.defineProperty(Transition.prototype, "playing", {
             get: function () {
@@ -5247,16 +6615,14 @@ var fairygui;
             var value;
             for (var i = 0; i < cnt; i++) {
                 var item = this._items[i];
-                if (item.label == null && item.label2 == null)
-                    continue;
                 if (item.label == label) {
-                    if (item.tween)
-                        value = item.startValue;
+                    if (item.tweenConfig != null)
+                        value = item.tweenConfig.startValue;
                     else
                         value = item.value;
                 }
-                else if (item.label2 == label) {
-                    value = item.endValue;
+                else if (item.tweenConfig != null && item.tweenConfig.endLabel == label) {
+                    value = item.tweenConfig.endValue;
                 }
                 else
                     continue;
@@ -5275,33 +6641,33 @@ var fairygui;
                         value.f1 = parseFloat(args[0]);
                         break;
                     case TransitionActionType.Rotation:
-                        value.i = parseFloat(args[0]);
+                        value.f1 = parseFloat(args[0]);
                         break;
                     case TransitionActionType.Color:
-                        value.c = parseFloat(args[0]);
+                        value.f1 = parseFloat(args[0]);
                         break;
                     case TransitionActionType.Animation:
-                        value.i = parseInt(args[0]);
+                        value.frame = parseInt(args[0]);
                         if (args.length > 1)
-                            value.b = args[1];
+                            value.playing = args[1];
                         break;
                     case TransitionActionType.Visible:
-                        value.b = args[0];
+                        value.visible = args[0];
                         break;
                     case TransitionActionType.Sound:
-                        value.s = args[0];
+                        value.sound = args[0];
                         if (args.length > 1)
-                            value.f1 = parseFloat(args[1]);
+                            value.volume = parseFloat(args[1]);
                         break;
                     case TransitionActionType.Transition:
-                        value.s = args[0];
+                        value.transName = args[0];
                         if (args.length > 1)
-                            value.i = parseInt(args[1]);
+                            value.playTimes = parseInt(args[1]);
                         break;
                     case TransitionActionType.Shake:
-                        value.f1 = parseFloat(args[0]);
+                        value.amplitude = parseFloat(args[0]);
                         if (args.length > 1)
-                            value.f2 = parseFloat(args[1]);
+                            value.duration = parseFloat(args[1]);
                         break;
                     case TransitionActionType.ColorFilter:
                         value.f1 = parseFloat(args[0]);
@@ -5312,18 +6678,18 @@ var fairygui;
                 }
             }
         };
-        Transition.prototype.setHook = function (label, callback, thisObj) {
+        Transition.prototype.setHook = function (label, callback, caller) {
             var cnt = this._items.length;
             for (var i = 0; i < cnt; i++) {
                 var item = this._items[i];
                 if (item.label == label) {
                     item.hook = callback;
-                    item.hookObj = thisObj;
+                    item.hookCaller = caller;
                     break;
                 }
-                else if (item.label2 == label) {
-                    item.hook2 = callback;
-                    item.hook2Obj = thisObj;
+                else if (item.tweenConfig != null && item.tweenConfig.endLabel == label) {
+                    item.tweenConfig.endHook = callback;
+                    item.tweenConfig.endHookCaller = caller;
                     break;
                 }
             }
@@ -5333,29 +6699,68 @@ var fairygui;
             for (var i = 0; i < cnt; i++) {
                 var item = this._items[i];
                 item.hook = null;
-                item.hookObj = null;
-                item.hook2 = null;
-                item.hook2Obj = null;
+                item.hookCaller = null;
+                if (item.tweenConfig != null) {
+                    item.tweenConfig.endHook = null;
+                    item.tweenConfig.endHookCaller = null;
+                }
             }
         };
         Transition.prototype.setTarget = function (label, newTarget) {
             var cnt = this._items.length;
-            var value;
             for (var i = 0; i < cnt; i++) {
                 var item = this._items[i];
-                if (item.label == null && item.label2 == null)
-                    continue;
-                item.targetId = newTarget.id;
+                if (item.label == label)
+                    item.targetId = newTarget.id;
             }
         };
         Transition.prototype.setDuration = function (label, value) {
             var cnt = this._items.length;
             for (var i = 0; i < cnt; i++) {
                 var item = this._items[i];
-                if (item.tween && item.label == label)
-                    item.duration = value;
+                if (item.tweenConfig != null && item.label == label)
+                    item.tweenConfig.duration = value;
             }
         };
+        Transition.prototype.getLabelTime = function (label) {
+            var cnt = this._items.length;
+            for (var i = 0; i < cnt; i++) {
+                var item = this._items[i];
+                if (item.label == label)
+                    return item.time;
+                else if (item.tweenConfig != null && item.tweenConfig.endLabel == label)
+                    return item.time + item.tweenConfig.duration;
+            }
+            return Number.NaN;
+        };
+        Object.defineProperty(Transition.prototype, "timeScale", {
+            get: function () {
+                return this._timeScale;
+            },
+            set: function (value) {
+                this._timeScale = value;
+                if (this._timeScale != value) {
+                    if (this._playing) {
+                        var cnt = this._items.length;
+                        for (var i = 0; i < cnt; i++) {
+                            var item = this._items[i];
+                            if (item.tweener != null)
+                                item.tweener.setTimeScale(value);
+                            else if (item.type == TransitionActionType.Transition) {
+                                if (item.value.trans != null)
+                                    item.value.trans.timeScale = value;
+                            }
+                            else if (item.type == TransitionActionType.Animation) {
+                                if (item.target != null)
+                                    (item.target).timeScale = value;
+                            }
+                        }
+                    }
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
         Transition.prototype.updateFromRelations = function (targetId, dx, dy) {
             var cnt = this._items.length;
             if (cnt == 0)
@@ -5363,11 +6768,11 @@ var fairygui;
             for (var i = 0; i < cnt; i++) {
                 var item = this._items[i];
                 if (item.type == TransitionActionType.XY && item.targetId == targetId) {
-                    if (item.tween) {
-                        item.startValue.f1 += dx;
-                        item.startValue.f2 += dy;
-                        item.endValue.f1 += dx;
-                        item.endValue.f2 += dy;
+                    if (item.tweenConfig != null) {
+                        item.tweenConfig.startValue.f1 += dx;
+                        item.tweenConfig.startValue.f2 += dy;
+                        item.tweenConfig.endValue.f1 += dx;
+                        item.tweenConfig.endValue.f2 += dy;
                     }
                     else {
                         item.value.f1 += dx;
@@ -5376,398 +6781,449 @@ var fairygui;
                 }
             }
         };
-        Transition.prototype.OnOwnerRemovedFromStage = function () {
+        Transition.prototype.onOwnerAddedToStage = function () {
+            if (this._autoPlay && !this._playing)
+                this.play(null, null, null, this._autoPlayTimes, this._autoPlayDelay);
+        };
+        Transition.prototype.onOwnerRemovedFromStage = function () {
             if ((this._options & Transition.OPTION_AUTO_STOP_DISABLED) == 0)
                 this.stop((this._options & Transition.OPTION_AUTO_STOP_AT_END) != 0 ? true : false, false);
         };
-        Transition.prototype.internalPlay = function (delay) {
-            if (delay === void 0) { delay = 0; }
+        Transition.prototype.onDelayedPlay = function () {
+            this.internalPlay();
+            this._playing = this._totalTasks > 0;
+            if (this._playing) {
+                if ((this._options & Transition.OPTION_IGNORE_DISPLAY_CONTROLLER) != 0) {
+                    var cnt = this._items.length;
+                    for (var i = 0; i < cnt; i++) {
+                        var item = this._items[i];
+                        if (item.target != null && item.target != this._owner)
+                            item.displayLockToken = item.target.addDisplayLock();
+                    }
+                }
+            }
+            else if (this._onComplete != null) {
+                var func = this._onComplete;
+                var param = this._onCompleteParam;
+                var thisObj = this._onCompleteCaller;
+                this._onComplete = null;
+                this._onCompleteParam = null;
+                this._onCompleteCaller = null;
+                func.call(thisObj, param);
+            }
+        };
+        Transition.prototype.internalPlay = function () {
             this._ownerBaseX = this._owner.x;
             this._ownerBaseY = this._owner.y;
             this._totalTasks = 0;
             var cnt = this._items.length;
-            var startTime;
             var item;
-            for (var i = 0; i < cnt; i++) {
-                item = this._items[i];
-                if (item.targetId)
-                    item.target = this._owner.getChildById(item.targetId);
-                else
-                    item.target = this._owner;
-                if (item.target == null)
-                    continue;
-                if (item.tween) {
-                    if (this._reversed)
-                        startTime = delay + this._maxTime - item.time - item.duration;
-                    else
-                        startTime = delay + item.time;
-                    if (startTime > 0 && (item.type == TransitionActionType.XY || item.type == TransitionActionType.Size)) {
-                        this._totalTasks++;
-                        item.completed = false;
-                        item.tweener = egret.Tween.get(item.value).wait(startTime * 1000).call(this.__delayCall, this, [item]);
+            var needSkipAnimations = false;
+            if (!this._reversed) {
+                for (var i = 0; i < cnt; i++) {
+                    item = this._items[i];
+                    if (item.target == null)
+                        continue;
+                    if (item.type == TransitionActionType.Animation && this._startTime != 0 && item.time <= this._startTime) {
+                        needSkipAnimations = true;
+                        item.value.flag = false;
                     }
                     else
-                        this.startTween(item, startTime);
+                        this.playItem(item);
                 }
-                else {
-                    if (this._reversed)
-                        startTime = delay + this._maxTime - item.time;
-                    else
-                        startTime = delay + item.time;
-                    if (startTime == 0) {
-                        this.applyValue(item, item.value);
-                        if (item.hook != null)
-                            item.hook.call(item.hookObj);
-                    }
-                    else {
-                        this._totalTasks++;
-                        item.completed = false;
-                        item.tweener = egret.Tween.get(item.value).wait(startTime * 1000).call(this.__delayCall2, this, [item]);
-                    }
-                }
-            }
-        };
-        Transition.prototype.prepareValue = function (item, toProps, reversed) {
-            if (reversed === void 0) { reversed = false; }
-            var startValue;
-            var endValue;
-            if (reversed) {
-                startValue = item.endValue;
-                endValue = item.startValue;
             }
             else {
-                startValue = item.startValue;
-                endValue = item.endValue;
+                for (i = 0; i < cnt; i++) {
+                    item = this._items[i];
+                    if (item.target == null)
+                        continue;
+                    this.playItem(item);
+                }
             }
+            if (needSkipAnimations)
+                this.skipAnimations();
+        };
+        Transition.prototype.playItem = function (item) {
+            var time;
+            if (item.tweenConfig != null) {
+                if (this._reversed)
+                    time = (this._totalDuration - item.time - item.tweenConfig.duration);
+                else
+                    time = item.time;
+                if (this._endTime == -1 || time <= this._endTime) {
+                    var startValue;
+                    var endValue;
+                    if (this._reversed) {
+                        startValue = item.tweenConfig.endValue;
+                        endValue = item.tweenConfig.startValue;
+                    }
+                    else {
+                        startValue = item.tweenConfig.startValue;
+                        endValue = item.tweenConfig.endValue;
+                    }
+                    item.value.b1 = startValue.b1 || endValue.b1;
+                    item.value.b2 = startValue.b2 || endValue.b2;
+                    switch (item.type) {
+                        case TransitionActionType.XY:
+                        case TransitionActionType.Size:
+                        case TransitionActionType.Scale:
+                        case TransitionActionType.Skew:
+                            item.tweener = fairygui.tween.GTween.to2(startValue.f1, startValue.f2, endValue.f1, endValue.f2, item.tweenConfig.duration);
+                            break;
+                        case TransitionActionType.Alpha:
+                        case TransitionActionType.Rotation:
+                            item.tweener = fairygui.tween.GTween.to(startValue.f1, endValue.f1, item.tweenConfig.duration);
+                            break;
+                        case TransitionActionType.Color:
+                            item.tweener = fairygui.tween.GTween.toColor(startValue.f1, endValue.f1, item.tweenConfig.duration);
+                            break;
+                        case TransitionActionType.ColorFilter:
+                            item.tweener = fairygui.tween.GTween.to4(startValue.f1, startValue.f2, startValue.f3, startValue.f4, endValue.f1, endValue.f2, endValue.f3, endValue.f4, item.tweenConfig.duration);
+                            break;
+                    }
+                    item.tweener.setDelay(time)
+                        .setEase(item.tweenConfig.easeType)
+                        .setRepeat(item.tweenConfig.repeat, item.tweenConfig.yoyo)
+                        .setTimeScale(this._timeScale)
+                        .setTarget(item)
+                        .onStart(this.onTweenStart, this)
+                        .onUpdate(this.onTweenUpdate, this)
+                        .onComplete(this.onTweenComplete, this);
+                    if (this._endTime >= 0)
+                        item.tweener.setBreakpoint(this._endTime - time);
+                    this._totalTasks++;
+                }
+            }
+            else if (item.type == TransitionActionType.Shake) {
+                if (this._reversed)
+                    time = (this._totalDuration - item.time - item.value.duration);
+                else
+                    time = item.time;
+                item.value.offsetX = item.value.offsetY = 0;
+                item.value.lastOffsetX = item.value.lastOffsetY = 0;
+                item.tweener = fairygui.tween.GTween.shake(0, 0, item.value.amplitude, item.value.duration)
+                    .setDelay(time)
+                    .setTimeScale(this._timeScale)
+                    .setTarget(item)
+                    .onUpdate(this.onTweenUpdate, this)
+                    .onComplete(this.onTweenComplete, this);
+                if (this._endTime >= 0)
+                    item.tweener.setBreakpoint(this._endTime - item.time);
+                this._totalTasks++;
+            }
+            else {
+                if (this._reversed)
+                    time = (this._totalDuration - item.time);
+                else
+                    time = item.time;
+                if (time <= this._startTime) {
+                    this.applyValue(item);
+                    this.callHook(item, false);
+                }
+                else if (this._endTime == -1 || time <= this._endTime) {
+                    this._totalTasks++;
+                    item.tweener = fairygui.tween.GTween.delayedCall(time)
+                        .setTimeScale(this._timeScale)
+                        .setTarget(item)
+                        .onComplete(this.onDelayedPlayItem, this);
+                }
+            }
+            if (item.tweener != null)
+                item.tweener.seek(this._startTime);
+        };
+        Transition.prototype.skipAnimations = function () {
+            var frame;
+            var playStartTime;
+            var playTotalTime;
+            var value;
+            var target;
+            var item;
+            var cnt = this._items.length;
+            for (var i = 0; i < cnt; i++) {
+                item = this._items[i];
+                if (item.type != TransitionActionType.Animation || item.time > this._startTime)
+                    continue;
+                value = item.value;
+                if (value.flag)
+                    continue;
+                target = item.target;
+                frame = target.frame;
+                playStartTime = target.playing ? 0 : -1;
+                playTotalTime = 0;
+                for (var j = i; j < cnt; j++) {
+                    item = this._items[j];
+                    if (item.type != TransitionActionType.Animation || item.target != target || item.time > this._startTime)
+                        continue;
+                    value = item.value;
+                    value.flag = true;
+                    if (value.frame != -1) {
+                        frame = value.frame;
+                        if (value.playing)
+                            playStartTime = item.time;
+                        else
+                            playStartTime = -1;
+                        playTotalTime = 0;
+                    }
+                    else {
+                        if (value.playing) {
+                            if (playStartTime < 0)
+                                playStartTime = item.time;
+                        }
+                        else {
+                            if (playStartTime >= 0)
+                                playTotalTime += (item.time - playStartTime);
+                            playStartTime = -1;
+                        }
+                    }
+                    this.callHook(item, false);
+                }
+                if (playStartTime >= 0)
+                    playTotalTime += (this._startTime - playStartTime);
+                target.playing = playStartTime >= 0;
+                target.frame = frame;
+                if (playTotalTime > 0)
+                    target.advance(playTotalTime * 1000);
+            }
+        };
+        Transition.prototype.onDelayedPlayItem = function (tweener) {
+            var item = tweener.target;
+            item.tweener = null;
+            this._totalTasks--;
+            this.applyValue(item);
+            this.callHook(item, false);
+            this.checkAllComplete();
+        };
+        Transition.prototype.onTweenStart = function (tweener) {
+            var item = tweener.target;
+            if (item.type == TransitionActionType.XY || item.type == TransitionActionType.Size) {
+                var startValue;
+                var endValue;
+                if (this._reversed) {
+                    startValue = item.tweenConfig.endValue;
+                    endValue = item.tweenConfig.startValue;
+                }
+                else {
+                    startValue = item.tweenConfig.startValue;
+                    endValue = item.tweenConfig.endValue;
+                }
+                if (item.type == TransitionActionType.XY) {
+                    if (item.target != this._owner) {
+                        if (!startValue.b1)
+                            startValue.f1 = item.target.x;
+                        if (!startValue.b2)
+                            startValue.f2 = item.target.y;
+                    }
+                }
+                else {
+                    if (!startValue.b1)
+                        startValue.f1 = item.target.width;
+                    if (!startValue.b2)
+                        startValue.f2 = item.target.height;
+                }
+                if (!endValue.b1)
+                    endValue.f1 = startValue.f1;
+                if (!endValue.b2)
+                    endValue.f2 = startValue.f2;
+                tweener.startValue.x = startValue.f1;
+                tweener.startValue.y = startValue.f2;
+                tweener.endValue.x = endValue.f1;
+                tweener.endValue.y = endValue.f2;
+            }
+            this.callHook(item, false);
+        };
+        Transition.prototype.onTweenUpdate = function (tweener) {
+            var item = tweener.target;
             switch (item.type) {
                 case TransitionActionType.XY:
                 case TransitionActionType.Size:
-                    if (item.type == TransitionActionType.XY) {
-                        if (item.target == this._owner) {
-                            if (!startValue.b1)
-                                startValue.f1 = 0;
-                            if (!startValue.b2)
-                                startValue.f2 = 0;
-                        }
-                        else {
-                            if (!startValue.b1)
-                                startValue.f1 = item.target.x;
-                            if (!startValue.b2)
-                                startValue.f2 = item.target.y;
-                        }
-                    }
-                    else {
-                        if (!startValue.b1)
-                            startValue.f1 = item.target.width;
-                        if (!startValue.b2)
-                            startValue.f2 = item.target.height;
-                    }
-                    item.value.f1 = startValue.f1;
-                    item.value.f2 = startValue.f2;
-                    if (!endValue.b1)
-                        endValue.f1 = item.value.f1;
-                    if (!endValue.b2)
-                        endValue.f2 = item.value.f2;
-                    item.value.b1 = startValue.b1 || endValue.b1;
-                    item.value.b2 = startValue.b2 || endValue.b2;
-                    toProps.f1 = endValue.f1;
-                    toProps.f2 = endValue.f2;
-                    break;
                 case TransitionActionType.Scale:
                 case TransitionActionType.Skew:
-                    item.value.f1 = startValue.f1;
-                    item.value.f2 = startValue.f2;
-                    toProps.f1 = endValue.f1;
-                    toProps.f2 = endValue.f2;
+                    item.value.f1 = tweener.value.x;
+                    item.value.f2 = tweener.value.y;
                     break;
                 case TransitionActionType.Alpha:
-                    item.value.f1 = startValue.f1;
-                    toProps.f1 = endValue.f1;
-                    break;
                 case TransitionActionType.Rotation:
-                    item.value.i = startValue.i;
-                    toProps.i = endValue.i;
+                    item.value.f1 = tweener.value.x;
+                    break;
+                case TransitionActionType.Color:
+                    item.value.f1 = tweener.value.color;
                     break;
                 case TransitionActionType.ColorFilter:
-                    item.value.f1 = startValue.f1;
-                    item.value.f2 = startValue.f2;
-                    item.value.f3 = startValue.f3;
-                    item.value.f4 = startValue.f4;
-                    toProps.f1 = endValue.f1;
-                    toProps.f2 = endValue.f2;
-                    toProps.f3 = endValue.f3;
-                    toProps.f4 = endValue.f4;
+                    item.value.f1 = tweener.value.x;
+                    item.value.f2 = tweener.value.y;
+                    item.value.f3 = tweener.value.z;
+                    item.value.f4 = tweener.value.w;
+                    break;
+                case TransitionActionType.Shake:
+                    item.value.offsetX = tweener.deltaValue.x;
+                    item.value.offsetY = tweener.deltaValue.y;
                     break;
             }
+            this.applyValue(item);
         };
-        Transition.prototype.startTween = function (item, delay) {
-            var initProps, toProps;
-            initProps = {};
-            toProps = {};
-            this._totalTasks++;
-            item.completed = false;
-            this.prepareValue(item, toProps, this._reversed);
-            item.tweener = egret.Tween.get(item.value, initProps);
-            if (delay != 0)
-                item.tweener.wait(delay * 1000);
-            else
-                this.applyValue(item, item.value);
-            item.tweener.call(this.__tweenStart, this, [item]);
-            item.tweener.to(toProps, item.duration * 1000, item.easeType);
-            if (item.repeat != 0) {
-                item.tweenTimes = 0;
-                item.tweener.call(this.__tweenRepeatComplete, this, [item]);
-            }
-            else
-                item.tweener.call(this.__tweenComplete, this, [item]);
-        };
-        Transition.prototype.__delayCall = function (item) {
+        Transition.prototype.onTweenComplete = function (tweener) {
+            var item = tweener.target;
             item.tweener = null;
             this._totalTasks--;
-            this.startTween(item, 0);
-        };
-        Transition.prototype.__delayCall2 = function (item) {
-            item.tweener = null;
-            this._totalTasks--;
-            item.completed = true;
-            this.applyValue(item, item.value);
-            if (item.hook != null)
-                item.hook.call(item.hookObj);
+            if (tweener.allCompleted)
+                this.callHook(item, true);
             this.checkAllComplete();
         };
-        Transition.prototype.__tweenStart = function (item) {
-            if (item.tweener != null) {
-                if (item.hook != null)
-                    item.hook.call(item.hookObj);
-                //因为egret的onChange在wait的时候已经开始调用，因此只能放在这里注册侦听
-                item.tweener.addEventListener("change", this.__tweenUpdate, [this, item]);
+        Transition.prototype.onPlayTransCompleted = function (item) {
+            this._totalTasks--;
+            this.checkAllComplete();
+        };
+        Transition.prototype.callHook = function (item, tweenEnd) {
+            if (tweenEnd) {
+                if (item.tweenConfig != null && item.tweenConfig.endHook != null)
+                    item.tweenConfig.endHook.call(item.tweenConfig.endHookCaller);
             }
-        };
-        Transition.prototype.__tweenUpdate = function () {
-            var args = this;
-            var trans = args[0];
-            var item = args[1];
-            trans.applyValue(item, item.value);
-        };
-        Transition.prototype.__tweenComplete = function (item) {
-            item.tweener = null;
-            this._totalTasks--;
-            item.completed = true;
-            if (item.hook2 != null)
-                item.hook2.call(item.hook2Obj);
-            this.checkAllComplete();
-        };
-        Transition.prototype.__tweenRepeatComplete = function (item) {
-            item.tweenTimes++;
-            if (item.repeat == -1 || item.tweenTimes < item.repeat + 1) {
-                var initProps, toProps;
-                initProps = {};
-                toProps = {};
-                initProps.onChange = this.__tweenUpdate;
-                initProps.onChangeObj = [this, item];
-                var reversed;
-                if (item.yoyo) {
-                    if (this._reversed)
-                        reversed = item.tweenTimes % 2 == 0;
-                    else
-                        reversed = item.tweenTimes % 2 == 1;
-                }
-                else
-                    reversed = this._reversed;
-                this.prepareValue(item, toProps, reversed);
-                item.tweener = egret.Tween.get(item.value, initProps);
-                item.tweener.to(toProps, item.duration * 1000, item.easeType)
-                    .call(this.__tweenRepeatComplete, this, [item]);
+            else {
+                if (item.time >= this._startTime && item.hook != null)
+                    item.hook.call(item.hookCaller);
             }
-            else
-                this.__tweenComplete(item);
-        };
-        Transition.prototype.__playTransComplete = function (item) {
-            this._totalTasks--;
-            item.completed = true;
-            this.checkAllComplete();
         };
         Transition.prototype.checkAllComplete = function () {
             if (this._playing && this._totalTasks == 0) {
                 if (this._totalTimes < 0) {
-                    //不立刻调用的原因是egret.Tween在onComplete之后，还会调用onChange
-                    egret.callLater(this.internalPlay, this, 0);
+                    this.internalPlay();
                 }
                 else {
                     this._totalTimes--;
                     if (this._totalTimes > 0)
-                        egret.callLater(this.internalPlay, this, 0);
+                        this.internalPlay();
                     else {
                         this._playing = false;
                         var cnt = this._items.length;
                         for (var i = 0; i < cnt; i++) {
                             var item = this._items[i];
-                            if (item.target != null) {
-                                if (item.displayLockToken != 0) {
-                                    item.target.releaseDisplayLock(item.displayLockToken);
-                                    item.displayLockToken = 0;
-                                }
-                                if (item.filterCreated) {
-                                    item.filterCreated = false;
-                                    item.target.filters = null;
-                                }
+                            if (item.target != null && item.displayLockToken != 0) {
+                                item.target.releaseDisplayLock(item.displayLockToken);
+                                item.displayLockToken = 0;
                             }
                         }
                         if (this._onComplete != null) {
                             var func = this._onComplete;
                             var param = this._onCompleteParam;
-                            var thisObj = this._onCompleteObj;
+                            var thisObj = this._onCompleteCaller;
                             this._onComplete = null;
                             this._onCompleteParam = null;
-                            this._onCompleteObj = null;
-                            if (func.length > 0)
-                                func.call(thisObj, param);
-                            else
-                                func.call(thisObj);
+                            this._onCompleteCaller = null;
+                            func.call(thisObj, param);
                         }
                     }
                 }
             }
         };
-        Transition.prototype.applyValue = function (item, value) {
+        Transition.prototype.applyValue = function (item) {
             item.target._gearLocked = true;
             switch (item.type) {
                 case TransitionActionType.XY:
                     if (item.target == this._owner) {
-                        var f1 = 0, f2 = 0;
-                        if (!value.b1)
+                        var f1, f2;
+                        if (!item.value.b1)
                             f1 = item.target.x;
                         else
-                            f1 = value.f1 + this._ownerBaseX;
-                        if (!value.b2)
+                            f1 = item.value.f1 + this._ownerBaseX;
+                        if (!item.value.b2)
                             f2 = item.target.y;
                         else
-                            f2 = value.f2 + this._ownerBaseY;
+                            f2 = item.value.f2 + this._ownerBaseY;
                         item.target.setXY(f1, f2);
                     }
                     else {
-                        if (!value.b1)
-                            value.f1 = item.target.x;
-                        if (!value.b2)
-                            value.f2 = item.target.y;
-                        item.target.setXY(value.f1, value.f2);
+                        if (!item.value.b1)
+                            item.value.f1 = item.target.x;
+                        if (!item.value.b2)
+                            item.value.f2 = item.target.y;
+                        item.target.setXY(item.value.f1, item.value.f2);
                     }
                     break;
                 case TransitionActionType.Size:
-                    if (!value.b1)
-                        value.f1 = item.target.width;
-                    if (!value.b2)
-                        value.f2 = item.target.height;
-                    item.target.setSize(value.f1, value.f2);
+                    if (!item.value.b1)
+                        item.value.f1 = item.target.width;
+                    if (!item.value.b2)
+                        item.value.f2 = item.target.height;
+                    item.target.setSize(item.value.f1, item.value.f2);
                     break;
                 case TransitionActionType.Pivot:
-                    item.target.setPivot(value.f1, value.f2);
+                    item.target.setPivot(item.value.f1, item.value.f2, item.target.pivotAsAnchor);
                     break;
                 case TransitionActionType.Alpha:
-                    item.target.alpha = value.f1;
+                    item.target.alpha = item.value.f1;
                     break;
                 case TransitionActionType.Rotation:
-                    item.target.rotation = value.i;
+                    item.target.rotation = item.value.f1;
                     break;
                 case TransitionActionType.Scale:
-                    item.target.setScale(value.f1, value.f2);
+                    item.target.setScale(item.value.f1, item.value.f2);
                     break;
                 case TransitionActionType.Skew:
-                    item.target.setSkew(value.f1, value.f2);
+                    //todo
                     break;
                 case TransitionActionType.Color:
-                    item.target.color = value.c;
+                    (item.target).color = item.value.f1;
                     break;
                 case TransitionActionType.Animation:
-                    if (!value.b1)
-                        value.i = item.target.frame;
-                    item.target.frame = value.i;
-                    item.target.playing = value.b;
+                    if (item.value.frame >= 0)
+                        (item.target).frame = item.value.frame;
+                    (item.target).playing = item.value.playing;
+                    (item.target).timeScale = this._timeScale;
                     break;
                 case TransitionActionType.Visible:
-                    item.target.visible = value.b;
+                    item.target.visible = item.value.visible;
                     break;
                 case TransitionActionType.Transition:
-                    var trans = item.target.getTransition(value.s);
-                    if (trans != null) {
-                        if (value.i == 0)
-                            trans.stop(false, true);
-                        else if (trans.playing)
-                            trans._totalTimes = value.i;
-                        else {
-                            item.completed = false;
+                    if (this._playing) {
+                        var trans = item.value.trans;
+                        if (trans != null) {
                             this._totalTasks++;
-                            if (this._reversed)
-                                trans.playReverse(this.__playTransComplete, this, item, item.value.i);
-                            else
-                                trans.play(this.__playTransComplete, this, item, item.value.i);
+                            var startTime = this._startTime > item.time ? (this._startTime - item.time) : 0;
+                            var endTime = this._endTime >= 0 ? (this._endTime - item.time) : -1;
+                            if (item.value.stopTime >= 0 && (endTime < 0 || endTime > item.value.stopTime))
+                                endTime = item.value.stopTime;
+                            trans.timeScale = this._timeScale;
+                            trans._play(this.onPlayTransCompleted, this, item, item.value.playTimes, 0, startTime, endTime, this._reversed);
                         }
                     }
                     break;
                 case TransitionActionType.Sound:
-                    var pi = fairygui.UIPackage.getItemByURL(value.s);
-                    if (pi) {
-                        var sound = pi.owner.getItemAsset(pi);
-                        if (sound)
-                            fairygui.GRoot.inst.playOneShotSound(sound, value.f1);
+                    if (this._playing && item.time >= this._startTime) {
+                        if (item.value.audioClip == null) {
+                            var pi = fairygui.UIPackage.getItemByURL(item.value.sound);
+                            if (pi)
+                                item.value.audioClip = pi.owner.getItemAsset(pi);
+                        }
+                        if (item.value.audioClip)
+                            fairygui.GRoot.inst.playOneShotSound(item.value.audioClip, item.value.volume);
                     }
                     break;
                 case TransitionActionType.Shake:
-                    item.startValue.f1 = 0; //offsetX
-                    item.startValue.f2 = 0; //offsetY
-                    item.startValue.f3 = item.value.f2; //shakePeriod
-                    item.startValue.i = egret.getTimer(); //startTime
-                    fairygui.GTimers.inst.add(1, 0, this.__shake, item, this);
-                    this._totalTasks++;
-                    item.completed = false;
+                    item.target.setXY(item.target.x - item.value.lastOffsetX + item.value.offsetX, item.target.y - item.value.lastOffsetY + item.value.offsetY);
+                    item.value.lastOffsetX = item.value.offsetX;
+                    item.value.lastOffsetY = item.value.offsetY;
                     break;
                 case TransitionActionType.ColorFilter:
-                    var arr = item.target.filters;
-                    var cf;
-                    if (!arr || !(arr[0] instanceof egret.ColorMatrixFilter)) {
-                        cf = new egret.ColorMatrixFilter();
-                        arr = [cf];
-                        item.filterCreated = true;
+                    {
+                        var arr = item.target.filters;
+                        var cf;
+                        if (!arr || !(arr[0] instanceof egret.ColorMatrixFilter)) {
+                            cf = new egret.ColorMatrixFilter();
+                            arr = [cf];
+                        }
+                        else
+                            cf = arr[0];
+                        var cm = new fairygui.ColorMatrix();
+                        cm.adjustBrightness(item.value.f1);
+                        cm.adjustContrast(item.value.f2);
+                        cm.adjustSaturation(item.value.f3);
+                        cm.adjustHue(item.value.f4);
+                        cf.matrix = cm.matrix;
+                        item.target.filters = arr;
+                        break;
                     }
-                    else
-                        cf = arr[0];
-                    var cm = new fairygui.ColorMatrix();
-                    cm.adjustBrightness(value.f1);
-                    cm.adjustContrast(value.f2);
-                    cm.adjustSaturation(value.f3);
-                    cm.adjustHue(value.f4);
-                    cf.matrix = cm.matrix;
-                    item.target.filters = arr;
             }
             item.target._gearLocked = false;
-        };
-        Transition.prototype.__shake = function (trans) {
-            var item = this;
-            trans.__shakeItem(item);
-        };
-        Transition.prototype.__shakeItem = function (item) {
-            var r = Math.ceil(item.value.f1 * item.startValue.f3 / item.value.f2);
-            var rx = (Math.random() * 2 - 1) * r;
-            var ry = (Math.random() * 2 - 1) * r;
-            rx = rx > 0 ? Math.ceil(rx) : Math.floor(rx);
-            ry = ry > 0 ? Math.ceil(ry) : Math.floor(ry);
-            item.target._gearLocked = true;
-            item.target.setXY(item.target.x - item.startValue.f1 + rx, item.target.y - item.startValue.f2 + ry);
-            item.target._gearLocked = false;
-            item.startValue.f1 = rx;
-            item.startValue.f2 = ry;
-            var t = egret.getTimer();
-            item.startValue.f3 -= (t - item.startValue.i) / 1000;
-            item.startValue.i = t;
-            if (item.startValue.f3 <= 0) {
-                item.target._gearLocked = true;
-                item.target.setXY(item.target.x - item.startValue.f1, item.target.y - item.startValue.f2);
-                item.target._gearLocked = false;
-                item.completed = true;
-                this._totalTasks--;
-                fairygui.GTimers.inst.remove(this.__shake, item);
-                this.checkAllComplete();
-            }
         };
         Transition.prototype.setup = function (xml) {
             this.name = xml.attributes.name;
@@ -5778,103 +7234,113 @@ var fairygui;
             if (this._autoPlay) {
                 str = xml.attributes.autoPlayRepeat;
                 if (str)
-                    this.autoPlayRepeat = parseInt(str);
+                    this._autoPlayTimes = parseInt(str);
                 str = xml.attributes.autoPlayDelay;
                 if (str)
-                    this.autoPlayDelay = parseFloat(str);
+                    this._autoPlayDelay = parseFloat(str);
             }
+            str = xml.attributes.fps;
+            var frameInterval;
+            if (str)
+                frameInterval = 1 / parseInt(str);
+            else
+                frameInterval = 1 / 24;
             var col = xml.children;
             var length1 = col.length;
             for (var i1 = 0; i1 < length1; i1++) {
                 var cxml = col[i1];
                 if (cxml.name != "item")
                     continue;
-                var item = new TransitionItem();
-                this._items.push(item);
-                item.time = parseInt(cxml.attributes.time) / Transition.FRAME_RATE;
-                item.targetId = cxml.attributes.target;
                 str = cxml.attributes.type;
-                switch (str) {
-                    case "XY":
-                        item.type = TransitionActionType.XY;
-                        break;
-                    case "Size":
-                        item.type = TransitionActionType.Size;
-                        break;
-                    case "Scale":
-                        item.type = TransitionActionType.Scale;
-                        break;
-                    case "Pivot":
-                        item.type = TransitionActionType.Pivot;
-                        break;
-                    case "Alpha":
-                        item.type = TransitionActionType.Alpha;
-                        break;
-                    case "Rotation":
-                        item.type = TransitionActionType.Rotation;
-                        break;
-                    case "Color":
-                        item.type = TransitionActionType.Color;
-                        break;
-                    case "Animation":
-                        item.type = TransitionActionType.Animation;
-                        break;
-                    case "Visible":
-                        item.type = TransitionActionType.Visible;
-                        break;
-                    case "Sound":
-                        item.type = TransitionActionType.Sound;
-                        break;
-                    case "Transition":
-                        item.type = TransitionActionType.Transition;
-                        break;
-                    case "Shake":
-                        item.type = TransitionActionType.Shake;
-                        break;
-                    case "ColorFilter":
-                        item.type = TransitionActionType.ColorFilter;
-                        break;
-                    case "Skew":
-                        item.type = TransitionActionType.Skew;
-                        break;
-                    default:
-                        item.type = TransitionActionType.Unknown;
-                        break;
-                }
-                item.tween = cxml.attributes.tween == "true";
+                var item = new TransitionItem(this.parseItemType(str));
+                this._items.push(item);
+                item.time = parseInt(cxml.attributes.time) * frameInterval;
+                item.targetId = cxml.attributes.target;
+                if (cxml.attributes.tween == "true")
+                    item.tweenConfig = new TweenConfig();
                 item.label = cxml.attributes.label;
-                if (item.tween) {
-                    item.duration = parseInt(cxml.attributes.duration) / Transition.FRAME_RATE;
-                    if (item.time + item.duration > this._maxTime)
-                        this._maxTime = item.time + item.duration;
+                if (item.tweenConfig) {
+                    item.tweenConfig.duration = parseInt(cxml.attributes.duration) * frameInterval;
+                    if (item.time + item.tweenConfig.duration > this._totalDuration)
+                        this._totalDuration = item.time + item.tweenConfig.duration;
                     str = cxml.attributes.ease;
                     if (str)
-                        item.easeType = fairygui.parseEaseType(str);
+                        item.tweenConfig.easeType = fairygui.tween.EaseType.parseEaseType(str);
                     str = cxml.attributes.repeat;
                     if (str)
-                        item.repeat = parseInt(str);
-                    item.yoyo = cxml.attributes.yoyo == "true";
-                    item.label2 = cxml.attributes.label2;
+                        item.tweenConfig.repeat = parseInt(str);
+                    item.tweenConfig.yoyo = cxml.attributes.yoyo == "true";
+                    item.tweenConfig.endLabel = cxml.attributes.label2;
                     var v = cxml.attributes.endValue;
                     if (v) {
-                        this.decodeValue(item.type, cxml.attributes.startValue, item.startValue);
-                        this.decodeValue(item.type, v, item.endValue);
+                        this.decodeValue(item, cxml.attributes.startValue, item.tweenConfig.startValue);
+                        this.decodeValue(item, v, item.tweenConfig.endValue);
                     }
                     else {
-                        item.tween = false;
-                        this.decodeValue(item.type, cxml.attributes.startValue, item.value);
+                        this.decodeValue(item, cxml.attributes.startValue, item.value);
                     }
                 }
                 else {
-                    if (item.time > this._maxTime)
-                        this._maxTime = item.time;
-                    this.decodeValue(item.type, cxml.attributes.value, item.value);
+                    if (item.time > this._totalDuration)
+                        this._totalDuration = item.time;
+                    this.decodeValue(item, cxml.attributes.value, item.value);
                 }
             }
         };
-        Transition.prototype.decodeValue = function (type, str, value) {
+        Transition.prototype.parseItemType = function (str) {
+            var type;
+            switch (str) {
+                case "XY":
+                    type = TransitionActionType.XY;
+                    break;
+                case "Size":
+                    type = TransitionActionType.Size;
+                    break;
+                case "Scale":
+                    type = TransitionActionType.Scale;
+                    break;
+                case "Pivot":
+                    type = TransitionActionType.Pivot;
+                    break;
+                case "Alpha":
+                    type = TransitionActionType.Alpha;
+                    break;
+                case "Rotation":
+                    type = TransitionActionType.Rotation;
+                    break;
+                case "Color":
+                    type = TransitionActionType.Color;
+                    break;
+                case "Animation":
+                    type = TransitionActionType.Animation;
+                    break;
+                case "Visible":
+                    type = TransitionActionType.Visible;
+                    break;
+                case "Sound":
+                    type = TransitionActionType.Sound;
+                    break;
+                case "Transition":
+                    type = TransitionActionType.Transition;
+                    break;
+                case "Shake":
+                    type = TransitionActionType.Shake;
+                    break;
+                case "ColorFilter":
+                    type = TransitionActionType.ColorFilter;
+                    break;
+                case "Skew":
+                    type = TransitionActionType.Skew;
+                    break;
+                default:
+                    type = TransitionActionType.Unknown;
+                    break;
+            }
+            return type;
+        };
+        Transition.prototype.decodeValue = function (item, str, value) {
             var arr;
-            switch (type) {
+            switch (item.type) {
                 case TransitionActionType.XY:
                 case TransitionActionType.Size:
                 case TransitionActionType.Pivot:
@@ -5899,7 +7365,7 @@ var fairygui;
                     value.f1 = parseFloat(str);
                     break;
                 case TransitionActionType.Rotation:
-                    value.i = parseInt(str);
+                    value.f1 = parseFloat(str);
                     break;
                 case TransitionActionType.Scale:
                     arr = str.split(",");
@@ -5907,47 +7373,44 @@ var fairygui;
                     value.f2 = parseFloat(arr[1]);
                     break;
                 case TransitionActionType.Color:
-                    value.c = fairygui.ToolSet.convertFromHtmlColor(str);
+                    value.f1 = fairygui.ToolSet.convertFromHtmlColor(str);
                     break;
                 case TransitionActionType.Animation:
                     arr = str.split(",");
-                    if (arr[0] == "-") {
-                        value.b1 = false;
-                    }
-                    else {
-                        value.i = parseInt(arr[0]);
-                        value.b1 = true;
-                    }
-                    value.b = arr[1] == "p";
+                    if (arr[0] == "-")
+                        value.frame = -1;
+                    else
+                        value.frame = parseInt(arr[0]);
+                    value.playing = arr[1] == "p";
                     break;
                 case TransitionActionType.Visible:
-                    value.b = str == "true";
+                    value.visible = str == "true";
                     break;
                 case TransitionActionType.Sound:
                     arr = str.split(",");
-                    value.s = arr[0];
+                    value.sound = arr[0];
                     if (arr.length > 1) {
                         var intv = parseInt(arr[1]);
                         if (intv == 0 || intv == 100)
-                            value.f1 = 1;
+                            value.volume = 1;
                         else
-                            value.f1 = intv / 100;
+                            value.volume = intv / 100;
                     }
                     else
-                        value.f1 = 1;
+                        value.volume = 1;
                     break;
                 case TransitionActionType.Transition:
                     arr = str.split(",");
-                    value.s = arr[0];
+                    value.transName = arr[0];
                     if (arr.length > 1)
-                        value.i = parseInt(arr[1]);
+                        value.playTimes = parseInt(arr[1]);
                     else
-                        value.i = 1;
+                        value.playTimes = 1;
                     break;
                 case TransitionActionType.Shake:
                     arr = str.split(",");
-                    value.f1 = parseFloat(arr[0]);
-                    value.f2 = parseFloat(arr[1]);
+                    value.amplitude = parseFloat(arr[0]);
+                    value.duration = parseFloat(arr[1]);
                     break;
                 case TransitionActionType.ColorFilter:
                     arr = str.split(",");
@@ -5961,7 +7424,6 @@ var fairygui;
         Transition.OPTION_IGNORE_DISPLAY_CONTROLLER = 1;
         Transition.OPTION_AUTO_STOP_DISABLED = 2;
         Transition.OPTION_AUTO_STOP_AT_END = 4;
-        Transition.FRAME_RATE = 24;
         return Transition;
     }());
     fairygui.Transition = Transition;
@@ -5988,39 +7450,90 @@ var fairygui;
     }());
     __reflect(TransitionActionType.prototype, "TransitionActionType");
     var TransitionItem = (function () {
-        function TransitionItem() {
-            this.time = 0;
-            this.type = 0;
-            this.duration = 0;
-            this.repeat = 0;
-            this.yoyo = false;
-            this.tween = false;
-            this.tweenTimes = 0;
-            this.completed = false;
-            this.displayLockToken = 0;
-            this.easeType = egret.Ease.quadOut;
-            this.value = new TransitionValue();
-            this.startValue = new TransitionValue();
-            this.endValue = new TransitionValue();
+        function TransitionItem(type) {
+            this.type = type;
+            switch (type) {
+                case TransitionActionType.XY:
+                case TransitionActionType.Size:
+                case TransitionActionType.Scale:
+                case TransitionActionType.Pivot:
+                case TransitionActionType.Skew:
+                case TransitionActionType.Alpha:
+                case TransitionActionType.Rotation:
+                case TransitionActionType.Color:
+                case TransitionActionType.ColorFilter:
+                    this.value = new TValue();
+                    break;
+                case TransitionActionType.Animation:
+                    this.value = new TValue_Animation();
+                    break;
+                case TransitionActionType.Shake:
+                    this.value = new TValue_Shake();
+                    break;
+                case TransitionActionType.Sound:
+                    this.value = new TValue_Sound();
+                    break;
+                case TransitionActionType.Transition:
+                    this.value = new TValue_Transition();
+                    break;
+                case TransitionActionType.Visible:
+                    this.value = new TValue_Visible();
+                    break;
+            }
         }
         return TransitionItem;
     }());
     __reflect(TransitionItem.prototype, "TransitionItem");
-    var TransitionValue = (function () {
-        function TransitionValue() {
-            this.f1 = 0;
-            this.f2 = 0;
-            this.f3 = 0;
-            this.f4 = 0;
-            this.i = 0;
-            this.c = 0;
-            this.b = false;
-            this.b1 = true;
-            this.b2 = true;
+    var TweenConfig = (function () {
+        function TweenConfig() {
+            this.duration = 0;
+            this.repeat = 0;
+            this.yoyo = false;
+            this.easeType = fairygui.tween.EaseType.QuadOut;
+            this.startValue = new TValue();
+            this.endValue = new TValue();
         }
-        return TransitionValue;
+        return TweenConfig;
     }());
-    __reflect(TransitionValue.prototype, "TransitionValue");
+    __reflect(TweenConfig.prototype, "TweenConfig");
+    var TValue_Visible = (function () {
+        function TValue_Visible() {
+        }
+        return TValue_Visible;
+    }());
+    __reflect(TValue_Visible.prototype, "TValue_Visible");
+    var TValue_Animation = (function () {
+        function TValue_Animation() {
+        }
+        return TValue_Animation;
+    }());
+    __reflect(TValue_Animation.prototype, "TValue_Animation");
+    var TValue_Sound = (function () {
+        function TValue_Sound() {
+        }
+        return TValue_Sound;
+    }());
+    __reflect(TValue_Sound.prototype, "TValue_Sound");
+    var TValue_Transition = (function () {
+        function TValue_Transition() {
+        }
+        return TValue_Transition;
+    }());
+    __reflect(TValue_Transition.prototype, "TValue_Transition");
+    var TValue_Shake = (function () {
+        function TValue_Shake() {
+        }
+        return TValue_Shake;
+    }());
+    __reflect(TValue_Shake.prototype, "TValue_Shake");
+    var TValue = (function () {
+        function TValue() {
+            this.f1 = this.f2 = this.f3 = this.f4 = 0;
+            this.b1 = this.b2 = true;
+        }
+        return TValue;
+    }());
+    __reflect(TValue.prototype, "TValue");
 })(fairygui || (fairygui = {}));
 var fairygui;
 (function (fairygui) {
@@ -6076,20 +7589,23 @@ var fairygui;
             var _this = _super.call(this) || this;
             _this.interval = 0;
             _this.repeatDelay = 0;
+            _this.timeScale = 1;
+            _this._playing = true;
             _this._frameCount = 0;
-            _this._currentFrame = 0;
+            _this._frame = 0;
             _this._start = 0;
             _this._end = 0;
             _this._times = 0;
             _this._endAt = 0;
             _this._status = 0; //0-none, 1-next loop, 2-ending, 3-ended
             _this._smoothing = true;
+            _this._frameElapsed = 0; //当前帧延迟
+            _this._reversed = false;
+            _this._repeatedCount = 0;
             //comment out below line before 5.1.0
             _this.$renderNode = new egret.sys.NormalBitmapNode();
             //comment out below line after 5.1.0
             //this.$renderNode = new egret.sys.BitmapNode();
-            _this.playState = new fairygui.PlayState();
-            _this._playing = true;
             _this.touchEnabled = false;
             _this.setPlaySettings();
             return _this;
@@ -6108,13 +7624,13 @@ var fairygui;
                     this._end = this._frameCount - 1;
                 if (this._endAt == -1 || this._endAt > this._frameCount - 1)
                     this._endAt = this._frameCount - 1;
-                if (this._currentFrame < 0 || this._currentFrame > this._frameCount - 1)
-                    this._currentFrame = this._frameCount - 1;
-                if (this._frameCount > 0)
-                    this.setFrame(this._frames[this._currentFrame]);
-                else
-                    this.setFrame(null);
-                this.playState.rewind();
+                if (this._frame < 0 || this._frame > this._frameCount - 1)
+                    this._frame = this._frameCount - 1;
+                this.drawFrame();
+                this._frameElapsed = 0;
+                this._repeatedCount = 0;
+                this._reversed = false;
+                this.checkTimer();
             },
             enumerable: true,
             configurable: true
@@ -6126,15 +7642,17 @@ var fairygui;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(MovieClip.prototype, "currentFrame", {
+        Object.defineProperty(MovieClip.prototype, "frame", {
             get: function () {
-                return this._currentFrame;
+                return this._frame;
             },
             set: function (value) {
-                if (this._currentFrame != value) {
-                    this._currentFrame = value;
-                    this.playState.currentFrame = value;
-                    this.setFrame(this._currentFrame < this._frameCount ? this._frames[this._currentFrame] : null);
+                if (this._frame != value) {
+                    if (this._frames != null && value >= this._frameCount)
+                        value = this._frameCount - 1;
+                    this._frame = value;
+                    this._frameElapsed = 0;
+                    this.drawFrame();
                 }
             },
             enumerable: true,
@@ -6145,12 +7663,9 @@ var fairygui;
                 return this._playing;
             },
             set: function (value) {
-                this._playing = value;
-                if (value && this.stage != null) {
-                    fairygui.GTimers.inst.add(0, 0, this.update, this);
-                }
-                else {
-                    fairygui.GTimers.inst.remove(this.update, this);
+                if (this._playing != value) {
+                    this._playing = value;
+                    this.checkTimer();
                 }
             },
             enumerable: true,
@@ -6166,6 +7681,65 @@ var fairygui;
             enumerable: true,
             configurable: true
         });
+        MovieClip.prototype.rewind = function () {
+            this._frame = 0;
+            this._frameElapsed = 0;
+            this._reversed = false;
+            this._repeatedCount = 0;
+            this.drawFrame();
+        };
+        MovieClip.prototype.syncStatus = function (anotherMc) {
+            this._frame = anotherMc._frame;
+            this._frameElapsed = anotherMc._frameElapsed;
+            this._reversed = anotherMc._reversed;
+            this._repeatedCount = anotherMc._repeatedCount;
+            this.drawFrame();
+        };
+        MovieClip.prototype.advance = function (timeInMiniseconds) {
+            var beginFrame = this._frame;
+            var beginReversed = this._reversed;
+            var backupTime = timeInMiniseconds;
+            while (true) {
+                var tt = this.interval + this._frames[this._frame].addDelay;
+                if (this._frame == 0 && this._repeatedCount > 0)
+                    tt += this.repeatDelay;
+                if (timeInMiniseconds < tt) {
+                    this._frameElapsed = 0;
+                    break;
+                }
+                timeInMiniseconds -= tt;
+                if (this.swing) {
+                    if (this._reversed) {
+                        this._frame--;
+                        if (this._frame <= 0) {
+                            this._frame = 0;
+                            this._repeatedCount++;
+                            this._reversed = !this._reversed;
+                        }
+                    }
+                    else {
+                        this._frame++;
+                        if (this._frame > this._frameCount - 1) {
+                            this._frame = Math.max(0, this._frameCount - 2);
+                            this._repeatedCount++;
+                            this._reversed = !this._reversed;
+                        }
+                    }
+                }
+                else {
+                    this._frame++;
+                    if (this._frame > this._frameCount - 1) {
+                        this._frame = 0;
+                        this._repeatedCount++;
+                    }
+                }
+                if (this._frame == beginFrame && this._reversed == beginReversed) {
+                    var roundTime = backupTime - timeInMiniseconds; //这就是一轮需要的时间
+                    timeInMiniseconds -= Math.floor(timeInMiniseconds / roundTime) * roundTime; //跳过
+                }
+            }
+            this.drawFrame();
+        };
         //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
         MovieClip.prototype.setPlaySettings = function (start, end, times, endAt, endCallback, callbackObj) {
             if (start === void 0) { start = 0; }
@@ -6185,65 +7759,89 @@ var fairygui;
             this._status = 0;
             this._callback = endCallback;
             this._callbackObj = callbackObj;
-            this.currentFrame = start;
+            this.frame = start;
         };
         MovieClip.prototype.update = function () {
-            if (this._playing && this._frameCount != 0 && this._status != 3) {
-                this.playState.update(this);
-                if (this._currentFrame != this.playState.currentFrame) {
-                    if (this._status == 1) {
-                        this._currentFrame = this._start;
-                        this.playState.currentFrame = this._currentFrame;
-                        this._status = 0;
+            if (!this._playing || this._frameCount == 0 || this._status == 3)
+                return;
+            var dt = fairygui.GTimers.deltaTime;
+            if (this.timeScale != 1)
+                dt *= this.timeScale;
+            this._frameElapsed += dt;
+            var tt = this.interval + this._frames[this._frame].addDelay;
+            if (this._frame == 0 && this._repeatedCount > 0)
+                tt += this.repeatDelay;
+            if (this._frameElapsed < tt)
+                return;
+            this._frameElapsed -= tt;
+            if (this._frameElapsed > this.interval)
+                this._frameElapsed = this.interval;
+            if (this.swing) {
+                if (this._reversed) {
+                    this._frame--;
+                    if (this._frame <= 0) {
+                        this._frame = 0;
+                        this._repeatedCount++;
+                        this._reversed = !this._reversed;
                     }
-                    else if (this._status == 2) {
-                        this._currentFrame = this._endAt;
-                        this.playState.currentFrame = this._currentFrame;
-                        this._status = 3;
-                        //play end
-                        if (this._callback != null) {
-                            fairygui.GTimers.inst.callLater(this.__playEnd, this);
-                        }
+                }
+                else {
+                    this._frame++;
+                    if (this._frame > this._frameCount - 1) {
+                        this._frame = Math.max(0, this._frameCount - 2);
+                        this._repeatedCount++;
+                        this._reversed = !this._reversed;
                     }
-                    else {
-                        this._currentFrame = this.playState.currentFrame;
-                        if (this._currentFrame == this._end) {
-                            if (this._times > 0) {
-                                this._times--;
-                                if (this._times == 0)
-                                    this._status = 2;
-                                else
-                                    this._status = 1;
-                            }
-                            else if (this._start != 0)
-                                this._status = 1;
-                        }
-                    }
-                    //draw
-                    this.setFrame(this._frames[this._currentFrame]);
                 }
             }
-        };
-        MovieClip.prototype.__playEnd = function () {
-            if (this._callback != null) {
-                var f = this._callback;
-                var fObj = this._callbackObj;
-                this._callback = null;
-                this._callbackObj = null;
-                if (f.length == 1)
-                    f.call(fObj, this);
-                else
-                    f.call(fObj);
+            else {
+                this._frame++;
+                if (this._frame > this._frameCount - 1) {
+                    this._frame = 0;
+                    this._repeatedCount++;
+                }
             }
-        };
-        MovieClip.prototype.setFrame = function (frame) {
-            if (frame == null) {
-                this._texture = null;
+            if (this._status == 1) {
+                this._frame = this._start;
+                this._frameElapsed = 0;
+                this._status = 0;
+            }
+            else if (this._status == 2) {
+                this._frame = this._endAt;
+                this._frameElapsed = 0;
+                this._status = 3; //ended
+                //play end
+                if (this._callback != null) {
+                    var callback = this._callback;
+                    var caller = this._callbackObj;
+                    this._callback = null;
+                    this._callbackObj = null;
+                    callback.call(caller);
+                }
             }
             else {
+                if (this._frame == this._end) {
+                    if (this._times > 0) {
+                        this._times--;
+                        if (this._times == 0)
+                            this._status = 2; //ending
+                        else
+                            this._status = 1; //new loop
+                    }
+                    else if (this._start != 0)
+                        this._status = 1; //new loop
+                }
+            }
+            this.drawFrame();
+        };
+        MovieClip.prototype.drawFrame = function () {
+            if (this._frameCount > 0 && this._frame < this._frames.length) {
+                var frame = this._frames[this._frame];
                 this._texture = frame.texture;
                 this._frameRect = frame.rect;
             }
+            else
+                this._texture = null;
             if (this["$updateRenderNode"]) {
                 var self_1 = this;
                 self_1.$renderDirty = true;
@@ -6262,6 +7860,12 @@ var fairygui;
                 var self_2 = this;
                 self_2.$invalidateContentBounds();
             }
+        };
+        MovieClip.prototype.checkTimer = function () {
+            if (this._playing && this._frameCount > 0 && this.stage != null)
+                fairygui.GTimers.inst.add(1, 0, this.update, this);
+            else
+                fairygui.GTimers.inst.remove(this.update, this);
         };
         //comment this function before 5.1.0
         MovieClip.prototype.$updateRenderNode = function () {
@@ -6322,13 +7926,12 @@ var fairygui;
         };
         MovieClip.prototype.$onAddToStage = function (stage, nestLevel) {
             _super.prototype.$onAddToStage.call(this, stage, nestLevel);
-            if (this._playing)
-                fairygui.GTimers.inst.add(0, 0, this.update, this);
+            if (this._playing && this._frameCount > 0)
+                fairygui.GTimers.inst.add(1, 0, this.update, this);
         };
         MovieClip.prototype.$onRemoveFromStage = function () {
             _super.prototype.$onRemoveFromStage.call(this);
-            if (this._playing)
-                fairygui.GTimers.inst.remove(this.update, this);
+            fairygui.GTimers.inst.remove(this.update, this);
         };
         return MovieClip;
     }(egret.DisplayObject));
@@ -6337,472 +7940,50 @@ var fairygui;
 })(fairygui || (fairygui = {}));
 var fairygui;
 (function (fairygui) {
-    var GButton = (function (_super) {
-        __extends(GButton, _super);
-        function GButton() {
+    var UIContainer = (function (_super) {
+        __extends(UIContainer, _super);
+        function UIContainer() {
             var _this = _super.call(this) || this;
-            _this._mode = fairygui.ButtonMode.Common;
-            _this._title = "";
-            _this._icon = "";
-            _this._sound = fairygui.UIConfig.buttonSound;
-            _this._soundVolumeScale = fairygui.UIConfig.buttonSoundVolumeScale;
-            _this._pageOption = new fairygui.PageOption();
-            _this._changeStateOnClick = true;
-            _this._downEffect = 0;
-            _this._downEffectValue = 0.8;
+            _this.touchEnabled = true;
+            _this.touchChildren = true;
             return _this;
         }
-        Object.defineProperty(GButton.prototype, "icon", {
+        Object.defineProperty(UIContainer.prototype, "hitArea", {
             get: function () {
-                return this._icon;
+                return this._hitArea;
             },
             set: function (value) {
-                this._icon = value;
-                value = (this._selected && this._selectedIcon) ? this._selectedIcon : this._icon;
-                if (this._iconObject != null)
-                    this._iconObject.icon = value;
-                this.updateGear(7);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GButton.prototype, "selectedIcon", {
-            get: function () {
-                return this._selectedIcon;
-            },
-            set: function (value) {
-                this._selectedIcon = value;
-                value = (this._selected && this._selectedIcon) ? this._selectedIcon : this._icon;
-                if (this._iconObject != null)
-                    this._iconObject.icon = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GButton.prototype, "title", {
-            get: function () {
-                return this._title;
-            },
-            set: function (value) {
-                this._title = value;
-                if (this._titleObject)
-                    this._titleObject.text = (this._selected && this._selectedTitle) ? this._selectedTitle : this._title;
-                this.updateGear(6);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GButton.prototype, "text", {
-            get: function () {
-                return this.title;
-            },
-            set: function (value) {
-                this.title = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GButton.prototype, "selectedTitle", {
-            get: function () {
-                return this._selectedTitle;
-            },
-            set: function (value) {
-                this._selectedTitle = value;
-                if (this._titleObject)
-                    this._titleObject.text = (this._selected && this._selectedTitle) ? this._selectedTitle : this._title;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GButton.prototype, "titleColor", {
-            get: function () {
-                if (this._titleObject instanceof fairygui.GTextField)
-                    return this._titleObject.color;
-                else if (this._titleObject instanceof fairygui.GLabel)
-                    return this._titleObject.titleColor;
-                else if (this._titleObject instanceof GButton)
-                    return this._titleObject.titleColor;
+                if (this._hitArea && value) {
+                    this._hitArea.x = value.x;
+                    this._hitArea.y = value.y;
+                    this._hitArea.width = value.width;
+                    this._hitArea.height = value.height;
+                }
                 else
-                    return 0;
-            },
-            set: function (value) {
-                if (this._titleObject instanceof fairygui.GTextField)
-                    this._titleObject.color = value;
-                else if (this._titleObject instanceof fairygui.GLabel)
-                    this._titleObject.titleColor = value;
-                else if (this._titleObject instanceof GButton)
-                    this._titleObject.titleColor = value;
+                    this._hitArea = (value ? value.clone() : null);
             },
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(GButton.prototype, "titleFontSize", {
-            get: function () {
-                if (this._titleObject instanceof fairygui.GTextField)
-                    return this._titleObject.fontSize;
-                else if (this._titleObject instanceof fairygui.GLabel)
-                    return this._titleObject.titleFontSize;
-                else if (this._titleObject instanceof GButton)
-                    return this._titleObject.titleFontSize;
-                else
-                    return 0;
-            },
-            set: function (value) {
-                if (this._titleObject instanceof fairygui.GTextField)
-                    this._titleObject.fontSize = value;
-                else if (this._titleObject instanceof fairygui.GLabel)
-                    this._titleObject.titleFontSize = value;
-                else if (this._titleObject instanceof GButton)
-                    this._titleObject.titleFontSize = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GButton.prototype, "sound", {
-            get: function () {
-                return this._sound;
-            },
-            set: function (val) {
-                this._sound = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GButton.prototype, "soundVolumeScale", {
-            get: function () {
-                return this._soundVolumeScale;
-            },
-            set: function (value) {
-                this._soundVolumeScale = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GButton.prototype, "selected", {
-            get: function () {
-                return this._selected;
-            },
-            set: function (val) {
-                if (this._mode == fairygui.ButtonMode.Common)
-                    return;
-                if (this._selected != val) {
-                    this._selected = val;
-                    if (this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED)) {
-                        if (this._selected)
-                            this.setState(GButton.SELECTED_DISABLED);
-                        else
-                            this.setState(GButton.DISABLED);
-                    }
-                    else {
-                        if (this._selected)
-                            this.setState(this._over ? GButton.SELECTED_OVER : GButton.DOWN);
-                        else
-                            this.setState(this._over ? GButton.OVER : GButton.UP);
-                    }
-                    if (this._selectedTitle && this._titleObject)
-                        this._titleObject.text = this._selected ? this._selectedTitle : this._title;
-                    if (this._selectedIcon) {
-                        var str = this._selected ? this._selectedIcon : this._icon;
-                        if (this._iconObject != null)
-                            this._iconObject.icon = str;
-                    }
-                    if (this._relatedController
-                        && this._parent
-                        && !this._parent._buildingDisplayList) {
-                        if (this._selected) {
-                            this._relatedController.selectedPageId = this._pageOption.id;
-                            if (this._relatedController._autoRadioGroupDepth)
-                                this._parent.adjustRadioGroupDepth(this, this._relatedController);
-                        }
-                        else if (this._mode == fairygui.ButtonMode.Check && this._relatedController.selectedPageId == this._pageOption.id)
-                            this._relatedController.oppositePageId = this._pageOption.id;
-                    }
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GButton.prototype, "mode", {
-            get: function () {
-                return this._mode;
-            },
-            set: function (value) {
-                if (this._mode != value) {
-                    if (value == fairygui.ButtonMode.Common)
-                        this.selected = false;
-                    this._mode = value;
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GButton.prototype, "relatedController", {
-            get: function () {
-                return this._relatedController;
-            },
-            set: function (val) {
-                if (val != this._relatedController) {
-                    this._relatedController = val;
-                    this._pageOption.controller = val;
-                    this._pageOption.clear();
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GButton.prototype, "pageOption", {
-            get: function () {
-                return this._pageOption;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GButton.prototype, "changeStateOnClick", {
-            get: function () {
-                return this._changeStateOnClick;
-            },
-            set: function (value) {
-                this._changeStateOnClick = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GButton.prototype, "linkedPopup", {
-            get: function () {
-                return this._linkedPopup;
-            },
-            set: function (value) {
-                this._linkedPopup = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        GButton.prototype.addStateListener = function (listener, thisObj) {
-            this.addEventListener(fairygui.StateChangeEvent.CHANGED, listener, thisObj);
-        };
-        GButton.prototype.removeStateListener = function (listener, thisObj) {
-            this.removeEventListener(fairygui.StateChangeEvent.CHANGED, listener, thisObj);
-        };
-        GButton.prototype.fireClick = function (downEffect) {
-            if (downEffect === void 0) { downEffect = true; }
-            if (downEffect && this._mode == fairygui.ButtonMode.Common) {
-                this.setState(GButton.OVER);
-                fairygui.GTimers.inst.add(100, 1, function () { this.setState(GButton.DOWN); }, this);
-                fairygui.GTimers.inst.add(200, 1, function () { this.setState(GButton.UP); }, this);
+        UIContainer.prototype.$hitTest = function (stageX, stageY) {
+            var ret = _super.prototype.$hitTest.call(this, stageX, stageY);
+            if (ret == this) {
+                if (!this.touchEnabled || this._hitArea == null)
+                    return null;
             }
-            this.__click(null);
+            else if (ret == null && this.touchEnabled && this.visible && this._hitArea != null) {
+                var m = this.$getInvertedConcatenatedMatrix();
+                var localX = m.a * stageX + m.c * stageY + m.tx;
+                var localY = m.b * stageX + m.d * stageY + m.ty;
+                if (this._hitArea.contains(localX, localY))
+                    ret = this;
+            }
+            return ret;
         };
-        GButton.prototype.setState = function (val) {
-            if (this._buttonController)
-                this._buttonController.selectedPage = val;
-            if (this._downEffect == 1) {
-                var cnt = this.numChildren;
-                if (val == GButton.DOWN || val == GButton.SELECTED_OVER || val == GButton.SELECTED_DISABLED) {
-                    var r = this._downEffectValue * 255;
-                    var color = (r << 16) + (r << 8) + r;
-                    for (var i = 0; i < cnt; i++) {
-                        var obj = this.getChildAt(i);
-                        if (obj["color"] != undefined && !(obj instanceof fairygui.GTextField))
-                            obj.color = color;
-                    }
-                }
-                else {
-                    for (var i = 0; i < cnt; i++) {
-                        var obj = this.getChildAt(i);
-                        if (obj["color"] != undefined && !(obj instanceof fairygui.GTextField))
-                            obj.color = 0xFFFFFF;
-                    }
-                }
-            }
-            else if (this._downEffect == 2) {
-                if (val == GButton.DOWN || val == GButton.SELECTED_OVER || val == GButton.SELECTED_DISABLED) {
-                    if (!this._downScaled) {
-                        this._downScaled = true;
-                        this.setScale(this.scaleX * this._downEffectValue, this.scaleY * this._downEffectValue);
-                    }
-                }
-                else {
-                    if (this._downScaled) {
-                        this._downScaled = false;
-                        this.setScale(this.scaleX / this._downEffectValue, this.scaleY / this._downEffectValue);
-                    }
-                }
-            }
-        };
-        GButton.prototype.handleControllerChanged = function (c) {
-            _super.prototype.handleControllerChanged.call(this, c);
-            if (this._relatedController == c)
-                this.selected = this._pageOption.id == c.selectedPageId;
-        };
-        GButton.prototype.handleGrayedChanged = function () {
-            if (this._buttonController && this._buttonController.hasPage(GButton.DISABLED)) {
-                if (this.grayed) {
-                    if (this._selected && this._buttonController.hasPage(GButton.SELECTED_DISABLED))
-                        this.setState(GButton.SELECTED_DISABLED);
-                    else
-                        this.setState(GButton.DISABLED);
-                }
-                else if (this._selected)
-                    this.setState(GButton.DOWN);
-                else
-                    this.setState(GButton.UP);
-            }
-            else
-                _super.prototype.handleGrayedChanged.call(this);
-        };
-        GButton.prototype.constructFromXML = function (xml) {
-            _super.prototype.constructFromXML.call(this, xml);
-            xml = fairygui.ToolSet.findChildNode(xml, "Button");
-            var str;
-            str = xml.attributes.mode;
-            if (str)
-                this._mode = fairygui.parseButtonMode(str);
-            str = xml.attributes.sound;
-            if (str != null)
-                this._sound = str;
-            str = xml.attributes.volume;
-            if (str)
-                this._soundVolumeScale = parseInt(str) / 100;
-            str = xml.attributes.downEffect;
-            if (str) {
-                this._downEffect = str == "dark" ? 1 : (str == "scale" ? 2 : 0);
-                str = xml.attributes.downEffectValue;
-                this._downEffectValue = parseFloat(str);
-                if (this._downEffect == 2)
-                    this.setPivot(0.5, 0.5);
-            }
-            this._buttonController = this.getController("button");
-            this._titleObject = this.getChild("title");
-            this._iconObject = this.getChild("icon");
-            if (this._titleObject != null)
-                this._title = this._titleObject.text;
-            if (this._iconObject != null)
-                this._icon = this._iconObject.icon;
-            if (this._mode == fairygui.ButtonMode.Common)
-                this.setState(GButton.UP);
-            this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__mousedown, this);
-            this.addEventListener(egret.TouchEvent.TOUCH_TAP, this.__click, this);
-        };
-        GButton.prototype.setup_afterAdd = function (xml) {
-            _super.prototype.setup_afterAdd.call(this, xml);
-            xml = fairygui.ToolSet.findChildNode(xml, "Button");
-            if (xml) {
-                var str;
-                str = xml.attributes.title;
-                if (str)
-                    this.title = str;
-                str = xml.attributes.icon;
-                if (str)
-                    this.icon = str;
-                str = xml.attributes.selectedTitle;
-                if (str)
-                    this.selectedTitle = str;
-                str = xml.attributes.selectedIcon;
-                if (str)
-                    this.selectedIcon = str;
-                str = xml.attributes.titleColor;
-                if (str)
-                    this.titleColor = fairygui.ToolSet.convertFromHtmlColor(str);
-                str = xml.attributes.titleFontSize;
-                if (str)
-                    this.titleFontSize = parseInt(str);
-                str = xml.attributes.sound;
-                if (str != null)
-                    this._sound = str;
-                str = xml.attributes.volume;
-                if (str)
-                    this._soundVolumeScale = parseInt(str) / 100;
-                str = xml.attributes.controller;
-                if (str)
-                    this._relatedController = this._parent.getController(str);
-                else
-                    this._relatedController = null;
-                this._pageOption.id = xml.attributes.page;
-                this.selected = xml.attributes.checked == "true";
-            }
-        };
-        GButton.prototype.__rollover = function (evt) {
-            if (!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
-                return;
-            this._over = true;
-            if (this._down)
-                return;
-            this.setState(this._selected ? GButton.SELECTED_OVER : GButton.OVER);
-        };
-        GButton.prototype.__rollout = function (evt) {
-            if (!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
-                return;
-            this._over = false;
-            if (this._down)
-                return;
-            this.setState(this._selected ? GButton.DOWN : GButton.UP);
-        };
-        GButton.prototype.__mousedown = function (evt) {
-            this._down = true;
-            fairygui.GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
-            if (this._mode == fairygui.ButtonMode.Common) {
-                if (this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED))
-                    this.setState(GButton.SELECTED_DISABLED);
-                else
-                    this.setState(GButton.DOWN);
-            }
-            if (this._linkedPopup != null) {
-                if (this._linkedPopup instanceof fairygui.Window)
-                    (this._linkedPopup).toggleStatus();
-                else
-                    this.root.togglePopup(this._linkedPopup, this);
-            }
-        };
-        GButton.prototype.__mouseup = function (evt) {
-            if (this._down) {
-                fairygui.GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
-                this._down = false;
-                if (this._mode == fairygui.ButtonMode.Common) {
-                    if (this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED))
-                        this.setState(GButton.DISABLED);
-                    else if (this._over)
-                        this.setState(GButton.OVER);
-                    else
-                        this.setState(GButton.UP);
-                }
-            }
-        };
-        GButton.prototype.__click = function (evt) {
-            if (this._sound) {
-                var pi = fairygui.UIPackage.getItemByURL(this._sound);
-                if (pi) {
-                    var sound = pi.owner.getItemAsset(pi);
-                    if (sound)
-                        fairygui.GRoot.inst.playOneShotSound(sound, this._soundVolumeScale);
-                }
-            }
-            if (this._mode == fairygui.ButtonMode.Check) {
-                if (this._changeStateOnClick) {
-                    this.selected = !this._selected;
-                    this.dispatchEvent(new fairygui.StateChangeEvent(fairygui.StateChangeEvent.CHANGED));
-                }
-            }
-            else if (this._mode == fairygui.ButtonMode.Radio) {
-                if (this._changeStateOnClick && !this._selected) {
-                    this.selected = true;
-                    this.dispatchEvent(new fairygui.StateChangeEvent(fairygui.StateChangeEvent.CHANGED));
-                }
-            }
-            else {
-                if (this._relatedController)
-                    this._relatedController.selectedPageId = this._pageOption.id;
-            }
-        };
-        GButton.UP = "up";
-        GButton.DOWN = "down";
-        GButton.OVER = "over";
-        GButton.SELECTED_OVER = "selectedOver";
-        GButton.DISABLED = "disabled";
-        GButton.SELECTED_DISABLED = "selectedDisabled";
-        return GButton;
-    }(fairygui.GComponent));
-    fairygui.GButton = GButton;
-    __reflect(GButton.prototype, "fairygui.GButton");
+        return UIContainer;
+    }(egret.DisplayObjectContainer));
+    fairygui.UIContainer = UIContainer;
+    __reflect(UIContainer.prototype, "fairygui.UIContainer");
 })(fairygui || (fairygui = {}));
 var fairygui;
 (function (fairygui) {
@@ -7237,98 +8418,73 @@ var fairygui;
 })(fairygui || (fairygui = {}));
 var fairygui;
 (function (fairygui) {
-    var PlayState = (function () {
-        function PlayState() {
-            this.repeatedCount = 0;
-            this._curFrame = 0;
-            this._curFrameDelay = 0;
-            this._lastUpdateSeq = 0;
+    var GearColor = (function (_super) {
+        __extends(GearColor, _super);
+        function GearColor(owner) {
+            return _super.call(this, owner) || this;
         }
-        PlayState.prototype.update = function (mc) {
-            var elapsed;
-            var frameId = fairygui.GTimers.workCount;
-            if (frameId - this._lastUpdateSeq != 1)
-                //1、如果>1，表示不是连续帧了，说明刚启动（或者停止过），这里不能用流逝的时间了，不然会跳过很多帧
-                //2、如果==0，表示在本帧已经处理过了，这通常是因为一个PlayState用于多个MovieClip共享，目的是多个MovieClip同步播放
-                elapsed = 0;
+        GearColor.prototype.init = function () {
+            if (this._owner["strokeColor"] != undefined)
+                this._default = new GearColorValue(this._owner.color, this._owner.strokeColor);
             else
-                elapsed = fairygui.GTimers.deltaTime;
-            this._lastUpdateSeq = frameId;
-            var cur = this._curFrame;
-            if (cur >= mc.frameCount)
-                cur = mc.frameCount - 1;
-            this.reachEnding = false;
-            this._curFrameDelay += elapsed;
-            var interval = mc.interval + mc.frames[cur].addDelay
-                + ((cur == 0 && this.repeatedCount > 0) ? mc.repeatDelay : 0);
-            if (this._curFrameDelay < interval)
+                this._default = new GearColorValue(this._owner.color);
+            this._storage = {};
+        };
+        GearColor.prototype.addStatus = function (pageId, value) {
+            if (value == "-" || value.length == 0)
                 return;
-            this._curFrameDelay -= interval;
-            if (this._curFrameDelay > mc.interval)
-                this._curFrameDelay = mc.interval;
-            if (mc.swing) {
-                if (this.reversed) {
-                    this._curFrame--;
-                    if (this._curFrame <= 0) {
-                        this._curFrame = 0;
-                        this.repeatedCount++;
-                        this.reversed = !this.reversed;
-                    }
-                }
-                else {
-                    this._curFrame++;
-                    if (this._curFrame > mc.frameCount - 1) {
-                        this._curFrame = Math.max(0, mc.frameCount - 2);
-                        this.repeatedCount++;
-                        this.reachEnding = true;
-                        this.reversed = !this.reversed;
-                    }
-                }
+            var pos = value.indexOf(",");
+            var col1;
+            var col2;
+            if (pos == -1) {
+                col1 = fairygui.ToolSet.convertFromHtmlColor(value);
+                col2 = NaN;
             }
             else {
-                this._curFrame++;
-                if (this._curFrame > mc.frameCount - 1) {
-                    this._curFrame = 0;
-                    this.repeatedCount++;
-                    this.reachEnding = true;
-                }
+                col1 = fairygui.ToolSet.convertFromHtmlColor(value.substr(0, pos));
+                col2 = fairygui.ToolSet.convertFromHtmlColor(value.substr(pos + 1));
             }
+            if (pageId == null) {
+                this._default.color = col1;
+                this._default.strokeColor = col2;
+            }
+            else
+                this._storage[pageId] = new GearColorValue(col1, col2);
         };
-        Object.defineProperty(PlayState.prototype, "currentFrame", {
-            get: function () {
-                return this._curFrame;
-            },
-            set: function (value) {
-                this._curFrame = value;
-                this._curFrameDelay = 0;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        PlayState.prototype.rewind = function () {
-            this._curFrame = 0;
-            this._curFrameDelay = 0;
-            this.reversed = false;
-            this.reachEnding = false;
+        GearColor.prototype.apply = function () {
+            this._owner._gearLocked = true;
+            var gv = this._storage[this._controller.selectedPageId];
+            if (!gv)
+                gv = this._default;
+            this._owner.color = gv.color;
+            if (this._owner["strokeColor"] != undefined && !isNaN(gv.strokeColor))
+                this._owner.strokeColor = gv.strokeColor;
+            this._owner._gearLocked = false;
         };
-        PlayState.prototype.reset = function () {
-            this._curFrame = 0;
-            this._curFrameDelay = 0;
-            this.repeatedCount = 0;
-            this.reachEnding = false;
-            this.reversed = false;
+        GearColor.prototype.updateState = function () {
+            var gv = this._storage[this._controller.selectedPageId];
+            if (!gv) {
+                gv = new GearColorValue(null, null);
+                this._storage[this._controller.selectedPageId] = gv;
+            }
+            gv.color = this._owner.color;
+            if (this._owner["strokeColor"] != undefined)
+                gv.strokeColor = this._owner.strokeColor;
         };
-        PlayState.prototype.copy = function (src) {
-            this._curFrame = src._curFrame;
-            this._curFrameDelay = src._curFrameDelay;
-            this.repeatedCount = src.repeatedCount;
-            this.reachEnding = src.reachEnding;
-            this.reversed = src.reversed;
-        };
-        return PlayState;
+        return GearColor;
+    }(fairygui.GearBase));
+    fairygui.GearColor = GearColor;
+    __reflect(GearColor.prototype, "fairygui.GearColor");
+    var GearColorValue = (function () {
+        function GearColorValue(color, strokeColor) {
+            if (color === void 0) { color = 0; }
+            if (strokeColor === void 0) { strokeColor = 0; }
+            this.color = color;
+            this.strokeColor = strokeColor;
+        }
+        return GearColorValue;
     }());
-    fairygui.PlayState = PlayState;
-    __reflect(PlayState.prototype, "fairygui.PlayState");
+    __reflect(GearColorValue.prototype, "GearColorValue");
 })(fairygui || (fairygui = {}));
 var fairygui;
 (function (fairygui) {
@@ -7412,10 +8568,10 @@ var fairygui;
                 this._owner.grayed = gv.grayed;
                 this._owner.touchable = gv.touchable;
                 this._owner._gearLocked = false;
-                if (this.tweener != null) {
-                    if (this._tweenTarget.alpha != gv.alpha || this._tweenTarget.rotation != gv.rotation) {
-                        this.tweener["tick"] ? this.tweener["tick"](100000000) : this.tweener["$tick"](100000000);
-                        this.tweener = null;
+                if (this._tweener != null) {
+                    if (this._tweener.endValue.x != gv.alpha || this._tweener.endValue.y != gv.rotation) {
+                        this._tweener.kill(true);
+                        this._tweener = null;
                     }
                     else
                         return;
@@ -7425,33 +8581,13 @@ var fairygui;
                 if (a || b) {
                     if (this._owner.checkGearController(0, this._controller))
                         this._displayLockToken = this._owner.addDisplayLock();
-                    this._tweenTarget = gv;
-                    var vars = {
-                        onChange: function () {
-                            this._owner._gearLocked = true;
-                            if (a)
-                                this._owner.alpha = this._tweenValue.x;
-                            if (b)
-                                this._owner.rotation = this._tweenValue.y;
-                            this._owner._gearLocked = false;
-                        },
-                        onChangeObj: this
-                    };
-                    if (this._tweenValue == null)
-                        this._tweenValue = new egret.Point();
-                    this._tweenValue.x = this._owner.alpha;
-                    this._tweenValue.y = this._owner.rotation;
-                    this.tweener = egret.Tween.get(this._tweenValue, vars)
-                        .wait(this._tweenDelay * 1000)
-                        .to({ x: gv.alpha, y: gv.rotation }, this._tweenTime * 1000, this._easeType)
-                        .call(function () {
-                        if (this._displayLockToken != 0) {
-                            this._owner.releaseDisplayLock(this._displayLockToken);
-                            this._displayLockToken = 0;
-                        }
-                        this._tweener = null;
-                        this._owner.dispatchEventWith(fairygui.GObject.GEAR_STOP, false);
-                    }, this);
+                    this._tweener = fairygui.tween.GTween.to2(this._owner.alpha, this._owner.rotation, gv.alpha, gv.rotation, this._tweenTime)
+                        .setDelay(this._tweenDelay)
+                        .setEase(this._easeType)
+                        .setUserData((a ? 1 : 0) + (b ? 2 : 0))
+                        .setTarget(this)
+                        .onUpdate(this.__tweenUpdate, this)
+                        .onComplete(this.__tweenComplete, this);
                 }
             }
             else {
@@ -7462,6 +8598,22 @@ var fairygui;
                 this._owner.rotation = gv.rotation;
                 this._owner._gearLocked = false;
             }
+        };
+        GearLook.prototype.__tweenUpdate = function (tweener) {
+            var flag = tweener.userData;
+            this._owner._gearLocked = true;
+            if ((flag & 1) != 0)
+                this._owner.alpha = tweener.value.x;
+            if ((flag & 2) != 0)
+                this._owner.rotation = tweener.value.y;
+            this._owner._gearLocked = false;
+        };
+        GearLook.prototype.__tweenComplete = function () {
+            if (this._displayLockToken != 0) {
+                this._owner.releaseDisplayLock(this._displayLockToken);
+                this._displayLockToken = 0;
+            }
+            this._tweener = null;
         };
         GearLook.prototype.updateState = function () {
             var gv = this._storage[this._controller.selectedPageId];
@@ -10487,15 +11639,15 @@ var fairygui;
 })(fairygui || (fairygui = {}));
 var fairygui;
 (function (fairygui) {
-    var UIContainer = (function (_super) {
-        __extends(UIContainer, _super);
-        function UIContainer() {
+    var UISprite = (function (_super) {
+        __extends(UISprite, _super);
+        function UISprite() {
             var _this = _super.call(this) || this;
             _this.touchEnabled = true;
             _this.touchChildren = true;
             return _this;
         }
-        Object.defineProperty(UIContainer.prototype, "hitArea", {
+        Object.defineProperty(UISprite.prototype, "hitArea", {
             get: function () {
                 return this._hitArea;
             },
@@ -10512,13 +11664,13 @@ var fairygui;
             enumerable: true,
             configurable: true
         });
-        UIContainer.prototype.$hitTest = function (stageX, stageY) {
+        UISprite.prototype.$hitTest = function (stageX, stageY) {
             var ret = _super.prototype.$hitTest.call(this, stageX, stageY);
             if (ret == this) {
                 if (!this.touchEnabled || this._hitArea == null)
                     return null;
             }
-            else if (ret == null && this.touchEnabled && this.visible && this._hitArea != null) {
+            else if (ret == null && this.touchEnabled && this._hitArea != null) {
                 var m = this.$getInvertedConcatenatedMatrix();
                 var localX = m.a * stageX + m.c * stageY + m.tx;
                 var localY = m.b * stageX + m.d * stageY + m.ty;
@@ -10527,10 +11679,10 @@ var fairygui;
             }
             return ret;
         };
-        return UIContainer;
-    }(egret.DisplayObjectContainer));
-    fairygui.UIContainer = UIContainer;
-    __reflect(UIContainer.prototype, "fairygui.UIContainer");
+        return UISprite;
+    }(egret.Sprite));
+    fairygui.UISprite = UISprite;
+    __reflect(UISprite.prototype, "fairygui.UISprite");
 })(fairygui || (fairygui = {}));
 var fairygui;
 (function (fairygui) {
@@ -10683,13 +11835,31 @@ var fairygui;
                 if (this._frame != value) {
                     this._frame = value;
                     if (this._content instanceof fairygui.MovieClip)
-                        this._content.currentFrame = value;
+                        this._content.frame = value;
                     this.updateGear(5);
                 }
             },
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(GLoader.prototype, "timeScale", {
+            get: function () {
+                if (this._content instanceof fairygui.MovieClip)
+                    return this._content.timeScale;
+                else
+                    return 1;
+            },
+            set: function (value) {
+                if (this._content instanceof fairygui.MovieClip)
+                    this._content.timeScale = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GLoader.prototype.advance = function (timeInMiniseconds) {
+            if (this._content instanceof fairygui.MovieClip)
+                this._content.advance(timeInMiniseconds);
+        };
         Object.defineProperty(GLoader.prototype, "color", {
             get: function () {
                 return this._color;
@@ -11067,17 +12237,36 @@ var fairygui;
         });
         Object.defineProperty(GMovieClip.prototype, "frame", {
             get: function () {
-                return this._movieClip.currentFrame;
+                return this._movieClip.frame;
             },
             set: function (value) {
-                if (this._movieClip.currentFrame != value) {
-                    this._movieClip.currentFrame = value;
+                if (this._movieClip.frame != value) {
+                    this._movieClip.frame = value;
                     this.updateGear(5);
                 }
             },
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(GMovieClip.prototype, "timeScale", {
+            get: function () {
+                return this._movieClip.timeScale;
+            },
+            set: function (value) {
+                this._movieClip.timeScale = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GMovieClip.prototype.rewind = function () {
+            this._movieClip.rewind();
+        };
+        GMovieClip.prototype.syncStatus = function (anotherMc) {
+            this._movieClip.syncStatus(anotherMc._movieClip);
+        };
+        GMovieClip.prototype.advance = function (timeInMiniseconds) {
+            this._movieClip.advance(timeInMiniseconds);
+        };
         //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
         GMovieClip.prototype.setPlaySettings = function (start, end, times, endAt, endCallback, callbackObj) {
             if (start === void 0) { start = 0; }
@@ -11106,7 +12295,7 @@ var fairygui;
             var str;
             str = xml.attributes.frame;
             if (str)
-                this._movieClip.currentFrame = parseInt(str);
+                this._movieClip.frame = parseInt(str);
             str = xml.attributes.playing;
             this._movieClip.playing = str != "false";
             str = xml.attributes.color;
@@ -11132,7 +12321,7 @@ var fairygui;
             _this._barMaxHeightDelta = 0;
             _this._barStartX = 0;
             _this._barStartY = 0;
-            _this._tweenValue = 0;
+            _this._tweening = false;
             _this._titleType = fairygui.ProgressTitleType.Percent;
             _this._value = 50;
             _this._max = 100;
@@ -11169,9 +12358,9 @@ var fairygui;
                 return this._value;
             },
             set: function (value) {
-                if (this._tweener != null) {
-                    this._tweener.setPaused(true);
-                    this._tweener = null;
+                if (this._tweening) {
+                    fairygui.tween.GTween.kill(this, true, this.update);
+                    this._tweening = false;
                 }
                 if (this._value != value) {
                     this._value = value;
@@ -11182,21 +12371,19 @@ var fairygui;
             configurable: true
         });
         GProgressBar.prototype.tweenValue = function (value, duration) {
-            var _this = this;
             if (this._value != value) {
-                if (this._tweener)
-                    this._tweener.setPaused(true);
-                this._tweenValue = this._value;
+                if (this._tweening) {
+                    fairygui.tween.GTween.kill(this, false, this.update);
+                    this._tweening = false;
+                }
+                var oldValule = this._value;
                 this._value = value;
-                this._tweener = egret.Tween.get(this, { onChange: this.onUpdateTween, onChangeObj: this })
-                    .to({ _tweenValue: value }, duration * 1000, GProgressBar.easeLinear).call(function () { _this._tweener = null; }, this);
-                return this._tweener;
+                this._tweening = true;
+                return fairygui.tween.GTween.to(oldValule, this._value, duration).setTarget(this, this.update).setEase(fairygui.tween.EaseType.Linear)
+                    .onComplete(function () { this._tweening = false; }, this);
             }
             else
                 return null;
-        };
-        GProgressBar.prototype.onUpdateTween = function () {
-            this.update(this._tweenValue);
         };
         GProgressBar.prototype.update = function (newValue) {
             var percent = this._max != 0 ? Math.min(newValue / this._max, 1) : 0;
@@ -11279,11 +12466,10 @@ var fairygui;
             this.update(this._value);
         };
         GProgressBar.prototype.dispose = function () {
-            if (this._tweener)
-                this._tweener.setPaused(true);
+            if (this._tweening)
+                fairygui.tween.GTween.kill(this);
             _super.prototype.dispose.call(this);
         };
-        GProgressBar.easeLinear = egret.Ease.getPowIn(1);
         return GProgressBar;
     }(fairygui.GComponent));
     fairygui.GProgressBar = GProgressBar;
@@ -11291,50 +12477,15 @@ var fairygui;
 })(fairygui || (fairygui = {}));
 var fairygui;
 (function (fairygui) {
-    var UISprite = (function (_super) {
-        __extends(UISprite, _super);
-        function UISprite() {
-            var _this = _super.call(this) || this;
-            _this.touchEnabled = true;
-            _this.touchChildren = true;
-            return _this;
+    var BitmapFont = (function () {
+        function BitmapFont() {
+            this.size = 0;
+            this.glyphs = {};
         }
-        Object.defineProperty(UISprite.prototype, "hitArea", {
-            get: function () {
-                return this._hitArea;
-            },
-            set: function (value) {
-                if (this._hitArea && value) {
-                    this._hitArea.x = value.x;
-                    this._hitArea.y = value.y;
-                    this._hitArea.width = value.width;
-                    this._hitArea.height = value.height;
-                }
-                else
-                    this._hitArea = (value ? value.clone() : null);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        UISprite.prototype.$hitTest = function (stageX, stageY) {
-            var ret = _super.prototype.$hitTest.call(this, stageX, stageY);
-            if (ret == this) {
-                if (!this.touchEnabled || this._hitArea == null)
-                    return null;
-            }
-            else if (ret == null && this.touchEnabled && this._hitArea != null) {
-                var m = this.$getInvertedConcatenatedMatrix();
-                var localX = m.a * stageX + m.c * stageY + m.tx;
-                var localY = m.b * stageX + m.d * stageY + m.ty;
-                if (this._hitArea.contains(localX, localY))
-                    ret = this;
-            }
-            return ret;
-        };
-        return UISprite;
-    }(egret.Sprite));
-    fairygui.UISprite = UISprite;
-    __reflect(UISprite.prototype, "fairygui.UISprite");
+        return BitmapFont;
+    }());
+    fairygui.BitmapFont = BitmapFont;
+    __reflect(BitmapFont.prototype, "fairygui.BitmapFont");
 })(fairygui || (fairygui = {}));
 var fairygui;
 (function (fairygui) {

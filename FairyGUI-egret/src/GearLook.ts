@@ -2,12 +2,9 @@
 module fairygui {
 
     export class GearLook extends GearBase {
-        public tweener: egret.Tween;
-
         private _storage: any;
         private _default: GearLookValue;
-        private _tweenValue: egret.Point;
-        private _tweenTarget: GearLookValue;
+        private _tweener: tween.GTweener;
 
         public constructor(owner: GObject) {
             super(owner);
@@ -49,50 +46,28 @@ module fairygui {
                 this._owner.grayed = gv.grayed;
                 this._owner.touchable = gv.touchable;
                 this._owner._gearLocked = false;
-
-                if (this.tweener != null) {
-                    if (this._tweenTarget.alpha != gv.alpha || this._tweenTarget.rotation != gv.rotation) {
-                        this.tweener["tick"] ? this.tweener["tick"](100000000) : this.tweener["$tick"](100000000);
-                        this.tweener = null;
+                if (this._tweener != null) {
+                    if (this._tweener.endValue.x != gv.alpha || this._tweener.endValue.y != gv.rotation) {
+                        this._tweener.kill(true);
+                        this._tweener = null;
                     }
                     else
                         return;
                 }
 
-                var a: boolean = gv.alpha != this._owner.alpha;
-                var b: boolean = gv.rotation != this._owner.rotation;
+                var a: Boolean = gv.alpha != this._owner.alpha;
+                var b: Boolean = gv.rotation != this._owner.rotation;
                 if (a || b) {
                     if (this._owner.checkGearController(0, this._controller))
                         this._displayLockToken = this._owner.addDisplayLock();
-                    this._tweenTarget = gv;
 
-                    var vars: any = {
-                        onChange: function (): void {
-                            this._owner._gearLocked = true;
-                            if (a)
-                                this._owner.alpha = this._tweenValue.x;
-                            if (b)
-                                this._owner.rotation = this._tweenValue.y;
-                            this._owner._gearLocked = false;
-                        },
-                        onChangeObj: this
-                    };
-
-                    if (this._tweenValue == null)
-                        this._tweenValue = new egret.Point();
-                    this._tweenValue.x = this._owner.alpha;
-                    this._tweenValue.y = this._owner.rotation;
-                    this.tweener = egret.Tween.get(this._tweenValue, vars)
-                        .wait(this._tweenDelay * 1000)
-                        .to({ x: gv.alpha, y: gv.rotation }, this._tweenTime * 1000, this._easeType)
-                        .call(function (): void {
-                            if (this._displayLockToken != 0) {
-                                this._owner.releaseDisplayLock(this._displayLockToken);
-                                this._displayLockToken = 0;
-                            }
-                            this._tweener = null;
-                            this._owner.dispatchEventWith(GObject.GEAR_STOP, false);
-                        }, this);
+                    this._tweener = tween.GTween.to2(this._owner.alpha, this._owner.rotation, gv.alpha, gv.rotation, this._tweenTime)
+                        .setDelay(this._tweenDelay)
+                        .setEase(this._easeType)
+                        .setUserData((a ? 1 : 0) + (b ? 2 : 0))
+                        .setTarget(this)
+                        .onUpdate(this.__tweenUpdate, this)
+                        .onComplete(this.__tweenComplete, this);
                 }
             }
             else {
@@ -103,6 +78,24 @@ module fairygui {
                 this._owner.rotation = gv.rotation;
                 this._owner._gearLocked = false;
             }
+        }
+
+        private __tweenUpdate(tweener: tween.GTweener): void {
+            var flag: number = tweener.userData;
+            this._owner._gearLocked = true;
+            if ((flag & 1) != 0)
+                this._owner.alpha = tweener.value.x;
+            if ((flag & 2) != 0)
+                this._owner.rotation = tweener.value.y;
+            this._owner._gearLocked = false;
+        }
+
+        private __tweenComplete(): void {
+            if (this._displayLockToken != 0) {
+                this._owner.releaseDisplayLock(this._displayLockToken);
+                this._displayLockToken = 0;
+            }
+            this._tweener = null;
         }
 
         public updateState(): void {
