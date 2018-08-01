@@ -756,14 +756,14 @@ declare module fairygui {
         protected cleanValue(p_val: number, p_limit: number): number;
     }
 }
-declare module fairygui.tween {
+declare module fairygui {
     class EaseManager {
         private static _PiOver2;
         private static _TwoPi;
         static evaluate(easeType: number, time: number, duration: number, overshootOrAmplitude: number, period: number): number;
     }
 }
-declare module fairygui.tween {
+declare module fairygui {
     class EaseType {
         static Linear: number;
         static SineIn: number;
@@ -801,7 +801,7 @@ declare module fairygui.tween {
         static parseEaseType(value: string): number;
     }
 }
-declare module fairygui.tween {
+declare module fairygui {
     class GTween {
         static safeMode: boolean;
         static to(start: number, end: number, duration: number): GTweener;
@@ -816,7 +816,7 @@ declare module fairygui.tween {
         static getTween(target: Object, propType?: Object): GTweener;
     }
 }
-declare module fairygui.tween {
+declare module fairygui {
     class GTweener {
         _target: any;
         _propType: any;
@@ -896,7 +896,7 @@ declare module fairygui.tween {
         private callCompleteCallback();
     }
 }
-declare module fairygui.tween {
+declare module fairygui {
     class TweenManager {
         private static _activeTweens;
         private static _tweenerPool;
@@ -910,7 +910,7 @@ declare module fairygui.tween {
         private static update(timestamp);
     }
 }
-declare module fairygui.tween {
+declare module fairygui {
     class TweenValue {
         x: number;
         y: number;
@@ -1556,7 +1556,7 @@ declare module fairygui {
         titleType: ProgressTitleType;
         max: number;
         value: number;
-        tweenValue(value: number, duration: number): tween.GTweener;
+        tweenValue(value: number, duration: number): GTweener;
         update(newValue: number): void;
         protected constructFromXML(xml: any): void;
         protected handleSizeChanged(): void;

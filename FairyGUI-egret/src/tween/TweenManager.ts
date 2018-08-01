@@ -1,4 +1,4 @@
-module fairygui.tween {
+module fairygui {
     export class TweenManager {
         private static _activeTweens: Array<GTweener> = new Array<GTweener>(30);
         private static _tweenerPool: Array<GTweener> = new Array<GTweener>();

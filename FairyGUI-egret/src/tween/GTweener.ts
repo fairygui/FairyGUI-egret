@@ -1,4 +1,4 @@
-module fairygui.tween {
+module fairygui {
     export class GTweener {
         public _target: any;
         public _propType: any;
@@ -380,10 +380,8 @@ module fairygui.tween {
             if (this._valueSize == 5) {
                 if (this._ended == 0) {
                     var r: number = this._startValue.w * (1 - this._normalizedTime);
-                    var rx: number = (Math.random() * 2 - 1) * r;
-                    var ry: number = (Math.random() * 2 - 1) * r;
-                    rx = rx > 0 ? Math.ceil(rx) : Math.floor(rx);
-                    ry = ry > 0 ? Math.ceil(ry) : Math.floor(ry);
+                    var rx: number = r * (Math.random() > 0.5 ? 1 : -1);
+                    var ry: number = r * (Math.random() > 0.5 ? 1 : -1);
 
                     this._deltaValue.x = rx;
                     this._deltaValue.y = ry;

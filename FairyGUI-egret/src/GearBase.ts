@@ -15,7 +15,7 @@ module fairygui {
 
         public constructor(owner: GObject) {
             this._owner = owner;
-            this._easeType = tween.EaseType.QuadOut;
+            this._easeType = EaseType.QuadOut;
             this._tweenTime = 0.3;
             this._tweenDelay = 0;
             this._displayLockToken = 0;
@@ -80,7 +80,7 @@ module fairygui {
 
             str = xml.attributes.ease;
             if (str)
-                this._easeType = tween.EaseType.parseEaseType(str);
+                this._easeType = EaseType.parseEaseType(str);
 
             str = xml.attributes.duration;
             if (str)

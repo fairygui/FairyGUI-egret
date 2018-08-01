@@ -4,7 +4,7 @@ module fairygui {
     export class GearXY extends GearBase {
         private _storage: any;
         private _default: egret.Point;
-        private _tweener: tween.GTweener;
+        private _tweener: GTweener;
 
         public constructor(owner: GObject) {
             super(owner);
@@ -50,7 +50,7 @@ module fairygui {
                     if (this._owner.checkGearController(0, this._controller))
                         this._displayLockToken = this._owner.addDisplayLock();
 
-                    this._tweener = tween.GTween.to2(this._owner.x, this._owner.y, pt.x, pt.y, this._tweenTime)
+                    this._tweener = GTween.to2(this._owner.x, this._owner.y, pt.x, pt.y, this._tweenTime)
                         .setDelay(this._tweenDelay)
                         .setEase(this._easeType)
                         .setTarget(this)
@@ -65,7 +65,7 @@ module fairygui {
             }
         }
 
-        private __tweenUpdate(tweener: tween.GTweener): void {
+        private __tweenUpdate(tweener: GTweener): void {
             this._owner._gearLocked = true;
             this._owner.setXY(tweener.value.x, tweener.value.y);
             this._owner._gearLocked = false;

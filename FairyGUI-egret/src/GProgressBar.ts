@@ -56,7 +56,7 @@ module fairygui {
 
         public set value(value: number) {
             if (this._tweening) {
-                tween.GTween.kill(this, true, this.update);
+                GTween.kill(this, true, this.update);
                 this._tweening = false;
             }
 
@@ -66,10 +66,10 @@ module fairygui {
             }
         }
 
-        public tweenValue(value: number, duration: number): tween.GTweener {
+        public tweenValue(value: number, duration: number): GTweener {
             if (this._value != value) {
                 if (this._tweening) {
-                    tween.GTween.kill(this, false, this.update);
+                    GTween.kill(this, false, this.update);
                     this._tweening = false;
                 }
 
@@ -77,7 +77,7 @@ module fairygui {
                 this._value = value;
 
                 this._tweening = true;
-                return tween.GTween.to(oldValule, this._value, duration).setTarget(this, this.update).setEase(tween.EaseType.Linear)
+                return GTween.to(oldValule, this._value, duration).setTarget(this, this.update).setEase(EaseType.Linear)
                     .onComplete(function (): void { this._tweening = false; }, this);
             }
             else
@@ -182,7 +182,7 @@ module fairygui {
 
         public dispose(): void {
             if (this._tweening)
-                tween.GTween.kill(this);
+                GTween.kill(this);
             super.dispose();
         }
     }

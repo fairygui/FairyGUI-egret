@@ -36,7 +36,7 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-module fairygui.tween {
+module fairygui {
 
     export class EaseManager {
         private static _PiOver2: number = Math.PI * 0.5;

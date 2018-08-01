@@ -1,4 +1,4 @@
-module fairygui.tween {
+module fairygui {
     export class GTween {
         public static safeMode: boolean = true;
 

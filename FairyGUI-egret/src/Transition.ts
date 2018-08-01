@@ -122,7 +122,7 @@ module fairygui {
             if (delay == 0)
                 this.onDelayedPlay();
             else
-                tween.GTween.delayedCall(delay).onComplete(this.onDelayedPlay, this);
+                GTween.delayedCall(delay).onComplete(this.onDelayedPlay, this);
         }
 
         public stop(setToComplete: boolean = true, processCallback: boolean = false): void {
@@ -139,7 +139,7 @@ module fairygui {
             this._onCompleteParam = null;
             this._onCompleteCaller = null;
 
-            tween.GTween.kill(this);//delay start
+            GTween.kill(this);//delay start
 
             var cnt: number = this._items.length;
             if (this._reversed) {
@@ -196,7 +196,7 @@ module fairygui {
                 return;
 
             this._paused = paused;
-            var tweener: tween.GTweener = tween.GTween.getTween(this);
+            var tweener: GTweener = GTween.getTween(this);
             if (tweener != null)
                 tweener.setPaused(paused);
 
@@ -226,7 +226,7 @@ module fairygui {
 
         public dispose(): void {
             if (this._playing)
-                tween.GTween.kill(this);//delay start
+                GTween.kill(this);//delay start
 
             var cnt: number = this._items.length;
             for (var i: number = 0; i < cnt; i++) {
@@ -541,20 +541,20 @@ module fairygui {
                         case TransitionActionType.Size:
                         case TransitionActionType.Scale:
                         case TransitionActionType.Skew:
-                            item.tweener = tween.GTween.to2(startValue.f1, startValue.f2, endValue.f1, endValue.f2, item.tweenConfig.duration);
+                            item.tweener = GTween.to2(startValue.f1, startValue.f2, endValue.f1, endValue.f2, item.tweenConfig.duration);
                             break;
 
                         case TransitionActionType.Alpha:
                         case TransitionActionType.Rotation:
-                            item.tweener = tween.GTween.to(startValue.f1, endValue.f1, item.tweenConfig.duration);
+                            item.tweener = GTween.to(startValue.f1, endValue.f1, item.tweenConfig.duration);
                             break;
 
                         case TransitionActionType.Color:
-                            item.tweener = tween.GTween.toColor(startValue.f1, endValue.f1, item.tweenConfig.duration);
+                            item.tweener = GTween.toColor(startValue.f1, endValue.f1, item.tweenConfig.duration);
                             break;
 
                         case TransitionActionType.ColorFilter:
-                            item.tweener = tween.GTween.to4(startValue.f1, startValue.f2, startValue.f3, startValue.f4,
+                            item.tweener = GTween.to4(startValue.f1, startValue.f2, startValue.f3, startValue.f4,
                                 endValue.f1, endValue.f2, endValue.f3, endValue.f4, item.tweenConfig.duration);
                             break;
                     }
@@ -582,7 +582,7 @@ module fairygui {
 
                 item.value.offsetX = item.value.offsetY = 0;
                 item.value.lastOffsetX = item.value.lastOffsetY = 0;
-                item.tweener = tween.GTween.shake(0, 0, item.value.amplitude, item.value.duration)
+                item.tweener = GTween.shake(0, 0, item.value.amplitude, item.value.duration)
                     .setDelay(time)
                     .setTimeScale(this._timeScale)
                     .setTarget(item)
@@ -606,7 +606,7 @@ module fairygui {
                 }
                 else if (this._endTime == -1 || time <= this._endTime) {
                     this._totalTasks++;
-                    item.tweener = tween.GTween.delayedCall(time)
+                    item.tweener = GTween.delayedCall(time)
                         .setTimeScale(this._timeScale)
                         .setTarget(item)
                         .onComplete(this.onDelayedPlayItem, this);
@@ -681,7 +681,7 @@ module fairygui {
             }
         }
 
-        private onDelayedPlayItem(tweener: tween.GTweener): void {
+        private onDelayedPlayItem(tweener: GTweener): void {
             var item: TransitionItem = tweener.target as TransitionItem;
             item.tweener = null;
             this._totalTasks--;
@@ -692,7 +692,7 @@ module fairygui {
             this.checkAllComplete();
         }
 
-        private onTweenStart(tweener: tween.GTweener): void {
+        private onTweenStart(tweener: GTweener): void {
             var item: TransitionItem = tweener.target as TransitionItem;
 
             if (item.type == TransitionActionType.XY || item.type == TransitionActionType.Size) //位置和大小要到start才最终确认起始值
@@ -738,7 +738,7 @@ module fairygui {
             this.callHook(item, false);
         }
 
-        private onTweenUpdate(tweener: tween.GTweener): void {
+        private onTweenUpdate(tweener: GTweener): void {
             var item: TransitionItem = tweener.target as TransitionItem;
             switch (item.type) {
                 case TransitionActionType.XY:
@@ -774,7 +774,7 @@ module fairygui {
             this.applyValue(item);
         }
 
-        private onTweenComplete(tweener: tween.GTweener): void {
+        private onTweenComplete(tweener: GTweener): void {
             var item: TransitionItem = tweener.target as TransitionItem;
             item.tweener = null;
             this._totalTasks--;
@@ -1006,7 +1006,7 @@ module fairygui {
                         this._totalDuration = item.time + item.tweenConfig.duration;
                     str = cxml.attributes.ease;
                     if (str)
-                        item.tweenConfig.easeType = tween.EaseType.parseEaseType(str);
+                        item.tweenConfig.easeType = EaseType.parseEaseType(str);
                     str = cxml.attributes.repeat;
                     if (str)
                         item.tweenConfig.repeat = parseInt(str);
@@ -1204,7 +1204,7 @@ module fairygui {
         public hook: Function;
         public hookCaller: any;
 
-        public tweener: tween.GTweener;
+        public tweener: GTweener;
         public target: GObject;
         public displayLockToken: number;
 
@@ -1259,7 +1259,7 @@ module fairygui {
         public endHookCaller: any;
 
         public constructor() {
-            this.easeType = tween.EaseType.QuadOut;
+            this.easeType = EaseType.QuadOut;
             this.startValue = new TValue();
             this.endValue = new TValue();
         }

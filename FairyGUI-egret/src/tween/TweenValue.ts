@@ -1,4 +1,4 @@
-module fairygui.tween {
+module fairygui {
     export class TweenValue {
         public x: number;
         public y: number;

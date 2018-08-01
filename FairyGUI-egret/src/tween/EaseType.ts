@@ -1,4 +1,4 @@
-module fairygui.tween {
+module fairygui {
     export class EaseType {
         public static Linear: number = 0;
         public static SineIn: number = 1;

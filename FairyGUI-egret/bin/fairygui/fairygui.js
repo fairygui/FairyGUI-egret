@@ -1917,7 +1917,7 @@ var fairygui;
     var GearBase = (function () {
         function GearBase(owner) {
             this._owner = owner;
-            this._easeType = fairygui.tween.EaseType.QuadOut;
+            this._easeType = fairygui.EaseType.QuadOut;
             this._tweenTime = 0.3;
             this._tweenDelay = 0;
             this._displayLockToken = 0;
@@ -1987,7 +1987,7 @@ var fairygui;
                 this._tween = true;
             str = xml.attributes.ease;
             if (str)
-                this._easeType = fairygui.tween.EaseType.parseEaseType(str);
+                this._easeType = fairygui.EaseType.parseEaseType(str);
             str = xml.attributes.duration;
             if (str)
                 this._tweenTime = parseFloat(str);
@@ -5089,923 +5089,903 @@ var fairygui;
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 var fairygui;
 (function (fairygui) {
-    var tween;
-    (function (tween) {
-        var EaseManager = (function () {
-            function EaseManager() {
-            }
-            EaseManager.evaluate = function (easeType, time, duration, overshootOrAmplitude, period) {
-                switch (easeType) {
-                    case tween.EaseType.Linear:
-                        return time / duration;
-                    case tween.EaseType.SineIn:
-                        return -Math.cos(time / duration * EaseManager._PiOver2) + 1;
-                    case tween.EaseType.SineOut:
-                        return Math.sin(time / duration * EaseManager._PiOver2);
-                    case tween.EaseType.SineInOut:
-                        return -0.5 * (Math.cos(Math.PI * time / duration) - 1);
-                    case tween.EaseType.QuadIn:
-                        return (time /= duration) * time;
-                    case tween.EaseType.QuadOut:
-                        return -(time /= duration) * (time - 2);
-                    case tween.EaseType.QuadInOut:
-                        if ((time /= duration * 0.5) < 1)
-                            return 0.5 * time * time;
-                        return -0.5 * ((--time) * (time - 2) - 1);
-                    case tween.EaseType.CubicIn:
-                        return (time /= duration) * time * time;
-                    case tween.EaseType.CubicOut:
-                        return ((time = time / duration - 1) * time * time + 1);
-                    case tween.EaseType.CubicInOut:
-                        if ((time /= duration * 0.5) < 1)
-                            return 0.5 * time * time * time;
-                        return 0.5 * ((time -= 2) * time * time + 2);
-                    case tween.EaseType.QuartIn:
-                        return (time /= duration) * time * time * time;
-                    case tween.EaseType.QuartOut:
-                        return -((time = time / duration - 1) * time * time * time - 1);
-                    case tween.EaseType.QuartInOut:
-                        if ((time /= duration * 0.5) < 1)
-                            return 0.5 * time * time * time * time;
-                        return -0.5 * ((time -= 2) * time * time * time - 2);
-                    case tween.EaseType.QuintIn:
-                        return (time /= duration) * time * time * time * time;
-                    case tween.EaseType.QuintOut:
-                        return ((time = time / duration - 1) * time * time * time * time + 1);
-                    case tween.EaseType.QuintInOut:
-                        if ((time /= duration * 0.5) < 1)
-                            return 0.5 * time * time * time * time * time;
-                        return 0.5 * ((time -= 2) * time * time * time * time + 2);
-                    case tween.EaseType.ExpoIn:
-                        return (time == 0) ? 0 : Math.pow(2, 10 * (time / duration - 1));
-                    case tween.EaseType.ExpoOut:
-                        if (time == duration)
-                            return 1;
-                        return (-Math.pow(2, -10 * time / duration) + 1);
-                    case tween.EaseType.ExpoInOut:
-                        if (time == 0)
-                            return 0;
-                        if (time == duration)
-                            return 1;
-                        if ((time /= duration * 0.5) < 1)
-                            return 0.5 * Math.pow(2, 10 * (time - 1));
-                        return 0.5 * (-Math.pow(2, -10 * --time) + 2);
-                    case tween.EaseType.CircIn:
-                        return -(Math.sqrt(1 - (time /= duration) * time) - 1);
-                    case tween.EaseType.CircOut:
-                        return Math.sqrt(1 - (time = time / duration - 1) * time);
-                    case tween.EaseType.CircInOut:
-                        if ((time /= duration * 0.5) < 1)
-                            return -0.5 * (Math.sqrt(1 - time * time) - 1);
-                        return 0.5 * (Math.sqrt(1 - (time -= 2) * time) + 1);
-                    case tween.EaseType.ElasticIn:
-                        var s0;
-                        if (time == 0)
-                            return 0;
-                        if ((time /= duration) == 1)
-                            return 1;
-                        if (period == 0)
-                            period = duration * 0.3;
-                        if (overshootOrAmplitude < 1) {
-                            overshootOrAmplitude = 1;
-                            s0 = period / 4;
-                        }
-                        else
-                            s0 = period / EaseManager._TwoPi * Math.asin(1 / overshootOrAmplitude);
-                        return -(overshootOrAmplitude * Math.pow(2, 10 * (time -= 1)) * Math.sin((time * duration - s0) * EaseManager._TwoPi / period));
-                    case tween.EaseType.ElasticOut:
-                        var s1;
-                        if (time == 0)
-                            return 0;
-                        if ((time /= duration) == 1)
-                            return 1;
-                        if (period == 0)
-                            period = duration * 0.3;
-                        if (overshootOrAmplitude < 1) {
-                            overshootOrAmplitude = 1;
-                            s1 = period / 4;
-                        }
-                        else
-                            s1 = period / EaseManager._TwoPi * Math.asin(1 / overshootOrAmplitude);
-                        return (overshootOrAmplitude * Math.pow(2, -10 * time) * Math.sin((time * duration - s1) * EaseManager._TwoPi / period) + 1);
-                    case tween.EaseType.ElasticInOut:
-                        var s;
-                        if (time == 0)
-                            return 0;
-                        if ((time /= duration * 0.5) == 2)
-                            return 1;
-                        if (period == 0)
-                            period = duration * (0.3 * 1.5);
-                        if (overshootOrAmplitude < 1) {
-                            overshootOrAmplitude = 1;
-                            s = period / 4;
-                        }
-                        else
-                            s = period / EaseManager._TwoPi * Math.asin(1 / overshootOrAmplitude);
-                        if (time < 1)
-                            return -0.5 * (overshootOrAmplitude * Math.pow(2, 10 * (time -= 1)) * Math.sin((time * duration - s) * EaseManager._TwoPi / period));
-                        return overshootOrAmplitude * Math.pow(2, -10 * (time -= 1)) * Math.sin((time * duration - s) * EaseManager._TwoPi / period) * 0.5 + 1;
-                    case tween.EaseType.BackIn:
-                        return (time /= duration) * time * ((overshootOrAmplitude + 1) * time - overshootOrAmplitude);
-                    case tween.EaseType.BackOut:
-                        return ((time = time / duration - 1) * time * ((overshootOrAmplitude + 1) * time + overshootOrAmplitude) + 1);
-                    case tween.EaseType.BackInOut:
-                        if ((time /= duration * 0.5) < 1)
-                            return 0.5 * (time * time * (((overshootOrAmplitude *= (1.525)) + 1) * time - overshootOrAmplitude));
-                        return 0.5 * ((time -= 2) * time * (((overshootOrAmplitude *= (1.525)) + 1) * time + overshootOrAmplitude) + 2);
-                    case tween.EaseType.BounceIn:
-                        return Bounce.easeIn(time, duration);
-                    case tween.EaseType.BounceOut:
-                        return Bounce.easeOut(time, duration);
-                    case tween.EaseType.BounceInOut:
-                        return Bounce.easeInOut(time, duration);
-                    default:
-                        return -(time /= duration) * (time - 2);
-                }
-            };
-            EaseManager._PiOver2 = Math.PI * 0.5;
-            EaseManager._TwoPi = Math.PI * 2;
-            return EaseManager;
-        }());
-        tween.EaseManager = EaseManager;
-        __reflect(EaseManager.prototype, "fairygui.tween.EaseManager");
-        var Bounce = (function () {
-            function Bounce() {
-            }
-            Bounce.easeIn = function (time, duration) {
-                return 1 - Bounce.easeOut(duration - time, duration);
-            };
-            Bounce.easeOut = function (time, duration) {
-                if ((time /= duration) < (1 / 2.75)) {
-                    return (7.5625 * time * time);
-                }
-                if (time < (2 / 2.75)) {
-                    return (7.5625 * (time -= (1.5 / 2.75)) * time + 0.75);
-                }
-                if (time < (2.5 / 2.75)) {
-                    return (7.5625 * (time -= (2.25 / 2.75)) * time + 0.9375);
-                }
-                return (7.5625 * (time -= (2.625 / 2.75)) * time + 0.984375);
-            };
-            Bounce.easeInOut = function (time, duration) {
-                if (time < duration * 0.5) {
-                    return Bounce.easeIn(time * 2, duration) * 0.5;
-                }
-                return Bounce.easeOut(time * 2 - duration, duration) * 0.5 + 0.5;
-            };
-            return Bounce;
-        }());
-        __reflect(Bounce.prototype, "Bounce");
-    })(tween = fairygui.tween || (fairygui.tween = {}));
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var tween;
-    (function (tween) {
-        var EaseType = (function () {
-            function EaseType() {
-            }
-            EaseType.parseEaseType = function (value) {
-                var type = EaseType.easeTypeMap[value];
-                if (type == undefined)
-                    return EaseType.ExpoOut;
-                else
-                    return type;
-            };
-            EaseType.Linear = 0;
-            EaseType.SineIn = 1;
-            EaseType.SineOut = 2;
-            EaseType.SineInOut = 3;
-            EaseType.QuadIn = 4;
-            EaseType.QuadOut = 5;
-            EaseType.QuadInOut = 6;
-            EaseType.CubicIn = 7;
-            EaseType.CubicOut = 8;
-            EaseType.CubicInOut = 9;
-            EaseType.QuartIn = 10;
-            EaseType.QuartOut = 11;
-            EaseType.QuartInOut = 12;
-            EaseType.QuintIn = 13;
-            EaseType.QuintOut = 14;
-            EaseType.QuintInOut = 15;
-            EaseType.ExpoIn = 16;
-            EaseType.ExpoOut = 17;
-            EaseType.ExpoInOut = 18;
-            EaseType.CircIn = 19;
-            EaseType.CircOut = 20;
-            EaseType.CircInOut = 21;
-            EaseType.ElasticIn = 22;
-            EaseType.ElasticOut = 23;
-            EaseType.ElasticInOut = 24;
-            EaseType.BackIn = 25;
-            EaseType.BackOut = 26;
-            EaseType.BackInOut = 27;
-            EaseType.BounceIn = 28;
-            EaseType.BounceOut = 29;
-            EaseType.BounceInOut = 30;
-            EaseType.Custom = 31;
-            EaseType.easeTypeMap = {
-                "Linear": EaseType.Linear,
-                "Elastic.In": EaseType.ElasticIn,
-                "Elastic.Out": EaseType.ElasticInOut,
-                "Elastic.InOut": EaseType.ElasticInOut,
-                "Quad.In": EaseType.QuadIn,
-                "Quad.Out": EaseType.QuadOut,
-                "Quad.InOut": EaseType.QuadInOut,
-                "Cube.In": EaseType.CubicIn,
-                "Cube.Out": EaseType.CubicOut,
-                "Cube.InOut": EaseType.CubicInOut,
-                "Quart.In": EaseType.QuartIn,
-                "Quart.Out": EaseType.QuartOut,
-                "Quart.InOut": EaseType.QuartInOut,
-                "Quint.In": EaseType.QuintIn,
-                "Quint.Out": EaseType.QuintOut,
-                "Quint.InOut": EaseType.QuintInOut,
-                "Sine.In": EaseType.SineIn,
-                "Sine.Out": EaseType.SineOut,
-                "Sine.InOut": EaseType.SineInOut,
-                "Bounce.In": EaseType.BounceIn,
-                "Bounce.Out": EaseType.BounceOut,
-                "Bounce.InOut": EaseType.BounceInOut,
-                "Circ.In": EaseType.CircIn,
-                "Circ.Out": EaseType.CircOut,
-                "Circ.InOut": EaseType.CircInOut,
-                "Expo.In": EaseType.ExpoIn,
-                "Expo.Out": EaseType.ExpoOut,
-                "Expo.InOut": EaseType.ExpoInOut,
-                "Back.In": EaseType.BackIn,
-                "Back.Out": EaseType.BackOut,
-                "Back.InOut": EaseType.BackInOut
-            };
-            return EaseType;
-        }());
-        tween.EaseType = EaseType;
-        __reflect(EaseType.prototype, "fairygui.tween.EaseType");
-    })(tween = fairygui.tween || (fairygui.tween = {}));
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var tween;
-    (function (tween) {
-        var GTween = (function () {
-            function GTween() {
-            }
-            GTween.to = function (start, end, duration) {
-                return tween.TweenManager.createTween()._to(start, end, duration);
-            };
-            GTween.to2 = function (start, start2, end, end2, duration) {
-                return tween.TweenManager.createTween()._to2(start, start2, end, end2, duration);
-            };
-            GTween.to3 = function (start, start2, start3, end, end2, end3, duration) {
-                return tween.TweenManager.createTween()._to3(start, start2, start3, end, end2, end3, duration);
-            };
-            GTween.to4 = function (start, start2, start3, start4, end, end2, end3, end4, duration) {
-                return tween.TweenManager.createTween()._to4(start, start2, start3, start4, end, end2, end3, end4, duration);
-            };
-            GTween.toColor = function (start, end, duration) {
-                return tween.TweenManager.createTween()._toColor(start, end, duration);
-            };
-            GTween.delayedCall = function (delay) {
-                return tween.TweenManager.createTween().setDelay(delay);
-            };
-            GTween.shake = function (startX, startY, amplitude, duration) {
-                return tween.TweenManager.createTween()._shake(startX, startY, amplitude, duration);
-            };
-            GTween.isTweening = function (target, propType) {
-                return tween.TweenManager.isTweening(target, propType);
-            };
-            GTween.kill = function (target, complete, propType) {
-                if (complete === void 0) { complete = false; }
-                if (propType === void 0) { propType = null; }
-                tween.TweenManager.killTweens(target, false, null);
-            };
-            GTween.getTween = function (target, propType) {
-                if (propType === void 0) { propType = null; }
-                return tween.TweenManager.getTween(target, propType);
-            };
-            GTween.safeMode = true;
-            return GTween;
-        }());
-        tween.GTween = GTween;
-        __reflect(GTween.prototype, "fairygui.tween.GTween");
-    })(tween = fairygui.tween || (fairygui.tween = {}));
-})(fairygui || (fairygui = {}));
-var fairygui;
-(function (fairygui) {
-    var tween;
-    (function (tween) {
-        var GTweener = (function () {
-            function GTweener() {
-                this._startValue = new tween.TweenValue();
-                this._endValue = new tween.TweenValue();
-                this._value = new tween.TweenValue();
-                this._deltaValue = new tween.TweenValue();
-                this._reset();
-            }
-            GTweener.prototype.setDelay = function (value) {
-                this._delay = value;
-                return this;
-            };
-            Object.defineProperty(GTweener.prototype, "delay", {
-                get: function () {
-                    return this._delay;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            GTweener.prototype.setDuration = function (value) {
-                this._duration = value;
-                return this;
-            };
-            Object.defineProperty(GTweener.prototype, "duration", {
-                get: function () {
-                    return this._duration;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            GTweener.prototype.setBreakpoint = function (value) {
-                this._breakpoint = value;
-                return this;
-            };
-            GTweener.prototype.setEase = function (value) {
-                this._easeType = value;
-                return this;
-            };
-            GTweener.prototype.setEasePeriod = function (value) {
-                this._easePeriod = value;
-                return this;
-            };
-            GTweener.prototype.setEaseOvershootOrAmplitude = function (value) {
-                this._easeOvershootOrAmplitude = value;
-                return this;
-            };
-            GTweener.prototype.setRepeat = function (repeat, yoyo) {
-                if (yoyo === void 0) { yoyo = false; }
-                this._repeat = repeat;
-                this._yoyo = yoyo;
-                return this;
-            };
-            Object.defineProperty(GTweener.prototype, "repeat", {
-                get: function () {
-                    return this._repeat;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            GTweener.prototype.setTimeScale = function (value) {
-                this._timeScale = value;
-                return this;
-            };
-            GTweener.prototype.setSnapping = function (value) {
-                this._snapping = value;
-                return this;
-            };
-            GTweener.prototype.setTarget = function (value, propType) {
-                if (propType === void 0) { propType = null; }
-                this._target = value;
-                this._propType = propType;
-                return this;
-            };
-            Object.defineProperty(GTweener.prototype, "target", {
-                get: function () {
-                    return this._target;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            GTweener.prototype.setUserData = function (value) {
-                this._userData = value;
-                return this;
-            };
-            Object.defineProperty(GTweener.prototype, "userData", {
-                get: function () {
-                    return this._userData;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            GTweener.prototype.onUpdate = function (callback, caller) {
-                this._onUpdate = callback;
-                this._onUpdateCaller = caller;
-                return this;
-            };
-            GTweener.prototype.onStart = function (callback, caller) {
-                this._onStart = callback;
-                this._onStartCaller = caller;
-                return this;
-            };
-            GTweener.prototype.onComplete = function (callback, caller) {
-                this._onComplete = callback;
-                this._onCompleteCaller = caller;
-                return this;
-            };
-            Object.defineProperty(GTweener.prototype, "startValue", {
-                get: function () {
-                    return this._startValue;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(GTweener.prototype, "endValue", {
-                get: function () {
-                    return this._endValue;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(GTweener.prototype, "value", {
-                get: function () {
-                    return this._value;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(GTweener.prototype, "deltaValue", {
-                get: function () {
-                    return this._deltaValue;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(GTweener.prototype, "normalizedTime", {
-                get: function () {
-                    return this._normalizedTime;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(GTweener.prototype, "completed", {
-                get: function () {
-                    return this._ended != 0;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(GTweener.prototype, "allCompleted", {
-                get: function () {
-                    return this._ended == 1;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            GTweener.prototype.setPaused = function (paused) {
-                this._paused = paused;
-                return this;
-            };
-            /**
-             * seek position of the tween, in seconds.
-             */
-            GTweener.prototype.seek = function (time) {
-                if (this._killed)
-                    return;
-                this._elapsedTime = time;
-                if (this._elapsedTime < this._delay) {
-                    if (this._started)
-                        this._elapsedTime = this._delay;
-                    else
-                        return;
-                }
-                this.update();
-            };
-            GTweener.prototype.kill = function (complete) {
-                if (complete === void 0) { complete = false; }
-                if (this._killed)
-                    return;
-                if (complete) {
-                    if (this._ended == 0) {
-                        if (this._breakpoint >= 0)
-                            this._elapsedTime = this._delay + this._breakpoint;
-                        else if (this._repeat >= 0)
-                            this._elapsedTime = this._delay + this._duration * (this._repeat + 1);
-                        else
-                            this._elapsedTime = this._delay + this._duration * 3;
-                        this.update();
+    var EaseManager = (function () {
+        function EaseManager() {
+        }
+        EaseManager.evaluate = function (easeType, time, duration, overshootOrAmplitude, period) {
+            switch (easeType) {
+                case fairygui.EaseType.Linear:
+                    return time / duration;
+                case fairygui.EaseType.SineIn:
+                    return -Math.cos(time / duration * EaseManager._PiOver2) + 1;
+                case fairygui.EaseType.SineOut:
+                    return Math.sin(time / duration * EaseManager._PiOver2);
+                case fairygui.EaseType.SineInOut:
+                    return -0.5 * (Math.cos(Math.PI * time / duration) - 1);
+                case fairygui.EaseType.QuadIn:
+                    return (time /= duration) * time;
+                case fairygui.EaseType.QuadOut:
+                    return -(time /= duration) * (time - 2);
+                case fairygui.EaseType.QuadInOut:
+                    if ((time /= duration * 0.5) < 1)
+                        return 0.5 * time * time;
+                    return -0.5 * ((--time) * (time - 2) - 1);
+                case fairygui.EaseType.CubicIn:
+                    return (time /= duration) * time * time;
+                case fairygui.EaseType.CubicOut:
+                    return ((time = time / duration - 1) * time * time + 1);
+                case fairygui.EaseType.CubicInOut:
+                    if ((time /= duration * 0.5) < 1)
+                        return 0.5 * time * time * time;
+                    return 0.5 * ((time -= 2) * time * time + 2);
+                case fairygui.EaseType.QuartIn:
+                    return (time /= duration) * time * time * time;
+                case fairygui.EaseType.QuartOut:
+                    return -((time = time / duration - 1) * time * time * time - 1);
+                case fairygui.EaseType.QuartInOut:
+                    if ((time /= duration * 0.5) < 1)
+                        return 0.5 * time * time * time * time;
+                    return -0.5 * ((time -= 2) * time * time * time - 2);
+                case fairygui.EaseType.QuintIn:
+                    return (time /= duration) * time * time * time * time;
+                case fairygui.EaseType.QuintOut:
+                    return ((time = time / duration - 1) * time * time * time * time + 1);
+                case fairygui.EaseType.QuintInOut:
+                    if ((time /= duration * 0.5) < 1)
+                        return 0.5 * time * time * time * time * time;
+                    return 0.5 * ((time -= 2) * time * time * time * time + 2);
+                case fairygui.EaseType.ExpoIn:
+                    return (time == 0) ? 0 : Math.pow(2, 10 * (time / duration - 1));
+                case fairygui.EaseType.ExpoOut:
+                    if (time == duration)
+                        return 1;
+                    return (-Math.pow(2, -10 * time / duration) + 1);
+                case fairygui.EaseType.ExpoInOut:
+                    if (time == 0)
+                        return 0;
+                    if (time == duration)
+                        return 1;
+                    if ((time /= duration * 0.5) < 1)
+                        return 0.5 * Math.pow(2, 10 * (time - 1));
+                    return 0.5 * (-Math.pow(2, -10 * --time) + 2);
+                case fairygui.EaseType.CircIn:
+                    return -(Math.sqrt(1 - (time /= duration) * time) - 1);
+                case fairygui.EaseType.CircOut:
+                    return Math.sqrt(1 - (time = time / duration - 1) * time);
+                case fairygui.EaseType.CircInOut:
+                    if ((time /= duration * 0.5) < 1)
+                        return -0.5 * (Math.sqrt(1 - time * time) - 1);
+                    return 0.5 * (Math.sqrt(1 - (time -= 2) * time) + 1);
+                case fairygui.EaseType.ElasticIn:
+                    var s0;
+                    if (time == 0)
+                        return 0;
+                    if ((time /= duration) == 1)
+                        return 1;
+                    if (period == 0)
+                        period = duration * 0.3;
+                    if (overshootOrAmplitude < 1) {
+                        overshootOrAmplitude = 1;
+                        s0 = period / 4;
                     }
-                    this.callCompleteCallback();
-                }
-                this._killed = true;
-            };
-            GTweener.prototype._to = function (start, end, duration) {
-                this._valueSize = 1;
-                this._startValue.x = start;
-                this._endValue.x = end;
-                this._duration = duration;
-                return this;
-            };
-            GTweener.prototype._to2 = function (start, start2, end, end2, duration) {
-                this._valueSize = 2;
-                this._startValue.x = start;
-                this._endValue.x = end;
-                this._startValue.y = start2;
-                this._endValue.y = end2;
-                this._duration = duration;
-                return this;
-            };
-            GTweener.prototype._to3 = function (start, start2, start3, end, end2, end3, duration) {
-                this._valueSize = 3;
-                this._startValue.x = start;
-                this._endValue.x = end;
-                this._startValue.y = start2;
-                this._endValue.y = end2;
-                this._startValue.z = start3;
-                this._endValue.z = end3;
-                this._duration = duration;
-                return this;
-            };
-            GTweener.prototype._to4 = function (start, start2, start3, start4, end, end2, end3, end4, duration) {
-                this._valueSize = 4;
-                this._startValue.x = start;
-                this._endValue.x = end;
-                this._startValue.y = start2;
-                this._endValue.y = end2;
-                this._startValue.z = start3;
-                this._endValue.z = end3;
-                this._startValue.w = start4;
-                this._endValue.w = end4;
-                this._duration = duration;
-                return this;
-            };
-            GTweener.prototype._toColor = function (start, end, duration) {
-                this._valueSize = 4;
-                this._startValue.color = start;
-                this._endValue.color = end;
-                this._duration = duration;
-                return this;
-            };
-            GTweener.prototype._shake = function (startX, startY, amplitude, duration) {
-                this._valueSize = 5;
-                this._startValue.x = startX;
-                this._startValue.y = startY;
-                this._startValue.w = amplitude;
-                this._duration = duration;
-                return this;
-            };
-            GTweener.prototype._init = function () {
-                this._delay = 0;
-                this._duration = 0;
-                this._breakpoint = -1;
-                this._easeType = tween.EaseType.QuadOut;
-                this._timeScale = 1;
-                this._easePeriod = 0;
-                this._easeOvershootOrAmplitude = 1.70158;
-                this._snapping = false;
-                this._repeat = 0;
-                this._yoyo = false;
-                this._valueSize = 0;
-                this._started = false;
-                this._paused = false;
-                this._killed = false;
-                this._elapsedTime = 0;
-                this._normalizedTime = 0;
-                this._ended = 0;
-            };
-            GTweener.prototype._reset = function () {
-                this._target = null;
-                this._userData = null;
-                this._onStart = this._onUpdate = this._onComplete = null;
-                this._onStartCaller = this._onUpdateCaller = this._onCompleteCaller = null;
-            };
-            GTweener.prototype._update = function (dt) {
-                if (this._timeScale != 1)
-                    dt *= this._timeScale;
-                if (dt == 0)
+                    else
+                        s0 = period / EaseManager._TwoPi * Math.asin(1 / overshootOrAmplitude);
+                    return -(overshootOrAmplitude * Math.pow(2, 10 * (time -= 1)) * Math.sin((time * duration - s0) * EaseManager._TwoPi / period));
+                case fairygui.EaseType.ElasticOut:
+                    var s1;
+                    if (time == 0)
+                        return 0;
+                    if ((time /= duration) == 1)
+                        return 1;
+                    if (period == 0)
+                        period = duration * 0.3;
+                    if (overshootOrAmplitude < 1) {
+                        overshootOrAmplitude = 1;
+                        s1 = period / 4;
+                    }
+                    else
+                        s1 = period / EaseManager._TwoPi * Math.asin(1 / overshootOrAmplitude);
+                    return (overshootOrAmplitude * Math.pow(2, -10 * time) * Math.sin((time * duration - s1) * EaseManager._TwoPi / period) + 1);
+                case fairygui.EaseType.ElasticInOut:
+                    var s;
+                    if (time == 0)
+                        return 0;
+                    if ((time /= duration * 0.5) == 2)
+                        return 1;
+                    if (period == 0)
+                        period = duration * (0.3 * 1.5);
+                    if (overshootOrAmplitude < 1) {
+                        overshootOrAmplitude = 1;
+                        s = period / 4;
+                    }
+                    else
+                        s = period / EaseManager._TwoPi * Math.asin(1 / overshootOrAmplitude);
+                    if (time < 1)
+                        return -0.5 * (overshootOrAmplitude * Math.pow(2, 10 * (time -= 1)) * Math.sin((time * duration - s) * EaseManager._TwoPi / period));
+                    return overshootOrAmplitude * Math.pow(2, -10 * (time -= 1)) * Math.sin((time * duration - s) * EaseManager._TwoPi / period) * 0.5 + 1;
+                case fairygui.EaseType.BackIn:
+                    return (time /= duration) * time * ((overshootOrAmplitude + 1) * time - overshootOrAmplitude);
+                case fairygui.EaseType.BackOut:
+                    return ((time = time / duration - 1) * time * ((overshootOrAmplitude + 1) * time + overshootOrAmplitude) + 1);
+                case fairygui.EaseType.BackInOut:
+                    if ((time /= duration * 0.5) < 1)
+                        return 0.5 * (time * time * (((overshootOrAmplitude *= (1.525)) + 1) * time - overshootOrAmplitude));
+                    return 0.5 * ((time -= 2) * time * (((overshootOrAmplitude *= (1.525)) + 1) * time + overshootOrAmplitude) + 2);
+                case fairygui.EaseType.BounceIn:
+                    return Bounce.easeIn(time, duration);
+                case fairygui.EaseType.BounceOut:
+                    return Bounce.easeOut(time, duration);
+                case fairygui.EaseType.BounceInOut:
+                    return Bounce.easeInOut(time, duration);
+                default:
+                    return -(time /= duration) * (time - 2);
+            }
+        };
+        EaseManager._PiOver2 = Math.PI * 0.5;
+        EaseManager._TwoPi = Math.PI * 2;
+        return EaseManager;
+    }());
+    fairygui.EaseManager = EaseManager;
+    __reflect(EaseManager.prototype, "fairygui.EaseManager");
+    var Bounce = (function () {
+        function Bounce() {
+        }
+        Bounce.easeIn = function (time, duration) {
+            return 1 - Bounce.easeOut(duration - time, duration);
+        };
+        Bounce.easeOut = function (time, duration) {
+            if ((time /= duration) < (1 / 2.75)) {
+                return (7.5625 * time * time);
+            }
+            if (time < (2 / 2.75)) {
+                return (7.5625 * (time -= (1.5 / 2.75)) * time + 0.75);
+            }
+            if (time < (2.5 / 2.75)) {
+                return (7.5625 * (time -= (2.25 / 2.75)) * time + 0.9375);
+            }
+            return (7.5625 * (time -= (2.625 / 2.75)) * time + 0.984375);
+        };
+        Bounce.easeInOut = function (time, duration) {
+            if (time < duration * 0.5) {
+                return Bounce.easeIn(time * 2, duration) * 0.5;
+            }
+            return Bounce.easeOut(time * 2 - duration, duration) * 0.5 + 0.5;
+        };
+        return Bounce;
+    }());
+    __reflect(Bounce.prototype, "Bounce");
+})(fairygui || (fairygui = {}));
+var fairygui;
+(function (fairygui) {
+    var EaseType = (function () {
+        function EaseType() {
+        }
+        EaseType.parseEaseType = function (value) {
+            var type = EaseType.easeTypeMap[value];
+            if (type == undefined)
+                return EaseType.ExpoOut;
+            else
+                return type;
+        };
+        EaseType.Linear = 0;
+        EaseType.SineIn = 1;
+        EaseType.SineOut = 2;
+        EaseType.SineInOut = 3;
+        EaseType.QuadIn = 4;
+        EaseType.QuadOut = 5;
+        EaseType.QuadInOut = 6;
+        EaseType.CubicIn = 7;
+        EaseType.CubicOut = 8;
+        EaseType.CubicInOut = 9;
+        EaseType.QuartIn = 10;
+        EaseType.QuartOut = 11;
+        EaseType.QuartInOut = 12;
+        EaseType.QuintIn = 13;
+        EaseType.QuintOut = 14;
+        EaseType.QuintInOut = 15;
+        EaseType.ExpoIn = 16;
+        EaseType.ExpoOut = 17;
+        EaseType.ExpoInOut = 18;
+        EaseType.CircIn = 19;
+        EaseType.CircOut = 20;
+        EaseType.CircInOut = 21;
+        EaseType.ElasticIn = 22;
+        EaseType.ElasticOut = 23;
+        EaseType.ElasticInOut = 24;
+        EaseType.BackIn = 25;
+        EaseType.BackOut = 26;
+        EaseType.BackInOut = 27;
+        EaseType.BounceIn = 28;
+        EaseType.BounceOut = 29;
+        EaseType.BounceInOut = 30;
+        EaseType.Custom = 31;
+        EaseType.easeTypeMap = {
+            "Linear": EaseType.Linear,
+            "Elastic.In": EaseType.ElasticIn,
+            "Elastic.Out": EaseType.ElasticInOut,
+            "Elastic.InOut": EaseType.ElasticInOut,
+            "Quad.In": EaseType.QuadIn,
+            "Quad.Out": EaseType.QuadOut,
+            "Quad.InOut": EaseType.QuadInOut,
+            "Cube.In": EaseType.CubicIn,
+            "Cube.Out": EaseType.CubicOut,
+            "Cube.InOut": EaseType.CubicInOut,
+            "Quart.In": EaseType.QuartIn,
+            "Quart.Out": EaseType.QuartOut,
+            "Quart.InOut": EaseType.QuartInOut,
+            "Quint.In": EaseType.QuintIn,
+            "Quint.Out": EaseType.QuintOut,
+            "Quint.InOut": EaseType.QuintInOut,
+            "Sine.In": EaseType.SineIn,
+            "Sine.Out": EaseType.SineOut,
+            "Sine.InOut": EaseType.SineInOut,
+            "Bounce.In": EaseType.BounceIn,
+            "Bounce.Out": EaseType.BounceOut,
+            "Bounce.InOut": EaseType.BounceInOut,
+            "Circ.In": EaseType.CircIn,
+            "Circ.Out": EaseType.CircOut,
+            "Circ.InOut": EaseType.CircInOut,
+            "Expo.In": EaseType.ExpoIn,
+            "Expo.Out": EaseType.ExpoOut,
+            "Expo.InOut": EaseType.ExpoInOut,
+            "Back.In": EaseType.BackIn,
+            "Back.Out": EaseType.BackOut,
+            "Back.InOut": EaseType.BackInOut
+        };
+        return EaseType;
+    }());
+    fairygui.EaseType = EaseType;
+    __reflect(EaseType.prototype, "fairygui.EaseType");
+})(fairygui || (fairygui = {}));
+var fairygui;
+(function (fairygui) {
+    var GTween = (function () {
+        function GTween() {
+        }
+        GTween.to = function (start, end, duration) {
+            return fairygui.TweenManager.createTween()._to(start, end, duration);
+        };
+        GTween.to2 = function (start, start2, end, end2, duration) {
+            return fairygui.TweenManager.createTween()._to2(start, start2, end, end2, duration);
+        };
+        GTween.to3 = function (start, start2, start3, end, end2, end3, duration) {
+            return fairygui.TweenManager.createTween()._to3(start, start2, start3, end, end2, end3, duration);
+        };
+        GTween.to4 = function (start, start2, start3, start4, end, end2, end3, end4, duration) {
+            return fairygui.TweenManager.createTween()._to4(start, start2, start3, start4, end, end2, end3, end4, duration);
+        };
+        GTween.toColor = function (start, end, duration) {
+            return fairygui.TweenManager.createTween()._toColor(start, end, duration);
+        };
+        GTween.delayedCall = function (delay) {
+            return fairygui.TweenManager.createTween().setDelay(delay);
+        };
+        GTween.shake = function (startX, startY, amplitude, duration) {
+            return fairygui.TweenManager.createTween()._shake(startX, startY, amplitude, duration);
+        };
+        GTween.isTweening = function (target, propType) {
+            return fairygui.TweenManager.isTweening(target, propType);
+        };
+        GTween.kill = function (target, complete, propType) {
+            if (complete === void 0) { complete = false; }
+            if (propType === void 0) { propType = null; }
+            fairygui.TweenManager.killTweens(target, false, null);
+        };
+        GTween.getTween = function (target, propType) {
+            if (propType === void 0) { propType = null; }
+            return fairygui.TweenManager.getTween(target, propType);
+        };
+        GTween.safeMode = true;
+        return GTween;
+    }());
+    fairygui.GTween = GTween;
+    __reflect(GTween.prototype, "fairygui.GTween");
+})(fairygui || (fairygui = {}));
+var fairygui;
+(function (fairygui) {
+    var GTweener = (function () {
+        function GTweener() {
+            this._startValue = new fairygui.TweenValue();
+            this._endValue = new fairygui.TweenValue();
+            this._value = new fairygui.TweenValue();
+            this._deltaValue = new fairygui.TweenValue();
+            this._reset();
+        }
+        GTweener.prototype.setDelay = function (value) {
+            this._delay = value;
+            return this;
+        };
+        Object.defineProperty(GTweener.prototype, "delay", {
+            get: function () {
+                return this._delay;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GTweener.prototype.setDuration = function (value) {
+            this._duration = value;
+            return this;
+        };
+        Object.defineProperty(GTweener.prototype, "duration", {
+            get: function () {
+                return this._duration;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GTweener.prototype.setBreakpoint = function (value) {
+            this._breakpoint = value;
+            return this;
+        };
+        GTweener.prototype.setEase = function (value) {
+            this._easeType = value;
+            return this;
+        };
+        GTweener.prototype.setEasePeriod = function (value) {
+            this._easePeriod = value;
+            return this;
+        };
+        GTweener.prototype.setEaseOvershootOrAmplitude = function (value) {
+            this._easeOvershootOrAmplitude = value;
+            return this;
+        };
+        GTweener.prototype.setRepeat = function (repeat, yoyo) {
+            if (yoyo === void 0) { yoyo = false; }
+            this._repeat = repeat;
+            this._yoyo = yoyo;
+            return this;
+        };
+        Object.defineProperty(GTweener.prototype, "repeat", {
+            get: function () {
+                return this._repeat;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GTweener.prototype.setTimeScale = function (value) {
+            this._timeScale = value;
+            return this;
+        };
+        GTweener.prototype.setSnapping = function (value) {
+            this._snapping = value;
+            return this;
+        };
+        GTweener.prototype.setTarget = function (value, propType) {
+            if (propType === void 0) { propType = null; }
+            this._target = value;
+            this._propType = propType;
+            return this;
+        };
+        Object.defineProperty(GTweener.prototype, "target", {
+            get: function () {
+                return this._target;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GTweener.prototype.setUserData = function (value) {
+            this._userData = value;
+            return this;
+        };
+        Object.defineProperty(GTweener.prototype, "userData", {
+            get: function () {
+                return this._userData;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GTweener.prototype.onUpdate = function (callback, caller) {
+            this._onUpdate = callback;
+            this._onUpdateCaller = caller;
+            return this;
+        };
+        GTweener.prototype.onStart = function (callback, caller) {
+            this._onStart = callback;
+            this._onStartCaller = caller;
+            return this;
+        };
+        GTweener.prototype.onComplete = function (callback, caller) {
+            this._onComplete = callback;
+            this._onCompleteCaller = caller;
+            return this;
+        };
+        Object.defineProperty(GTweener.prototype, "startValue", {
+            get: function () {
+                return this._startValue;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTweener.prototype, "endValue", {
+            get: function () {
+                return this._endValue;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTweener.prototype, "value", {
+            get: function () {
+                return this._value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTweener.prototype, "deltaValue", {
+            get: function () {
+                return this._deltaValue;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTweener.prototype, "normalizedTime", {
+            get: function () {
+                return this._normalizedTime;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTweener.prototype, "completed", {
+            get: function () {
+                return this._ended != 0;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTweener.prototype, "allCompleted", {
+            get: function () {
+                return this._ended == 1;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GTweener.prototype.setPaused = function (paused) {
+            this._paused = paused;
+            return this;
+        };
+        /**
+         * seek position of the tween, in seconds.
+         */
+        GTweener.prototype.seek = function (time) {
+            if (this._killed)
+                return;
+            this._elapsedTime = time;
+            if (this._elapsedTime < this._delay) {
+                if (this._started)
+                    this._elapsedTime = this._delay;
+                else
                     return;
-                if (this._ended != 0) {
+            }
+            this.update();
+        };
+        GTweener.prototype.kill = function (complete) {
+            if (complete === void 0) { complete = false; }
+            if (this._killed)
+                return;
+            if (complete) {
+                if (this._ended == 0) {
+                    if (this._breakpoint >= 0)
+                        this._elapsedTime = this._delay + this._breakpoint;
+                    else if (this._repeat >= 0)
+                        this._elapsedTime = this._delay + this._duration * (this._repeat + 1);
+                    else
+                        this._elapsedTime = this._delay + this._duration * 3;
+                    this.update();
+                }
+                this.callCompleteCallback();
+            }
+            this._killed = true;
+        };
+        GTweener.prototype._to = function (start, end, duration) {
+            this._valueSize = 1;
+            this._startValue.x = start;
+            this._endValue.x = end;
+            this._duration = duration;
+            return this;
+        };
+        GTweener.prototype._to2 = function (start, start2, end, end2, duration) {
+            this._valueSize = 2;
+            this._startValue.x = start;
+            this._endValue.x = end;
+            this._startValue.y = start2;
+            this._endValue.y = end2;
+            this._duration = duration;
+            return this;
+        };
+        GTweener.prototype._to3 = function (start, start2, start3, end, end2, end3, duration) {
+            this._valueSize = 3;
+            this._startValue.x = start;
+            this._endValue.x = end;
+            this._startValue.y = start2;
+            this._endValue.y = end2;
+            this._startValue.z = start3;
+            this._endValue.z = end3;
+            this._duration = duration;
+            return this;
+        };
+        GTweener.prototype._to4 = function (start, start2, start3, start4, end, end2, end3, end4, duration) {
+            this._valueSize = 4;
+            this._startValue.x = start;
+            this._endValue.x = end;
+            this._startValue.y = start2;
+            this._endValue.y = end2;
+            this._startValue.z = start3;
+            this._endValue.z = end3;
+            this._startValue.w = start4;
+            this._endValue.w = end4;
+            this._duration = duration;
+            return this;
+        };
+        GTweener.prototype._toColor = function (start, end, duration) {
+            this._valueSize = 4;
+            this._startValue.color = start;
+            this._endValue.color = end;
+            this._duration = duration;
+            return this;
+        };
+        GTweener.prototype._shake = function (startX, startY, amplitude, duration) {
+            this._valueSize = 5;
+            this._startValue.x = startX;
+            this._startValue.y = startY;
+            this._startValue.w = amplitude;
+            this._duration = duration;
+            return this;
+        };
+        GTweener.prototype._init = function () {
+            this._delay = 0;
+            this._duration = 0;
+            this._breakpoint = -1;
+            this._easeType = fairygui.EaseType.QuadOut;
+            this._timeScale = 1;
+            this._easePeriod = 0;
+            this._easeOvershootOrAmplitude = 1.70158;
+            this._snapping = false;
+            this._repeat = 0;
+            this._yoyo = false;
+            this._valueSize = 0;
+            this._started = false;
+            this._paused = false;
+            this._killed = false;
+            this._elapsedTime = 0;
+            this._normalizedTime = 0;
+            this._ended = 0;
+        };
+        GTweener.prototype._reset = function () {
+            this._target = null;
+            this._userData = null;
+            this._onStart = this._onUpdate = this._onComplete = null;
+            this._onStartCaller = this._onUpdateCaller = this._onCompleteCaller = null;
+        };
+        GTweener.prototype._update = function (dt) {
+            if (this._timeScale != 1)
+                dt *= this._timeScale;
+            if (dt == 0)
+                return;
+            if (this._ended != 0) {
+                this.callCompleteCallback();
+                this._killed = true;
+                return;
+            }
+            this._elapsedTime += dt;
+            this.update();
+            if (this._ended != 0) {
+                if (!this._killed) {
                     this.callCompleteCallback();
                     this._killed = true;
+                }
+            }
+        };
+        GTweener.prototype.update = function () {
+            this._ended = 0;
+            if (this._valueSize == 0) {
+                if (this._elapsedTime >= this._delay + this._duration)
+                    this._ended = 1;
+                return;
+            }
+            if (!this._started) {
+                if (this._elapsedTime < this._delay)
                     return;
-                }
-                this._elapsedTime += dt;
-                this.update();
-                if (this._ended != 0) {
-                    if (!this._killed) {
-                        this.callCompleteCallback();
-                        this._killed = true;
-                    }
-                }
-            };
-            GTweener.prototype.update = function () {
-                this._ended = 0;
-                if (this._valueSize == 0) {
-                    if (this._elapsedTime >= this._delay + this._duration)
-                        this._ended = 1;
+                this._started = true;
+                this.callStartCallback();
+                if (this._killed)
                     return;
-                }
-                if (!this._started) {
-                    if (this._elapsedTime < this._delay)
-                        return;
-                    this._started = true;
-                    this.callStartCallback();
-                    if (this._killed)
-                        return;
-                }
-                var reversed = false;
-                var tt = this._elapsedTime - this._delay;
-                if (this._breakpoint >= 0 && tt >= this._breakpoint) {
-                    tt = this._breakpoint;
-                    this._ended = 2;
-                }
-                if (this._repeat != 0) {
-                    var round = Math.floor(tt / this._duration);
-                    tt -= this._duration * round;
+            }
+            var reversed = false;
+            var tt = this._elapsedTime - this._delay;
+            if (this._breakpoint >= 0 && tt >= this._breakpoint) {
+                tt = this._breakpoint;
+                this._ended = 2;
+            }
+            if (this._repeat != 0) {
+                var round = Math.floor(tt / this._duration);
+                tt -= this._duration * round;
+                if (this._yoyo)
+                    reversed = round % 2 == 1;
+                if (this._repeat > 0 && this._repeat - round < 0) {
                     if (this._yoyo)
-                        reversed = round % 2 == 1;
-                    if (this._repeat > 0 && this._repeat - round < 0) {
-                        if (this._yoyo)
-                            reversed = this._repeat % 2 == 1;
-                        tt = this._duration;
-                        this._ended = 1;
-                    }
-                }
-                else if (tt >= this._duration) {
+                        reversed = this._repeat % 2 == 1;
                     tt = this._duration;
                     this._ended = 1;
                 }
-                this._normalizedTime = tween.EaseManager.evaluate(this._easeType, reversed ? (this._duration - tt) : tt, this._duration, this._easeOvershootOrAmplitude, this._easePeriod);
-                this._value.setZero();
-                this._deltaValue.setZero();
-                if (this._valueSize == 5) {
-                    if (this._ended == 0) {
-                        var r = this._startValue.w * (1 - this._normalizedTime);
-                        var rx = (Math.random() * 2 - 1) * r;
-                        var ry = (Math.random() * 2 - 1) * r;
-                        rx = rx > 0 ? Math.ceil(rx) : Math.floor(rx);
-                        ry = ry > 0 ? Math.ceil(ry) : Math.floor(ry);
-                        this._deltaValue.x = rx;
-                        this._deltaValue.y = ry;
-                        this._value.x = this._startValue.x + rx;
-                        this._value.y = this._startValue.y + ry;
-                    }
-                    else {
-                        this._value.x = this._startValue.x;
-                        this._value.y = this._startValue.y;
+            }
+            else if (tt >= this._duration) {
+                tt = this._duration;
+                this._ended = 1;
+            }
+            this._normalizedTime = fairygui.EaseManager.evaluate(this._easeType, reversed ? (this._duration - tt) : tt, this._duration, this._easeOvershootOrAmplitude, this._easePeriod);
+            this._value.setZero();
+            this._deltaValue.setZero();
+            if (this._valueSize == 5) {
+                if (this._ended == 0) {
+                    var r = this._startValue.w * (1 - this._normalizedTime);
+                    var rx = r * (Math.random() > 0.5 ? 1 : -1);
+                    var ry = r * (Math.random() > 0.5 ? 1 : -1);
+                    this._deltaValue.x = rx;
+                    this._deltaValue.y = ry;
+                    this._value.x = this._startValue.x + rx;
+                    this._value.y = this._startValue.y + ry;
+                }
+                else {
+                    this._value.x = this._startValue.x;
+                    this._value.y = this._startValue.y;
+                }
+            }
+            else {
+                for (var i = 0; i < this._valueSize; i++) {
+                    var n1 = this._startValue.getField(i);
+                    var n2 = this._endValue.getField(i);
+                    var f = n1 + (n2 - n1) * this._normalizedTime;
+                    if (this._snapping)
+                        f = Math.round(f);
+                    this._deltaValue.setField(i, f - this._value.getField(i));
+                    this._value.setField(i, f);
+                }
+            }
+            if (this._target != null && this._propType != null) {
+                if (this._propType instanceof Function) {
+                    switch (this._valueSize) {
+                        case 1:
+                            this._propType.call(this._target, this._value.x);
+                            break;
+                        case 2:
+                            this._propType.call(this._target, this._value.x, this._value.y);
+                            break;
+                        case 3:
+                            this._propType.call(this._target, this._value.x, this._value.y, this._value.z);
+                            break;
+                        case 4:
+                            this._propType.call(this._target, this._value.x, this._value.y, this._value.z, this._value.w);
+                            break;
+                        case 5:
+                            this._propType.call(this._target, this._value.color);
+                            break;
+                        case 6:
+                            this._propType.call(this._target, this._value.x, this._value.y);
+                            break;
                     }
                 }
                 else {
-                    for (var i = 0; i < this._valueSize; i++) {
-                        var n1 = this._startValue.getField(i);
-                        var n2 = this._endValue.getField(i);
-                        var f = n1 + (n2 - n1) * this._normalizedTime;
-                        if (this._snapping)
-                            f = Math.round(f);
-                        this._deltaValue.setField(i, f - this._value.getField(i));
-                        this._value.setField(i, f);
-                    }
+                    if (this._valueSize == 5)
+                        this._target[this._propType] = this._value.color;
+                    else
+                        this._target[this._propType] = this._value.x;
                 }
-                if (this._target != null && this._propType != null) {
-                    if (this._propType instanceof Function) {
-                        switch (this._valueSize) {
-                            case 1:
-                                this._propType.call(this._target, this._value.x);
-                                break;
-                            case 2:
-                                this._propType.call(this._target, this._value.x, this._value.y);
-                                break;
-                            case 3:
-                                this._propType.call(this._target, this._value.x, this._value.y, this._value.z);
-                                break;
-                            case 4:
-                                this._propType.call(this._target, this._value.x, this._value.y, this._value.z, this._value.w);
-                                break;
-                            case 5:
-                                this._propType.call(this._target, this._value.color);
-                                break;
-                            case 6:
-                                this._propType.call(this._target, this._value.x, this._value.y);
-                                break;
-                        }
-                    }
-                    else {
-                        if (this._valueSize == 5)
-                            this._target[this._propType] = this._value.color;
-                        else
-                            this._target[this._propType] = this._value.x;
-                    }
+            }
+            this.callUpdateCallback();
+        };
+        GTweener.prototype.callStartCallback = function () {
+            if (this._onStart != null) {
+                try {
+                    this._onStart.call(this._onStartCaller, this);
                 }
-                this.callUpdateCallback();
-            };
-            GTweener.prototype.callStartCallback = function () {
-                if (this._onStart != null) {
-                    try {
-                        this._onStart.call(this._onStartCaller, this);
-                    }
-                    catch (err) {
-                        console.log("FairyGUI: error in start callback > " + err);
-                    }
+                catch (err) {
+                    console.log("FairyGUI: error in start callback > " + err);
                 }
-            };
-            GTweener.prototype.callUpdateCallback = function () {
-                if (this._onUpdate != null) {
-                    try {
-                        this._onUpdate.call(this._onUpdateCaller, this);
-                    }
-                    catch (err) {
-                        console.log("FairyGUI: error in update callback > " + err);
-                    }
+            }
+        };
+        GTweener.prototype.callUpdateCallback = function () {
+            if (this._onUpdate != null) {
+                try {
+                    this._onUpdate.call(this._onUpdateCaller, this);
                 }
-            };
-            GTweener.prototype.callCompleteCallback = function () {
-                if (this._onComplete != null) {
-                    try {
-                        this._onComplete.call(this._onCompleteCaller, this);
-                    }
-                    catch (err) {
-                        console.log("FairyGUI: error in complete callback > " + err);
-                    }
+                catch (err) {
+                    console.log("FairyGUI: error in update callback > " + err);
                 }
-            };
-            return GTweener;
-        }());
-        tween.GTweener = GTweener;
-        __reflect(GTweener.prototype, "fairygui.tween.GTweener");
-    })(tween = fairygui.tween || (fairygui.tween = {}));
+            }
+        };
+        GTweener.prototype.callCompleteCallback = function () {
+            if (this._onComplete != null) {
+                try {
+                    this._onComplete.call(this._onCompleteCaller, this);
+                }
+                catch (err) {
+                    console.log("FairyGUI: error in complete callback > " + err);
+                }
+            }
+        };
+        return GTweener;
+    }());
+    fairygui.GTweener = GTweener;
+    __reflect(GTweener.prototype, "fairygui.GTweener");
 })(fairygui || (fairygui = {}));
 var fairygui;
 (function (fairygui) {
-    var tween;
-    (function (tween) {
-        var TweenManager = (function () {
-            function TweenManager() {
+    var TweenManager = (function () {
+        function TweenManager() {
+        }
+        TweenManager.createTween = function () {
+            if (!TweenManager._inited) {
+                egret.startTick(TweenManager.update, null);
+                TweenManager._inited = true;
+                TweenManager._lastTime = egret.getTimer();
             }
-            TweenManager.createTween = function () {
-                if (!TweenManager._inited) {
-                    egret.startTick(TweenManager.update, null);
-                    TweenManager._inited = true;
-                    TweenManager._lastTime = egret.getTimer();
-                }
-                var tweener;
-                var cnt = TweenManager._tweenerPool.length;
-                if (cnt > 0) {
-                    tweener = TweenManager._tweenerPool.pop();
-                }
-                else
-                    tweener = new tween.GTweener();
-                tweener._init();
-                TweenManager._activeTweens[TweenManager._totalActiveTweens++] = tweener;
-                if (TweenManager._totalActiveTweens == TweenManager._activeTweens.length)
-                    TweenManager._activeTweens.length = TweenManager._activeTweens.length + Math.ceil(TweenManager._activeTweens.length * 0.5);
-                return tweener;
-            };
-            TweenManager.isTweening = function (target, propType) {
-                if (target == null)
-                    return false;
-                var anyType = propType == null || propType == undefined;
-                for (var i = 0; i < TweenManager._totalActiveTweens; i++) {
-                    var tweener = TweenManager._activeTweens[i];
-                    if (tweener != null && tweener.target == target && !tweener._killed
-                        && (anyType || tweener._propType == propType))
-                        return true;
-                }
+            var tweener;
+            var cnt = TweenManager._tweenerPool.length;
+            if (cnt > 0) {
+                tweener = TweenManager._tweenerPool.pop();
+            }
+            else
+                tweener = new fairygui.GTweener();
+            tweener._init();
+            TweenManager._activeTweens[TweenManager._totalActiveTweens++] = tweener;
+            if (TweenManager._totalActiveTweens == TweenManager._activeTweens.length)
+                TweenManager._activeTweens.length = TweenManager._activeTweens.length + Math.ceil(TweenManager._activeTweens.length * 0.5);
+            return tweener;
+        };
+        TweenManager.isTweening = function (target, propType) {
+            if (target == null)
                 return false;
-            };
-            TweenManager.killTweens = function (target, completed, propType) {
-                if (target == null)
-                    return false;
-                var flag = false;
-                var cnt = TweenManager._totalActiveTweens;
-                var anyType = propType == null || propType == undefined;
-                for (var i = 0; i < cnt; i++) {
-                    var tweener = TweenManager._activeTweens[i];
-                    if (tweener != null && tweener.target == target && !tweener._killed
-                        && (anyType || tweener._propType == propType)) {
-                        tweener.kill(completed);
-                        flag = true;
-                    }
+            var anyType = propType == null || propType == undefined;
+            for (var i = 0; i < TweenManager._totalActiveTweens; i++) {
+                var tweener = TweenManager._activeTweens[i];
+                if (tweener != null && tweener.target == target && !tweener._killed
+                    && (anyType || tweener._propType == propType))
+                    return true;
+            }
+            return false;
+        };
+        TweenManager.killTweens = function (target, completed, propType) {
+            if (target == null)
+                return false;
+            var flag = false;
+            var cnt = TweenManager._totalActiveTweens;
+            var anyType = propType == null || propType == undefined;
+            for (var i = 0; i < cnt; i++) {
+                var tweener = TweenManager._activeTweens[i];
+                if (tweener != null && tweener.target == target && !tweener._killed
+                    && (anyType || tweener._propType == propType)) {
+                    tweener.kill(completed);
+                    flag = true;
                 }
-                return flag;
-            };
-            TweenManager.getTween = function (target, propType) {
-                if (target == null)
-                    return null;
-                var cnt = TweenManager._totalActiveTweens;
-                var anyType = propType == null || propType == undefined;
-                for (var i = 0; i < cnt; i++) {
-                    var tweener = TweenManager._activeTweens[i];
-                    if (tweener != null && tweener.target == target && !tweener._killed
-                        && (anyType || tweener._propType == propType)) {
-                        return tweener;
-                    }
-                }
+            }
+            return flag;
+        };
+        TweenManager.getTween = function (target, propType) {
+            if (target == null)
                 return null;
-            };
-            TweenManager.update = function (timestamp) {
-                var dt = timestamp - TweenManager._lastTime;
-                TweenManager._lastTime = timestamp;
-                if (dt > 125)
-                    dt = 125;
-                dt /= 1000;
-                var cnt = TweenManager._totalActiveTweens;
-                var freePosStart = -1;
-                var freePosCount = 0;
-                for (var i = 0; i < cnt; i++) {
-                    var tweener = TweenManager._activeTweens[i];
-                    if (tweener == null) {
-                        if (freePosStart == -1)
-                            freePosStart = i;
-                        freePosCount++;
-                    }
-                    else if (tweener._killed) {
-                        tweener._reset();
-                        TweenManager._tweenerPool.push(tweener);
+            var cnt = TweenManager._totalActiveTweens;
+            var anyType = propType == null || propType == undefined;
+            for (var i = 0; i < cnt; i++) {
+                var tweener = TweenManager._activeTweens[i];
+                if (tweener != null && tweener.target == target && !tweener._killed
+                    && (anyType || tweener._propType == propType)) {
+                    return tweener;
+                }
+            }
+            return null;
+        };
+        TweenManager.update = function (timestamp) {
+            var dt = timestamp - TweenManager._lastTime;
+            TweenManager._lastTime = timestamp;
+            if (dt > 125)
+                dt = 125;
+            dt /= 1000;
+            var cnt = TweenManager._totalActiveTweens;
+            var freePosStart = -1;
+            var freePosCount = 0;
+            for (var i = 0; i < cnt; i++) {
+                var tweener = TweenManager._activeTweens[i];
+                if (tweener == null) {
+                    if (freePosStart == -1)
+                        freePosStart = i;
+                    freePosCount++;
+                }
+                else if (tweener._killed) {
+                    tweener._reset();
+                    TweenManager._tweenerPool.push(tweener);
+                    TweenManager._activeTweens[i] = null;
+                    if (freePosStart == -1)
+                        freePosStart = i;
+                    freePosCount++;
+                }
+                else {
+                    if (!tweener._paused)
+                        tweener._update(dt);
+                    if (freePosStart != -1) {
+                        TweenManager._activeTweens[freePosStart] = tweener;
                         TweenManager._activeTweens[i] = null;
-                        if (freePosStart == -1)
-                            freePosStart = i;
-                        freePosCount++;
-                    }
-                    else {
-                        if (!tweener._paused)
-                            tweener._update(dt);
-                        if (freePosStart != -1) {
-                            TweenManager._activeTweens[freePosStart] = tweener;
-                            TweenManager._activeTweens[i] = null;
-                            freePosStart++;
-                        }
+                        freePosStart++;
                     }
                 }
-                if (freePosStart >= 0) {
-                    if (TweenManager._totalActiveTweens != cnt) {
-                        var j = cnt;
-                        cnt = TweenManager._totalActiveTweens - cnt;
-                        for (i = 0; i < cnt; i++)
-                            TweenManager._activeTweens[freePosStart++] = TweenManager._activeTweens[j++];
-                    }
-                    TweenManager._totalActiveTweens = freePosStart;
+            }
+            if (freePosStart >= 0) {
+                if (TweenManager._totalActiveTweens != cnt) {
+                    var j = cnt;
+                    cnt = TweenManager._totalActiveTweens - cnt;
+                    for (i = 0; i < cnt; i++)
+                        TweenManager._activeTweens[freePosStart++] = TweenManager._activeTweens[j++];
                 }
-                return false;
-            };
-            TweenManager._activeTweens = new Array(30);
-            TweenManager._tweenerPool = new Array();
-            TweenManager._totalActiveTweens = 0;
-            TweenManager._lastTime = 0;
-            TweenManager._inited = false;
-            return TweenManager;
-        }());
-        tween.TweenManager = TweenManager;
-        __reflect(TweenManager.prototype, "fairygui.tween.TweenManager");
-    })(tween = fairygui.tween || (fairygui.tween = {}));
+                TweenManager._totalActiveTweens = freePosStart;
+            }
+            return false;
+        };
+        TweenManager._activeTweens = new Array(30);
+        TweenManager._tweenerPool = new Array();
+        TweenManager._totalActiveTweens = 0;
+        TweenManager._lastTime = 0;
+        TweenManager._inited = false;
+        return TweenManager;
+    }());
+    fairygui.TweenManager = TweenManager;
+    __reflect(TweenManager.prototype, "fairygui.TweenManager");
 })(fairygui || (fairygui = {}));
 var fairygui;
 (function (fairygui) {
-    var tween;
-    (function (tween) {
-        var TweenValue = (function () {
-            function TweenValue() {
-                this.x = this.y = this.z = this.w = 0;
+    var TweenValue = (function () {
+        function TweenValue() {
+            this.x = this.y = this.z = this.w = 0;
+        }
+        Object.defineProperty(TweenValue.prototype, "color", {
+            get: function () {
+                return (this.w << 24) + (this.x << 16) + (this.y << 8) + this.z;
+            },
+            set: function (value) {
+                this.x = (value & 0xFF0000) >> 16;
+                this.y = (value & 0x00FF00) >> 8;
+                this.z = (value & 0x0000FF);
+                this.w = (value & 0xFF000000) >> 24;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        TweenValue.prototype.getField = function (index) {
+            switch (index) {
+                case 0:
+                    return this.x;
+                case 1:
+                    return this.y;
+                case 2:
+                    return this.z;
+                case 3:
+                    return this.w;
+                default:
+                    throw new Error("Index out of bounds: " + index);
             }
-            Object.defineProperty(TweenValue.prototype, "color", {
-                get: function () {
-                    return (this.w << 24) + (this.x << 16) + (this.y << 8) + this.z;
-                },
-                set: function (value) {
-                    this.x = (value & 0xFF0000) >> 16;
-                    this.y = (value & 0x00FF00) >> 8;
-                    this.z = (value & 0x0000FF);
-                    this.w = (value & 0xFF000000) >> 24;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            TweenValue.prototype.getField = function (index) {
-                switch (index) {
-                    case 0:
-                        return this.x;
-                    case 1:
-                        return this.y;
-                    case 2:
-                        return this.z;
-                    case 3:
-                        return this.w;
-                    default:
-                        throw new Error("Index out of bounds: " + index);
-                }
-            };
-            TweenValue.prototype.setField = function (index, value) {
-                switch (index) {
-                    case 0:
-                        this.x = value;
-                        break;
-                    case 1:
-                        this.y = value;
-                        break;
-                    case 2:
-                        this.z = value;
-                        break;
-                    case 3:
-                        this.w = value;
-                        break;
-                    default:
-                        throw new Error("Index out of bounds: " + index);
-                }
-            };
-            TweenValue.prototype.setZero = function () {
-                this.x = this.y = this.z = this.w = 0;
-            };
-            return TweenValue;
-        }());
-        tween.TweenValue = TweenValue;
-        __reflect(TweenValue.prototype, "fairygui.tween.TweenValue");
-    })(tween = fairygui.tween || (fairygui.tween = {}));
+        };
+        TweenValue.prototype.setField = function (index, value) {
+            switch (index) {
+                case 0:
+                    this.x = value;
+                    break;
+                case 1:
+                    this.y = value;
+                    break;
+                case 2:
+                    this.z = value;
+                    break;
+                case 3:
+                    this.w = value;
+                    break;
+                default:
+                    throw new Error("Index out of bounds: " + index);
+            }
+        };
+        TweenValue.prototype.setZero = function () {
+            this.x = this.y = this.z = this.w = 0;
+        };
+        return TweenValue;
+    }());
+    fairygui.TweenValue = TweenValue;
+    __reflect(TweenValue.prototype, "fairygui.TweenValue");
 })(fairygui || (fairygui = {}));
 var fairygui;
 (function (fairygui) {
@@ -6137,7 +6117,7 @@ var fairygui;
                 if (a || b) {
                     if (this._owner.checkGearController(0, this._controller))
                         this._displayLockToken = this._owner.addDisplayLock();
-                    this._tweener = fairygui.tween.GTween.to4(this._owner.width, this._owner.height, this._owner.scaleX, this._owner.scaleY, gv.width, gv.height, gv.scaleX, gv.scaleY, this.tweenTime)
+                    this._tweener = fairygui.GTween.to4(this._owner.width, this._owner.height, this._owner.scaleX, this._owner.scaleY, gv.width, gv.height, gv.scaleX, gv.scaleY, this.tweenTime)
                         .setDelay(this._tweenDelay)
                         .setEase(this._easeType)
                         .setUserData((a ? 1 : 0) + (b ? 2 : 0))
@@ -6252,7 +6232,7 @@ var fairygui;
                 if (this._owner.x != pt.x || this._owner.y != pt.y) {
                     if (this._owner.checkGearController(0, this._controller))
                         this._displayLockToken = this._owner.addDisplayLock();
-                    this._tweener = fairygui.tween.GTween.to2(this._owner.x, this._owner.y, pt.x, pt.y, this._tweenTime)
+                    this._tweener = fairygui.GTween.to2(this._owner.x, this._owner.y, pt.x, pt.y, this._tweenTime)
                         .setDelay(this._tweenDelay)
                         .setEase(this._easeType)
                         .setTarget(this)
@@ -6492,7 +6472,7 @@ var fairygui;
             if (delay == 0)
                 this.onDelayedPlay();
             else
-                fairygui.tween.GTween.delayedCall(delay).onComplete(this.onDelayedPlay, this);
+                fairygui.GTween.delayedCall(delay).onComplete(this.onDelayedPlay, this);
         };
         Transition.prototype.stop = function (setToComplete, processCallback) {
             if (setToComplete === void 0) { setToComplete = true; }
@@ -6508,7 +6488,7 @@ var fairygui;
             this._onComplete = null;
             this._onCompleteParam = null;
             this._onCompleteCaller = null;
-            fairygui.tween.GTween.kill(this); //delay start
+            fairygui.GTween.kill(this); //delay start
             var cnt = this._items.length;
             if (this._reversed) {
                 for (var i = cnt - 1; i >= 0; i--) {
@@ -6554,7 +6534,7 @@ var fairygui;
             if (!this._playing || this._paused == paused)
                 return;
             this._paused = paused;
-            var tweener = fairygui.tween.GTween.getTween(this);
+            var tweener = fairygui.GTween.getTween(this);
             if (tweener != null)
                 tweener.setPaused(paused);
             var cnt = this._items.length;
@@ -6580,7 +6560,7 @@ var fairygui;
         };
         Transition.prototype.dispose = function () {
             if (this._playing)
-                fairygui.tween.GTween.kill(this); //delay start
+                fairygui.GTween.kill(this); //delay start
             var cnt = this._items.length;
             for (var i = 0; i < cnt; i++) {
                 var item = this._items[i];
@@ -6868,17 +6848,17 @@ var fairygui;
                         case TransitionActionType.Size:
                         case TransitionActionType.Scale:
                         case TransitionActionType.Skew:
-                            item.tweener = fairygui.tween.GTween.to2(startValue.f1, startValue.f2, endValue.f1, endValue.f2, item.tweenConfig.duration);
+                            item.tweener = fairygui.GTween.to2(startValue.f1, startValue.f2, endValue.f1, endValue.f2, item.tweenConfig.duration);
                             break;
                         case TransitionActionType.Alpha:
                         case TransitionActionType.Rotation:
-                            item.tweener = fairygui.tween.GTween.to(startValue.f1, endValue.f1, item.tweenConfig.duration);
+                            item.tweener = fairygui.GTween.to(startValue.f1, endValue.f1, item.tweenConfig.duration);
                             break;
                         case TransitionActionType.Color:
-                            item.tweener = fairygui.tween.GTween.toColor(startValue.f1, endValue.f1, item.tweenConfig.duration);
+                            item.tweener = fairygui.GTween.toColor(startValue.f1, endValue.f1, item.tweenConfig.duration);
                             break;
                         case TransitionActionType.ColorFilter:
-                            item.tweener = fairygui.tween.GTween.to4(startValue.f1, startValue.f2, startValue.f3, startValue.f4, endValue.f1, endValue.f2, endValue.f3, endValue.f4, item.tweenConfig.duration);
+                            item.tweener = fairygui.GTween.to4(startValue.f1, startValue.f2, startValue.f3, startValue.f4, endValue.f1, endValue.f2, endValue.f3, endValue.f4, item.tweenConfig.duration);
                             break;
                     }
                     item.tweener.setDelay(time)
@@ -6901,7 +6881,7 @@ var fairygui;
                     time = item.time;
                 item.value.offsetX = item.value.offsetY = 0;
                 item.value.lastOffsetX = item.value.lastOffsetY = 0;
-                item.tweener = fairygui.tween.GTween.shake(0, 0, item.value.amplitude, item.value.duration)
+                item.tweener = fairygui.GTween.shake(0, 0, item.value.amplitude, item.value.duration)
                     .setDelay(time)
                     .setTimeScale(this._timeScale)
                     .setTarget(item)
@@ -6922,7 +6902,7 @@ var fairygui;
                 }
                 else if (this._endTime == -1 || time <= this._endTime) {
                     this._totalTasks++;
-                    item.tweener = fairygui.tween.GTween.delayedCall(time)
+                    item.tweener = fairygui.GTween.delayedCall(time)
                         .setTimeScale(this._timeScale)
                         .setTarget(item)
                         .onComplete(this.onDelayedPlayItem, this);
@@ -7265,7 +7245,7 @@ var fairygui;
                         this._totalDuration = item.time + item.tweenConfig.duration;
                     str = cxml.attributes.ease;
                     if (str)
-                        item.tweenConfig.easeType = fairygui.tween.EaseType.parseEaseType(str);
+                        item.tweenConfig.easeType = fairygui.EaseType.parseEaseType(str);
                     str = cxml.attributes.repeat;
                     if (str)
                         item.tweenConfig.repeat = parseInt(str);
@@ -7489,7 +7469,7 @@ var fairygui;
             this.duration = 0;
             this.repeat = 0;
             this.yoyo = false;
-            this.easeType = fairygui.tween.EaseType.QuadOut;
+            this.easeType = fairygui.EaseType.QuadOut;
             this.startValue = new TValue();
             this.endValue = new TValue();
         }
@@ -8581,7 +8561,7 @@ var fairygui;
                 if (a || b) {
                     if (this._owner.checkGearController(0, this._controller))
                         this._displayLockToken = this._owner.addDisplayLock();
-                    this._tweener = fairygui.tween.GTween.to2(this._owner.alpha, this._owner.rotation, gv.alpha, gv.rotation, this._tweenTime)
+                    this._tweener = fairygui.GTween.to2(this._owner.alpha, this._owner.rotation, gv.alpha, gv.rotation, this._tweenTime)
                         .setDelay(this._tweenDelay)
                         .setEase(this._easeType)
                         .setUserData((a ? 1 : 0) + (b ? 2 : 0))
@@ -12359,7 +12339,7 @@ var fairygui;
             },
             set: function (value) {
                 if (this._tweening) {
-                    fairygui.tween.GTween.kill(this, true, this.update);
+                    fairygui.GTween.kill(this, true, this.update);
                     this._tweening = false;
                 }
                 if (this._value != value) {
@@ -12373,13 +12353,13 @@ var fairygui;
         GProgressBar.prototype.tweenValue = function (value, duration) {
             if (this._value != value) {
                 if (this._tweening) {
-                    fairygui.tween.GTween.kill(this, false, this.update);
+                    fairygui.GTween.kill(this, false, this.update);
                     this._tweening = false;
                 }
                 var oldValule = this._value;
                 this._value = value;
                 this._tweening = true;
-                return fairygui.tween.GTween.to(oldValule, this._value, duration).setTarget(this, this.update).setEase(fairygui.tween.EaseType.Linear)
+                return fairygui.GTween.to(oldValule, this._value, duration).setTarget(this, this.update).setEase(fairygui.EaseType.Linear)
                     .onComplete(function () { this._tweening = false; }, this);
             }
             else
@@ -12467,7 +12447,7 @@ var fairygui;
         };
         GProgressBar.prototype.dispose = function () {
             if (this._tweening)
-                fairygui.tween.GTween.kill(this);
+                fairygui.GTween.kill(this);
             _super.prototype.dispose.call(this);
         };
         return GProgressBar;
