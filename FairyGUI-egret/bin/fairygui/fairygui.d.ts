@@ -347,7 +347,6 @@ declare module fairygui {
     function parseScrollType(value: string): ScrollType;
     function parseFlipType(value: string): FlipType;
     function parseChildrenRenderOrder(value: string): ChildrenRenderOrder;
-    function parseEaseType(value: string): Function;
     function parseGroupLayoutType(value: string): GroupLayoutType;
 }
 declare module fairygui {

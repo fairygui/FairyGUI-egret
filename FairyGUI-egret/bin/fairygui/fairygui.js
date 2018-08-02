@@ -1860,46 +1860,6 @@ var fairygui;
         }
     }
     fairygui.parseChildrenRenderOrder = parseChildrenRenderOrder;
-    var EaseMap = {
-        "Linear": egret.Ease.getPowIn(1),
-        "Elastic.In": egret.Ease.elasticIn,
-        "Elastic.Out": egret.Ease.elasticOut,
-        "Elastic.InOut": egret.Ease.elasticInOut,
-        "Quad.In": egret.Ease.quadIn,
-        "Quad.Out": egret.Ease.quadOut,
-        "Quad.InOut": egret.Ease.quadInOut,
-        "Cube.In": egret.Ease.cubicIn,
-        "Cube.Out": egret.Ease.cubicOut,
-        "Cube.InOut": egret.Ease.cubicInOut,
-        "Quart.In": egret.Ease.quartIn,
-        "Quart.Out": egret.Ease.quartOut,
-        "Quart.InOut": egret.Ease.quartInOut,
-        "Quint.In": egret.Ease.quintIn,
-        "Quint.Out": egret.Ease.quintOut,
-        "Quint.InOut": egret.Ease.quintInOut,
-        "Sine.In": egret.Ease.sineIn,
-        "Sine.Out": egret.Ease.sineOut,
-        "Sine.InOut": egret.Ease.sineInOut,
-        "Bounce.In": egret.Ease.bounceIn,
-        "Bounce.Out": egret.Ease.bounceOut,
-        "Bounce.InOut": egret.Ease.bounceInOut,
-        "Circ.In": egret.Ease.circIn,
-        "Circ.Out": egret.Ease.circOut,
-        "Circ.InOut": egret.Ease.circInOut,
-        "Expo.In": egret.Ease.quartIn,
-        "Expo.Out": egret.Ease.quartOut,
-        "Expo.InOut": egret.Ease.quartInOut,
-        "Back.In": egret.Ease.backIn,
-        "Back.Out": egret.Ease.backOut,
-        "Back.InOut": egret.Ease.backInOut
-    };
-    function parseEaseType(value) {
-        var ret = EaseMap[value];
-        if (!ret)
-            ret = egret.Ease.quartOut;
-        return ret;
-    }
-    fairygui.parseEaseType = parseEaseType;
     function parseGroupLayoutType(value) {
         switch (value) {
             case "hz":
