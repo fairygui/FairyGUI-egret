@@ -201,7 +201,7 @@ module fairygui {
                     else if (this._repeat >= 0)
                         this._elapsedTime = this._delay + this._duration * (this._repeat + 1);
                     else
-                        this._elapsedTime = this._delay + this._duration * 3;
+                        this._elapsedTime = this._delay + this._duration * 2;
                     this.update();
                 }
 

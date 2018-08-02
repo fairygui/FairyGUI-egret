@@ -11,7 +11,6 @@ module fairygui {
 
         public static deltaTime: number = 0;
         public static time: number = 0;
-        public static workCount: number = 0;
 
         public static inst: GTimers = new GTimers();
 
@@ -92,10 +91,10 @@ module fairygui {
 
         private __timer(timeStamp: number): boolean {
             GTimers.time = timeStamp;
-            GTimers.workCount++;
-
             GTimers.deltaTime = timeStamp - this._lastTime;
             this._lastTime = timeStamp;
+            if (GTimers.deltaTime > 100)
+                GTimers.deltaTime = 100;
 
             this._enumI = 0;
             this._enumCount = this._items.length;

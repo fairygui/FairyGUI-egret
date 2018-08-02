@@ -1656,7 +1656,6 @@ declare module fairygui {
         private _lastTime;
         static deltaTime: number;
         static time: number;
-        static workCount: number;
         static inst: GTimers;
         private static FPS24;
         constructor();

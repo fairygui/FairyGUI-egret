@@ -5568,7 +5568,7 @@ var fairygui;
                     else if (this._repeat >= 0)
                         this._elapsedTime = this._delay + this._duration * (this._repeat + 1);
                     else
-                        this._elapsedTime = this._delay + this._duration * 3;
+                        this._elapsedTime = this._delay + this._duration * 2;
                     this.update();
                 }
                 this.callCompleteCallback();
@@ -5876,8 +5876,8 @@ var fairygui;
         TweenManager.update = function (timestamp) {
             var dt = timestamp - TweenManager._lastTime;
             TweenManager._lastTime = timestamp;
-            if (dt > 125)
-                dt = 125;
+            if (dt > 100)
+                dt = 100;
             dt /= 1000;
             var cnt = TweenManager._totalActiveTweens;
             var freePosStart = -1;
@@ -13019,9 +13019,10 @@ var fairygui;
         };
         GTimers.prototype.__timer = function (timeStamp) {
             GTimers.time = timeStamp;
-            GTimers.workCount++;
             GTimers.deltaTime = timeStamp - this._lastTime;
             this._lastTime = timeStamp;
+            if (GTimers.deltaTime > 100)
+                GTimers.deltaTime = 100;
             this._enumI = 0;
             this._enumCount = this._items.length;
             while (this._enumI < this._enumCount) {
@@ -13047,7 +13048,6 @@ var fairygui;
         };
         GTimers.deltaTime = 0;
         GTimers.time = 0;
-        GTimers.workCount = 0;
         GTimers.inst = new GTimers();
         GTimers.FPS24 = 1000 / 24;
         return GTimers;

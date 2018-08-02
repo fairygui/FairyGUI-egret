@@ -84,8 +84,8 @@ module fairygui {
             var dt: number = timestamp - TweenManager._lastTime;
             TweenManager._lastTime = timestamp;
 
-            if (dt > 125)
-                dt = 125;
+            if (dt > 100)
+                dt = 100;
             dt /= 1000;
 
             var cnt: number = TweenManager._totalActiveTweens;
