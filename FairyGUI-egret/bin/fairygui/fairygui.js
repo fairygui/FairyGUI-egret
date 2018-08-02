@@ -7099,7 +7099,7 @@ var fairygui;
                     item.target.setScale(item.value.f1, item.value.f2);
                     break;
                 case TransitionActionType.Skew:
-                    //todo
+                    item.target.setSkew(item.value.f1, item.value.f2);
                     break;
                 case TransitionActionType.Color:
                     (item.target).color = item.value.f1;

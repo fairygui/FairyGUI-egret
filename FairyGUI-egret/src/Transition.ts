@@ -888,7 +888,7 @@ module fairygui {
                     break;
 
                 case TransitionActionType.Skew:
-                    //todo
+                    item.target.setSkew(item.value.f1, item.value.f2);
                     break;
 
                 case TransitionActionType.Color:
