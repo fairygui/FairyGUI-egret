@@ -7218,6 +7218,7 @@ var fairygui;
                     }
                     else {
                         this.decodeValue(item, cxml.attributes.startValue, item.value);
+                        item.tweenConfig = null;
                     }
                 }
                 else {
