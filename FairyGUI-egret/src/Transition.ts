@@ -485,9 +485,10 @@ module fairygui {
             var cnt: number = this._items.length;
             var item: TransitionItem;
             var needSkipAnimations: boolean = false;
+            var i: number;
 
             if (!this._reversed) {
-                for (var i: number = 0; i < cnt; i++) {
+                for (i = 0; i < cnt; i++) {
                     item = this._items[i];
                     if (item.target == null)
                         continue;
@@ -501,7 +502,7 @@ module fairygui {
                 }
             }
             else {
-                for (i = 0; i < cnt; i++) {
+                for (i = cnt - 1; i >= 0; i--) {
                     item = this._items[i];
                     if (item.target == null)
                         continue;

@@ -5836,8 +5836,6 @@ var fairygui;
         TweenManager.update = function (timestamp) {
             var dt = timestamp - TweenManager._lastTime;
             TweenManager._lastTime = timestamp;
-            if (dt > 100)
-                dt = 100;
             dt /= 1000;
             var cnt = TweenManager._totalActiveTweens;
             var freePosStart = -1;
@@ -6759,8 +6757,9 @@ var fairygui;
             var cnt = this._items.length;
             var item;
             var needSkipAnimations = false;
+            var i;
             if (!this._reversed) {
-                for (var i = 0; i < cnt; i++) {
+                for (i = 0; i < cnt; i++) {
                     item = this._items[i];
                     if (item.target == null)
                         continue;
@@ -6773,7 +6772,7 @@ var fairygui;
                 }
             }
             else {
-                for (i = 0; i < cnt; i++) {
+                for (i = cnt - 1; i >= 0; i--) {
                     item = this._items[i];
                     if (item.target == null)
                         continue;
@@ -12982,8 +12981,6 @@ var fairygui;
             GTimers.time = timeStamp;
             GTimers.deltaTime = timeStamp - this._lastTime;
             this._lastTime = timeStamp;
-            if (GTimers.deltaTime > 100)
-                GTimers.deltaTime = 100;
             this._enumI = 0;
             this._enumCount = this._items.length;
             while (this._enumI < this._enumCount) {

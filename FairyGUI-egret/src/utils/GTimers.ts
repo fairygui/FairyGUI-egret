@@ -93,9 +93,7 @@ module fairygui {
             GTimers.time = timeStamp;
             GTimers.deltaTime = timeStamp - this._lastTime;
             this._lastTime = timeStamp;
-            if (GTimers.deltaTime > 100)
-                GTimers.deltaTime = 100;
-
+            
             this._enumI = 0;
             this._enumCount = this._items.length;
 
