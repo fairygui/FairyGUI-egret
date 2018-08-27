@@ -5335,7 +5335,7 @@ var fairygui;
             if (propType === void 0) { propType = null; }
             return fairygui.TweenManager.getTween(target, propType);
         };
-        GTween.safeMode = true;
+        GTween.catchCallbackExceptions = true;
         return GTween;
     }());
     fairygui.GTween = GTween;
@@ -7543,13 +7543,18 @@ var fairygui;
             _this._reversed = false;
             _this._repeatedCount = 0;
             //comment out below line before 5.1.0
-            _this.$renderNode = new egret.sys.NormalBitmapNode();
+            if (!egret.nativeRender) {
+                _this.$renderNode = new egret.sys.NormalBitmapNode();
+            }
             //comment out below line after 5.1.0
             //this.$renderNode = new egret.sys.BitmapNode();
             _this.touchEnabled = false;
             _this.setPlaySettings();
             return _this;
         }
+        MovieClip.prototype.createNativeDisplayObject = function () {
+            this.$nativeDisplayObject = new egret_native.NativeDisplayObject(11 /* BITMAP_TEXT */);
+        };
         Object.defineProperty(MovieClip.prototype, "frames", {
             get: function () {
                 return this._frames;
