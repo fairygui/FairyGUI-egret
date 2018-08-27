@@ -802,7 +802,7 @@ declare module fairygui {
 }
 declare module fairygui {
     class GTween {
-        static safeMode: boolean;
+        static catchCallbackExceptions: boolean;
         static to(start: number, end: number, duration: number): GTweener;
         static to2(start: number, start2: number, end: number, end2: number, duration: number): GTweener;
         static to3(start: number, start2: number, start3: number, end: number, end2: number, end3: number, duration: number): GTweener;
@@ -1132,6 +1132,7 @@ declare module fairygui {
         private _reversed;
         private _repeatedCount;
         constructor();
+        protected createNativeDisplayObject(): void;
         frames: Array<Frame>;
         readonly frameCount: number;
         frame: number;

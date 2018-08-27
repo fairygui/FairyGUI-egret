@@ -32,13 +32,19 @@ module fairygui {
             super();
 
             //comment out below line before 5.1.0
-            this.$renderNode = new egret.sys.NormalBitmapNode();
+             if (!egret.nativeRender) {
+                this.$renderNode = new egret.sys.NormalBitmapNode();
+             }
             //comment out below line after 5.1.0
             //this.$renderNode = new egret.sys.BitmapNode();
 
             this.touchEnabled = false;
 
             this.setPlaySettings();
+        }
+
+        protected createNativeDisplayObject(): void {
+            this.$nativeDisplayObject = new egret_native.NativeDisplayObject(egret_native.NativeObjectType.BITMAP_TEXT);
         }
 
         public get frames(): Array<Frame> {

@@ -1,6 +1,6 @@
 module fairygui {
     export class GTween {
-        public static safeMode: boolean = true;
+        public static catchCallbackExceptions: boolean = true;
 
         public static to(start: number, end: number, duration: number): GTweener {
             return TweenManager.createTween()._to(start, end, duration);
