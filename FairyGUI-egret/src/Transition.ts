@@ -398,8 +398,8 @@ module fairygui {
         }
 
         public set timeScale(value: number) {
-            this._timeScale = value;
             if (this._timeScale != value) {
+                this._timeScale = value;
                 if (this._playing) {
                     var cnt: number = this._items.length;
                     for (var i: number = 0; i < cnt; i++) {
