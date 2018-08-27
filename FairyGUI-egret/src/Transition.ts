@@ -366,8 +366,10 @@ module fairygui {
             var cnt: number = this._items.length;
             for (var i: number = 0; i < cnt; i++) {
                 var item: TransitionItem = this._items[i];
-                if (item.label == label)
+                if (item.label == label) {
                     item.targetId = newTarget.id;
+                    item.target = null;
+                }
             }
         }
 

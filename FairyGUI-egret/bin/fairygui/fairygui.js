@@ -6648,8 +6648,10 @@ var fairygui;
             var cnt = this._items.length;
             for (var i = 0; i < cnt; i++) {
                 var item = this._items[i];
-                if (item.label == label)
+                if (item.label == label) {
                     item.targetId = newTarget.id;
+                    item.target = null;
+                }
             }
         };
         Transition.prototype.setDuration = function (label, value) {
@@ -6676,8 +6678,8 @@ var fairygui;
                 return this._timeScale;
             },
             set: function (value) {
-                this._timeScale = value;
                 if (this._timeScale != value) {
+                    this._timeScale = value;
                     if (this._playing) {
                         var cnt = this._items.length;
                         for (var i = 0; i < cnt; i++) {
