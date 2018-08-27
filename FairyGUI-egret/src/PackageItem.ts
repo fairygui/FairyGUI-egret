@@ -5,12 +5,14 @@ module fairygui {
         public owner: UIPackage;
 
         public type: PackageItemType;
+        public objectType: ObjectType;
         public id: string;
         public name: string;
         public width: number = 0;
         public height: number = 0;
         public file: string;
         public decoded: boolean;
+        public rawData: ByteBuffer;
 
         //image
         public scale9Grid: egret.Rectangle;
@@ -18,6 +20,7 @@ module fairygui {
         public tileGridIndice: number = 0;
         public smoothing: boolean;
         public texture: egret.Texture;
+        //public pixelHitTestData: PixelHitTestData;
 
         //movieclip
         public interval: number = 0;
@@ -26,8 +29,6 @@ module fairygui {
         public frames: Array<Frame>;
 
         //componenet
-        public componentData: any;
-        public displayList: Array<DisplayListItem>;
         public extensionType: any;
 
         //sound

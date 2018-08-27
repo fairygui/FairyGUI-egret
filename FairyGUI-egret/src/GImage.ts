@@ -131,17 +131,14 @@ module fairygui {
             this._content.height = this.height;
         }
 
-        public setup_beforeAdd(xml: any): void {
-            super.setup_beforeAdd(xml);
+        public setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void {
+            super.setup_beforeAdd(buffer, beginPos);
 
-            var str: string;
-            str = xml.attributes.color;
-            if (str)
-                this.color = ToolSet.convertFromHtmlColor(str);
+            buffer.seek(beginPos, 5);
 
-            str = xml.attributes.flip;
-            if (str)
-                this.flip = parseFlipType(str);
+            if (buffer.readBool())
+                this.color = buffer.readColor();
+            this.flip = buffer.readByte();
         }
     }
 }

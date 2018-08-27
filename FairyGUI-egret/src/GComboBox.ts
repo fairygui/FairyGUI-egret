@@ -16,7 +16,7 @@ module fairygui {
         private _itemsUpdated: boolean;
         private _selectedIndex: number = 0;
         private _buttonController: Controller;
-        private _popupDownward: any = true;
+        private _popupDirection: number = PopupDirection.Auto;
         private _selectionController: Controller;
 
         private _over: boolean;
@@ -57,24 +57,32 @@ module fairygui {
             this.updateGear(7);
         }
 
-        public get titleColor(): number {
-            if (this._titleObject instanceof GTextField)
-                return (<GTextField>this._titleObject).color;
-            else if (this._titleObject instanceof GLabel)
-                return (<GLabel>this._titleObject).titleColor;
-            else if (this._titleObject instanceof GButton)
-                return (<GButton>this._titleObject).titleColor;
+public get titleColor(): number {
+            var tf:GTextField = this.getTextField();
+            if (tf!=null)
+                return tf.color;
             else
                 return 0;
         }
 
         public set titleColor(value: number) {
-            if (this._titleObject instanceof GTextField)
-                (<GTextField>this._titleObject).color = value;
-            else if (this._titleObject instanceof GLabel)
-                (<GLabel>this._titleObject).titleColor = value;
-            else if (this._titleObject instanceof GButton)
-                (<GButton>this._titleObject).titleColor = value;
+            var tf:GTextField = this.getTextField();
+            if (tf!=null)
+                tf.color = value;
+        }
+
+        public get titleFontSize(): number {
+            var tf:GTextField = this.getTextField();
+            if (tf!=null)
+                return tf.fontSize;
+            else
+                return 0;
+        }
+
+        public set titleFontSize(value: number) {
+            var tf:GTextField = this.getTextField();
+            if (tf!=null)
+                tf.fontSize = value;
         }
 
         public get visibleItemCount(): number {
@@ -85,12 +93,12 @@ module fairygui {
             this._visibleItemCount = value;
         }
 
-        public get popupDownward(): any {
-            return this._popupDownward;
+        public get popupDirection(): PopupDirection {
+            return this._popupDirection;
         }
 
-        public set popupDownward(value: any) {
-            this._popupDownward = value;
+        public set popupDirection(value: PopupDirection) {
+            this._popupDirection = value;
         }
 
         public get items(): Array<string> {
@@ -181,23 +189,31 @@ module fairygui {
             this._selectionController = value;
         }
 
+        public getTextField():GTextField
+		{
+			 if (this._titleObject instanceof GTextField)
+				return (<GTextField>this._titleObject);
+			else if (this._titleObject instanceof GLabel)
+				return (<GLabel>this._titleObject).getTextField();
+			else if (this._titleObject instanceof GButton)
+				return (<GButton>this._titleObject).getTextField();
+			else
+				return null;
+		}
+
         protected setState(val: string): void {
             if (this._buttonController)
                 this._buttonController.selectedPage = val;
         }
 
-        protected constructFromXML(xml: any): void {
-            super.constructFromXML(xml);
-
-            xml = ToolSet.findChildNode(xml, "ComboBox");
-
+        protected constructExtension(buffer: ByteBuffer): void {
             var str: string;
 
             this._buttonController = this.getController("button");
             this._titleObject = this.getChild("title");
             this._iconObject = this.getChild("icon");
 
-            str = xml.attributes.dropdown;
+            str = buffer.readS();
             if (str) {
                 this.dropdown = <GComponent><any>(UIPackage.createObjectFromURL(str));
                 if (!this.dropdown) {
@@ -256,65 +272,62 @@ module fairygui {
             super.dispose();
         }
 
-        public setup_afterAdd(xml: any): void {
-            super.setup_afterAdd(xml);
+        public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
+            super.setup_afterAdd(buffer, beginPos);
 
-            xml = ToolSet.findChildNode(xml, "ComboBox");
-            if (xml) {
-                var str: string;
-                str = xml.attributes.titleColor;
-                if (str)
-                    this.titleColor = ToolSet.convertFromHtmlColor(str);
-                str = xml.attributes.visibleItemCount;
-                if (str)
-                    this._visibleItemCount = parseInt(str);
+            if (!buffer.seek(beginPos, 6))
+                return;
 
-                var col: any = xml.children;
-                if (col) {
-                    var length: number = col.length;
-                    for (var i: number = 0; i < length; i++) {
-                        var cxml: any = col[i];
-                        if (cxml.name == "item") {
-                            this._items.push(<string><any>(cxml.attributes.title));
-                            this._values.push(<string><any>(cxml.attributes.value));
-                            str = cxml.attributes.icon;
-                            if (str) {
-                                if (!this._icons)
-                                    this._icons = new Array<string>(length);
-                                this._icons[i] = str;
-                            }
-                        }
-                    }
+            if (buffer.readByte() != this.packageItem.objectType)
+                return;
+
+            var i: number;
+            var iv: number;
+            var nextPos: number;
+            var str: string;
+            var itemCount: number = buffer.readShort();
+            for (i = 0; i < itemCount; i++) {
+                nextPos = buffer.readShort();
+                nextPos += buffer.position;
+
+                this._items[i] = buffer.readS();
+                this._values[i] = buffer.readS();
+                str = buffer.readS();
+                if (str != null) {
+                    if (this._icons == null)
+                        this._icons = new Array<string>();
+                    this._icons[i] = str;
                 }
 
-                str = xml.attributes.title;
-                if (str) {
-                    this.text = str;
-                    this._selectedIndex = this._items.indexOf(str);
-                }
-                else if (this._items.length > 0) {
-                    this._selectedIndex = 0;
-                    this.text = this._items[0];
-                }
-                else
-                    this._selectedIndex = -1;
-
-                str = xml.attributes.icon;
-                if (str)
-                    this.icon = str;
-
-                str = xml.attributes.direction;
-                if (str) {
-                    if (str == "up")
-                        this._popupDownward = false;
-                    else if (str == "auto")
-                        this._popupDownward = null;
-                }
-
-                str = xml.attributes.selectionController;
-                if (str)
-                    this._selectionController = this.parent.getController(str);
+                buffer.position = nextPos;
             }
+
+            str = buffer.readS();
+            if (str != null) {
+                this.text = str;
+                this._selectedIndex = this._items.indexOf(str);
+            }
+            else if (this._items.length > 0) {
+                this._selectedIndex = 0;
+                this.text = this._items[0];
+            }
+            else
+                this._selectedIndex = -1;
+
+            str = buffer.readS();
+            if (str != null)
+                this.icon = str;
+
+            if (buffer.readBool())
+                this.titleColor = buffer.readColor();
+            iv = buffer.readInt();
+            if (iv > 0)
+                this._visibleItemCount = iv;
+            this._popupDirection = buffer.readByte();
+
+            iv = buffer.readShort();
+            if (iv >= 0)
+                this._selectionController = this.parent.getControllerAt(iv);
         }
 
         protected showDropdown(): void {
@@ -334,7 +347,13 @@ module fairygui {
             this._list.selectedIndex = -1;
             this.dropdown.width = this.width;
 
-            this.root.togglePopup(this.dropdown, this, this._popupDownward);
+            var downward: any = null;
+            if (this._popupDirection == PopupDirection.Down)
+                downward = true;
+            else if (this._popupDirection == PopupDirection.Up)
+                downward = false;
+
+            this.root.togglePopup(this.dropdown, this, downward);
             if (this.dropdown.parent)
                 this.setState(GButton.DOWN);
         }

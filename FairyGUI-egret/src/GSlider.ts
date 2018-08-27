@@ -108,17 +108,11 @@ module fairygui {
             }
         }
 
-        protected constructFromXML(xml: any): void {
-            super.constructFromXML(xml);
+        protected constructExtension(buffer: ByteBuffer): void {
+            buffer.seek(0, 6);
 
-            xml = ToolSet.findChildNode(xml, "Slider");
-
-            var str: string;
-            str = xml.attributes.titleType;
-            if (str)
-                this._titleType = parseProgressTitleType(str);
-
-            this._reverse = xml.attributes.reverse == "true";
+            this._titleType = buffer.readByte();
+            this._reverse = buffer.readBool();
 
             this._titleObject = <GTextField><any>(this.getChild("title"));
             this._barObjectH = this.getChild("bar");
@@ -153,14 +147,21 @@ module fairygui {
                 this.update();
         }
 
-        public setup_afterAdd(xml: any): void {
-            super.setup_afterAdd(xml);
+        public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
+            super.setup_afterAdd(buffer, beginPos);
 
-            xml = ToolSet.findChildNode(xml, "Slider");
-            if (xml) {
-                this._value = parseInt(xml.attributes.value);
-                this._max = parseInt(xml.attributes.max);
+            if (!buffer.seek(beginPos, 6)) {
+                this.update();
+                return;
             }
+
+            if (buffer.readByte() != this.packageItem.objectType) {
+                this.update();
+                return;
+            }
+
+            this._value = buffer.readInt();
+            this._max = buffer.readInt();
 
             this.update();
         }

@@ -8,34 +8,6 @@ module fairygui {
         public handling: GObject;
         public sizeDirty: boolean;
 
-        private static RELATION_NAMES: Array<string> =
-        [
-            "left-left",//0
-            "left-center",
-            "left-right",
-            "center-center",
-            "right-left",
-            "right-center",
-            "right-right",
-            "top-top",//7
-            "top-middle",
-            "top-bottom",
-            "middle-middle",
-            "bottom-top",
-            "bottom-middle",
-            "bottom-bottom",
-            "width-width",//14
-            "height-height",//15
-            "leftext-left",//16
-            "leftext-right",
-            "rightext-left",
-            "rightext-right",
-            "topext-top",//20
-            "topext-bottom",
-            "bottomext-top",
-            "bottomext-bottom"//23
-        ];
-
         public constructor(owner: GObject) {
             this._owner = owner;
             this._items = new Array<RelationItem>();
@@ -54,35 +26,6 @@ module fairygui {
             newItem.target = target;
             newItem.add(relationType, usePercent);
             this._items.push(newItem);
-        }
-
-        public addItems(target: GObject, sidePairs: string): void {
-            var arr: string[] = sidePairs.split(",");
-            var s: string;
-            var usePercent: boolean;
-            var i: number;
-
-            for (i = 0; i < 2; i++) {
-                s = arr[i];
-                if (!s)
-                    continue;
-
-                if (s.charAt(s.length - 1) == "%") {
-                    s = s.substr(0, s.length - 1);
-                    usePercent = true;
-                }
-                else
-                    usePercent = false;
-                var j: number = s.indexOf("-");
-                if (j == -1)
-                    s = s + "-" + s;
-
-                var t: number = Relations.RELATION_NAMES.indexOf(s);
-                if (t == -1)
-                    throw "invalid relation type";
-
-                this.add(target, t, usePercent);
-            }
         }
 
         public remove(target: GObject, relationType: number = 0): void {
@@ -183,30 +126,27 @@ module fairygui {
             return this._items.length == 0;
         }
 
-        public setup(xml: any): void {
-            var col: any = xml.children;
-            if (col) {
-                var targetId: string;
-                var target: GObject;
-                var length: number = col.length;
-                for (var i: number = 0; i < length; i++) {
-                    var cxml: any = col[i];
-                    if (cxml.name != "relation")
-                        continue;
+        public setup(buffer: ByteBuffer, parentToChild: boolean): void {
+            var cnt: number = buffer.readByte();
+            var target: GObject;
+            for (var i: number = 0; i < cnt; i++) {
+                var targetIndex: number = buffer.readShort();
+                if (targetIndex == -1)
+                    target = this._owner.parent;
+                else if (parentToChild)
+                    target = (<GComponent>this._owner).getChildAt(targetIndex);
+                else
+                    target = this._owner.parent.getChildAt(targetIndex);
 
-                    targetId = cxml.attributes.target;
-                    if (this._owner.parent) {
-                        if (targetId)
-                            target = this._owner.parent.getChildById(targetId);
-                        else
-                            target = this._owner.parent;
-                    }
-                    else {
-                        //call from component construction
-                        target = (<GComponent><any>(this._owner)).getChildById(targetId);
-                    }
-                    if (target)
-                        this.addItems(target, cxml.attributes.sidePair);
+                var newItem: RelationItem = new RelationItem(this._owner);
+                newItem.target = target;
+                this._items.push(newItem);
+
+                var cnt2: number = buffer.readByte();
+                for (var j: number = 0; j < cnt2; j++) {
+                    var rt: number = buffer.readByte();
+                    var usePercent: boolean = buffer.readBool();
+                    newItem.internalAdd(rt, usePercent);
                 }
             }
         }

@@ -4,7 +4,6 @@ module fairygui {
     export class GearLook extends GearBase {
         private _storage: any;
         private _default: GearLookValue;
-        private _tweener: GTweener;
 
         public constructor(owner: GObject) {
             super(owner);
@@ -15,11 +14,7 @@ module fairygui {
             this._storage = {};
         }
 
-        protected addStatus(pageId: string, value: string): void {
-            if (value == "-" || value.length == 0)
-                return;
-
-            var arr: string[] = value.split(",");
+        protected addStatus(pageId: string, buffer: ByteBuffer): void {
             var gv: GearLookValue;
             if (pageId == null)
                 gv = this._default;
@@ -27,13 +22,10 @@ module fairygui {
                 gv = new GearLookValue();
                 this._storage[pageId] = gv;
             }
-            gv.alpha = parseFloat(arr[0]);
-            gv.rotation = parseInt(arr[1]);
-            gv.grayed = arr[2] == "1" ? true : false;
-            if (arr.length < 4)
-                gv.touchable = this._owner.touchable;
-            else
-                gv.touchable = arr[3] == "1" ? true : false;
+            gv.alpha = buffer.readFloat();
+            gv.rotation = buffer.readFloat();
+            gv.grayed = buffer.readBool();
+            gv.touchable = buffer.readBool();
         }
 
         public apply(): void {
@@ -41,15 +33,15 @@ module fairygui {
             if (!gv)
                 gv = this._default;
 
-            if (this._tween && !UIPackage._constructing && !GearBase.disableAllTweenEffect) {
+            if (this._tweenConfig && this._tweenConfig.tween && !UIPackage._constructing && !GearBase.disableAllTweenEffect) {
                 this._owner._gearLocked = true;
                 this._owner.grayed = gv.grayed;
                 this._owner.touchable = gv.touchable;
                 this._owner._gearLocked = false;
-                if (this._tweener != null) {
-                    if (this._tweener.endValue.x != gv.alpha || this._tweener.endValue.y != gv.rotation) {
-                        this._tweener.kill(true);
-                        this._tweener = null;
+                if (this._tweenConfig._tweener != null) {
+                    if (this._tweenConfig._tweener.endValue.x != gv.alpha || this._tweenConfig._tweener.endValue.y != gv.rotation) {
+                        this._tweenConfig._tweener.kill(true);
+                        this._tweenConfig._tweener = null;
                     }
                     else
                         return;
@@ -59,11 +51,11 @@ module fairygui {
                 var b: Boolean = gv.rotation != this._owner.rotation;
                 if (a || b) {
                     if (this._owner.checkGearController(0, this._controller))
-                        this._displayLockToken = this._owner.addDisplayLock();
+                        this._tweenConfig._displayLockToken = this._owner.addDisplayLock();
 
-                    this._tweener = GTween.to2(this._owner.alpha, this._owner.rotation, gv.alpha, gv.rotation, this._tweenTime)
-                        .setDelay(this._tweenDelay)
-                        .setEase(this._easeType)
+                    this._tweenConfig._tweener = GTween.to2(this._owner.alpha, this._owner.rotation, gv.alpha, gv.rotation, this._tweenConfig.duration)
+                        .setDelay(this._tweenConfig.delay)
+                        .setEase(this._tweenConfig.easeType)
                         .setUserData((a ? 1 : 0) + (b ? 2 : 0))
                         .setTarget(this)
                         .onUpdate(this.__tweenUpdate, this)
@@ -91,11 +83,11 @@ module fairygui {
         }
 
         private __tweenComplete(): void {
-            if (this._displayLockToken != 0) {
-                this._owner.releaseDisplayLock(this._displayLockToken);
-                this._displayLockToken = 0;
+            if (this._tweenConfig._displayLockToken != 0) {
+                this._owner.releaseDisplayLock(this._tweenConfig._displayLockToken);
+                this._tweenConfig._displayLockToken = 0;
             }
-            this._tweener = null;
+            this._tweenConfig._tweener = null;
         }
 
         public updateState(): void {

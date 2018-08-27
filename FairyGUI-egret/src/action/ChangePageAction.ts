@@ -31,12 +31,12 @@ module fairygui {
             }
         }
 
-        public setup(xml: any): void {
-            super.setup(xml);
+        public setup(buffer: ByteBuffer): void {
+            super.setup(buffer);
 
-            this.objectId = xml.attributes.objectId;
-            this.controllerName = xml.attributes.controller;
-            this.targetPage = xml.attributes.targetPage;
+            this.objectId = buffer.readS();
+            this.controllerName = buffer.readS();
+            this.targetPage = buffer.readS();
         }
     }
 }

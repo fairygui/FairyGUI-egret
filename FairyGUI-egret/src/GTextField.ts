@@ -145,7 +145,7 @@ module fairygui {
         public set align(value: AlignType) {
             if (this._align != value) {
                 this._align = value;
-                this._textField.textAlign = getAlignTypeString(this._align);
+                this._textField.textAlign = this.getAlignTypeString(this._align);
                 if (this._bitmapFont && !this._underConstruct)
                     this.render();
             }
@@ -158,10 +158,20 @@ module fairygui {
         public set verticalAlign(value: VertAlignType) {
             if (this._verticalAlign != value) {
                 this._verticalAlign = value;
-                this._textField.verticalAlign = getVertAlignTypeString(this._verticalAlign);
+                this._textField.verticalAlign = this.getVertAlignTypeString(this._verticalAlign);
                 if (this._bitmapFont && !this._underConstruct)
                     this.render();
             }
+        }
+
+        private getAlignTypeString(type: AlignType): string {
+            return type == AlignType.Left ? egret.HorizontalAlign.LEFT :
+                (type == AlignType.Center ? egret.HorizontalAlign.CENTER : egret.HorizontalAlign.RIGHT);
+        }
+
+        private getVertAlignTypeString(type: VertAlignType): string {
+            return type == VertAlignType.Top ? egret.VerticalAlign.TOP :
+                (type == VertAlignType.Middle ? egret.VerticalAlign.MIDDLE : egret.VerticalAlign.BOTTOM);
         }
 
         public get leading(): number {
@@ -278,11 +288,15 @@ module fairygui {
 
         protected updateTextFormat(): void {
             this._textField.size = this._fontSize;
-            if (ToolSet.startsWith(this._font, "ui://"))
-                this._bitmapFont = UIPackage.getBitmapFontByURL(this._font);
-            else {
-                this._bitmapFont = null;
+            this._bitmapFont = null;
+            if (ToolSet.startsWith(this._font, "ui://")) {
+                var pi: PackageItem = UIPackage.getItemByURL(this._font);
+                if (pi)
+                    this._bitmapFont = <BitmapFont>pi.owner.getItemAsset(pi);
+            }
 
+
+            if (this._bitmapFont == null) {
                 if (this._font)
                     this._textField.fontFamily = this._font;
                 else
@@ -392,9 +406,9 @@ module fairygui {
             this._textWidth = 0;
             this._textHeight = 0;
 
-			var text2:string = this._text;
-			if (this._templateVars != null)
-				text2 = this.parseTemplate(text2);
+            var text2: string = this._text;
+            if (this._templateVars != null)
+                text2 = this.parseTemplate(text2);
             var textLength: number = text2.length;
             for (var offset: number = 0; offset < textLength; ++offset) {
                 var ch: string = text2.charAt(offset);
@@ -739,75 +753,47 @@ module fairygui {
             this.displayObject.y = this.y + this._yOffset;
         }
 
-        public setup_beforeAdd(xml: any): void {
-            super.setup_beforeAdd(xml);
+        public setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void {
+            super.setup_beforeAdd(buffer, beginPos);
 
-            var str: string;
+            buffer.seek(beginPos, 5);
 
-            str = xml.attributes.font;
-            if (str)
-                this._font = str;
-
-            str = xml.attributes.fontSize;
-            if (str)
-                this._fontSize = parseInt(str);
-
-            str = xml.attributes.color;
-            if (str)
-                this._color = ToolSet.convertFromHtmlColor(str);
-
-            str = xml.attributes.align;
-            if (str)
-                this.align = parseAlignType(str);
-
-            str = xml.attributes.vAlign;
-            if (str)
-                this.verticalAlign = parseVertAlignType(str);
-
-            str = xml.attributes.leading;
-            if (str)
-                this._leading = parseInt(str);
-            else
-                this._leading = 3;
-
-            str = xml.attributes.letterSpacing;
-            if (str)
-                this._letterSpacing = parseInt(str);
-
-            this._ubbEnabled = xml.attributes.ubb == "true";
-
-            str = xml.attributes.autoSize;
-            if (str) {
-                this._autoSize = parseAutoSizeType(str);
-                this._widthAutoSize = this._autoSize == AutoSizeType.Both;
-                this._heightAutoSize = this._autoSize == AutoSizeType.Both || this._autoSize == AutoSizeType.Height;
+            this._font = buffer.readS();
+            this._fontSize = buffer.readShort();
+            this._color = buffer.readColor();
+            this.align = buffer.readByte();
+            this.verticalAlign = buffer.readByte();
+            this._leading = buffer.readShort();
+            this._letterSpacing = buffer.readShort();
+            this._ubbEnabled = buffer.readBool();
+            this._autoSize = buffer.readByte();
+            this._widthAutoSize = this._autoSize == AutoSizeType.Both;
+            this._heightAutoSize = this._autoSize == AutoSizeType.Both || this._autoSize == AutoSizeType.Height;
+            buffer.readBool(); //this._textField.underline
+            this._textField.italic = buffer.readBool();
+            this._textField.bold = buffer.readBool();
+            this._textField.multiline = !buffer.readBool();
+            if (buffer.readBool()) {
+                this._textField.strokeColor = buffer.readColor();
+                this.stroke = buffer.readFloat() + 1;
             }
 
-            //this._textField.underline = xml.attributes.underline == "true";
-            this._textField.italic = xml.attributes.italic == "true";
-            this._textField.bold = xml.attributes.bold == "true";
-            this._textField.multiline = xml.attributes.singleLine != "true";
-            str = xml.attributes.strokeColor;
-            if (str) {
-                this._textField.strokeColor = ToolSet.convertFromHtmlColor(str);
-                str = xml.attributes.strokeSize;
-                if (str)
-                    this.stroke = parseInt(str) + 1;
-                else
-                    this.stroke = 2;
-            }
+            if (buffer.readBool()) //shadow
+                buffer.skip(12);
 
-            if (xml.attributes.vars == "true")
+            if (buffer.readBool())
                 this._templateVars = {};
         }
 
-        public setup_afterAdd(xml: any): void {
-            super.setup_afterAdd(xml);
+        public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
+            super.setup_afterAdd(buffer, beginPos);
 
             this.updateTextFormat();
 
-            var str: string = xml.attributes.text;
-            if (str != null && str.length > 0)
+            buffer.seek(beginPos, 6);
+
+            var str: string = buffer.readS();
+            if (str != null)
                 this.text = str;
             this._sizeDirty = false;
         }

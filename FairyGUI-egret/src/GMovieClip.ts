@@ -45,31 +45,26 @@ module fairygui {
             }
         }
 
-		public get timeScale():number
-		{
-			return this._movieClip.timeScale;
-		}
-		
-		public set timeScale(value:number)
-		{
-			this._movieClip.timeScale = value;
-		}
-		
-		public rewind():void
-		{
-			this._movieClip.rewind();
-		}
-		
-		public syncStatus(anotherMc:GMovieClip):void
-		{
-			this._movieClip.syncStatus(anotherMc._movieClip);
-		}
-		
-		public advance(timeInMiniseconds:number):void
-		{
-			this._movieClip.advance(timeInMiniseconds);
-		}
-		
+        public get timeScale(): number {
+            return this._movieClip.timeScale;
+        }
+
+        public set timeScale(value: number) {
+            this._movieClip.timeScale = value;
+        }
+
+        public rewind(): void {
+            this._movieClip.rewind();
+        }
+
+        public syncStatus(anotherMc: GMovieClip): void {
+            this._movieClip.syncStatus(anotherMc._movieClip);
+        }
+
+        public advance(timeInMiniseconds: number): void {
+            this._movieClip.advance(timeInMiniseconds);
+        }
+
         //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
         public setPlaySettings(start: number = 0, end: number = -1,
             times: number = 0, endAt: number = -1,
@@ -94,19 +89,16 @@ module fairygui {
             this._movieClip.smoothing = this.packageItem.smoothing;
         }
 
-        public setup_beforeAdd(xml: any): void {
-            super.setup_beforeAdd(xml);
+        public setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void {
+            super.setup_beforeAdd(buffer, beginPos);
 
-            var str: string;
-            str = xml.attributes.frame;
-            if (str)
-                this._movieClip.frame = parseInt(str);
-            str = xml.attributes.playing;
-            this._movieClip.playing = str != "false";
+            buffer.seek(beginPos, 5);
 
-            str = xml.attributes.color;
-            if (str)
-                this.color = ToolSet.convertFromHtmlColor(str);
+            if (buffer.readBool())
+                this.color = buffer.readColor();
+            buffer.readByte(); //flip
+            this._movieClip.frame = buffer.readInt();
+            this._movieClip.playing = buffer.readBool();
         }
     }
 }

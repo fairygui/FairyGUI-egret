@@ -4,7 +4,6 @@ module fairygui {
     export class GearXY extends GearBase {
         private _storage: any;
         private _default: egret.Point;
-        private _tweener: GTweener;
 
         public constructor(owner: GObject) {
             super(owner);
@@ -15,20 +14,16 @@ module fairygui {
             this._storage = {};
         }
 
-        protected addStatus(pageId: string, value: string): void {
-            if (value == "-" || value.length == 0)
-                return;
-
-            var arr: string[] = value.split(",");
-            var pt: egret.Point;
+        protected addStatus(pageId: string, buffer: ByteBuffer): void {
+            var gv: egret.Point;
             if (pageId == null)
-                pt = this._default;
+                gv = this._default;
             else {
-                pt = new egret.Point();
-                this._storage[pageId] = pt;
+                gv = new egret.Point();
+                this._storage[pageId] = gv;
             }
-            pt.x = parseInt(arr[0]);
-            pt.y = parseInt(arr[1]);
+            gv.x = buffer.readInt();
+            gv.y = buffer.readInt();
         }
 
         public apply(): void {
@@ -36,11 +31,11 @@ module fairygui {
             if (!pt)
                 pt = this._default;
 
-            if (this._tween && !UIPackage._constructing && !GearBase.disableAllTweenEffect) {
-                if (this._tweener != null) {
-                    if (this._tweener.endValue.x != pt.x || this._tweener.endValue.y != pt.y) {
-                        this._tweener.kill(true);
-                        this._tweener = null;
+            if (this._tweenConfig && this._tweenConfig.tween && !UIPackage._constructing && !GearBase.disableAllTweenEffect) {
+                if (this._tweenConfig._tweener != null) {
+                    if (this._tweenConfig._tweener.endValue.x != pt.x || this._tweenConfig._tweener.endValue.y != pt.y) {
+                        this._tweenConfig._tweener.kill(true);
+                        this._tweenConfig._tweener = null;
                     }
                     else
                         return;
@@ -48,11 +43,11 @@ module fairygui {
 
                 if (this._owner.x != pt.x || this._owner.y != pt.y) {
                     if (this._owner.checkGearController(0, this._controller))
-                        this._displayLockToken = this._owner.addDisplayLock();
+                        this._tweenConfig._displayLockToken = this._owner.addDisplayLock();
 
-                    this._tweener = GTween.to2(this._owner.x, this._owner.y, pt.x, pt.y, this._tweenTime)
-                        .setDelay(this._tweenDelay)
-                        .setEase(this._easeType)
+                    this._tweenConfig._tweener = GTween.to2(this._owner.x, this._owner.y, pt.x, pt.y, this._tweenConfig.duration)
+                        .setDelay(this._tweenConfig.delay)
+                        .setEase(this._tweenConfig.easeType)
                         .setTarget(this)
                         .onUpdate(this.__tweenUpdate, this)
                         .onComplete(this.__tweenComplete, this);
@@ -72,11 +67,11 @@ module fairygui {
         }
 
         private __tweenComplete(): void {
-            if (this._displayLockToken != 0) {
-                this._owner.releaseDisplayLock(this._displayLockToken);
-                this._displayLockToken = 0;
+            if (this._tweenConfig._displayLockToken != 0) {
+                this._owner.releaseDisplayLock(this._tweenConfig._displayLockToken);
+                this._tweenConfig._displayLockToken = 0;
             }
-            this._tweener = null;
+            this._tweenConfig._tweener = null;
         }
 
         public updateState(): void {

@@ -4,30 +4,21 @@ module fairygui {
     export class UIPackage {
         private _id: string;
         private _name: string;
-        private _basePath: string;
         private _items: Array<PackageItem>;
         private _itemsById: any;
         private _itemsByName: any;
-        private _resKey: string;
-        private _resData: any;
         private _customId: string;
         private _sprites: any;
-
         //internal
         public static _constructing: number = 0;
 
         private static _packageInstById: any = {};
         private static _packageInstByName: any = {};
-        private static _bitmapFonts: any = {};
-        private static _stringsSource: Object = null;
-
-        private static sep0: string = ",";
-        private static sep1: string = "\n";
-        private static sep2: string = " ";
-        private static sep3: string = "=";
 
         public constructor() {
             this._items = new Array<PackageItem>();
+            this._itemsById = {};
+            this._itemsByName = {};
             this._sprites = {};
         }
 
@@ -40,8 +31,14 @@ module fairygui {
         }
 
         public static addPackage(resKey: string, descData: ArrayBuffer = null): UIPackage {
+            if (!descData) {
+                descData = RES.getRes(resKey);
+                if (!descData)
+                    throw "Resource '" + resKey + "' not found, please check default.res.json!";
+            }
+
             var pkg: UIPackage = new UIPackage();
-            pkg.create(resKey, descData);
+            pkg.loadPackage(new ByteBuffer(descData), resKey);
             UIPackage._packageInstById[pkg.id] = pkg;
             UIPackage._packageInstByName[pkg.name] = pkg;
             pkg.customId = resKey;
@@ -130,232 +127,163 @@ module fairygui {
             return UIPackage.getItemURL(pkgName, srcName);
         }
 
-        public static getBitmapFontByURL(url: string): BitmapFont {
-            return UIPackage._bitmapFonts[url];
-        }
-
         public static setStringsSource(source: string): void {
-            UIPackage._stringsSource = {};
-            var xml: any = egret.XML.parse(source);
-            var nodes: any = xml.children;
-            var length1: number = nodes.length;
-            for (var i1: number = 0; i1 < length1; i1++) {
-                var cxml: any = nodes[i1];
-                if (cxml.name == "string") {
-                    var key: string = cxml.attributes.name;
-                    var text: string = cxml.children.length > 0 ? cxml.children[0].text : "";
-                    var i: number = key.indexOf("-");
-                    if (i == -1)
-                        continue;
-
-                    var key2: string = key.substr(0, i);
-                    var key3: string = key.substr(i + 1);
-                    var col: any = UIPackage._stringsSource[key2];
-                    if (!col) {
-                        col = {};
-                        UIPackage._stringsSource[key2] = col;
-                    }
-                    col[key3] = text;
-                }
-            }
+            TranslationHelper.loadFromXML(source);
         }
 
-        private create(resKey: string, descData: ArrayBuffer): void {
-            this._resKey = resKey;
+        private loadPackage(buffer: ByteBuffer, resKey: string): void {
+            if (buffer.readUnsignedInt() != 0x46475549)
+                throw "FairyGUI: old package format found in '" + resKey + "'";
 
-            this.loadPackage(descData);
-        }
+            buffer.version = buffer.readInt();
+            var compressed: boolean = buffer.readBool();
+            this._id = buffer.readUTF();
+            this._name = buffer.readUTF();
+            buffer.skip(20);
 
-        private loadPackage(descData: ArrayBuffer): void {
-            var str: string;
-            var arr: string[];
-
-            var buf: any;
-            if (descData)
-                buf = descData;
-            else {
-                buf = RES.getRes(this._resKey);
-                if (!buf)
-                    buf = RES.getRes(this._resKey + "_fui");
-                if (!buf)
-                    throw "Resource '" + this._resKey + "' not found, please check default.res.json!";
+            if (compressed) {
+                var buf: Uint8Array = new Uint8Array(buffer.buffer, buffer.position, buffer.length - buffer.position);
+                var inflater: Zlib.RawInflate = new Zlib.RawInflate(buf);
+                buffer = new ByteBuffer(inflater.decompress());
             }
 
-            this.decompressPackage(buf);
+            var indexTablePos: number = buffer.position;
+            var cnt: number;
+            var i: number;
+            var nextPos: number;
 
-            str = this.getDesc("sprites.bytes");
+            buffer.seek(indexTablePos, 4);
 
-            arr = str.split(UIPackage.sep1);
-            var cnt: number = arr.length;
-            for (var i: number = 1; i < cnt; i++) {
-                str = arr[i];
-                if (!str)
-                    continue;
+            cnt = buffer.readInt();
+            var stringTable: Array<string> = new Array<string>(cnt);
+            stringTable.reduceRight
+            for (i = 0; i < cnt; i++)
+                stringTable[i] = buffer.readUTF();
+            buffer.stringTable = stringTable;
 
-                var arr2: string[] = str.split(UIPackage.sep2);
+            buffer.seek(indexTablePos, 1);
 
-                var sprite: AtlasSprite = new AtlasSprite();
-                var itemId: string = arr2[0];
-                var binIndex: number = parseInt(arr2[1]);
-                if (binIndex >= 0)
-                    sprite.atlas = "atlas" + binIndex;
-                else {
-                    var pos: number = itemId.indexOf("_");
-                    if (pos == -1)
-                        sprite.atlas = "atlas_" + itemId;
-                    else
-                        sprite.atlas = "atlas_" + itemId.substr(0, pos);
-                }
-
-                sprite.rect.x = parseInt(arr2[2]);
-                sprite.rect.y = parseInt(arr2[3]);
-                sprite.rect.width = parseInt(arr2[4]);
-                sprite.rect.height = parseInt(arr2[5]);
-                sprite.rotated = arr2[6] == "1";
-                this._sprites[itemId] = sprite;
-            }
-
-            str = this.getDesc("package.xml");
-            var xml: any = egret.XML.parse(str);
-
-            this._id = xml.attributes.id;
-            this._name = xml.attributes.name;
-
-            var resources: any = xml.children[0].children;
-
-            this._itemsById = {};
-            this._itemsByName = {};
             var pi: PackageItem;
-            var cxml: any;
+            resKey = resKey + "_";
 
-            var length1: number = resources.length;
-            for (var i1: number = 0; i1 < length1; i1++) {
-                cxml = resources[i1];
+            cnt = buffer.readShort();
+            for (i = 0; i < cnt; i++) {
+                nextPos = buffer.readInt();
+                nextPos += buffer.position;
+
                 pi = new PackageItem();
                 pi.owner = this;
-                pi.type = parsePackageItemType(cxml.name);
-                pi.id = cxml.attributes.id;
-                pi.name = cxml.attributes.name;
-                pi.file = cxml.attributes.file;
-                str = cxml.attributes.size;
-                if (str) {
-                    arr = str.split(UIPackage.sep0);
-                    pi.width = parseInt(arr[0]);
-                    pi.height = parseInt(arr[1]);
-                }
-                switch (pi.type) {
-                    case PackageItemType.Image: {
-                        str = cxml.attributes.scale;
-                        if (str == "9grid") {
-                            pi.scale9Grid = new egret.Rectangle();
-                            str = cxml.attributes.scale9grid;
-                            if (str) {
-                                arr = str.split(UIPackage.sep0);
-                                pi.scale9Grid.x = parseInt(arr[0]);
-                                pi.scale9Grid.y = parseInt(arr[1]);
-                                pi.scale9Grid.width = parseInt(arr[2]);
-                                pi.scale9Grid.height = parseInt(arr[3]);
+                pi.type = buffer.readByte();
+                pi.id = buffer.readS();
+                pi.name = buffer.readS();
+                buffer.readS(); //path
+                pi.file = buffer.readS();
+                buffer.readBool();//exported
+                pi.width = buffer.readInt();
+                pi.height = buffer.readInt();
 
-                                str = cxml.attributes.gridTile;
-                                if (str)
-                                    pi.tileGridIndice = parseInt(str);
+                switch (pi.type) {
+                    case PackageItemType.Image:
+                        {
+                            pi.objectType = ObjectType.Image;
+                            var scaleOption: number = buffer.readByte();
+                            if (scaleOption == 1) {
+                                pi.scale9Grid = new egret.Rectangle();
+                                pi.scale9Grid.x = buffer.readInt();
+                                pi.scale9Grid.y = buffer.readInt();
+                                pi.scale9Grid.width = buffer.readInt();
+                                pi.scale9Grid.height = buffer.readInt();
+
+                                pi.tileGridIndice = buffer.readInt();
                             }
+                            else if (scaleOption == 2)
+                                pi.scaleByTile = true;
+
+                            pi.smoothing = buffer.readBool();
+                            break;
                         }
-                        else if (str == "tile") {
-                            pi.scaleByTile = true;
-                        }
-                        str = cxml.attributes.smoothing;
-                        pi.smoothing = str != "false";
-                        break;
-                    }
 
                     case PackageItemType.MovieClip:
-                        str = cxml.attributes.smoothing;
-                        pi.smoothing = str != "false";
-                        break;
+                        {
+                            pi.smoothing = buffer.readBool();
+                            pi.objectType = ObjectType.MovieClip;
+                            pi.rawData = buffer.readBuffer();
+                            break;
+                        }
+
+                    case PackageItemType.Font:
+                        {
+                            pi.rawData = buffer.readBuffer();
+                            break;
+                        }
 
                     case PackageItemType.Component:
-                        UIObjectFactory.$resolvePackageItemExtension(pi);
-                        break;
-                }
+                        {
+                            var extension: number = buffer.readByte();
+                            if (extension > 0)
+                                pi.objectType = extension;
+                            else
+                                pi.objectType = ObjectType.Component;
+                            pi.rawData = buffer.readBuffer();
 
+                            UIObjectFactory.resolvePackageItemExtension(pi);
+                            break;
+                        }
+
+                    case PackageItemType.Atlas:
+                    case PackageItemType.Sound:
+                    case PackageItemType.Misc:
+                        {
+                            pi.file = resKey + ToolSet.getFileName(pi.file);
+                            break;
+                        }
+                }
                 this._items.push(pi);
                 this._itemsById[pi.id] = pi;
                 if (pi.name != null)
                     this._itemsByName[pi.name] = pi;
+
+                buffer.position = nextPos;
             }
 
-            cnt = this._items.length;
+            buffer.seek(indexTablePos, 2);
+
+            cnt = buffer.readShort();
             for (i = 0; i < cnt; i++) {
-                pi = this._items[i];
-                if (pi.type == PackageItemType.Font) {
-                    this.loadFont(pi);
-                    UIPackage._bitmapFonts[pi.bitmapFont.id] = pi.bitmapFont;
-                }
+                nextPos = buffer.readShort();
+                nextPos += buffer.position;
+
+                var itemId: string = buffer.readS();
+                pi = this._itemsById[buffer.readS()];
+
+                var sprite: AtlasSprite = new AtlasSprite();
+                sprite.atlas = pi;
+                sprite.rect.x = buffer.readInt();
+                sprite.rect.y = buffer.readInt();
+                sprite.rect.width = buffer.readInt();
+                sprite.rect.height = buffer.readInt();
+                sprite.rotated = buffer.readBool();
+                this._sprites[itemId] = sprite;
+
+                buffer.position = nextPos;
             }
-        }
 
-        private decompressPackage(buf: ArrayBuffer): void {
-            this._resData = {};
-
-            var mark: Uint8Array = new Uint8Array(buf.slice(0, 2));
-            if (mark[0] == 0x50 && mark[1] == 0x4b) {
-                this.decodeUncompressed(buf);
-                return;
-            }
-
-            var inflater: Zlib.RawInflate = new Zlib.RawInflate(buf);
-            var data: Uint8Array = inflater.decompress();
-            var tmp: egret.ByteArray = new egret.ByteArray();
-            var source: string = tmp["decodeUTF8"](data); //ByteArray.decodeUTF8 is private @_@
-            var curr: number = 0;
-            var fn: string;
-            var size: number;
-            while (true) {
-                var pos: number = source.indexOf("|", curr);
-                if (pos == -1)
-                    break;
-                fn = source.substring(curr, pos);
-                curr = pos + 1;
-                pos = source.indexOf("|", curr);
-                size = parseInt(source.substring(curr, pos));
-                curr = pos + 1;
-                this._resData[fn] = source.substr(curr, size);
-                curr += size;
-            }
-        }
-
-        private decodeUncompressed(buf: ArrayBuffer): void {
-            var ba: egret.ByteArray = new egret.ByteArray(buf);
-            ba.endian = egret.Endian.LITTLE_ENDIAN;
-            var pos: number = ba.length - 22;
-            ba.position = pos + 10;
-            var entryCount: number = ba.readUnsignedShort();
-            ba.position = pos + 16;
-            pos = ba.readInt();
-
-            for (var i: number = 0; i < entryCount; i++) {
-                ba.position = pos + 28;
-                var len: number = ba.readUnsignedShort();
-                var len2: number = ba.readUnsignedShort() + ba.readUnsignedShort();
-
-                ba.position = pos + 46;
-                var entryName: string = ba.readUTFBytes(len);
-
-                if (entryName[entryName.length - 1] != '/' && entryName[entryName.length - 1] != '\\') //not directory
-                {
-                    ba.position = pos + 20;
-                    var size: number = ba.readInt();
-                    ba.position = pos + 42;
-                    var offset: number = ba.readInt() + 30 + len;
-
-                    if (size > 0) {
-                        ba.position = offset;
-                        this._resData[entryName] = ba.readUTFBytes(size);
-                    }
-                }
-
-                pos += 46 + len + len2;
+            if (buffer.seek(indexTablePos, 3)) {
+				/*cnt = buffer.readShort();
+				for (i = 0; i < cnt; i++)
+				{
+					nextPos = buffer.readInt();
+					nextPos += buffer.position;
+					
+					pi = this._itemsById[buffer.readS()];
+					if (pi && pi.type == PackageItemType.Image)
+					{
+						pi.pixelHitTestData = new PixelHitTestData();
+						pi.pixelHitTestData.load(buffer);
+					}
+					
+					buffer.position = nextPos;
+				}*/
             }
         }
 
@@ -373,9 +301,6 @@ module fairygui {
                         if (texture != null)
                             texture.dispose();
                     }
-                }
-                else if (pi.bitmapFont != null) {
-                    delete UIPackage._bitmapFonts[pi.bitmapFont.id];
                 }
             }
         }
@@ -460,20 +385,18 @@ module fairygui {
                 case PackageItemType.Atlas:
                     if (!item.decoded) {
                         item.decoded = true;
-                        var fileName: string = (item.file != null && item.file.length > 0) ? item.file : (item.id + ".png");
-                        item.texture = RES.getRes(this._resKey + "@" + ToolSet.getFileName(fileName));
+                        item.texture = RES.getRes(item.file);
                         if (!item.texture)
-                            item.texture = RES.getRes(this._resKey + "@" + fileName.replace("\.", "_"));
+                            console.log("Resource '" + item.file + "' not found, please check default.res.json!");
                     }
                     return item.texture;
 
                 case PackageItemType.Sound:
                     if (!item.decoded) {
                         item.decoded = true;
-                        var fileName: string = (item.file != null && item.file.length > 0) ? item.file : (item.id + ".mp3");
-                        item.sound = RES.getRes(this._resKey + "@" + ToolSet.getFileName(fileName));
+                        item.sound = RES.getRes(item.file);
                         if (!item.sound)
-                            item.sound = RES.getRes(this._resKey + "@" + fileName.replace("\.", "_"));
+                            console.log("Resource '" + item.file + "' not found, please check default.res.json!");
                     }
                     return item.sound;
 
@@ -491,189 +414,23 @@ module fairygui {
                     }
                     return item.frames;
 
-                case PackageItemType.Component:
-                    if (!item.decoded) {
-                        item.decoded = true;
-                        var str: string = this.getDesc(item.id + ".xml");
-                        var xml: any = egret.XML.parse(str);
-                        item.componentData = xml;
-
-                        this.loadComponentChildren(item);
-                        this.translateComponent(item);
-                    }
-                    return item.componentData;
+                case PackageItemType.Misc:
+                    if (item.file)
+                        return RES.getRes(item.file);
+                    else
+                        return null;
 
                 default:
-                    return RES.getRes(this._resKey + "@" + item.id);
-            }
-        }
-
-        private loadComponentChildren(item: PackageItem): void {
-            var listNode: any = ToolSet.findChildNode(item.componentData, "displayList");
-            if (listNode != null) {
-                var col: any = listNode.children;
-                var dcnt: number = col.length;
-                item.displayList = new Array<DisplayListItem>(dcnt);
-                var di: DisplayListItem;
-                for (var i: number = 0; i < dcnt; i++) {
-                    var cxml: any = col[i];
-                    var tagName: string = cxml.name;
-
-                    var src: string = cxml.attributes.src;
-                    if (src) {
-                        var pkgId: string = cxml.attributes.pkg;
-                        var pkg: UIPackage;
-                        if (pkgId && pkgId != item.owner.id)
-                            pkg = UIPackage.getById(pkgId);
-                        else
-                            pkg = item.owner;
-
-                        var pi: PackageItem = pkg != null ? pkg.getItemById(src) : null;
-                        if (pi != null)
-                            di = new DisplayListItem(pi, null);
-                        else
-                            di = new DisplayListItem(null, tagName);
-                    }
-                    else {
-                        if (tagName == "text" && cxml.attributes.input == "true")
-                            di = new DisplayListItem(null, "inputtext");
-                        else
-                            di = new DisplayListItem(null, tagName);
-                    }
-
-                    di.desc = cxml;
-                    item.displayList[i] = di;
-                }
-            }
-            else
-                item.displayList = new Array<DisplayListItem>();
-        }
-
-        private getDesc(fn: string): string {
-            return this._resData[fn];
-        }
-
-        private translateComponent(item: PackageItem): void {
-            if (UIPackage._stringsSource == null)
-                return;
-
-            var strings: Object = UIPackage._stringsSource[this.id + item.id];
-            if (strings == null)
-                return;
-
-            var length1: number = item.displayList.length;
-            var length2: number;
-            var value: any;
-            var cxml: any, dxml: any, exml: any;
-            var ename: string;
-            var elementId: string;
-            var items: any;
-            var i1: number, i2: number, j: number;
-            var str: string;
-
-            for (i1 = 0; i1 < length1; i1++) {
-                cxml = item.displayList[i1].desc;
-                ename = cxml.name;
-                elementId = cxml.attributes.id;
-
-                str = cxml.attributes.tooltips;
-                if (str) {
-                    value = strings[elementId + "-tips"];
-                    if (value != undefined)
-                        cxml.attributes.tooltips = value;
-                }
-
-                dxml = ToolSet.findChildNode(cxml, "gearText");
-                if (dxml) {
-                    value = strings[elementId + "-texts"];
-                    if (value != undefined)
-                        dxml.attributes.values = value;
-
-                    value = strings[elementId + "-texts_def"];
-                    if (value != undefined)
-                        dxml.attributes.default = value;
-                }
-
-                if (ename == "text" || ename == "richtext") {
-                    value = strings[elementId];
-                    if (value != undefined)
-                        cxml.attributes.text = value;
-                    value = strings[elementId + "-prompt"];
-                    if (value != undefined)
-                        cxml.attributes.prompt = value;
-                }
-                else if (ename == "list") {
-                    items = cxml.children;
-                    length2 = items.length;
-                    j = 0;
-                    for (i2 = 0; i2 < length2; i2++) {
-                        exml = items[i2];
-                        if (exml.name != "item")
-                            continue;
-                        value = strings[elementId + "-" + j];
-                        if (value != undefined)
-                            exml.attributes.title = value;
-                        j++;
-                    }
-                }
-                else if (ename == "component") {
-                    dxml = ToolSet.findChildNode(cxml, "Button");
-                    if (dxml) {
-                        value = strings[elementId];
-                        if (value != undefined)
-                            dxml.attributes.title = value;
-                        value = strings[elementId + "-0"];
-                        if (value != undefined)
-                            dxml.attributes.selectedTitle = value;
-                        continue;
-                    }
-
-                    dxml = ToolSet.findChildNode(cxml, "Label");
-                    if (dxml) {
-                        value = strings[elementId];
-                        if (value != undefined)
-                            dxml.attributes.title = value;
-                        value = strings[elementId + "-prompt"];
-                        if (value != undefined)
-                            dxml.attributes.prompt = value;
-                        continue;
-                    }
-
-                    dxml = ToolSet.findChildNode(cxml, "ComboBox");
-                    if (dxml) {
-                        value = strings[elementId];
-                        if (value != undefined)
-                            dxml.attributes.title = value;
-
-                        items = dxml.children;
-                        length2 = items.length;
-                        j = 0;
-                        for (i2 = 0; i2 < length2; i2++) {
-                            exml = items[i2];
-                            if (exml.name != "item")
-                                continue;
-                            value = strings[elementId + "-" + j];
-                            if (value != undefined)
-                                exml.attributes.title = value;
-                            j++;
-                        }
-                        continue;
-                    }
-                }
+                    return null;
             }
         }
 
         private createSpriteTexture(sprite: AtlasSprite): egret.Texture {
-            var atlasItem: PackageItem = this._itemsById[sprite.atlas];
-            if (atlasItem != null) {
-                var atlasTexture: egret.Texture = this.getItemAsset(atlasItem);
-                if (atlasTexture == null)
-                    return null;
-                else
-                    return this.createSubTexture(atlasTexture, sprite.rect);
-            }
-            else
+            var atlasTexture: egret.Texture = this.getItemAsset(sprite.atlas);
+            if (atlasTexture == null)
                 return null;
+            else
+                return this.createSubTexture(atlasTexture, sprite.rect);
         }
 
         private createSubTexture(atlasTexture: egret.Texture, uvRect: egret.Rectangle): egret.Texture {
@@ -695,168 +452,121 @@ module fairygui {
         }
 
         private loadMovieClip(item: PackageItem): void {
-            var xml: any = egret.XML.parse(this.getDesc(item.id + ".xml"));
-            var str: string;
-            var arr: string[];
+            var buffer: ByteBuffer = item.rawData;
 
-            str = xml.attributes.interval;
-            if (str != null)
-                item.interval = parseInt(str);
-            str = xml.attributes.swing;
-            if (str != null)
-                item.swing = str == "true";
-            str = xml.attributes.repeatDelay;
-            if (str != null)
-                item.repeatDelay = parseInt(str);
+            buffer.seek(0, 0);
 
-            var frameCount: number = parseInt(xml.attributes.frameCount);
-            item.frames = new Array<Frame>(frameCount);
-            var frameNodes: any = xml.children[0].children;
+            item.interval = buffer.readInt();
+            item.swing = buffer.readBool();
+            item.repeatDelay = buffer.readInt();
+
+            buffer.seek(0, 1);
+
+            var frameCount: number = buffer.readShort();
+            item.frames = Array<Frame>(frameCount);
+
+            var spriteId: string;
+            var frame: Frame;
+            var sprite: AtlasSprite;
+
             for (var i: number = 0; i < frameCount; i++) {
-                var frame: Frame = new Frame();
-                var frameNode: any = frameNodes[i];
-                str = frameNode.attributes.rect;
-                arr = str.split(UIPackage.sep0);
-                frame.rect = new egret.Rectangle(parseInt(arr[0]), parseInt(arr[1]), parseInt(arr[2]), parseInt(arr[3]));
-                str = frameNode.attributes.addDelay;
-                if (str)
-                    frame.addDelay = parseInt(str);
+                var nextPos: number = buffer.readShort();
+                nextPos += buffer.position;
+
+                frame = new Frame();
+                frame.rect.x = buffer.readInt();
+                frame.rect.y = buffer.readInt();
+                frame.rect.width = buffer.readInt();
+                frame.rect.height = buffer.readInt();
+                frame.addDelay = buffer.readInt();
+                spriteId = buffer.readS();
+
+                if (spriteId != null && (sprite = this._sprites[spriteId]) != null)
+                    frame.texture = this.createSpriteTexture(sprite);
                 item.frames[i] = frame;
 
-                if (frame.rect.width == 0)
-                    continue;
-
-                str = frameNode.attributes.sprite;
-                if (str)
-                    str = item.id + "_" + str;
-                else
-                    str = item.id + "_" + i;
-
-                var sprite: AtlasSprite = this._sprites[str];
-                if (sprite != null) {
-                    frame.texture = this.createSpriteTexture(sprite);
-                }
+                buffer.position = nextPos;
             }
         }
 
         private loadFont(item: PackageItem): void {
             var font: BitmapFont = new BitmapFont();
-            font.id = "ui://" + this.id + item.id;
-            var str: string = this.getDesc(item.id + ".fnt");
-
-            var lines: string[] = str.split(UIPackage.sep1);
-            var lineCount: number = lines.length;
-            var i: number = 0;
-            var kv: any = {};
-            var ttf: boolean = false;
-            var size: number = 0;
-            var xadvance: number = 0;
-            var resizable: boolean = false;
-            var atlasOffsetX: number = 0, atlasOffsetY: number = 0;
-            var charImg: PackageItem;
-            var mainTexture: egret.Texture;
-            var lineHeight: number = 0;
-
-            for (i = 0; i < lineCount; i++) {
-                str = lines[i];
-                if (str.length == 0)
-                    continue;
-
-                str = ToolSet.trim(str);
-                var arr: string[] = str.split(UIPackage.sep2);
-                for (var j: number = 1; j < arr.length; j++) {
-                    var arr2: string[] = arr[j].split(UIPackage.sep3);
-                    kv[arr2[0]] = arr2[1];
-                }
-
-                str = arr[0];
-                if (str == "char") {
-                    var bg: BMGlyph = new BMGlyph();
-                    bg.x = isNaN(kv.x) ? 0 : parseInt(kv.x);
-                    bg.y = isNaN(kv.y) ? 0 : parseInt(kv.y);
-                    bg.offsetX = isNaN(kv.xoffset) ? 0 : parseInt(kv.xoffset);
-                    bg.offsetY = isNaN(kv.yoffset) ? 0 : parseInt(kv.yoffset);
-                    bg.width = isNaN(kv.width) ? 0 : parseInt(kv.width);
-                    bg.height = isNaN(kv.height) ? 0 : parseInt(kv.height);
-                    bg.advance = isNaN(kv.xadvance) ? 0 : parseInt(kv.xadvance);
-                    if (kv.chnl != undefined) {
-                        bg.channel = parseInt(kv.chnl);
-                        if (bg.channel == 15)
-                            bg.channel = 4;
-                        else if (bg.channel == 1)
-                            bg.channel = 3;
-                        else if (bg.channel == 2)
-                            bg.channel = 2;
-                        else
-                            bg.channel = 1;
-                    }
-
-                    if (!ttf) {
-                        if (kv.img) {
-                            charImg = this._itemsById[kv.img];
-                            if (charImg != null) {
-                                charImg.load();
-                                bg.width = charImg.width;
-                                bg.height = charImg.height;
-                                bg.texture = charImg.texture;
-                            }
-                        }
-                    }
-                    else if (mainTexture != null) {
-                        bg.texture = this.createSubTexture(mainTexture, new egret.Rectangle(bg.x + atlasOffsetX, bg.y + atlasOffsetY, bg.width, bg.height));
-                    }
-
-                    if (ttf)
-                        bg.lineHeight = lineHeight;
-                    else {
-                        if (bg.advance == 0) {
-                            if (xadvance == 0)
-                                bg.advance = bg.offsetX + bg.width;
-                            else
-                                bg.advance = xadvance;
-                        }
-
-                        bg.lineHeight = bg.offsetY < 0 ? bg.height : (bg.offsetY + bg.height);
-                        if (size > 0 && bg.lineHeight < size)
-                            bg.lineHeight = size;
-                    }
-                    font.glyphs[String.fromCharCode(kv.id)] = bg;
-                }
-                else if (str == "info") {
-                    ttf = kv.face != null;
-                    if (!isNaN(kv.size))
-                        size = parseInt(kv.size);
-                    resizable = kv.resizable == "true";
-                    if (ttf) {
-                        var sprite: AtlasSprite = this._sprites[item.id];
-                        if (sprite != null) {
-                            atlasOffsetX = sprite.rect.x;
-                            atlasOffsetY = sprite.rect.y;
-                            var atlasItem: PackageItem = this._itemsById[sprite.atlas];
-                            if (atlasItem != null)
-                                mainTexture = this.getItemAsset(atlasItem);
-                        }
-                    }
-                }
-                else if (str == "common") {
-                    if (!isNaN(kv.lineHeight))
-                        lineHeight = parseInt(kv.lineHeight);
-                    if (size == 0)
-                        size = lineHeight;
-                    else if (lineHeight == 0)
-                        lineHeight = size;
-                    if (!isNaN(kv.xadvance))
-                        xadvance = parseInt(kv.xadvance);
-                }
-            }
-
-            if (size == 0 && bg)
-                size = bg.height;
-
-            font.ttf = ttf;
-            font.size = size;
-            font.resizable = resizable;
             item.bitmapFont = font;
+            var buffer: ByteBuffer = item.rawData;
+
+            buffer.seek(0, 0);
+
+            font.ttf = buffer.readBool();
+            buffer.readBool(); //tint
+            font.resizable = buffer.readBool();
+            buffer.readBool(); //has channel
+            font.size = buffer.readInt();
+            var xadvance: number = buffer.readInt();
+            var lineHeight: number = buffer.readInt();
+
+            var mainTexture: egret.Texture = null;
+            var mainSprite: AtlasSprite = this._sprites[item.id];
+            if (mainSprite != null)
+                mainTexture = <egret.Texture>(this.getItemAsset(mainSprite.atlas));
+
+            buffer.seek(0, 1);
+
+            var bg: BMGlyph = null;
+            var cnt: number = buffer.readInt();
+            for (var i: number = 0; i < cnt; i++) {
+                var nextPos: number = buffer.readShort();
+                nextPos += buffer.position;
+
+                bg = new BMGlyph();
+                var ch: string = buffer.readChar();
+                font.glyphs[ch] = bg;
+
+                var img: string = buffer.readS();
+                var bx: number = buffer.readInt();
+                var by: number = buffer.readInt();
+                bg.offsetX = buffer.readInt();
+                bg.offsetY = buffer.readInt();
+                bg.width = buffer.readInt();
+                bg.height = buffer.readInt();
+                bg.advance = buffer.readInt();
+                bg.channel = buffer.readByte();
+                if (bg.channel == 1)
+                    bg.channel = 3;
+                else if (bg.channel == 2)
+                    bg.channel = 2;
+                else if (bg.channel == 3)
+                    bg.channel = 1;
+
+                if (!font.ttf) {
+                    var charImg: PackageItem = this._itemsById[img];
+                    if (charImg) {
+                        this.getItemAsset(charImg);
+                        bg.width = charImg.width;
+                        bg.height = charImg.height;
+                        bg.texture = charImg.texture;
+                    }
+                }
+                else {
+                    bg.texture = this.createSubTexture(mainTexture, new egret.Rectangle(bg.x + mainSprite.rect.x, bg.y + mainSprite.rect.y, bg.width, bg.height));
+                }
+
+                if (font.ttf)
+                    bg.lineHeight = lineHeight;
+                else {
+                    if (bg.advance == 0) {
+                        if (xadvance == 0)
+                            bg.advance = bg.offsetX + bg.width;
+                        else
+                            bg.advance = xadvance;
+                    }
+
+                    bg.lineHeight = bg.offsetY < 0 ? bg.height : (bg.offsetY + bg.height);
+                    if (bg.lineHeight < font.size)
+                        bg.lineHeight = font.size;
+                }
+
+                buffer.position = nextPos;
+            }
         }
     }
 
@@ -865,7 +575,7 @@ module fairygui {
             this.rect = new egret.Rectangle();
         }
 
-        public atlas: string;
+        public atlas: PackageItem;
         public rect: egret.Rectangle;
         public rotated: boolean;
     }

@@ -98,46 +98,33 @@ module fairygui {
                 this._titleObject.text = (this._selected && this._selectedTitle) ? this._selectedTitle : this._title;
         }
 
-        public get titleColor(): number {
-            if (this._titleObject instanceof GTextField)
-                return (<GTextField>this._titleObject).color;
-            else if (this._titleObject instanceof GLabel)
-                return (<GLabel>this._titleObject).titleColor;
-            else if (this._titleObject instanceof GButton)
-                return (<GButton>this._titleObject).titleColor;
+   public get titleColor(): number {
+            var tf:GTextField = this.getTextField();
+            if (tf!=null)
+                return tf.color;
             else
                 return 0;
         }
 
         public set titleColor(value: number) {
-            if (this._titleObject instanceof GTextField)
-                (<GTextField>this._titleObject).color = value;
-            else if (this._titleObject instanceof GLabel)
-                (<GLabel>this._titleObject).titleColor = value;
-            else if (this._titleObject instanceof GButton)
-                (<GButton>this._titleObject).titleColor = value;
+            var tf:GTextField = this.getTextField();
+            if (tf!=null)
+                tf.color = value;
         }
 
         public get titleFontSize(): number {
-            if (this._titleObject instanceof GTextField)
-                return (<GTextField>this._titleObject).fontSize;
-            else if (this._titleObject instanceof GLabel)
-                return (<GLabel>this._titleObject).titleFontSize;
-            else if (this._titleObject instanceof GButton)
-                return (<GButton>this._titleObject).titleFontSize;
+            var tf:GTextField = this.getTextField();
+            if (tf!=null)
+                return tf.fontSize;
             else
                 return 0;
         }
 
         public set titleFontSize(value: number) {
-            if (this._titleObject instanceof GTextField)
-                (<GTextField>this._titleObject).fontSize = value;
-            else if (this._titleObject instanceof GLabel)
-                (<GLabel>this._titleObject).titleFontSize = value;
-            else if (this._titleObject instanceof GButton)
-                (<GButton>this._titleObject).titleFontSize = value;
+            var tf:GTextField = this.getTextField();
+            if (tf!=null)
+                tf.fontSize = value;
         }
-
         public get sound(): string {
             return this._sound;
         }
@@ -184,7 +171,7 @@ module fairygui {
                     && !this._parent._buildingDisplayList) {
                     if (this._selected) {
                         this._relatedController.selectedPageId = this._pageOption.id;
-                        if (this._relatedController._autoRadioGroupDepth)
+                        if (this._relatedController.autoRadioGroupDepth)
                             this._parent.adjustRadioGroupDepth(this, this._relatedController);
                     }
                     else if (this._mode == ButtonMode.Check && this._relatedController.selectedPageId == this._pageOption.id)
@@ -240,6 +227,18 @@ module fairygui {
         public set linkedPopup(value: GObject) {
             this._linkedPopup = value;
         }
+
+        public getTextField():GTextField
+		{
+			 if (this._titleObject instanceof GTextField)
+				return (<GTextField>this._titleObject);
+			else if (this._titleObject instanceof GLabel)
+				return (<GLabel>this._titleObject).getTextField();
+			else if (this._titleObject instanceof GButton)
+				return (<GButton>this._titleObject).getTextField();
+			else
+				return null;
+		}
 
         public addStateListener(listener: Function, thisObj: any): void {
             this.addEventListener(StateChangeEvent.CHANGED, listener, thisObj);
@@ -321,30 +320,18 @@ module fairygui {
                 super.handleGrayedChanged();
         }
 
-        protected constructFromXML(xml: any): void {
-            super.constructFromXML(xml);
+        protected constructExtension(buffer: ByteBuffer): void {
+            buffer.seek(0, 6);
 
-            xml = ToolSet.findChildNode(xml, "Button");
-
-            var str: string;
-            str = xml.attributes.mode;
+            this._mode = buffer.readByte();
+            var str: string = buffer.readS();
             if (str)
-                this._mode = parseButtonMode(str);
-
-            str = xml.attributes.sound;
-            if (str != null)
                 this._sound = str;
-            str = xml.attributes.volume;
-            if (str)
-                this._soundVolumeScale = parseInt(str) / 100;
-            str = xml.attributes.downEffect;
-            if (str) {
-                this._downEffect = str == "dark" ? 1 : (str == "scale" ? 2 : 0);
-                str = xml.attributes.downEffectValue;
-                this._downEffectValue = parseFloat(str);
-                if (this._downEffect == 2)
-                    this.setPivot(0.5, 0.5);
-            }
+            this._soundVolumeScale = buffer.readFloat();
+            this._downEffect = buffer.readByte();
+            this._downEffectValue = buffer.readFloat();
+            if (this._downEffect == 2)
+                this.setPivot(0.5, 0.5, this.pivotAsAnchor);
 
             this._buttonController = this.getController("button");
             this._titleObject = this.getChild("title");
@@ -361,48 +348,47 @@ module fairygui {
             this.addEventListener(egret.TouchEvent.TOUCH_TAP, this.__click, this);
         }
 
-        public setup_afterAdd(xml: any): void {
-            super.setup_afterAdd(xml);
+        public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
+            super.setup_afterAdd(buffer, beginPos);
 
-            xml = ToolSet.findChildNode(xml, "Button");
-            if (xml) {
-                var str: string;
-                str = xml.attributes.title;
-                if (str)
-                    this.title = str;
-                str = xml.attributes.icon;
-                if (str)
-                    this.icon = str;
-                str = xml.attributes.selectedTitle;
-                if (str)
-                    this.selectedTitle = str;
-                str = xml.attributes.selectedIcon;
-                if (str)
-                    this.selectedIcon = str;
+            if (!buffer.seek(beginPos, 6))
+                return;
 
-                str = xml.attributes.titleColor;
-                if (str)
-                    this.titleColor = ToolSet.convertFromHtmlColor(str);
-                str = xml.attributes.titleFontSize;
-                if (str)
-                    this.titleFontSize = parseInt(str);
+            if (buffer.readByte() != this.packageItem.objectType)
+                return;
 
-                str = xml.attributes.sound;
-                if (str != null)
-                    this._sound = str;
+            var str: string;
+            var iv: number;
 
-                str = xml.attributes.volume;
-                if (str)
-                    this._soundVolumeScale = parseInt(str) / 100;
+            str = buffer.readS();
+            if (str != null)
+                this.title = str;
+            str = buffer.readS();
+            if (str != null)
+                this.selectedTitle = str;
+            str = buffer.readS();
+            if (str != null)
+                this.icon = str;
+            str = buffer.readS();
+            if (str != null)
+                this.selectedIcon = str;
+            if (buffer.readBool())
+                this.titleColor = buffer.readColor();
+            iv = buffer.readInt();
+            if (iv != 0)
+                this.titleFontSize = iv;
+            iv = buffer.readShort();
+            if (iv >= 0)
+                this._relatedController = this.parent.getControllerAt(iv);
+            this.pageOption.id = buffer.readS();
 
-                str = xml.attributes.controller;
-                if (str)
-                    this._relatedController = this._parent.getController(str);
-                else
-                    this._relatedController = null;
-                this._pageOption.id = xml.attributes.page;
-                this.selected = xml.attributes.checked == "true";
-            }
+            str = buffer.readS();
+            if (str != null)
+                this._sound = str;
+            if (buffer.readBool())
+                this._soundVolumeScale = buffer.readFloat();
+
+            this.selected = buffer.readBool();
         }
 
         private __rollover(evt: egret.TouchEvent): void {

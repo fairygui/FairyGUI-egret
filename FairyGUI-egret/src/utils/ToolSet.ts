@@ -119,21 +119,6 @@ module fairygui {
             return null;
         }
 
-        public static findChildNode(xml: any, name: string): any {
-            var col: any = xml.children;
-            if (col) {
-                var length1: number = col.length;
-                for (var i1: number = 0; i1 < length1; i1++) {
-                    var cxml: any = col[i1];
-                    if (cxml.name == name) {
-                        return cxml;
-                    }
-                }
-            }
-
-            return null;
-        }
-
         public static encodeHTML(str: string): string {
             if (!str)
                 return "";

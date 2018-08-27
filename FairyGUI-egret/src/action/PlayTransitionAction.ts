@@ -35,23 +35,13 @@ module fairygui {
             }
         }
 
-        public setup(xml: any): void {
-            super.setup(xml);
+        public setup(buffer:ByteBuffer): void {
+            super.setup(buffer);
 
-            this.transitionName = xml.attributes.transition;
-
-            var str: string;
-
-            str = xml.attributes.repeat;
-            if (str)
-                this.playTimes = parseInt(str);
-
-            str = xml.attributes.delay;
-            if (str)
-                this.delay = parseFloat(str);
-
-            str = xml.attributes.stopOnExit;
-            this.stopOnExit = str == "true";
+			this.transitionName = buffer.readS();
+			this.playTimes = buffer.readInt();
+			this.delay = buffer.readFloat();
+			this.stopOnExit = buffer.readBool();
         }
     }
 }

@@ -2,15 +2,15 @@
 module fairygui {
 
     export class Controller extends egret.EventDispatcher {
-        private _name: string;
         private _selectedIndex: number = 0;
         private _previousIndex: number = 0;
         private _pageIds: Array<string>;
         private _pageNames: Array<string>;
         private _actions: Array<ControllerAction>;
 
-        public _parent: GComponent;
-        public _autoRadioGroupDepth: boolean;
+        public name: string;
+        public parent: GComponent;
+        public autoRadioGroupDepth: boolean;
         public changing: boolean = false;
 
         private static _nextPageId: number = 0;
@@ -23,20 +23,8 @@ module fairygui {
             this._previousIndex = -1;
         }
 
-        public dispose():void {
+        public dispose(): void {
 
-        }
-
-        public get name(): string {
-            return this._name;
-        }
-
-        public set name(value: string) {
-            this._name = value;
-        }
-
-        public get parent(): GComponent {
-            return this._parent;
         }
 
         public get selectedIndex(): number {
@@ -51,7 +39,7 @@ module fairygui {
                 this.changing = true;
                 this._previousIndex = this._selectedIndex;
                 this._selectedIndex = value;
-                this._parent.applyController(this);
+                this.parent.applyController(this);
 
                 this.dispatchEvent(new StateChangeEvent(StateChangeEvent.CHANGED));
 
@@ -68,7 +56,7 @@ module fairygui {
                 this.changing = true;
                 this._previousIndex = this._selectedIndex;
                 this._selectedIndex = value;
-                this._parent.applyController(this);
+                this.parent.applyController(this);
                 this.changing = false;
             }
         }
@@ -138,7 +126,7 @@ module fairygui {
                 if (this._selectedIndex >= this._pageIds.length)
                     this.selectedIndex = this._selectedIndex - 1;
                 else
-                    this._parent.applyController(this);
+                    this.parent.applyController(this);
             }
         }
 
@@ -148,7 +136,7 @@ module fairygui {
             if (this._selectedIndex >= this._pageIds.length)
                 this.selectedIndex = this._selectedIndex - 1;
             else
-                this._parent.applyController(this);
+                this.parent.applyController(this);
         }
 
         public clearPages(): void {
@@ -157,7 +145,7 @@ module fairygui {
             if (this._selectedIndex != -1)
                 this.selectedIndex = -1;
             else
-                this._parent.applyController(this);
+                this.parent.applyController(this);
         }
 
         public hasPage(aName: string): boolean {
@@ -223,70 +211,44 @@ module fairygui {
             }
         }
 
-        public setup(xml: any): void {
-            this._name = xml.attributes.name;
-            this._autoRadioGroupDepth = xml.attributes.autoRadioGroupDepth == "true";
+        public setup(buffer: ByteBuffer): void {
+            var beginPos: number = buffer.position;
+            buffer.seek(beginPos, 0);
 
-            var i: number = 0;
-            var k: number = 0;
-            var str: string = xml.attributes.pages;
-            if (str) {
-                var arr: string[] = str.split(",");
-                var cnt: number = arr.length;
-                for (i = 0; i < cnt; i += 2) {
-                    this._pageIds.push(arr[i]);
-                    this._pageNames.push(arr[i + 1]);
-                }
+            this.name = buffer.readS();
+            this.autoRadioGroupDepth = buffer.readBool();
+
+            buffer.seek(beginPos, 1);
+
+            var i: number;
+            var nextPos: number;
+            var cnt: number = buffer.readShort();
+
+            for (i = 0; i < cnt; i++) {
+                this._pageIds.push(buffer.readS());
+                this._pageNames.push(buffer.readS());
             }
 
-            var col: any = xml.children;
-            var length1: number = col.length;
-            if (length1 > 0) {
-                if (!this._actions)
+            buffer.seek(beginPos, 2);
+
+            cnt = buffer.readShort();
+            if (cnt > 0) {
+                if (this._actions == null)
                     this._actions = new Array<ControllerAction>();
 
-                for (var i1: number = 0; i1 < length1; i1++) {
-                    var cxml: any = col[i1];
-                    var action: ControllerAction = ControllerAction.createAction(cxml.attributes.type);
-                    action.setup(cxml);
-                    this._actions.push(action);
-                }
-            }
-
-            str = xml.attributes.transitions;
-            if (str) {
-                if (!this._actions)
-                    this._actions = new Array<ControllerAction>();
-
-                arr = str.split(",");
-                cnt = arr.length;
-                var ii: number;
                 for (i = 0; i < cnt; i++) {
-                    str = arr[i];
-                    if (!str)
-                        continue;
+                    nextPos = buffer.readShort();
+                    nextPos += buffer.position;
 
-                    var taction: PlayTransitionAction = new PlayTransitionAction();
-                    k = str.indexOf("=");
-                    taction.transitionName = str.substr(k + 1);
-                    str = str.substring(0, k);
-                    k = str.indexOf("-");
-                    ii = parseInt(str.substring(k + 1));
-                    if (ii < this._pageIds.length)
-                        taction.toPage = [this._pageIds[ii]];
-                    str = str.substring(0, k);
-                    if (str != "*") {
+                    var action: ControllerAction = ControllerAction.createAction(buffer.readByte());
+                    action.setup(buffer);
+                    this._actions.push(action);
 
-                        ii = parseInt(str);
-                        if (ii < this._pageIds.length)
-                            taction.fromPage = [this._pageIds[ii]];
-                    }
-                    taction.stopOnExit = true;
-                    this._actions.push(taction);
+                    buffer.position = nextPos;
                 }
             }
 
-            if (this._parent && this._pageIds.length > 0)
+            if (parent != null && this._pageIds.length > 0)
                 this._selectedIndex = 0;
             else
                 this._selectedIndex = -1;

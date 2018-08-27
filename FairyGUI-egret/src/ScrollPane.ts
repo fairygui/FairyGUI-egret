@@ -81,15 +81,7 @@ module fairygui {
 		private static sEndPos: egret.Point = new egret.Point();
 		private static sOldChange: egret.Point = new egret.Point();
 
-		public constructor(owner: GComponent,
-			scrollType: number,
-			scrollBarMargin: Margin,
-			scrollBarDisplay: number,
-			flags: number,
-			vtScrollBarRes: string,
-			hzScrollBarRes: string,
-			headerRes: string,
-			footerRes: string) {
+		public constructor(owner: GComponent) {
 			super();
 
 			this._owner = owner;
@@ -102,11 +94,50 @@ module fairygui {
 			this._container.y = 0;
 			this._maskContainer.addChild(this._container);
 
-			this._scrollBarMargin = scrollBarMargin;
-			this._scrollType = scrollType;
+			this._scrollBarMargin = new Margin();
+			this._scrollBarVisible = true;
+			this._mouseWheelEnabled = true;
+			this._xPos = 0;
+			this._yPos = 0;
+			this._aniFlag = 0;
+			this._footerLockedSize = 0;
+			this._headerLockedSize = 0;
+			this._viewSize = new egret.Point();
+			this._contentSize = new egret.Point();
+			this._pageSize = new egret.Point(1, 1);
+			this._overlapSize = new egret.Point();
+			this._tweenTime = new egret.Point();
+			this._tweenStart = new egret.Point();
+			this._tweenDuration = new egret.Point();
+			this._tweenChange = new egret.Point();
+			this._velocity = new egret.Point();
+			this._containerPos = new egret.Point();
+			this._beginTouchPos = new egret.Point();
+			this._lastTouchPos = new egret.Point();
+			this._lastTouchGlobalPos = new egret.Point();
 			this._scrollStep = fairygui.UIConfig.defaultScrollStep;
 			this._mouseWheelStep = this._scrollStep * 2;
 			this._decelerationRate = fairygui.UIConfig.defaultScrollDecelerationRate;
+
+			this._owner.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__touchBegin, this);
+		}
+
+		public setup(buffer: ByteBuffer): void {
+			this._scrollType = buffer.readByte();
+			var scrollBarDisplay: ScrollBarDisplayType = buffer.readByte();
+			var flags: number = buffer.readInt();
+
+			if (buffer.readBool()) {
+				this._scrollBarMargin.top = buffer.readInt();
+				this._scrollBarMargin.bottom = buffer.readInt();
+				this._scrollBarMargin.left = buffer.readInt();
+				this._scrollBarMargin.right = buffer.readInt();
+			}
+
+			var vtScrollBarRes: string = buffer.readS();
+			var hzScrollBarRes: string = buffer.readS();
+			var headerRes: string = buffer.readS();
+			var footerRes: string = buffer.readS();
 
 			this._displayOnLeft = (flags & 1) != 0;
 			this._snapToItem = (flags & 2) != 0;
@@ -127,31 +158,6 @@ module fairygui {
 			this._inertiaDisabled = (flags & 256) != 0;
 			if ((flags & 512) == 0)
 				this._maskContainer.scrollRect = new egret.Rectangle();
-
-			this._scrollBarVisible = true;
-			this._mouseWheelEnabled = true;
-			this._xPos = 0;
-			this._yPos = 0;
-			this._aniFlag = 0;
-			this._footerLockedSize = 0;
-			this._headerLockedSize = 0;
-
-			if (scrollBarDisplay == ScrollBarDisplayType.Default)
-				scrollBarDisplay = fairygui.UIConfig.defaultScrollBarDisplay;
-
-			this._viewSize = new egret.Point();
-			this._contentSize = new egret.Point();
-			this._pageSize = new egret.Point(1, 1);
-			this._overlapSize = new egret.Point();
-			this._tweenTime = new egret.Point();
-			this._tweenStart = new egret.Point();
-			this._tweenDuration = new egret.Point();
-			this._tweenChange = new egret.Point();
-			this._velocity = new egret.Point();
-			this._containerPos = new egret.Point();
-			this._beginTouchPos = new egret.Point();
-			this._lastTouchPos = new egret.Point();
-			this._lastTouchGlobalPos = new egret.Point();
 
 			if (scrollBarDisplay == ScrollBarDisplayType.Default)
 				scrollBarDisplay = UIConfig.defaultScrollBarDisplay;
@@ -203,9 +209,7 @@ module fairygui {
 			if (this._header != null || this._footer != null)
 				this._refreshBarAxis = (this._scrollType == ScrollType.Both || this._scrollType == ScrollType.Vertical) ? "y" : "x";
 
-			this.setSize(owner.width, owner.height);
-
-			this._owner.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__touchBegin, this);
+			this.setSize(this._owner.width, this._owner.height);
 		}
 
 		public dispose(): void {

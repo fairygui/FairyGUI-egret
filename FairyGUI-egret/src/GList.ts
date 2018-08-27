@@ -2172,184 +2172,109 @@ module fairygui {
             this.setBounds(0, 0, cw, ch);
         }
 
-        public setup_beforeAdd(xml: any): void {
-            super.setup_beforeAdd(xml);
+        public setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void {
+            super.setup_beforeAdd(buffer, beginPos);
 
+            buffer.seek(beginPos, 5);
+
+            var i: number;
+            var j: number;
+            var cnt: number;
+            var i1: number;
+            var i2: number;
+            var nextPos: number;
             var str: string;
-            var arr: string[];
 
-            str = xml.attributes.layout;
-            if (str)
-                this._layout = parseListLayoutType(str);
+            this._layout = buffer.readByte();
+            this._selectionMode = buffer.readByte();
+            this._align = buffer.readByte();
+            this._verticalAlign = buffer.readByte();
+            this._lineGap = buffer.readShort();
+            this._columnGap = buffer.readShort();
+            this._lineCount = buffer.readShort();
+            this._columnCount = buffer.readShort();
+            this._autoResizeItem = buffer.readBool();
+            this._childrenRenderOrder = buffer.readByte();
+            this._apexIndex = buffer.readShort();
 
-            var overflow: OverflowType;
-            str = xml.attributes.overflow;
-            if (str)
-                overflow = parseOverflowType(str);
-            else
-                overflow = OverflowType.Visible;
+            if (buffer.readBool()) {
+                this._margin.top = buffer.readInt();
+                this._margin.bottom = buffer.readInt();
+                this._margin.left = buffer.readInt();
+                this._margin.right = buffer.readInt();
+            }
 
-            str = xml.attributes.margin;
-            if (str)
-                this._margin.parse(str);
-
-            str = xml.attributes.align;
-            if (str)
-                this._align = parseAlignType(str);
-
-            str = xml.attributes.vAlign;
-            if (str)
-                this._verticalAlign = parseVertAlignType(str);
-
+            var overflow: number = buffer.readByte();
             if (overflow == OverflowType.Scroll) {
-                var scroll: ScrollType;
-                str = xml.attributes.scroll;
-                if (str)
-                    scroll = parseScrollType(str);
-                else
-                    scroll = ScrollType.Vertical;
-
-                var scrollBarDisplay: ScrollBarDisplayType;
-                str = xml.attributes.scrollBar;
-                if (str)
-                    scrollBarDisplay = parseScrollBarDisplayType(str);
-                else
-                    scrollBarDisplay = ScrollBarDisplayType.Default;
-
-                var scrollBarFlags: number;
-                str = xml.attributes.scrollBarFlags;
-                if (str)
-                    scrollBarFlags = parseInt(str);
-                else
-                    scrollBarFlags = 0;
-
-                var scrollBarMargin: Margin = new Margin();
-                str = xml.attributes.scrollBarMargin;
-                if (str)
-                    scrollBarMargin.parse(str);
-
-                var vtScrollBarRes: string;
-                var hzScrollBarRes: string;
-                str = xml.attributes.scrollBarRes;
-                if (str) {
-                    arr = str.split(",");
-                    vtScrollBarRes = arr[0];
-                    hzScrollBarRes = arr[1];
-                }
-
-                var headerRes: string;
-                var footerRes: string;
-                str = xml.attributes.ptrRes;
-                if (str) {
-                    arr = str.split(",");
-                    headerRes = arr[0];
-                    footerRes = arr[1];
-                }
-
-                this.setupScroll(scrollBarMargin, scroll, scrollBarDisplay, scrollBarFlags, vtScrollBarRes, hzScrollBarRes, headerRes, footerRes);
+                var savedPos: number = buffer.position;
+                buffer.seek(beginPos, 7);
+                this.setupScroll(buffer);
+                buffer.position = savedPos;
             }
             else
                 this.setupOverflow(overflow);
 
-            str = xml.attributes.lineGap;
-            if (str)
-                this._lineGap = parseInt(str);
+            if (buffer.readBool())
+                buffer.skip(8);
 
-            str = xml.attributes.colGap;
-            if (str)
-                this._columnGap = parseInt(str);
+            buffer.seek(beginPos, 8);
 
-            str = xml.attributes.lineItemCount;
-            if (str) {
-                if (this._layout == ListLayoutType.FlowHorizontal || this._layout == ListLayoutType.Pagination)
-                    this._columnCount = parseInt(str);
-                else if (this._layout == ListLayoutType.FlowVertical)
-                    this._lineCount = parseInt(str);
-            }
+            this._defaultItem = buffer.readS();
+            var itemCount: number = buffer.readShort();
+            for (i = 0; i < itemCount; i++) {
+                nextPos = buffer.readShort();
+                nextPos += buffer.position;
 
-            str = xml.attributes.lineItemCount2;
-            if (str)
-                this._lineCount = parseInt(str);
-
-            str = xml.attributes.selectionMode;
-            if (str)
-                this._selectionMode = parseListSelectionMode(str);
-
-            str = xml.attributes.defaultItem;
-            if (str)
-                this._defaultItem = str;
-
-            str = xml.attributes.autoItemSize;
-            if (this._layout == ListLayoutType.SingleRow || this._layout == ListLayoutType.SingleColumn)
-                this._autoResizeItem = str != "false";
-            else
-                this._autoResizeItem = str == "true";
-
-            str = xml.attributes.renderOrder;
-            if (str) {
-                this._childrenRenderOrder = parseChildrenRenderOrder(str);
-                if (this._childrenRenderOrder == ChildrenRenderOrder.Arch) {
-                    str = xml.attributes.apex;
-                    if (str)
-                        this._apexIndex = parseInt(str);
+                str = buffer.readS();
+                if (str == null) {
+                    str = this.defaultItem;
+                    if (!str) {
+                        buffer.position = nextPos;
+                        continue;
+                    }
                 }
-            }
 
-            var col: any = xml.children;
-            if (col) {
-                var length: number = col.length;
-                for (var i: number = 0; i < length; i++) {
-                    var cxml: any = col[i];
-                    if (cxml.name != "item")
-                        continue;
-
-                    var url: string = cxml.attributes.url;
-                    if (!url)
-                        url = this._defaultItem;
-                    if (!url)
-                        continue;
-
-                    var obj: GObject = this.getFromPool(url);
-                    if (obj != null) {
-                        this.addChild(obj);
-                        str = cxml.attributes.title;
-                        if (str)
-                            obj.text = str;
-                        str = cxml.attributes.icon;
-                        if (str)
-                            obj.icon = str;
-                        str = cxml.attributes.name;
-                        if (str)
-                            obj.name = str;
-                        str = cxml.attributes.selectedIcon;
-                        if (str && (obj instanceof GButton))
-                            (<GButton><any>obj).selectedIcon = str;
-                        str = cxml.attributes.selectedTitle;
-                        if (str && (obj instanceof GButton))
-                            (<GButton><any>obj).selectedTitle = str;
-                        if (obj instanceof GComponent) {
-                            str = cxml.attributes.controllers;
-                            if (str) {
-                                arr = str.split(",");
-                                for (var j: number = 0; j < arr.length; j += 2) {
-                                    var cc: Controller = (<GComponent><any>obj).getController(arr[j]);
-                                    if (cc != null)
-                                        cc.selectedPageId = arr[j + 1];
-                                }
-                            }
+                var obj: GObject = this.getFromPool(str);
+                if (obj != null) {
+                    this.addChild(obj);
+                    str = buffer.readS();
+                    if (str != null)
+                        obj.text = str;
+                    str = buffer.readS();
+                    if (str != null && (obj instanceof GButton))
+                        (<GButton>obj).selectedTitle = str;
+                    str = buffer.readS();
+                    if (str != null)
+                        obj.icon = str;
+                    str = buffer.readS();
+                    if (str != null && (obj instanceof GButton))
+                        (<GButton>obj).selectedIcon = str;
+                    str = buffer.readS();
+                    if (str != null)
+                        obj.name = str;
+                    if (obj instanceof GComponent) {
+                        cnt = buffer.readShort();
+                        for (j = 0; j < cnt; j++) {
+                            var cc: Controller = (<GComponent>obj).getController(buffer.readS());
+                            str = buffer.readS();
+                            if (cc != null)
+                                cc.selectedPageId = str;
                         }
                     }
                 }
+
+                buffer.position = nextPos;
             }
         }
 
-        public setup_afterAdd(xml: any): void {
-            super.setup_afterAdd(xml);
+        public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
+            super.setup_afterAdd(buffer, beginPos);
 
-            var str: string;
-            str = xml.attributes.selectionController;
-            if (str)
-                this._selectionController = this.parent.getController(str);
+            buffer.seek(beginPos, 6);
+
+            var i: number = buffer.readShort();
+            if (i != -1)
+                this._selectionController = this.parent.getControllerAt(i);
         }
     }
 

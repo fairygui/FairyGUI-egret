@@ -1,7 +1,7 @@
 
 module fairygui {
 
-    export class GearText extends GearBase {
+    export class GearIcon extends GearBase {
         private _storage: any;
         private _default: string;
 
@@ -10,15 +10,15 @@ module fairygui {
         }
 
         protected init(): void {
-            this._default = this._owner.text;
+            this._default = this._owner.icon;
             this._storage = {};
         }
 
-        protected addStatus(pageId: string, value: string): void {
-            if (pageId == null)
-                this._default = value;
-            else
-                this._storage[pageId] = value;
+        protected addStatus(pageId: string, buffer:ByteBuffer): void {
+			if(pageId==null)
+				this._default = buffer.readS();
+			else
+				this._storage[pageId] = buffer.readS(); 
         }
 
         public apply(): void {
@@ -26,15 +26,15 @@ module fairygui {
 
             var data: any = this._storage[this._controller.selectedPageId];
             if (data != undefined)
-                this._owner.text = data;
+                this._owner.icon = data;
             else
-                this._owner.text = this._default;
+                this._owner.icon = this._default;
 
             this._owner._gearLocked = false;
         }
 
         public updateState(): void {
-            this._storage[this._controller.selectedPageId] = this._owner.text;
+            this._storage[this._controller.selectedPageId] = this._owner.icon;
         }
     }
 }

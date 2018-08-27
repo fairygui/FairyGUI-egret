@@ -53,12 +53,10 @@ module fairygui {
                 return (this._arrowButton1 != null ? this._arrowButton1.width : 0) + (this._arrowButton2 != null ? this._arrowButton2.width : 0);
         }
 
-        protected constructFromXML(xml: any): void {
-            super.constructFromXML(xml);
-
-            xml = ToolSet.findChildNode(xml, "ScrollBar");
-            if (xml != null)
-                this._fixedGripSize = xml.attributes.fixedGripSize == "true";
+        protected constructExtension(buffer:ByteBuffer): void {
+            buffer.seek(0, 6);
+			
+			this._fixedGripSize = buffer.readBool();
 
             this._grip = this.getChild("grip");
             if (!this._grip) {

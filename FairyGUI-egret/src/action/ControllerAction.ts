@@ -5,12 +5,12 @@ module fairygui {
         public fromPage: string[];
         public toPage: string[];
 
-        public static createAction(type: string): ControllerAction {
+        public static createAction(type: number): ControllerAction {
             switch (type) {
-                case "play_transition":
+                case 0:
                     return new PlayTransitionAction();
 
-                case "change_page":
+                case 1:
                     return new ChangePageAction();
             }
             return null;
@@ -20,7 +20,7 @@ module fairygui {
         }
 
         public run(controller: Controller, prevPage: string, curPage: string): void {
-            if ( (this.fromPage == null || this.fromPage.length == 0 || this.fromPage.indexOf(prevPage) != -1)
+            if ((this.fromPage == null || this.fromPage.length == 0 || this.fromPage.indexOf(prevPage) != -1)
                 && (this.toPage == null || this.toPage.length == 0 || this.toPage.indexOf(curPage) != -1))
                 this.enter(controller);
             else
@@ -35,16 +35,19 @@ module fairygui {
 
         }
 
-        public setup(xml: any): void {
-            var str: string;
+        public setup(buffer: ByteBuffer): void {
+            var cnt: number;
+            var i: number;
 
-            str = xml.attributes.fromPage;
-            if (str)
-                this.fromPage = str.split(",");
+            cnt = buffer.readShort();
+            this.fromPage = [];
+            for (i = 0; i < cnt; i++)
+                this.fromPage[i] = buffer.readS();
 
-            str = xml.attributes.toPage;
-            if (str)
-                this.toPage = str.split(",");
+            cnt = buffer.readShort();
+            this.toPage = [];
+            for (i = 0; i < cnt; i++)
+                this.toPage[i] = buffer.readS();
         }
     }
 }

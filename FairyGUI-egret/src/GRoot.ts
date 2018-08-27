@@ -182,7 +182,7 @@ module fairygui {
             this.adjustModalLayer();
 
             var pos: egret.Point;
-            var sizeW: number, sizeH: number = 0;
+            var sizeW: number = 0, sizeH: number = 0;
             if (target) {
                 pos = target.localToRoot();
                 sizeW = target.width;

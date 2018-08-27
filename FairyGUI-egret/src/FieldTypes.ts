@@ -1,20 +1,118 @@
 module fairygui {
-    export enum ButtonMode { Common, Check, Radio };
-    export enum AutoSizeType { None, Both, Height };
-    export enum AlignType { Left, Center, Right };
-    export enum VertAlignType { Top, Middle, Bottom };
-    export enum LoaderFillType { None, Scale, ScaleMatchHeight, ScaleMatchWidth, ScaleFree, ScaleNoBorder };
-    export enum ListLayoutType { SingleColumn, SingleRow, FlowHorizontal, FlowVertical, Pagination };
-    export enum ListSelectionMode { Single, Multiple, Multiple_SingleClick, None };
-    export enum OverflowType { Visible, Hidden, Scroll, Scale, ScaleFree };
-    export enum PackageItemType { Image, Swf, MovieClip, Sound, Component, Misc, Font, Atlas };
-    export enum ProgressTitleType { Percent, ValueAndMax, Value, Max };
-    export enum ScrollBarDisplayType { Default, Visible, Auto, Hidden };
-    export enum ScrollType { Horizontal, Vertical, Both };
-    export enum FlipType { None, Horizontal, Vertical, Both };
-    export enum ChildrenRenderOrder { Ascent, Descent, Arch };
-    export enum GroupLayoutType { None, Horizontal, Vertical };
-
+    export enum ButtonMode {
+        Common,
+        Check,
+        Radio
+    };
+    export enum AutoSizeType {
+        None,
+        Both,
+        Height
+    };
+    export enum AlignType {
+        Left,
+        Center,
+        Right
+    };
+    export enum VertAlignType {
+        Top,
+        Middle,
+        Bottom
+    };
+    export enum LoaderFillType {
+        None,
+        Scale,
+        ScaleMatchHeight,
+        ScaleMatchWidth,
+        ScaleFree,
+        ScaleNoBorder
+    };
+    export enum ListLayoutType {
+        SingleColumn,
+        SingleRow,
+        FlowHorizontal,
+        FlowVertical,
+        Pagination
+    };
+    export enum ListSelectionMode {
+        Single,
+        Multiple,
+        Multiple_SingleClick,
+        None
+    };
+    export enum OverflowType {
+        Visible,
+        Hidden,
+        Scroll
+    };
+    export enum PackageItemType {
+        Image,
+        MovieClip,
+        Sound,
+        Component,
+        Atlas,
+        Font,
+        Swf,
+        Misc,
+        Unknown
+    };
+    export enum ObjectType {
+        Image,
+        MovieClip,
+        Swf,
+        Graph,
+        Loader,
+        Group,
+        Text,
+        RichText,
+        InputText,
+        Component,
+        List,
+        Label,
+        Button,
+        ComboBox,
+        ProgressBar,
+        Slider,
+        ScrollBar
+    };
+    export enum ProgressTitleType {
+        Percent,
+        ValueAndMax,
+        Value,
+        Max
+    };
+    export enum ScrollBarDisplayType {
+        Default,
+        Visible,
+        Auto,
+        Hidden
+    };
+    export enum ScrollType {
+        Horizontal,
+        Vertical,
+        Both
+    };
+    export enum FlipType {
+        None,
+        Horizontal,
+        Vertical,
+        Both
+    };
+    export enum ChildrenRenderOrder {
+        Ascent,
+        Descent,
+        Arch
+    };
+    export enum GroupLayoutType {
+        None,
+        Horizontal,
+        Vertical
+    };
+    export enum PopupDirection {
+        Auto,
+        Up,
+        Down
+    };
     export enum RelationType {
         Left_Left = 0,
         Left_Center = 1,
@@ -46,236 +144,4 @@ module fairygui {
 
         Size = 24
     };
-
-    export function parseButtonMode(value: string): ButtonMode {
-        switch (value) {
-            case "Common":
-                return ButtonMode.Common;
-            case "Check":
-                return ButtonMode.Check;
-            case "Radio":
-                return ButtonMode.Radio;
-            default:
-                return ButtonMode.Common;
-        }
-    }
-
-    export function parseAutoSizeType(value: string): AutoSizeType {
-        switch (value) {
-            case "none":
-                return AutoSizeType.None;
-            case "both":
-                return AutoSizeType.Both;
-            case "height":
-                return AutoSizeType.Height;
-            default:
-                return AutoSizeType.None;
-        }
-    }
-
-    export function parseAlignType(value: string): AlignType {
-        switch (value) {
-            case "left":
-                return AlignType.Left;
-            case "center":
-                return AlignType.Center;
-            case "right":
-                return AlignType.Right;
-            default:
-                return AlignType.Left;
-        }
-    }
-
-    export function getAlignTypeString(type: AlignType): string {
-        return type == AlignType.Left ? egret.HorizontalAlign.LEFT :
-            (type == AlignType.Center ? egret.HorizontalAlign.CENTER : egret.HorizontalAlign.RIGHT);
-    }
-
-    export function getVertAlignTypeString(type: VertAlignType): string {
-        return type == VertAlignType.Top ? egret.VerticalAlign.TOP :
-            (type == VertAlignType.Middle ? egret.VerticalAlign.MIDDLE : egret.VerticalAlign.BOTTOM);
-    }
-
-    export function parseVertAlignType(value: string): VertAlignType {
-        switch (value) {
-            case "top":
-                return VertAlignType.Top;
-            case "middle":
-                return VertAlignType.Middle;
-            case "bottom":
-                return VertAlignType.Bottom;
-            default:
-                return VertAlignType.Top;
-        }
-    }
-
-    export function parseLoaderFillType(value: string): LoaderFillType {
-        switch (value) {
-            case "none":
-                return LoaderFillType.None;
-            case "scale":
-                return LoaderFillType.Scale;
-            case "scaleMatchHeight":
-                return LoaderFillType.ScaleMatchHeight;
-            case "scaleMatchWidth":
-                return LoaderFillType.ScaleMatchWidth;
-            case "scaleFree":
-                return LoaderFillType.ScaleFree;
-            case "scaleNoBorder":
-                return LoaderFillType.ScaleNoBorder;
-            default:
-                return LoaderFillType.None;
-        }
-    }
-
-    export function parseListLayoutType(value: string): ListLayoutType {
-        switch (value) {
-            case "column":
-                return ListLayoutType.SingleColumn;
-            case "row":
-                return ListLayoutType.SingleRow;
-            case "flow_hz":
-                return ListLayoutType.FlowHorizontal;
-            case "flow_vt":
-                return ListLayoutType.FlowVertical;
-            case "pagination":
-                return ListLayoutType.Pagination;
-            default:
-                return ListLayoutType.SingleColumn;
-        }
-    }
-
-    export function parseListSelectionMode(value: string): ListSelectionMode {
-        switch (value) {
-            case "single":
-                return ListSelectionMode.Single;
-            case "multiple":
-                return ListSelectionMode.Multiple;
-            case "multipleSingleClick":
-                return ListSelectionMode.Multiple_SingleClick;
-            case "none":
-                return ListSelectionMode.None;
-            default:
-                return ListSelectionMode.Single;
-        }
-    }
-
-    export function parseOverflowType(value: string): OverflowType {
-        switch (value) {
-            case "visible":
-                return OverflowType.Visible;
-            case "hidden":
-                return OverflowType.Hidden;
-            case "scroll":
-                return OverflowType.Scroll;
-            case "scale":
-                return OverflowType.Scale;
-            case "scaleFree":
-                return OverflowType.ScaleFree;
-            default:
-                return OverflowType.Visible;
-        }
-    }
-
-    export function parsePackageItemType(value: string): PackageItemType {
-        switch (value) {
-            case "image":
-                return PackageItemType.Image;
-            case "movieclip":
-                return PackageItemType.MovieClip;
-            case "sound":
-                return PackageItemType.Sound;
-            case "component":
-                return PackageItemType.Component;
-            case "swf":
-                return PackageItemType.Swf;
-            case "font":
-                return PackageItemType.Font;
-            case "atlas":
-                return PackageItemType.Atlas;
-            default:
-                return PackageItemType.Misc;
-        }
-    }
-
-    export function parseProgressTitleType(value: string): ProgressTitleType {
-        switch (value) {
-            case "percent":
-                return ProgressTitleType.Percent;
-            case "valueAndmax":
-                return ProgressTitleType.ValueAndMax;
-            case "value":
-                return ProgressTitleType.Value;
-            case "max":
-                return ProgressTitleType.Max;
-            default:
-                return ProgressTitleType.Percent;
-        }
-    }
-
-    export function parseScrollBarDisplayType(value: string): ScrollBarDisplayType {
-        switch (value) {
-            case "default":
-                return ScrollBarDisplayType.Default;
-            case "visible":
-                return ScrollBarDisplayType.Visible;
-            case "auto":
-                return ScrollBarDisplayType.Auto;
-            case "hidden":
-                return ScrollBarDisplayType.Hidden;
-            default:
-                return ScrollBarDisplayType.Default;
-        }
-    }
-
-    export function parseScrollType(value: string): ScrollType {
-        switch (value) {
-            case "horizontal":
-                return ScrollType.Horizontal;
-            case "vertical":
-                return ScrollType.Vertical;
-            case "both":
-                return ScrollType.Both;
-            default:
-                return ScrollType.Vertical;
-        }
-    }
-
-
-    export function parseFlipType(value: string): FlipType {
-        switch (value) {
-            case "hz":
-                return FlipType.Horizontal;
-            case "vt":
-                return FlipType.Vertical;
-            case "both":
-                return FlipType.Both;
-            default:
-                return FlipType.None;
-        }
-    }
-
-    export function parseChildrenRenderOrder(value: string): ChildrenRenderOrder {
-        switch (value) {
-            case "ascent":
-                return ChildrenRenderOrder.Ascent;
-            case "descent":
-                return ChildrenRenderOrder.Descent;
-            case "arch":
-                return ChildrenRenderOrder.Arch;
-            default:
-                return ChildrenRenderOrder.Ascent;
-        }
-    }
-
-    export function parseGroupLayoutType(value: string): GroupLayoutType {
-        switch (value) {
-            case "hz":
-                return GroupLayoutType.Horizontal;
-            case "vt":
-                return GroupLayoutType.Vertical;
-            default:
-                return GroupLayoutType.None;
-        }
-    }
 } 

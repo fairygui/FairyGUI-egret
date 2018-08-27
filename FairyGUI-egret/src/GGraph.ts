@@ -10,7 +10,7 @@ module fairygui {
         private _lineAlpha: number;
         private _fillColor: number = 0;
         private _fillAlpha: number;
-        private _corner: number[];
+        private _cornerRadius: Array<number>;
 
         public constructor() {
             super();
@@ -19,6 +19,7 @@ module fairygui {
             this._lineAlpha = 1;
             this._fillAlpha = 1;
             this._fillColor = 0xFFFFFF;
+            this._cornerRadius = null;
         }
 
         public get graphics(): egret.Graphics {
@@ -38,7 +39,7 @@ module fairygui {
             this._lineAlpha = lineAlpha;
             this._fillColor = fillColor;
             this._fillAlpha = fillAlpha;
-            this._corner = corner;
+            this._cornerRadius = corner;
             this.drawCommon();
         }
 
@@ -50,7 +51,7 @@ module fairygui {
             this._lineAlpha = lineAlpha;
             this._fillColor = fillColor;
             this._fillAlpha = fillAlpha;
-            this._corner = null;
+            this._cornerRadius = null;
             this.drawCommon();
         }
 
@@ -87,11 +88,11 @@ module fairygui {
                 this._graphics.lineStyle(this._lineSize, this._lineColor, this._lineAlpha);
             this._graphics.beginFill(this._fillColor, this._fillAlpha);
             if (this._type == 1) {
-                if (this._corner) {
-                    if (this._corner.length == 1)
-                        this._graphics.drawRoundRect(0, 0, w, h, this._corner[0]*2, this._corner[0]*2);
+                if (this._cornerRadius) {
+                    if (this._cornerRadius.length == 1)
+                        this._graphics.drawRoundRect(0, 0, w, h, this._cornerRadius[0] * 2, this._cornerRadius[0] * 2);
                     else
-                        this._graphics.drawRoundRect(0, 0, w, h, this._corner[0]*2, this._corner[1]*2);
+                        this._graphics.drawRoundRect(0, 0, w, h, this._cornerRadius[0] * 2, this._cornerRadius[1] * 2);
                 }
                 else
                     this._graphics.drawRect(0, 0, w, h);
@@ -181,53 +182,34 @@ module fairygui {
             }
         }
 
-        public setup_beforeAdd(xml: any): void {
-            var str: string;
-            var type: string = xml.attributes.type;
-            if (type && type != "empty") {
+        public setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void {
+            buffer.seek(beginPos, 5);
+
+            var type: number = buffer.readByte();
+            if (type != 0) {
+                this._lineSize = buffer.readInt();
+                var c: number = buffer.readColor(true);
+                this._lineColor = c & 0xFFFFFF;
+                this._lineAlpha = ((c >> 24) & 0xFF) / 0xFF;
+                c = buffer.readColor(true);
+                this._fillColor = c & 0xFFFFFF;
+                this._fillAlpha = ((c >> 24) & 0xFF) / 0xFF;
+                if (buffer.readBool()) {
+                    this._cornerRadius = new Array<number>(4);
+                    for (var i: number = 0; i < 4; i++)
+                        this._cornerRadius[i] = buffer.readFloat();
+                }
+
                 var sprite: UISprite = new UISprite();
                 sprite["$owner"] = this;
                 this.setDisplayObject(sprite);
             }
 
-            super.setup_beforeAdd(xml);
+            super.setup_beforeAdd(buffer, beginPos);
 
             if (this.displayObject != null) {
                 this._graphics = (<egret.Sprite>(this.displayObject)).graphics;
-
-                str = xml.attributes.lineSize;
-                if (str)
-                    this._lineSize = parseInt(str);
-
-                str = xml.attributes.lineColor;
-                if (str) {
-                    var c: number = ToolSet.convertFromHtmlColor(str, true);
-                    this._lineColor = c & 0xFFFFFF;
-                    this._lineAlpha = ((c >> 24) & 0xFF) / 0xFF;
-                }
-
-                str = xml.attributes.fillColor;
-                if (str) {
-                    c = ToolSet.convertFromHtmlColor(str, true);
-                    this._fillColor = c & 0xFFFFFF;
-                    this._fillAlpha = ((c >> 24) & 0xFF) / 0xFF;
-                }
-
-                var arr: string[];
-                str = xml.attributes.corner;
-                if (str) {
-                    arr = str.split(",");
-                    if (arr.length > 1)
-                        this._corner = [parseInt(arr[0]), parseInt(arr[1])];
-                    else
-                        this._corner = [parseInt(arr[0])];
-                }
-
-                if (type == "rect")
-                    this._type = 1;
-                else
-                    this._type = 2;
-
+                this._type = type;
                 this.drawCommon();
             }
         }

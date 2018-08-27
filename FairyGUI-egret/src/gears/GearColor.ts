@@ -17,27 +17,17 @@ module fairygui {
             this._storage = {};
         }
 
-        protected addStatus(pageId: string, value: string): void {
-            if (value == "-" || value.length == 0)
-                return;
-
-            var pos: number = value.indexOf(",");
-            var col1: number;
-            var col2: number;
-            if (pos == -1) {
-                col1 = ToolSet.convertFromHtmlColor(value);
-                col2 = NaN;
-            }
+        protected addStatus(pageId: string, buffer: ByteBuffer): void {
+            var gv: GearColorValue;
+            if (pageId == null)
+                gv = this._default;
             else {
-                col1 = ToolSet.convertFromHtmlColor(value.substr(0, pos));
-                col2 = ToolSet.convertFromHtmlColor(value.substr(pos + 1));
+                gv = new GearColorValue();
+                this._storage[pageId] = gv;
             }
-            if (pageId == null) {
-                this._default.color = col1;
-                this._default.strokeColor = col2;
-            }
-            else
-                this._storage[pageId] = new GearColorValue(col1, col2);
+
+            gv.color = buffer.readColor();
+            gv.strokeColor = buffer.readColor();
         }
 
         public apply(): void {

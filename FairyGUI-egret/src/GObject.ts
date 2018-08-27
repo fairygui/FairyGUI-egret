@@ -1024,123 +1024,104 @@ module fairygui {
         public constructFromResource(): void {
         }
 
-        public setup_beforeAdd(xml: any): void {
-            var str: string;
-            var arr: string[];
+        public setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void {
+            buffer.seek(beginPos, 0);
+            buffer.skip(5);
 
-            this._id = xml.attributes.id;
-            this._name = xml.attributes.name;
+            var f1: number;
+            var f2: number;
 
-            str = xml.attributes.xy;
-            arr = str.split(",");
-            this.setXY(parseInt(arr[0]), parseInt(arr[1]));
+            this._id = buffer.readS();
+            this._name = buffer.readS();
+            f1 = buffer.readInt();
+            f2 = buffer.readInt();
+            this.setXY(f1, f2);
 
-            str = xml.attributes.size;
-            if (str) {
-                arr = str.split(",");
-                this.initWidth = parseInt(arr[0]);
-                this.initHeight = parseInt(arr[1]);
+            if (buffer.readBool()) {
+                this.initWidth = buffer.readInt();
+                this.initHeight = buffer.readInt();
                 this.setSize(this.initWidth, this.initHeight, true);
             }
 
-            str = xml.attributes.restrictSize;
-            if (str) {
-                arr = str.split(",");
-                this.minWidth = parseInt(arr[0]);
-                this.maxWidth = parseInt(arr[1]);
-                this.minHeight = parseInt(arr[2]);
-                this.maxHeight = parseInt(arr[3]);
+            if (buffer.readBool()) {
+                this.minWidth = buffer.readInt();
+                this.maxWidth = buffer.readInt();
+                this.minHeight = buffer.readInt();
+                this.maxHeight = buffer.readInt();
             }
 
-            str = xml.attributes.scale;
-            if (str) {
-                arr = str.split(",");
-                this.setScale(parseFloat(arr[0]), parseFloat(arr[1]));
+            if (buffer.readBool()) {
+                f1 = buffer.readFloat();
+                f2 = buffer.readFloat();
+                this.setScale(f1, f2);
             }
 
-            str = xml.attributes.rotation;
-            if (str)
-                this.rotation = parseFloat(str);
-
-            str = xml.attributes.skew;
-            if (str) {
-                arr = str.split(",");
-                this.setSkew(parseFloat(arr[0]), parseFloat(arr[1]));
+            if (buffer.readBool()) {
+                f1 = buffer.readFloat();
+                f2 = buffer.readFloat();
+                this.setSkew(f1, f2);
             }
 
-            str = xml.attributes.pivot;
-            if (str) {
-                arr = str.split(",");
-                str = xml.attributes.anchor;
-                this.setPivot(parseFloat(arr[0]), parseFloat(arr[1]), str == "true");
+            if (buffer.readBool()) {
+                f1 = buffer.readFloat();
+                f2 = buffer.readFloat();
+                this.setPivot(f1, f2, buffer.readBool());
             }
 
-            str = xml.attributes.alpha;
-            if (str)
-                this.alpha = parseFloat(str);
+            f1 = buffer.readFloat();
+            if (f1 != 1)
+                this.alpha = f1;
 
-            if (xml.attributes.touchable == "false")
-                this.touchable = false;
-            if (xml.attributes.visible == "false")
+            f1 = buffer.readFloat();
+            if (f1 != 0)
+                this.rotation = f1;
+
+            if (!buffer.readBool())
                 this.visible = false;
-            if (xml.attributes.grayed == "true")
+            if (!buffer.readBool())
+                this.touchable = false;
+            if (buffer.readBool())
                 this.grayed = true;
-            this.tooltips = xml.attributes.tooltips;
+            var bm: number = buffer.readByte();
+            if (bm == 2)
+                this.blendMode = egret.BlendMode.ADD;
+            else if (bm == 5)
+                this.blendMode = egret.BlendMode.ERASE;
 
-            str = xml.attributes.blend;
-            if (str)
-                this.blendMode = str;
-
-            str = xml.attributes.filter;
-            if (str) {
-                switch (str) {
-                    case "color":
-                        str = xml.attributes.filterData;
-                        arr = str.split(",");
-                        var cm: ColorMatrix = new ColorMatrix();
-                        cm.adjustBrightness(parseFloat(arr[0]));
-                        cm.adjustContrast(parseFloat(arr[1]));
-                        cm.adjustSaturation(parseFloat(arr[2]));
-                        cm.adjustHue(parseFloat(arr[3]));
-                        var cf: egret.ColorMatrixFilter = new egret.ColorMatrixFilter(cm.matrix);
-                        this.filters = [cf];
-                        break;
-                }
-            }
-
-            str = xml.attributes.customData;
-            if (str) {
-                this.data = str;
+            var filter: number = buffer.readByte();
+            if (filter == 1) {
+                var cm: ColorMatrix = new ColorMatrix();
+                cm.adjustBrightness(buffer.readFloat());
+                cm.adjustContrast(buffer.readFloat());
+                cm.adjustSaturation(buffer.readFloat());
+                cm.adjustHue(buffer.readFloat());
+                var cf: egret.ColorMatrixFilter = new egret.ColorMatrixFilter(cm.matrix);
+                this.filters = [cf];
             }
         }
 
-        private static GearXMLKeys: any = {
-            "gearDisplay": 0,
-            "gearXY": 1,
-            "gearSize": 2,
-            "gearLook": 3,
-            "gearColor": 4,
-            "gearAni": 5,
-            "gearText": 6,
-            "gearIcon": 7
-        };
+        public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
+            buffer.seek(beginPos, 1);
 
-        public setup_afterAdd(xml: any): void {
-            var cxml: any;
+            var str: string = buffer.readS();
+            if (str != null)
+                this.tooltips = str;
 
-            var str: string = xml.attributes.group;
-            if (str)
-                this._group = <GGroup><any>(this._parent.getChildById(str));
+            var groupId: number = buffer.readShort();
+            if (groupId >= 0)
+                this.group = <GGroup>this.parent.getChildAt(groupId);
 
-            var col: any = xml.children;
-            if (col) {
-                var length1: number = col.length;
-                for (var i1: number = 0; i1 < length1; i1++) {
-                    var cxml: any = col[i1];
-                    var index: any = GObject.GearXMLKeys[cxml.name];
-                    if (index != undefined)
-                        this.getGear(index).setup(cxml);
-                }
+            buffer.seek(beginPos, 2);
+
+            var cnt: number = buffer.readShort();
+            for (var i: number = 0; i < cnt; i++) {
+                var nextPos: number = buffer.readShort();
+                nextPos += buffer.position;
+
+                var gear: GearBase = this.getGear(buffer.readByte());
+                gear.setup(buffer);
+
+                buffer.position = nextPos;
             }
         }
 

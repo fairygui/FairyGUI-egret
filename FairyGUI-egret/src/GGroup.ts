@@ -372,25 +372,18 @@ module fairygui {
             }
         }
 
-        public setup_beforeAdd(xml: any): void {
-            super.setup_beforeAdd(xml);
+        public setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void {
+            super.setup_beforeAdd(buffer, beginPos);
 
-            var str: string;
+            buffer.seek(beginPos, 5);
 
-            str = xml.attributes.layout;
-            if (str != null) {
-                this._layout = parseGroupLayoutType(str);
-                str = xml.attributes.lineGap;
-                if (str)
-                    this._lineGap = parseInt(str);
-                str = xml.attributes.colGap;
-                if (str)
-                    this._columnGap = parseInt(str);
-            }
+            this._layout = buffer.readByte();
+            this._lineGap = buffer.readInt();
+            this._columnGap = buffer.readInt();
         }
 
-        public setup_afterAdd(xml: any): void {
-            super.setup_afterAdd(xml);
+        public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
+            super.setup_afterAdd(buffer, beginPos);
 
             if (!this.visible)
                 this.handleVisibleChanged();

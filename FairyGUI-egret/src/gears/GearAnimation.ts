@@ -15,10 +15,7 @@ module fairygui {
             this._storage = {};
         }
 
-        protected addStatus(pageId: string, value: string): void {
-            if (value == "-" || value.length == 0)
-                return;
-
+        protected addStatus(pageId: string, buffer:ByteBuffer): void {
             var gv: GearAnimationValue;
             if (pageId == null)
                 gv = this._default;
@@ -26,9 +23,8 @@ module fairygui {
                 gv = new GearAnimationValue();
                 this._storage[pageId] = gv;
             }
-            var arr: string[] = value.split(",");
-            gv.frame = parseInt(arr[0]);
-            gv.playing = arr[1] == "p";
+			gv.playing = buffer.readBool();
+			gv.frame = buffer.readInt();
         }
 
         public apply(): void {

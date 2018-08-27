@@ -52,54 +52,97 @@ module fairygui {
             this._itemList.length = 0;
             this._objectPool.length = 0;
 
-            this.collectComponentChildren(item);
-            this._itemList.push(new DisplayListItem(item, null));
+            var di: DisplayListItem = new DisplayListItem(item, 0);
+            di.childCount = this.collectComponentChildren(item);
+            this._itemList.push(di);
 
             this._index = 0;
             GTimers.inst.add(1, 0, this.run, this);
         }
 
-        private collectComponentChildren(item: PackageItem): void {
-            item.owner.getItemAsset(item);
+        private collectComponentChildren(item: PackageItem): number {
+            var buffer: ByteBuffer = item.rawData;
+            buffer.seek(0, 2);
 
-            var cnt: number = item.displayList.length;
-            for (var i: number = 0; i < cnt; i++) {
-                var di: DisplayListItem = item.displayList[i];
-                if (di.packageItem != null && di.packageItem.type == PackageItemType.Component)
-                    this.collectComponentChildren(di.packageItem);
-                else if (di.type == "list") //也要收集列表的item
-                {
-                    var defaultItem: string = null;
-                    di.listItemCount = 0;
+            var di: DisplayListItem;
+            var pi: PackageItem;
+            var i: number;
+            var dataLen: number;
+            var curPos: number;
+            var pkg: UIPackage;
 
-                    var col: any = di.desc.children;
-                    var length: number = col.length;
-                    for (var j: number = 0; j < length; j++) {
-                        var cxml: any = col[j];
-                        if (cxml.name != "item")
-                            continue;
+            var dcnt: number = buffer.readShort();
+            for (i = 0; i < dcnt; i++) {
+                dataLen = buffer.readShort();
+                curPos = buffer.position;
 
-                        var url: string = cxml.attributes.url;
-                        if (!url) {
-                            if (defaultItem == null)
-                                defaultItem = di.desc.attributes.defaultItem;
-                            url = defaultItem;
-                            if (!url)
-                                continue;
-                        }
+                buffer.seek(curPos, 0);
 
-                        var pi: PackageItem = UIPackage.getItemByURL(url);
-                        if (pi) {
-                            if (pi.type == PackageItemType.Component)
-                                this.collectComponentChildren(pi);
+                var type: number = buffer.readByte();
+                var src: string = buffer.readS();
+                var pkgId: string = buffer.readS();
 
-                            this._itemList.push(new DisplayListItem(pi, null));
-                            di.listItemCount++;
-                        }
+                buffer.position = curPos;
+
+                if (src != null) {
+                    if (pkgId != null)
+                        pkg = UIPackage.getById(pkgId);
+                    else
+                        pkg = item.owner;
+
+                    pi = pkg != null ? pkg.getItemById(src) : null;
+                    di = new DisplayListItem(pi, type);
+
+                    if (pi != null && pi.type == PackageItemType.Component)
+                        di.childCount = this.collectComponentChildren(pi);
+                }
+                else {
+                    di = new DisplayListItem(null, type);
+                    if (type == ObjectType.List) //list
+                        di.listItemCount = this.collectListChildren(buffer);
+                }
+
+                this._itemList.push(di);
+                buffer.position = curPos + dataLen;
+            }
+
+            return dcnt;
+        }
+
+        private collectListChildren(buffer: ByteBuffer): number {
+            buffer.seek(buffer.position, 8);
+
+            var listItemCount: number = 0;
+            var i: number;
+            var nextPos: number;
+            var url: string;
+            var pi: PackageItem;
+            var di: DisplayListItem;
+            var defaultItem: string = buffer.readS();
+            var itemCount: number = buffer.readShort();
+
+            for (i = 0; i < itemCount; i++) {
+                nextPos = buffer.readShort();
+                nextPos += buffer.position;
+
+                url = buffer.readS();
+                if (url == null)
+                    url = defaultItem;
+                if (url) {
+                    pi = UIPackage.getItemByURL(url);
+                    if (pi != null) {
+                        di = new DisplayListItem(pi, pi.objectType);
+                        if (pi.type == PackageItemType.Component)
+                            di.childCount = this.collectComponentChildren(pi);
+
+                        this._itemList.push(di);
+                        listItemCount++;
                     }
                 }
-                this._itemList.push(di);
+                buffer.position = nextPos;
             }
+
+            return listItemCount;
         }
 
         private run(): void {
@@ -120,11 +163,11 @@ module fairygui {
 
                     UIPackage._constructing++;
                     if (di.packageItem.type == PackageItemType.Component) {
-                        poolStart = this._objectPool.length - di.packageItem.displayList.length - 1;
+                        poolStart = this._objectPool.length - di.childCount - 1;
 
                         (<GComponent><any>obj).constructFromResource2(this._objectPool, poolStart);
 
-                        this._objectPool.splice(poolStart, di.packageItem.displayList.length);
+                        this._objectPool.splice(poolStart, di.childCount);
                     }
                     else {
                         obj.constructFromResource();
@@ -135,7 +178,7 @@ module fairygui {
                     obj = UIObjectFactory.newObject2(di.type);
                     this._objectPool.push(obj);
 
-                    if (di.type == "list" && di.listItemCount > 0) {
+                    if (di.type == ObjectType.List && di.listItemCount > 0) {
                         poolStart = this._objectPool.length - di.listItemCount - 1;
 
                         for (k = 0; k < di.listItemCount; k++) //把他们都放到pool里，这样GList在创建时就不需要创建对象了
@@ -157,6 +200,18 @@ module fairygui {
 
             if (this.callback != null)
                 this.callback.call(this.callbackObj, result);
+        }
+    }
+
+    class DisplayListItem {
+        public packageItem: PackageItem;
+        public type: ObjectType;
+        public childCount: number;
+        public listItemCount: number;
+
+        public constructor(packageItem: PackageItem, type: ObjectType) {
+            this.packageItem = packageItem;
+            this.type = type;
         }
     }
 }

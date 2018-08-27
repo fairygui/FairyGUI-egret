@@ -165,25 +165,22 @@ module fairygui {
             }
         }
 
-        public get timeScale():number
-		{
-			if(this._content instanceof MovieClip)
-				return (<MovieClip>this._content).timeScale;
-			else
-				return 1;
-		}
-		
-		public set timeScale(value:number)
-		{
-			if(this._content instanceof MovieClip)
-				(<MovieClip>this._content).timeScale = value;
-		}
-		
-		public advance(timeInMiniseconds:number):void
-		{
-			if(this._content instanceof MovieClip)
-				(<MovieClip>this._content).advance(timeInMiniseconds);
-		}
+        public get timeScale(): number {
+            if (this._content instanceof MovieClip)
+                return (<MovieClip>this._content).timeScale;
+            else
+                return 1;
+        }
+
+        public set timeScale(value: number) {
+            if (this._content instanceof MovieClip)
+                (<MovieClip>this._content).timeScale = value;
+        }
+
+        public advance(timeInMiniseconds: number): void {
+            if (this._content instanceof MovieClip)
+                (<MovieClip>this._content).advance(timeInMiniseconds);
+        }
 
         public get color(): number {
             return this._color;
@@ -511,38 +508,26 @@ module fairygui {
             this._container.hitArea.setTo(0, 0, this.width, this.height);
         }
 
-        public setup_beforeAdd(xml: any): void {
-            super.setup_beforeAdd(xml);
+        public setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void {
+            super.setup_beforeAdd(buffer, beginPos);
 
-            var str: string;
-            str = xml.attributes.url;
-            if (str)
-                this._url = str;
+            buffer.seek(beginPos, 5);
 
-            str = xml.attributes.align;
-            if (str)
-                this._align = parseAlignType(str);
+            this._url = buffer.readS();
+            this._align = buffer.readByte();
+            this._verticalAlign = buffer.readByte();
+            this._fill = buffer.readByte();
+            this._shrinkOnly = buffer.readBool();
+            this._autoSize = buffer.readBool();
+            this._showErrorSign = buffer.readBool();
+            this._playing = buffer.readBool();
+            this._frame = buffer.readInt();
 
-            str = xml.attributes.vAlign;
-            if (str)
-                this._verticalAlign = parseVertAlignType(str);
-
-            str = xml.attributes.fill;
-            if (str)
-                this._fill = parseLoaderFillType(str);
-
-            this._shrinkOnly = xml.attributes.shrinkOnly == "true"
-            this._autoSize = xml.attributes.autoSize == "true";
-
-            str = xml.attributes.errorSign;
-            if (str)
-                this._showErrorSign = str == "true";
-
-            this._playing = xml.attributes.playing != "false";
-
-            str = xml.attributes.color;
-            if (str)
-                this.color = ToolSet.convertFromHtmlColor(str);
+            if (buffer.readBool())
+                this.color = buffer.readColor();
+            var fillMethod: number = buffer.readByte();
+            if (fillMethod != 0)
+                buffer.skip(6);
 
             if (this._url)
                 this.loadContent();

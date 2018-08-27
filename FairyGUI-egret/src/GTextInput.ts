@@ -67,7 +67,7 @@ module fairygui {
             if (this._password != val) {
                 this._password = val;
                 this._textField.displayAsPassword = this._password;
-                if(val)
+                if (val)
                     this._textField.inputType = egret.TextFieldInputType.PASSWORD;
                 else
                     this._textField.inputType = egret.TextFieldInputType.TEXT;
@@ -122,24 +122,33 @@ module fairygui {
             }
         }
 
-        public setup_beforeAdd(xml: any): void {
-            super.setup_beforeAdd(xml);
+        public setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void {
+            super.setup_beforeAdd(buffer, beginPos);
 
-            this._promptText = xml.attributes.prompt;
-            var str: string = xml.attributes.maxLength;
+            buffer.seek(beginPos, 4);
+
+            var str: string = buffer.readS();
             if (str != null)
-                this._textField.maxChars = parseInt(str);
-            str = xml.attributes.restrict;
+                this._promptText = str;
+
+            str = buffer.readS();
             if (str != null)
                 this._textField.restrict = str;
-            str = xml.attributes.password;
-            if (str == "true")
+
+            var iv: number = buffer.readInt();
+            if (iv != 0)
+                this._textField.maxChars = iv;
+            iv = buffer.readInt();
+            if (iv != 0) {//keyboardType
+            }
+            if (buffer.readBool())
                 this.password = true;
+
             this.updateVertAlign();
         }
 
-        public setup_afterAdd(xml: any): void {
-            super.setup_afterAdd(xml);
+        public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
+            super.setup_afterAdd(buffer, beginPos);
 
             if (!this._text && this._promptText) {
                 this._textField.displayAsPassword = false;
