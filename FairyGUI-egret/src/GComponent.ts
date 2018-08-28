@@ -1127,14 +1127,16 @@ module fairygui {
 
             buffer.seek(beginPos, 4);
 
-            var pageController: string = buffer.readS();
+            var pageController: number = buffer.readShort();
             if (pageController != null && this._scrollPane != null)
-                this._scrollPane.pageController = this._parent.getController(pageController);
+                this._scrollPane.pageController = this._parent.getControllerAt(pageController);
 
             var cnt: number = buffer.readShort();
             for (var i: number = 0; i < cnt; i++) {
-                var cc: Controller = this.getControllerAt(buffer.readShort());
-                cc.selectedPageId = buffer.readS();
+                var cc: Controller = this.getController(buffer.readS());
+                var pageId: string = buffer.readS();
+                if (cc != null)
+                    cc.selectedPageId = pageId;
             }
         }
 

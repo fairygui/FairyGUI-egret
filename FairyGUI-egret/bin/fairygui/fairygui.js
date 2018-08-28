@@ -2760,13 +2760,15 @@ var fairygui;
         GComponent.prototype.setup_afterAdd = function (buffer, beginPos) {
             _super.prototype.setup_afterAdd.call(this, buffer, beginPos);
             buffer.seek(beginPos, 4);
-            var pageController = buffer.readS();
+            var pageController = buffer.readShort();
             if (pageController != null && this._scrollPane != null)
-                this._scrollPane.pageController = this._parent.getController(pageController);
+                this._scrollPane.pageController = this._parent.getControllerAt(pageController);
             var cnt = buffer.readShort();
             for (var i = 0; i < cnt; i++) {
-                var cc = this.getControllerAt(buffer.readShort());
-                cc.selectedPageId = buffer.readS();
+                var cc = this.getController(buffer.readS());
+                var pageId = buffer.readS();
+                if (cc != null)
+                    cc.selectedPageId = pageId;
             }
         };
         GComponent.prototype.___added = function (evt) {
