@@ -16026,7 +16026,7 @@ var fairygui;
                     }
                 }
                 else {
-                    bg.texture = this.createSubTexture(mainTexture, new egret.Rectangle(bg.x + mainSprite.rect.x, bg.y + mainSprite.rect.y, bg.width, bg.height));
+                    bg.texture = this.createSubTexture(mainTexture, new egret.Rectangle(bx + mainSprite.rect.x, by + mainSprite.rect.y, bg.width, bg.height));
                 }
                 if (font.ttf)
                     bg.lineHeight = lineHeight;
