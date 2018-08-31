@@ -10,6 +10,7 @@ module fairygui {
         public constructor() {
             super();
             this._color = 0xFFFFFF;
+            this._flip = FlipType.None;
         }
 
         private getColorMatrix(): egret.ColorMatrixFilter {

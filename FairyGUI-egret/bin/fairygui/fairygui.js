@@ -8651,6 +8651,7 @@ var fairygui;
         function GImage() {
             var _this = _super.call(this) || this;
             _this._color = 0xFFFFFF;
+            _this._flip = fairygui.FlipType.None;
             return _this;
         }
         GImage.prototype.getColorMatrix = function () {
