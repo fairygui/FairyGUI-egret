@@ -328,6 +328,11 @@ module fairygui {
                         value.f3 = parseFloat(args[2]);
                         value.f4 = parseFloat(args[3]);
                         break;
+
+                    case TransitionActionType.Text:
+                    case TransitionActionType.Icon:
+                        value.text = args[0];
+                        break;
                 }
             }
         }
@@ -719,6 +724,12 @@ module fairygui {
                         if (!startValue.b2)
                             startValue.f2 = item.target.y;
                     }
+                    else {
+                        if (!startValue.b1)
+                            startValue.f1 = item.target.x - this._ownerBaseX;
+                        if (!startValue.b2)
+                            startValue.f2 = item.target.y - this._ownerBaseY;
+                    }
                 }
                 else {
                     if (!startValue.b1)
@@ -961,6 +972,13 @@ module fairygui {
                         item.target.filters = arr;
                         break;
                     }
+                case TransitionActionType.Text:
+                    item.target.text = item.value.text;
+                    break;
+
+                case TransitionActionType.Icon:
+                    item.target.icon = item.value.text;
+                    break;
             }
 
             item.target._gearLocked = false;
@@ -1081,6 +1099,11 @@ module fairygui {
                     value.f3 = buffer.readFloat();
                     value.f4 = buffer.readFloat();
                     break;
+
+                case TransitionActionType.Text:
+                case TransitionActionType.Icon:
+                    value.text = buffer.readS();
+                    break;
             }
         }
     }
@@ -1100,7 +1123,9 @@ module fairygui {
         public static Shake: number = 11;
         public static ColorFilter: number = 12;
         public static Skew: number = 13;
-        public static Unknown: number = 14;
+        public static Text: number = 14;
+        public static Icon: number = 15;
+        public static Unknown: number = 16;
     }
 
     class TransitionItem {
@@ -1151,6 +1176,11 @@ module fairygui {
 
                 case TransitionActionType.Visible:
                     this.value = new TValue_Visible();
+                    break;
+
+                case TransitionActionType.Text:
+                case TransitionActionType.Icon:
+                    this.value = new TValue_Text();
                     break;
             }
         }
@@ -1204,6 +1234,10 @@ module fairygui {
         public offsetY: number;
         public lastOffsetX: number;
         public lastOffsetY: number;
+    }
+
+    class TValue_Text {
+        public text: string;
     }
 
     class TValue {

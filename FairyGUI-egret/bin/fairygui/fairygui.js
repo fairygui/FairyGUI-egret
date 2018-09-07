@@ -6072,6 +6072,10 @@ var fairygui;
                         value.f3 = parseFloat(args[2]);
                         value.f4 = parseFloat(args[3]);
                         break;
+                    case TransitionActionType.Text:
+                    case TransitionActionType.Icon:
+                        value.text = args[0];
+                        break;
                 }
             }
         };
@@ -6413,6 +6417,12 @@ var fairygui;
                         if (!startValue.b2)
                             startValue.f2 = item.target.y;
                     }
+                    else {
+                        if (!startValue.b1)
+                            startValue.f1 = item.target.x - this._ownerBaseX;
+                        if (!startValue.b2)
+                            startValue.f2 = item.target.y - this._ownerBaseY;
+                    }
                 }
                 else {
                     if (!startValue.b1)
@@ -6622,6 +6632,12 @@ var fairygui;
                         item.target.filters = arr;
                         break;
                     }
+                case TransitionActionType.Text:
+                    item.target.text = item.value.text;
+                    break;
+                case TransitionActionType.Icon:
+                    item.target.icon = item.value.text;
+                    break;
             }
             item.target._gearLocked = false;
         };
@@ -6717,6 +6733,10 @@ var fairygui;
                     value.f3 = buffer.readFloat();
                     value.f4 = buffer.readFloat();
                     break;
+                case TransitionActionType.Text:
+                case TransitionActionType.Icon:
+                    value.text = buffer.readS();
+                    break;
             }
         };
         Transition.OPTION_IGNORE_DISPLAY_CONTROLLER = 1;
@@ -6743,7 +6763,9 @@ var fairygui;
         TransitionActionType.Shake = 11;
         TransitionActionType.ColorFilter = 12;
         TransitionActionType.Skew = 13;
-        TransitionActionType.Unknown = 14;
+        TransitionActionType.Text = 14;
+        TransitionActionType.Icon = 15;
+        TransitionActionType.Unknown = 16;
         return TransitionActionType;
     }());
     __reflect(TransitionActionType.prototype, "TransitionActionType");
@@ -6776,6 +6798,10 @@ var fairygui;
                     break;
                 case TransitionActionType.Visible:
                     this.value = new TValue_Visible();
+                    break;
+                case TransitionActionType.Text:
+                case TransitionActionType.Icon:
+                    this.value = new TValue_Text();
                     break;
             }
         }
@@ -6824,6 +6850,12 @@ var fairygui;
         return TValue_Shake;
     }());
     __reflect(TValue_Shake.prototype, "TValue_Shake");
+    var TValue_Text = (function () {
+        function TValue_Text() {
+        }
+        return TValue_Text;
+    }());
+    __reflect(TValue_Text.prototype, "TValue_Text");
     var TValue = (function () {
         function TValue() {
             this.f1 = this.f2 = this.f3 = this.f4 = 0;
