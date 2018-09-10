@@ -1098,6 +1098,10 @@ module fairygui {
                 var cf: egret.ColorMatrixFilter = new egret.ColorMatrixFilter(cm.matrix);
                 this.filters = [cf];
             }
+
+            var str: string = buffer.readS();
+            if (str != null)
+                this.data = str;
         }
 
         public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {

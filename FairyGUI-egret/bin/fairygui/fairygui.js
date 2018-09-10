@@ -1172,6 +1172,9 @@ var fairygui;
                 var cf = new egret.ColorMatrixFilter(cm.matrix);
                 this.filters = [cf];
             }
+            var str = buffer.readS();
+            if (str != null)
+                this.data = str;
         };
         GObject.prototype.setup_afterAdd = function (buffer, beginPos) {
             buffer.seek(beginPos, 1);
