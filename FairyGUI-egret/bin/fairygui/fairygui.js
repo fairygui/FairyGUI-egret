@@ -3978,7 +3978,7 @@ var fairygui;
                     buffer.position = nextPos;
                 }
             }
-            if (parent != null && this._pageIds.length > 0)
+            if (this.parent != null && this._pageIds.length > 0)
                 this._selectedIndex = 0;
             else
                 this._selectedIndex = -1;
