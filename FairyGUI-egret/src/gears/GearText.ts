@@ -25,7 +25,7 @@ module fairygui {
             this._owner._gearLocked = true;
 
             var data: any = this._storage[this._controller.selectedPageId];
-            if (data != undefined)
+            if (data !== undefined)
                 this._owner.text = data;
             else
                 this._owner.text = this._default;
