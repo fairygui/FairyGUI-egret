@@ -32,8 +32,8 @@ module fairygui {
             if (TranslationHelper.strings == null)
                 return;
 
-            var strings: Object = TranslationHelper.strings[item.owner.id + item.id];
-            if (strings == null)
+            var compStrings: Object = TranslationHelper.strings[item.owner.id + item.id];
+            if (compStrings == null)
                 return;
 
             var elementId: string, value: string;
@@ -66,7 +66,7 @@ module fairygui {
 
                 buffer.seek(curPos, 1);
 
-                if ((value = strings[elementId + "-tips"]) != null)
+                if ((value = compStrings[elementId + "-tips"]) != null)
                     buffer.writeS(value);
 
                 buffer.seek(curPos, 2);
@@ -83,14 +83,14 @@ module fairygui {
                         for (k = 0; k < valueCnt; k++) {
                             page = buffer.readS();
                             if (page != null) {
-                                if ((value = strings[elementId + "-texts_" + k]) != null)
+                                if ((value = compStrings[elementId + "-texts_" + k]) != null)
                                     buffer.writeS(value);
                                 else
                                     buffer.skip(2);
                             }
                         }
 
-                        if (buffer.readBool() && (value = strings[elementId + "-texts_def"]) != null)
+                        if (buffer.readBool() && (value = compStrings[elementId + "-texts_def"]) != null)
                             buffer.writeS(value);
                     }
 
@@ -102,11 +102,11 @@ module fairygui {
                     case ObjectType.RichText:
                     case ObjectType.InputText:
                         {
-                            if ((value = strings[elementId]) != null) {
+                            if ((value = compStrings[elementId]) != null) {
                                 buffer.seek(curPos, 6);
                                 buffer.writeS(value);
                             }
-                            if ((value = strings[elementId + "-prompt"]) != null) {
+                            if ((value = compStrings[elementId + "-prompt"]) != null) {
                                 buffer.seek(curPos, 4);
                                 buffer.writeS(value);
                             }
@@ -123,11 +123,11 @@ module fairygui {
                                 nextPos += buffer.position;
 
                                 buffer.skip(2); //url
-                                if ((value = strings[elementId + "-" + j]) != null)
+                                if ((value = compStrings[elementId + "-" + j]) != null)
                                     buffer.writeS(value);
                                 else
                                     buffer.skip(2);
-                                if ((value = strings[elementId + "-" + j + "-0"]) != null)
+                                if ((value = compStrings[elementId + "-" + j + "-0"]) != null)
                                     buffer.writeS(value);
                                 buffer.position = nextPos;
                             }
@@ -137,7 +137,7 @@ module fairygui {
                     case ObjectType.Label:
                         {
                             if (buffer.seek(curPos, 6) && buffer.readByte() == type) {
-                                if ((value = strings[elementId]) != null)
+                                if ((value = compStrings[elementId]) != null)
                                     buffer.writeS(value);
                                 else
                                     buffer.skip(2);
@@ -146,7 +146,7 @@ module fairygui {
                                 if (buffer.readBool())
                                     buffer.skip(4);
                                 buffer.skip(4);
-                                if (buffer.readBool() && (value = strings[elementId + "-prompt"]) != null)
+                                if (buffer.readBool() && (value = compStrings[elementId + "-prompt"]) != null)
                                     buffer.writeS(value);
                             }
                             break;
@@ -155,11 +155,11 @@ module fairygui {
                     case ObjectType.Button:
                         {
                             if (buffer.seek(curPos, 6) && buffer.readByte() == type) {
-                                if ((value = strings[elementId]) != null)
+                                if ((value = compStrings[elementId]) != null)
                                     buffer.writeS(value);
                                 else
                                     buffer.skip(2);
-                                if ((value = strings[elementId + "-0"]) != null)
+                                if ((value = compStrings[elementId + "-0"]) != null)
                                     buffer.writeS(value);
                             }
                             break;
@@ -173,13 +173,13 @@ module fairygui {
                                     nextPos = buffer.readShort();
                                     nextPos += buffer.position;
 
-                                    if ((value = strings[elementId + "-" + j]) != null)
+                                    if ((value = compStrings[elementId + "-" + j]) != null)
                                         buffer.writeS(value);
 
                                     buffer.position = nextPos;
                                 }
 
-                                if ((value = strings[elementId]) != null)
+                                if ((value = compStrings[elementId]) != null)
                                     buffer.writeS(value);
                             }
 

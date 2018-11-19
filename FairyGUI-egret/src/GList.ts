@@ -856,12 +856,12 @@ module fairygui {
                 var pos: number = 0;
                 var i: number;
                 if (this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal) {
-                    for (i = 0; i < index; i += this._curLineItemCount)
+                    for (i = this._curLineItemCount - 1; i < index; i += this._curLineItemCount)
                         pos += this._virtualItems[i].height + this._lineGap;
                     rect = new egret.Rectangle(0, pos, this._itemSize.x, ii.height);
                 }
                 else if (this._layout == ListLayoutType.SingleRow || this._layout == ListLayoutType.FlowVertical) {
-                    for (i = 0; i < index; i += this._curLineItemCount)
+                    for (i = this._curLineItemCount - 1; i < index; i += this._curLineItemCount)
                         pos += this._virtualItems[i].width + this._columnGap;
                     rect = new egret.Rectangle(pos, 0, ii.width, this._itemSize.y);
                 }
@@ -1360,8 +1360,8 @@ module fairygui {
             this._firstIndex = newFirstIndex;
             var curIndex: number = newFirstIndex;
             var forward: boolean = oldFirstIndex > newFirstIndex;
-            var oldCount: number = this.numChildren;
-            var lastIndex: number = oldFirstIndex + oldCount - 1;
+            var childCount: number = this.numChildren;
+            var lastIndex: number = oldFirstIndex + childCount - 1;
             var reuseIndex: number = forward ? lastIndex : oldFirstIndex;
             var curX: number = 0, curY: number = pos;
             var needRender: boolean;
@@ -1472,7 +1472,7 @@ module fairygui {
                 curIndex++;
             }
 
-            for (i = 0; i < oldCount; i++) {
+            for (i = 0; i < childCount; i++) {
                 ii = this._virtualItems[oldFirstIndex + i];
                 if (ii.updateFlag != this.itemInfoVer && ii.obj != null) {
                     if (ii.obj instanceof GButton)
@@ -1480,6 +1480,13 @@ module fairygui {
                     this.removeChildToPool(ii.obj);
                     ii.obj = null;
                 }
+            }
+
+            childCount = this._children.length;
+            for (i = 0; i < childCount; i++) {
+                let obj: GObject = this._virtualItems[newFirstIndex + i].obj;
+                if (this._children[i] != obj)
+                    this.setChildIndex(obj, i);
             }
 
             if (deltaSize != 0 || firstItemDeltaSize != 0)
@@ -1512,8 +1519,8 @@ module fairygui {
             this._firstIndex = newFirstIndex;
             var curIndex: number = newFirstIndex;
             var forward: boolean = oldFirstIndex > newFirstIndex;
-            var oldCount: number = this.numChildren;
-            var lastIndex: number = oldFirstIndex + oldCount - 1;
+            var childCount: number = this.numChildren;
+            var lastIndex: number = oldFirstIndex + childCount - 1;
             var reuseIndex: number = forward ? lastIndex : oldFirstIndex;
             var curX: number = pos, curY: number = 0;
             var needRender: boolean;
@@ -1624,7 +1631,7 @@ module fairygui {
                 curIndex++;
             }
 
-            for (i = 0; i < oldCount; i++) {
+            for (i = 0; i < childCount; i++) {
                 ii = this._virtualItems[oldFirstIndex + i];
                 if (ii.updateFlag != this.itemInfoVer && ii.obj != null) {
                     if (ii.obj instanceof GButton)
@@ -1632,6 +1639,13 @@ module fairygui {
                     this.removeChildToPool(ii.obj);
                     ii.obj = null;
                 }
+            }
+
+            childCount = this._children.length;
+            for (i = 0; i < childCount; i++) {
+                let obj: GObject = this._virtualItems[newFirstIndex + i].obj;
+                if (this._children[i] != obj)
+                    this.setChildIndex(obj, i);
             }
 
             if (deltaSize != 0 || firstItemDeltaSize != 0)

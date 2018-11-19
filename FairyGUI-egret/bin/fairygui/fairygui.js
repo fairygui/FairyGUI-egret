@@ -9782,12 +9782,12 @@ var fairygui;
                 var pos = 0;
                 var i;
                 if (this._layout == fairygui.ListLayoutType.SingleColumn || this._layout == fairygui.ListLayoutType.FlowHorizontal) {
-                    for (i = 0; i < index; i += this._curLineItemCount)
+                    for (i = this._curLineItemCount - 1; i < index; i += this._curLineItemCount)
                         pos += this._virtualItems[i].height + this._lineGap;
                     rect = new egret.Rectangle(0, pos, this._itemSize.x, ii.height);
                 }
                 else if (this._layout == fairygui.ListLayoutType.SingleRow || this._layout == fairygui.ListLayoutType.FlowVertical) {
-                    for (i = 0; i < index; i += this._curLineItemCount)
+                    for (i = this._curLineItemCount - 1; i < index; i += this._curLineItemCount)
                         pos += this._virtualItems[i].width + this._columnGap;
                     rect = new egret.Rectangle(pos, 0, ii.width, this._itemSize.y);
                 }
@@ -10225,8 +10225,8 @@ var fairygui;
             this._firstIndex = newFirstIndex;
             var curIndex = newFirstIndex;
             var forward = oldFirstIndex > newFirstIndex;
-            var oldCount = this.numChildren;
-            var lastIndex = oldFirstIndex + oldCount - 1;
+            var childCount = this.numChildren;
+            var lastIndex = oldFirstIndex + childCount - 1;
             var reuseIndex = forward ? lastIndex : oldFirstIndex;
             var curX = 0, curY = pos;
             var needRender;
@@ -10324,7 +10324,7 @@ var fairygui;
                 }
                 curIndex++;
             }
-            for (i = 0; i < oldCount; i++) {
+            for (i = 0; i < childCount; i++) {
                 ii = this._virtualItems[oldFirstIndex + i];
                 if (ii.updateFlag != this.itemInfoVer && ii.obj != null) {
                     if (ii.obj instanceof fairygui.GButton)
@@ -10332,6 +10332,12 @@ var fairygui;
                     this.removeChildToPool(ii.obj);
                     ii.obj = null;
                 }
+            }
+            childCount = this._children.length;
+            for (i = 0; i < childCount; i++) {
+                var obj = this._virtualItems[newFirstIndex + i].obj;
+                if (this._children[i] != obj)
+                    this.setChildIndex(obj, i);
             }
             if (deltaSize != 0 || firstItemDeltaSize != 0)
                 this._scrollPane.changeContentSizeOnScrolling(0, deltaSize, 0, firstItemDeltaSize);
@@ -10358,8 +10364,8 @@ var fairygui;
             this._firstIndex = newFirstIndex;
             var curIndex = newFirstIndex;
             var forward = oldFirstIndex > newFirstIndex;
-            var oldCount = this.numChildren;
-            var lastIndex = oldFirstIndex + oldCount - 1;
+            var childCount = this.numChildren;
+            var lastIndex = oldFirstIndex + childCount - 1;
             var reuseIndex = forward ? lastIndex : oldFirstIndex;
             var curX = pos, curY = 0;
             var needRender;
@@ -10456,7 +10462,7 @@ var fairygui;
                 }
                 curIndex++;
             }
-            for (i = 0; i < oldCount; i++) {
+            for (i = 0; i < childCount; i++) {
                 ii = this._virtualItems[oldFirstIndex + i];
                 if (ii.updateFlag != this.itemInfoVer && ii.obj != null) {
                     if (ii.obj instanceof fairygui.GButton)
@@ -10464,6 +10470,12 @@ var fairygui;
                     this.removeChildToPool(ii.obj);
                     ii.obj = null;
                 }
+            }
+            childCount = this._children.length;
+            for (i = 0; i < childCount; i++) {
+                var obj = this._virtualItems[newFirstIndex + i].obj;
+                if (this._children[i] != obj)
+                    this.setChildIndex(obj, i);
             }
             if (deltaSize != 0 || firstItemDeltaSize != 0)
                 this._scrollPane.changeContentSizeOnScrolling(deltaSize, 0, firstItemDeltaSize, 0);
@@ -16648,8 +16660,8 @@ var fairygui;
         TranslationHelper.translateComponent = function (item) {
             if (TranslationHelper.strings == null)
                 return;
-            var strings = TranslationHelper.strings[item.owner.id + item.id];
-            if (strings == null)
+            var compStrings = TranslationHelper.strings[item.owner.id + item.id];
+            if (compStrings == null)
                 return;
             var elementId, value;
             var buffer = item.rawData;
@@ -16674,7 +16686,7 @@ var fairygui;
                         type = buffer.readByte();
                 }
                 buffer.seek(curPos, 1);
-                if ((value = strings[elementId + "-tips"]) != null)
+                if ((value = compStrings[elementId + "-tips"]) != null)
                     buffer.writeS(value);
                 buffer.seek(curPos, 2);
                 var gearCnt = buffer.readShort();
@@ -16687,13 +16699,13 @@ var fairygui;
                         for (k = 0; k < valueCnt; k++) {
                             page = buffer.readS();
                             if (page != null) {
-                                if ((value = strings[elementId + "-texts_" + k]) != null)
+                                if ((value = compStrings[elementId + "-texts_" + k]) != null)
                                     buffer.writeS(value);
                                 else
                                     buffer.skip(2);
                             }
                         }
-                        if (buffer.readBool() && (value = strings[elementId + "-texts_def"]) != null)
+                        if (buffer.readBool() && (value = compStrings[elementId + "-texts_def"]) != null)
                             buffer.writeS(value);
                     }
                     buffer.position = nextPos;
@@ -16703,11 +16715,11 @@ var fairygui;
                     case fairygui.ObjectType.RichText:
                     case fairygui.ObjectType.InputText:
                         {
-                            if ((value = strings[elementId]) != null) {
+                            if ((value = compStrings[elementId]) != null) {
                                 buffer.seek(curPos, 6);
                                 buffer.writeS(value);
                             }
-                            if ((value = strings[elementId + "-prompt"]) != null) {
+                            if ((value = compStrings[elementId + "-prompt"]) != null) {
                                 buffer.seek(curPos, 4);
                                 buffer.writeS(value);
                             }
@@ -16722,11 +16734,11 @@ var fairygui;
                                 nextPos = buffer.readShort();
                                 nextPos += buffer.position;
                                 buffer.skip(2); //url
-                                if ((value = strings[elementId + "-" + j]) != null)
+                                if ((value = compStrings[elementId + "-" + j]) != null)
                                     buffer.writeS(value);
                                 else
                                     buffer.skip(2);
-                                if ((value = strings[elementId + "-" + j + "-0"]) != null)
+                                if ((value = compStrings[elementId + "-" + j + "-0"]) != null)
                                     buffer.writeS(value);
                                 buffer.position = nextPos;
                             }
@@ -16735,7 +16747,7 @@ var fairygui;
                     case fairygui.ObjectType.Label:
                         {
                             if (buffer.seek(curPos, 6) && buffer.readByte() == type) {
-                                if ((value = strings[elementId]) != null)
+                                if ((value = compStrings[elementId]) != null)
                                     buffer.writeS(value);
                                 else
                                     buffer.skip(2);
@@ -16743,7 +16755,7 @@ var fairygui;
                                 if (buffer.readBool())
                                     buffer.skip(4);
                                 buffer.skip(4);
-                                if (buffer.readBool() && (value = strings[elementId + "-prompt"]) != null)
+                                if (buffer.readBool() && (value = compStrings[elementId + "-prompt"]) != null)
                                     buffer.writeS(value);
                             }
                             break;
@@ -16751,11 +16763,11 @@ var fairygui;
                     case fairygui.ObjectType.Button:
                         {
                             if (buffer.seek(curPos, 6) && buffer.readByte() == type) {
-                                if ((value = strings[elementId]) != null)
+                                if ((value = compStrings[elementId]) != null)
                                     buffer.writeS(value);
                                 else
                                     buffer.skip(2);
-                                if ((value = strings[elementId + "-0"]) != null)
+                                if ((value = compStrings[elementId + "-0"]) != null)
                                     buffer.writeS(value);
                             }
                             break;
@@ -16767,11 +16779,11 @@ var fairygui;
                                 for (j = 0; j < itemCount; j++) {
                                     nextPos = buffer.readShort();
                                     nextPos += buffer.position;
-                                    if ((value = strings[elementId + "-" + j]) != null)
+                                    if ((value = compStrings[elementId + "-" + j]) != null)
                                         buffer.writeS(value);
                                     buffer.position = nextPos;
                                 }
-                                if ((value = strings[elementId]) != null)
+                                if ((value = compStrings[elementId]) != null)
                                     buffer.writeS(value);
                             }
                             break;
