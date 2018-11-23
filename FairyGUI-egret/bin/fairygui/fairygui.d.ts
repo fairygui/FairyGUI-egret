@@ -1375,7 +1375,6 @@ declare module fairygui {
         private _virtualItems;
         private _eventLocked;
         private itemInfoVer;
-        private enterCounter;
         constructor();
         dispose(): void;
         layout: ListLayoutType;

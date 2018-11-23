@@ -8999,7 +8999,6 @@ var fairygui;
             _this._curLineItemCount2 = 0; //只用在页面模式，表示垂直方向的项目数
             _this._virtualListChanged = 0; //1-content changed, 2-size changed
             _this.itemInfoVer = 0; //用来标志item是否在本次处理中已经被重用了
-            _this.enterCounter = 0; //因为HandleScroll是会重入的，这个用来避免极端情况下的死锁
             _this._trackBounds = true;
             _this._pool = new fairygui.GObjectPool();
             _this._layout = fairygui.ListLayoutType.SingleColumn;
@@ -9842,9 +9841,9 @@ var fairygui;
                 if (this._loop && this._numItems > 0) {
                     var j = this._firstIndex % this._numItems;
                     if (index >= j)
-                        index = this._firstIndex + (index - j);
+                        index = index - j;
                     else
-                        index = this._firstIndex + this._numItems + (j - index);
+                        index = this._numItems - j + index;
                 }
                 else
                     index -= this._firstIndex;
@@ -10191,13 +10190,28 @@ var fairygui;
         GList.prototype.handleScroll = function (forceUpdate) {
             if (this._eventLocked)
                 return;
-            this.enterCounter = 0;
             if (this._layout == fairygui.ListLayoutType.SingleColumn || this._layout == fairygui.ListLayoutType.FlowHorizontal) {
-                this.handleScroll1(forceUpdate);
+                var enterCounter = 0;
+                while (this.handleScroll1(forceUpdate)) {
+                    enterCounter++;
+                    forceUpdate = false;
+                    if (enterCounter > 20) {
+                        console.log("FairyGUI: list will never be filled as the item renderer function always returns a different size.");
+                        break;
+                    }
+                }
                 this.handleArchOrder1();
             }
             else if (this._layout == fairygui.ListLayoutType.SingleRow || this._layout == fairygui.ListLayoutType.FlowVertical) {
-                this.handleScroll2(forceUpdate);
+                enterCounter = 0;
+                while (this.handleScroll2(forceUpdate)) {
+                    enterCounter++;
+                    forceUpdate = false;
+                    if (enterCounter > 20) {
+                        console.log("FairyGUI: list will never be filled as the item renderer function always returns a different size.");
+                        break;
+                    }
+                }
                 this.handleArchOrder2();
             }
             else {
@@ -10206,11 +10220,6 @@ var fairygui;
             this._boundsChanged = false;
         };
         GList.prototype.handleScroll1 = function (forceUpdate) {
-            this.enterCounter++;
-            if (this.enterCounter > 3) {
-                console.log("FairyGUI: list will never be filled as the item renderer function always returns a different size.");
-                return;
-            }
             var pos = this._scrollPane.scrollingPosY;
             var max = pos + this._scrollPane.viewHeight;
             var end = max == this._scrollPane.contentHeight; //这个标志表示当前需要滚动到最末，无论内容变化大小
@@ -10219,7 +10228,7 @@ var fairygui;
             var newFirstIndex = this.getIndexOnPos1(forceUpdate);
             pos = GList.pos_param;
             if (newFirstIndex == this._firstIndex && !forceUpdate) {
-                return;
+                return false;
             }
             var oldFirstIndex = this._firstIndex;
             this._firstIndex = newFirstIndex;
@@ -10342,14 +10351,11 @@ var fairygui;
             if (deltaSize != 0 || firstItemDeltaSize != 0)
                 this._scrollPane.changeContentSizeOnScrolling(0, deltaSize, 0, firstItemDeltaSize);
             if (curIndex > 0 && this.numChildren > 0 && this._container.y < 0 && this.getChildAt(0).y > -this._container.y)
-                this.handleScroll1(false);
+                return true;
+            else
+                return false;
         };
         GList.prototype.handleScroll2 = function (forceUpdate) {
-            this.enterCounter++;
-            if (this.enterCounter > 3) {
-                console.log("FairyGUI: list will never be filled as the item renderer function always returns a different size.");
-                return;
-            }
             var pos = this._scrollPane.scrollingPosX;
             var max = pos + this._scrollPane.viewWidth;
             var end = pos == this._scrollPane.contentWidth; //这个标志表示当前需要滚动到最末，无论内容变化大小
@@ -10358,7 +10364,7 @@ var fairygui;
             var newFirstIndex = this.getIndexOnPos2(forceUpdate);
             pos = GList.pos_param;
             if (newFirstIndex == this._firstIndex && !forceUpdate) {
-                return;
+                return false;
             }
             var oldFirstIndex = this._firstIndex;
             this._firstIndex = newFirstIndex;
@@ -10480,7 +10486,9 @@ var fairygui;
             if (deltaSize != 0 || firstItemDeltaSize != 0)
                 this._scrollPane.changeContentSizeOnScrolling(deltaSize, 0, firstItemDeltaSize, 0);
             if (curIndex > 0 && this.numChildren > 0 && this._container.x < 0 && this.getChildAt(0).x > -this._container.x)
-                this.handleScroll2(false);
+                return true;
+            else
+                return false;
         };
         GList.prototype.handleScroll3 = function (forceUpdate) {
             var pos = this._scrollPane.scrollingPosX;

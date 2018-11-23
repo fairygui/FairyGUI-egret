@@ -925,9 +925,9 @@ module fairygui {
                 if (this._loop && this._numItems > 0) {
                     var j: number = this._firstIndex % this._numItems;
                     if (index >= j)
-                        index = this._firstIndex + (index - j);
+                        index = index - j;
                     else
-                        index = this._firstIndex + this._numItems + (j - index);
+                        index = this._numItems - j + index;
                 }
                 else
                     index -= this._firstIndex;
