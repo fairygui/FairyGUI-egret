@@ -571,8 +571,6 @@ module fairygui {
                 this._updatingSize = true;
                 this.setSize(w, h);
                 this._updatingSize = false;
-
-                this.doAlign();
             }
 
             if (w == 0 || h == 0)
@@ -618,6 +616,7 @@ module fairygui {
                         }
                         bm.x = charX + lineIndent + Math.ceil(glyph.offsetX * fontScale);
                         bm.y = line.y + charIndent + Math.ceil(glyph.offsetY * fontScale);
+                        bm["$backupY"] = bm.y;
                         bm.texture = glyph.texture;
                         bm.scaleX = fontScale;
                         bm.scaleY = fontScale;
@@ -630,6 +629,8 @@ module fairygui {
                     }
                 }//text loop
             }//line loop
+
+            this.doAlign();
         }
 
         protected handleSizeChanged(): void {
@@ -739,18 +740,24 @@ module fairygui {
         }
 
         private doAlign(): void {
+            var yOffset: number;
             if (this._verticalAlign == VertAlignType.Top || this._textHeight == 0)
-                this._yOffset = GTextField.GUTTER_Y;
+                yOffset = GTextField.GUTTER_Y;
             else {
                 var dh: number = this.height - this._textHeight;
                 if (dh < 0)
                     dh = 0;
                 if (this._verticalAlign == VertAlignType.Middle)
-                    this._yOffset = Math.floor(dh / 2);
+                    yOffset = Math.floor(dh / 2);
                 else
-                    this._yOffset = Math.floor(dh);
+                    yOffset = Math.floor(dh);
             }
-            this.displayObject.y = this.y + this._yOffset;
+
+            var cnt: number = this._bitmapContainer.numChildren;
+            for (var i: number = 0; i < cnt; i++) {
+                var obj: egret.DisplayObject = this._bitmapContainer.getChildAt(i);
+                obj.y = obj["$backupY"] + yOffset;
+            }
         }
 
         public setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void {

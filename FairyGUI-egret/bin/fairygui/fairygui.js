@@ -48,7 +48,6 @@ var fairygui;
             _this._height = 0;
             _this._rawWidth = 0;
             _this._rawHeight = 0;
-            _this._yOffset = 0;
             _this._sizePercentInGroup = 0;
             //Size的实现方式，有两种，0-GObject的w/h等于DisplayObject的w/h。1-GObject的sourceWidth/sourceHeight等于DisplayObject的w/h，剩余部分由scale实现
             _this._sizeImplType = 0;
@@ -1058,7 +1057,7 @@ var fairygui;
         GObject.prototype.handleXYChanged = function () {
             if (this._displayObject) {
                 var xv = this._x;
-                var yv = this._y + this._yOffset;
+                var yv = this._y;
                 if (this._pivotAsAnchor) {
                     xv -= this._pivotX * this._width;
                     yv -= this._pivotY * this._height;
@@ -3382,7 +3381,6 @@ var fairygui;
                 this._updatingSize = true;
                 this.setSize(w, h);
                 this._updatingSize = false;
-                this.doAlign();
             }
             if (w == 0 || h == 0)
                 return;
@@ -3422,6 +3420,7 @@ var fairygui;
                         }
                         bm.x = charX + lineIndent + Math.ceil(glyph.offsetX * fontScale);
                         bm.y = line.y + charIndent + Math.ceil(glyph.offsetY * fontScale);
+                        bm["$backupY"] = bm.y;
                         bm.texture = glyph.texture;
                         bm.scaleX = fontScale;
                         bm.scaleY = fontScale;
@@ -3433,6 +3432,7 @@ var fairygui;
                     }
                 } //text loop
             } //line loop
+            this.doAlign();
         };
         GTextField.prototype.handleSizeChanged = function () {
             if (this._updatingSize)
@@ -3529,18 +3529,23 @@ var fairygui;
             this.updateTextFormat();
         };
         GTextField.prototype.doAlign = function () {
+            var yOffset;
             if (this._verticalAlign == fairygui.VertAlignType.Top || this._textHeight == 0)
-                this._yOffset = GTextField.GUTTER_Y;
+                yOffset = GTextField.GUTTER_Y;
             else {
                 var dh = this.height - this._textHeight;
                 if (dh < 0)
                     dh = 0;
                 if (this._verticalAlign == fairygui.VertAlignType.Middle)
-                    this._yOffset = Math.floor(dh / 2);
+                    yOffset = Math.floor(dh / 2);
                 else
-                    this._yOffset = Math.floor(dh);
+                    yOffset = Math.floor(dh);
             }
-            this.displayObject.y = this.y + this._yOffset;
+            var cnt = this._bitmapContainer.numChildren;
+            for (var i = 0; i < cnt; i++) {
+                var obj = this._bitmapContainer.getChildAt(i);
+                obj.y = obj["$backupY"] + yOffset;
+            }
         };
         GTextField.prototype.setup_beforeAdd = function (buffer, beginPos) {
             _super.prototype.setup_beforeAdd.call(this, buffer, beginPos);

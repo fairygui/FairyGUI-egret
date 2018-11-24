@@ -48,7 +48,6 @@ declare module fairygui {
         _name: string;
         _underConstruct: boolean;
         _gearLocked: boolean;
-        _yOffset: number;
         _sizePercentInGroup: number;
         _sizeImplType: number;
         static _gInstanceCounter: number;

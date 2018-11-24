@@ -54,7 +54,6 @@ module fairygui {
         public _name: string;
         public _underConstruct: boolean;
         public _gearLocked: boolean;
-        public _yOffset: number = 0;
         public _sizePercentInGroup: number = 0;
         //Size的实现方式，有两种，0-GObject的w/h等于DisplayObject的w/h。1-GObject的sourceWidth/sourceHeight等于DisplayObject的w/h，剩余部分由scale实现
         public _sizeImplType: number = 0;
@@ -960,7 +959,7 @@ module fairygui {
         protected handleXYChanged(): void {
             if (this._displayObject) {
                 var xv: number = this._x;
-                var yv: number = this._y + this._yOffset;
+                var yv: number = this._y;
                 if (this._pivotAsAnchor) {
                     xv -= this._pivotX * this._width;
                     yv -= this._pivotY * this._height;
