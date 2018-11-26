@@ -893,6 +893,7 @@ var fairygui;
         GObject.prototype.dispose = function () {
             this.removeFromParent();
             this._relations.dispose();
+            this._displayObject = null;
         };
         GObject.prototype.addClickListener = function (listener, thisObj) {
             this.addEventListener(egret.TouchEvent.TOUCH_TAP, listener, thisObj);
@@ -7702,6 +7703,8 @@ var fairygui;
             if (this._down) {
                 fairygui.GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
                 this._down = false;
+                if (this.displayObject == null)
+                    return;
                 if (this._mode == fairygui.ButtonMode.Common) {
                     if (this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED))
                         this.setState(GButton.DISABLED);

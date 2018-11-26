@@ -98,31 +98,31 @@ module fairygui {
                 this._titleObject.text = (this._selected && this._selectedTitle) ? this._selectedTitle : this._title;
         }
 
-   public get titleColor(): number {
-            var tf:GTextField = this.getTextField();
-            if (tf!=null)
+        public get titleColor(): number {
+            var tf: GTextField = this.getTextField();
+            if (tf != null)
                 return tf.color;
             else
                 return 0;
         }
 
         public set titleColor(value: number) {
-            var tf:GTextField = this.getTextField();
-            if (tf!=null)
+            var tf: GTextField = this.getTextField();
+            if (tf != null)
                 tf.color = value;
         }
 
         public get titleFontSize(): number {
-            var tf:GTextField = this.getTextField();
-            if (tf!=null)
+            var tf: GTextField = this.getTextField();
+            if (tf != null)
                 return tf.fontSize;
             else
                 return 0;
         }
 
         public set titleFontSize(value: number) {
-            var tf:GTextField = this.getTextField();
-            if (tf!=null)
+            var tf: GTextField = this.getTextField();
+            if (tf != null)
                 tf.fontSize = value;
         }
         public get sound(): string {
@@ -228,17 +228,16 @@ module fairygui {
             this._linkedPopup = value;
         }
 
-        public getTextField():GTextField
-		{
-			 if (this._titleObject instanceof GTextField)
-				return (<GTextField>this._titleObject);
-			else if (this._titleObject instanceof GLabel)
-				return (<GLabel>this._titleObject).getTextField();
-			else if (this._titleObject instanceof GButton)
-				return (<GButton>this._titleObject).getTextField();
-			else
-				return null;
-		}
+        public getTextField(): GTextField {
+            if (this._titleObject instanceof GTextField)
+                return (<GTextField>this._titleObject);
+            else if (this._titleObject instanceof GLabel)
+                return (<GLabel>this._titleObject).getTextField();
+            else if (this._titleObject instanceof GButton)
+                return (<GButton>this._titleObject).getTextField();
+            else
+                return null;
+        }
 
         public addStateListener(listener: Function, thisObj: any): void {
             this.addEventListener(StateChangeEvent.CHANGED, listener, thisObj);
@@ -436,6 +435,9 @@ module fairygui {
             if (this._down) {
                 GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
                 this._down = false;
+
+                if (this.displayObject == null)
+                    return;
 
                 if (this._mode == ButtonMode.Common) {
                     if (this.grayed && this._buttonController && this._buttonController.hasPage(GButton.DISABLED))

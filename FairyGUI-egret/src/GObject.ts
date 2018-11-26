@@ -794,6 +794,7 @@ module fairygui {
         public dispose(): void {
             this.removeFromParent();
             this._relations.dispose();
+            this._displayObject = null;
         }
 
         public addClickListener(listener: Function, thisObj: any): void {
