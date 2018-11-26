@@ -12823,8 +12823,8 @@ var fairygui;
             this.updateWidthPercent(percent);
         };
         GSlider.prototype.__gripMouseUp = function (evt) {
-            this._gripObject.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.__gripMouseMove, this);
-            this._gripObject.displayObject.stage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__gripMouseUp, this);
+            evt.currentTarget.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.__gripMouseMove, this);
+            evt.currentTarget.removeEventListener(egret.TouchEvent.TOUCH_END, this.__gripMouseUp, this);
         };
         GSlider.prototype.__barMouseDown = function (evt) {
             if (!this.changeOnClick)
