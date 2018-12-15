@@ -2,9 +2,6 @@
 module fairygui {
 
     export class GLoader extends GObject {
-        private _gearAnimation: GearAnimation;
-        private _gearColor: GearColor;
-
         private _url: string;
         private _align: AlignType;
         private _verticalAlign: VertAlignType;
@@ -40,9 +37,6 @@ module fairygui {
             this._verticalAlign = VertAlignType.Top;
             this._showErrorSign = true;
             this._color = 0xFFFFFF;
-
-            this._gearAnimation = new GearAnimation(this);
-            this._gearColor = new GearColor(this);
         }
 
         protected createDisplayObject(): void {
