@@ -70,7 +70,7 @@ module fairygui {
         public set url(value: string) {
             if (this._url == value)
                 return;
-
+            this.clearContent();
             this._url = value;
             this.loadContent();
             this.updateGear(7);
@@ -238,7 +238,7 @@ module fairygui {
         }
 
         protected loadContent(): void {
-            this.clearContent();
+            //this.clearContent();
 
             if (!this._url)
                 return;

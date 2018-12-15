@@ -3,11 +3,15 @@ module fairygui {
 
     export class UIContainer extends egret.DisplayObjectContainer {
         private _hitArea: egret.Rectangle;
-
+		private _invertedMatrix: egret.Matrix;
         public constructor() {
             super();
             this.touchEnabled = true;
             this.touchChildren = true;
+        }
+		
+		public set invertedMatrix(matrix:egret.Matrix) {
+            this._invertedMatrix = matrix;
         }
 
         public get hitArea(): egret.Rectangle {
@@ -31,7 +35,10 @@ module fairygui {
                     return null;
             }
             else if (ret == null && this.touchEnabled && this.visible && this._hitArea != null) {
-                var m = this.$getInvertedConcatenatedMatrix();
+				var m = this._invertedMatrix;
+                if(m == null){
+                    m = this.$getInvertedConcatenatedMatrix();
+                }
                 var localX = m.a * stageX + m.c * stageY + m.tx;
                 var localY = m.b * stageX + m.d * stageY + m.ty;
                 if (this._hitArea.contains(localX, localY))

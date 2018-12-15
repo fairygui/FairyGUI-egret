@@ -3175,7 +3175,7 @@ var fairygui;
                 return;
             }
             this.switchBitmapMode(false);
-            this._textField.width = this._widthAutoSize ? 10000 : Math.ceil(this.width);
+            this._textField.width = this._widthAutoSize ? (this.maxWidth <= 0 ? 10000 : this.maxWidth) : Math.ceil(this.width);
             this.updateTextFieldText();
             this._textWidth = Math.ceil(this._textField.textWidth);
             if (this._textWidth > 0)
@@ -7258,6 +7258,13 @@ var fairygui;
             _this.touchChildren = true;
             return _this;
         }
+        Object.defineProperty(UIContainer.prototype, "invertedMatrix", {
+            set: function (matrix) {
+                this._invertedMatrix = matrix;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(UIContainer.prototype, "hitArea", {
             get: function () {
                 return this._hitArea;
@@ -7282,7 +7289,10 @@ var fairygui;
                     return null;
             }
             else if (ret == null && this.touchEnabled && this.visible && this._hitArea != null) {
-                var m = this.$getInvertedConcatenatedMatrix();
+                var m = this._invertedMatrix;
+                if (m == null) {
+                    m = this.$getInvertedConcatenatedMatrix();
+                }
                 var localX = m.a * stageX + m.c * stageY + m.tx;
                 var localY = m.b * stageX + m.d * stageY + m.ty;
                 if (this._hitArea.contains(localX, localY))
@@ -7576,6 +7586,8 @@ var fairygui;
                 if (val == GButton.DOWN || val == GButton.SELECTED_OVER || val == GButton.SELECTED_DISABLED) {
                     if (!this._downScaled) {
                         this._downScaled = true;
+                        //复制缩放前的变换矩阵,解决缩放后的 container 计算hitTest.
+                        this._rootContainer.invertedMatrix = this._rootContainer.$getInvertedConcatenatedMatrix().clone();
                         this.setScale(this.scaleX * this._downEffectValue, this.scaleY * this._downEffectValue);
                     }
                 }
@@ -8210,7 +8222,9 @@ var fairygui;
             configurable: true
         });
         GGraph.prototype.drawCommon = function () {
-            this.graphics;
+            if (this.graphics == null) {
+                return;
+            }
             this._graphics.clear();
             var w = this.width;
             var h = this.height;
@@ -11166,6 +11180,7 @@ var fairygui;
             set: function (value) {
                 if (this._url == value)
                     return;
+                this.clearContent();
                 this._url = value;
                 this.loadContent();
                 this.updateGear(7);
@@ -11361,7 +11376,7 @@ var fairygui;
             configurable: true
         });
         GLoader.prototype.loadContent = function () {
-            this.clearContent();
+            //this.clearContent();
             if (!this._url)
                 return;
             if (fairygui.ToolSet.startsWith(this._url, "ui://"))
@@ -15644,8 +15659,12 @@ var fairygui;
         };
         UIPackage.addPackage = function (resKey, descData) {
             if (descData === void 0) { descData = null; }
+            var realKey = resKey;
             if (!descData) {
-                descData = RES.getRes(resKey);
+                descData = RES.getRes(realKey);
+                if (!descData)
+                    realKey = resKey + "_fui";
+                descData = RES.getRes(realKey);
                 if (!descData)
                     throw "Resource '" + resKey + "' not found, please check default.res.json!";
             }
@@ -15653,16 +15672,20 @@ var fairygui;
             pkg.loadPackage(new fairygui.ByteBuffer(descData), resKey);
             UIPackage._packageInstById[pkg.id] = pkg;
             UIPackage._packageInstByName[pkg.name] = pkg;
-            pkg.customId = resKey;
+            pkg.customId = realKey;
             return pkg;
         };
         UIPackage.removePackage = function (packageId) {
             var pkg = UIPackage._packageInstById[packageId];
+            if (pkg == null) {
+                return;
+            }
             pkg.dispose();
             delete UIPackage._packageInstById[pkg.id];
             if (pkg._customId != null)
                 delete UIPackage._packageInstById[pkg._customId];
             delete UIPackage._packageInstByName[pkg.name];
+            RES.destroyRes(pkg._customId);
         };
         UIPackage.createObject = function (pkgName, resName, userClass) {
             if (userClass === void 0) { userClass = null; }
@@ -16002,11 +16025,7 @@ var fairygui;
         };
         UIPackage.prototype.createSubTexture = function (atlasTexture, uvRect) {
             var texture = new egret.Texture();
-            if (atlasTexture["_bitmapData"]) {
-                texture["_bitmapData"] = atlasTexture["_bitmapData"];
-                texture.$initData(atlasTexture["_bitmapX"] + uvRect.x, atlasTexture["_bitmapY"] + uvRect.y, uvRect.width, uvRect.height, 0, 0, uvRect.width, uvRect.height, atlasTexture["_sourceWidth"], atlasTexture["_sourceHeight"]);
-            }
-            else {
+            if (atlasTexture.bitmapData != null) {
                 texture.bitmapData = atlasTexture.bitmapData;
                 texture.$initData(atlasTexture["$bitmapX"] + uvRect.x, atlasTexture["$bitmapY"] + uvRect.y, uvRect.width, uvRect.height, 0, 0, uvRect.width, uvRect.height, atlasTexture["$sourceWidth"], atlasTexture["$sourceHeight"]);
             }

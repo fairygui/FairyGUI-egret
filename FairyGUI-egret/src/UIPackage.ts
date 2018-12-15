@@ -31,27 +31,35 @@ module fairygui {
         }
 
         public static addPackage(resKey: string, descData: ArrayBuffer = null): UIPackage {
+			var realKey = resKey;
             if (!descData) {
-                descData = RES.getRes(resKey);
+				descData = RES.getRes(realKey);
+                if (!descData)
+					realKey = resKey + "_fui";
+                    descData = RES.getRes(realKey);
                 if (!descData)
                     throw "Resource '" + resKey + "' not found, please check default.res.json!";
             }
-
+			
             var pkg: UIPackage = new UIPackage();
             pkg.loadPackage(new ByteBuffer(descData), resKey);
             UIPackage._packageInstById[pkg.id] = pkg;
             UIPackage._packageInstByName[pkg.name] = pkg;
-            pkg.customId = resKey;
+            pkg.customId = realKey;
             return pkg;
         }
 
         public static removePackage(packageId: string): void {
             var pkg: UIPackage = UIPackage._packageInstById[packageId];
+			if(pkg == null){
+                return;
+            }
             pkg.dispose();
             delete UIPackage._packageInstById[pkg.id];
             if (pkg._customId != null)
                 delete UIPackage._packageInstById[pkg._customId];
             delete UIPackage._packageInstByName[pkg.name];
+			RES.destroyRes(pkg._customId);
         }
 
         public static createObject(pkgName: string, resName: string, userClass: any = null): GObject {
@@ -435,13 +443,7 @@ module fairygui {
 
         private createSubTexture(atlasTexture: egret.Texture, uvRect: egret.Rectangle): egret.Texture {
             var texture: egret.Texture = new egret.Texture();
-            if (atlasTexture["_bitmapData"]) {
-                texture["_bitmapData"] = atlasTexture["_bitmapData"];
-                texture.$initData(atlasTexture["_bitmapX"] + uvRect.x, atlasTexture["_bitmapY"] + uvRect.y,
-                    uvRect.width, uvRect.height, 0, 0, uvRect.width, uvRect.height,
-                    atlasTexture["_sourceWidth"], atlasTexture["_sourceHeight"]);
-            }
-            else {
+            if(atlasTexture.bitmapData != null){
                 texture.bitmapData = atlasTexture.bitmapData;
                 texture.$initData(atlasTexture["$bitmapX"] + uvRect.x, atlasTexture["$bitmapY"] + uvRect.y,
                     uvRect.width, uvRect.height, 0, 0, uvRect.width, uvRect.height,

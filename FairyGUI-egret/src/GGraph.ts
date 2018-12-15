@@ -73,8 +73,9 @@ module fairygui {
         }
 
         private drawCommon(): void {
-            this.graphics;
-
+			if(this.graphics == null){
+                return;
+            }
             this._graphics.clear();
 
             var w: number = this.width;
