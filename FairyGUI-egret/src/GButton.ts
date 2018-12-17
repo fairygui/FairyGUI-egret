@@ -283,12 +283,15 @@ module fairygui {
                 if (val == GButton.DOWN || val == GButton.SELECTED_OVER || val == GButton.SELECTED_DISABLED) {
                     if (!this._downScaled) {
                         this._downScaled = true;
+                        //复制缩放前的变换矩阵,解决缩放后的 container 计算hitTest.
+                        this._rootContainer.invertedMatrix = this._rootContainer.$getInvertedConcatenatedMatrix().clone();
                         this.setScale(this.scaleX * this._downEffectValue, this.scaleY * this._downEffectValue);
                     }
                 }
                 else {
                     if (this._downScaled) {
                         this._downScaled = false;
+                        this._rootContainer.invertedMatrix = <any>null;
                         this.setScale(this.scaleX / this._downEffectValue, this.scaleY / this._downEffectValue);
                     }
                 }

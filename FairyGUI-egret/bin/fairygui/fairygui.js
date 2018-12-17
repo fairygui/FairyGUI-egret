@@ -7259,6 +7259,13 @@ var fairygui;
             _this.touchChildren = true;
             return _this;
         }
+        Object.defineProperty(UIContainer.prototype, "invertedMatrix", {
+            set: function (matrix) {
+                this._invertedMatrix = matrix;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(UIContainer.prototype, "hitArea", {
             get: function () {
                 return this._hitArea;
@@ -7283,7 +7290,10 @@ var fairygui;
                     return null;
             }
             else if (ret == null && this.touchEnabled && this.visible && this._hitArea != null) {
-                var m = this.$getInvertedConcatenatedMatrix();
+                var m = this._invertedMatrix;
+                if (m == null) {
+                    m = this.$getInvertedConcatenatedMatrix();
+                }
                 var localX = m.a * stageX + m.c * stageY + m.tx;
                 var localY = m.b * stageX + m.d * stageY + m.ty;
                 if (this._hitArea.contains(localX, localY))
@@ -7577,12 +7587,15 @@ var fairygui;
                 if (val == GButton.DOWN || val == GButton.SELECTED_OVER || val == GButton.SELECTED_DISABLED) {
                     if (!this._downScaled) {
                         this._downScaled = true;
+                        //复制缩放前的变换矩阵,解决缩放后的 container 计算hitTest.
+                        this._rootContainer.invertedMatrix = this._rootContainer.$getInvertedConcatenatedMatrix().clone();
                         this.setScale(this.scaleX * this._downEffectValue, this.scaleY * this._downEffectValue);
                     }
                 }
                 else {
                     if (this._downScaled) {
                         this._downScaled = false;
+                        this._rootContainer.invertedMatrix = null;
                         this.setScale(this.scaleX / this._downEffectValue, this.scaleY / this._downEffectValue);
                     }
                 }

@@ -1136,7 +1136,9 @@ declare module fairygui {
 declare module fairygui {
     class UIContainer extends egret.DisplayObjectContainer {
         private _hitArea;
+        private _invertedMatrix;
         constructor();
+        invertedMatrix: egret.Matrix;
         hitArea: egret.Rectangle;
         $hitTest(stageX: number, stageY: number): egret.DisplayObject;
     }
