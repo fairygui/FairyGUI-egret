@@ -9,7 +9,7 @@ module fairygui {
             this.touchEnabled = true;
             this.touchChildren = true;
         }
-		
+        
 		public set invertedMatrix(matrix:egret.Matrix) {
             this._invertedMatrix = matrix;
         }
