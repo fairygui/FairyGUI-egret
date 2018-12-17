@@ -1742,7 +1742,7 @@ module fairygui {
 
                     if (ii.obj == null) {
                         if (this.itemProvider != null) {
-                            url = this.itemProvider(i % this._numItems);
+                            url = this.itemProvider.call(this.callbackThisObj, i % this._numItems);
                             if (url == null)
                                 url = this._defaultItem;
                             url = UIPackage.normalizeURL(url);
