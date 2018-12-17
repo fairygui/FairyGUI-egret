@@ -73,6 +73,7 @@ module fairygui {
             super.dispose();
 
             this._bitmapFont = null;
+            this._requireRender = false;
         }
 
         public set text(value: string) {

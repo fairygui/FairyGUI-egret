@@ -2888,6 +2888,7 @@ var fairygui;
         GTextField.prototype.dispose = function () {
             _super.prototype.dispose.call(this);
             this._bitmapFont = null;
+            this._requireRender = false;
         };
         Object.defineProperty(GTextField.prototype, "text", {
             get: function () {
@@ -7594,6 +7595,7 @@ var fairygui;
                 else {
                     if (this._downScaled) {
                         this._downScaled = false;
+                        this._rootContainer.invertedMatrix = null;
                         this.setScale(this.scaleX / this._downEffectValue, this.scaleY / this._downEffectValue);
                     }
                 }
@@ -10578,7 +10580,7 @@ var fairygui;
                         insertIndex = this.getChildIndex(lastObj) + 1;
                     if (ii.obj == null) {
                         if (this.itemProvider != null) {
-                            url = this.itemProvider(i % this._numItems);
+                            url = this.itemProvider.call(this.callbackThisObj, i % this._numItems);
                             if (url == null)
                                 url = this._defaultItem;
                             url = fairygui.UIPackage.normalizeURL(url);
@@ -11151,8 +11153,6 @@ var fairygui;
             _this._verticalAlign = fairygui.VertAlignType.Top;
             _this._showErrorSign = true;
             _this._color = 0xFFFFFF;
-            _this._gearAnimation = new fairygui.GearAnimation(_this);
-            _this._gearColor = new fairygui.GearColor(_this);
             return _this;
         }
         GLoader.prototype.createDisplayObject = function () {

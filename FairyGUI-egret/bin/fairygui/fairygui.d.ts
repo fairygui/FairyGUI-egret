@@ -1457,8 +1457,6 @@ declare module fairygui {
 }
 declare module fairygui {
     class GLoader extends GObject {
-        private _gearAnimation;
-        private _gearColor;
         private _url;
         private _align;
         private _verticalAlign;

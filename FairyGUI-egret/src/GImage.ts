@@ -6,7 +6,11 @@ module fairygui {
         private _color: number;
         private _flip: FlipType;
         private _matrix: egret.ColorMatrixFilter;
-
+        private _fillMethod: FillMethod = FillMethod.None;
+        private _fillOrigin: FillOrigin|FillOrigin90 = FillOrigin.Left;
+        private _fillAmount: number = 100;
+        private _fillClockwise: boolean = false;
+        protected fillStart:number =0;
         public constructor() {
             super();
             this._color = 0xFFFFFF;
@@ -70,6 +74,64 @@ module fairygui {
             }
         }
 
+        public get fillMethod(): FillMethod {
+            return this._fillMethod;
+        }
+
+        public set fillMethod(value: FillMethod) {
+            if(this._fillMethod!= value){
+                this._fillMethod = value;
+                if (this._fillMethod != 0){
+                    this.setupFill();
+                }else{
+                    let mask = this._content.mask;
+                    this._content.mask = null;
+                    if(mask instanceof egret.Shape){
+                        if(mask.parent){
+                            mask.parent.removeChild(mask);
+                        }
+                    }
+                }
+            }
+        }
+
+        public get fillOrigin(): FillOrigin|FillOrigin90  {
+            return this._fillOrigin;
+        }
+
+        public set fillOrigin(value: FillOrigin|FillOrigin90 ) {
+            if(this._fillOrigin!= value){
+                this._fillOrigin = value;
+                if (this._fillMethod != 0){
+                    this.setupFill();
+                }  
+            }
+            
+        }
+        public get fillClockwise(): boolean {
+            return this._fillClockwise;
+        }
+
+        public set fillClockwise(value: boolean) {
+            if (this._fillClockwise != value) {
+                this._fillClockwise = value;
+                if (this._fillMethod != 0){
+                    this.setupFill();
+                }  
+            }
+        }
+         public get fillAmount(): number {
+            return this._fillAmount;
+        }
+
+        public set fillAmount(value: number) {
+            if (this._fillAmount != value) {
+                this._fillAmount = ToolSet.clamp(value,0,100);
+                if (this._fillMethod != 0) {
+                   this.setupFill();
+                }
+            }
+        }
         public get texture(): egret.Texture {
             return this._content.texture;
         }
@@ -96,7 +158,55 @@ module fairygui {
             this._content.touchEnabled = false;
             this.setDisplayObject(this._content);
         }
+        
+        protected setupFill():void{
+            let mask = this._content.mask;
+            let width = this._content.width;
+            let height = this._content.height;
+            if (this._fillMethod == FillMethod.Horizontal || this._fillMethod == FillMethod.Vertical) {
+                if(!mask || mask instanceof egret.DisplayObject){
+                    mask = new egret.Rectangle(0,0,width,height);
+                }
+                if(this._fillMethod == FillMethod.Horizontal){
+                    mask.y = 0;
+                    if(this._fillOrigin == FillOrigin.Top ){
+                        mask.x = width*(this._fillAmount/100-1);
+                    }else{
+                        mask.x = width*(1-this._fillAmount/100);
+                    }
+                }else{
+                    mask.x = 0;
+                    if(this._fillOrigin == FillOrigin.Top){
+                        mask.y = height*(this._fillAmount/100-1);
+                    }else{
+                        mask.y = height*(1-this._fillAmount/100);
+                    }
+                } 
+            } else if(this._fillMethod != FillMethod.None && this._content.parent) {
+                if(!mask || mask instanceof egret.Rectangle){
+                    mask = new egret.Shape();
+                    this._content.parent.addChild(mask);
+                    mask.x = this.x;
+                    mask.y = this.y;
+                }
+                width  = this.scaleX*width;
+                height = this.scaleY*height;
+                GraphicsHelper.fillImage(this._fillMethod,this._fillAmount,this._fillOrigin,this._fillClockwise,(<egret.Shape >mask).graphics,width,height);
+            }
+            this._content.mask = mask;
+        }
+        public removeFromParent(): void {
+            if(this._fillMethod!=FillMethod.None){
+                let mask = this._content.mask;
+                if(mask instanceof egret.Shape){
+                    if(mask.parent){
+                        mask.parent.removeChild(mask);
+                    }
+                }
+            }
+            super.removeFromParent();
 
+        }
         public dispose(): void {
             super.dispose();
         }
@@ -119,12 +229,20 @@ module fairygui {
 
         protected handleXYChanged(): void {
             super.handleXYChanged();
+            if(this._fillMethod!=FillMethod.None){
+                let mask = this._content.mask;
+                if(mask instanceof egret.Shape){
+                    mask.x = this._content.x;
+                    mask.y = this._content.y;
+                }
+            }
             if (this._flip != FlipType.None) {
                 if (this._content.scaleX == -1)
                     this._content.x += this.width;
                 if (this._content.scaleY == -1)
                     this._content.y += this.height;
             }
+            
         }
 
         protected handleSizeChanged(): void {
@@ -140,6 +258,13 @@ module fairygui {
             if (buffer.readBool())
                 this.color = buffer.readColor();
             this.flip = buffer.readByte();
+            this._fillMethod = buffer.readByte();
+			if (this._fillMethod != 0)
+			{
+				this._fillOrigin = buffer.readByte();
+				this._fillClockwise = buffer.readBool();
+				this.fillAmount = buffer.readFloat();
+			}
         }
     }
 }
