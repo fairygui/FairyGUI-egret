@@ -144,4 +144,29 @@ module fairygui {
 
         Size = 24
     };
+     export enum FillMethod
+	{
+		None,
+		Horizontal,
+		Vertical,
+		Radial90,
+		Radial180,
+		Radial360,
+    };
+    
+    export enum FillOrigin
+	{
+		Top,
+		Bottom,
+		Left,
+		Right
+    };
+    export enum FillOrigin90
+	{
+		TopLeft,
+		TopRight,
+		BottomLeft,
+		BottomRight
+    };
+    
 } 
