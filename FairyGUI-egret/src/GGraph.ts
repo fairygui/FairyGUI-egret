@@ -73,7 +73,8 @@ module fairygui {
         }
 
         private drawCommon(): void {
-			if(this.graphics == null){
+            //确保绘制前 _graphics被初始化,并保证有效
+            if (this.graphics == null) {
                 return;
             }
             this._graphics.clear();
