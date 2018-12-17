@@ -3175,7 +3175,7 @@ var fairygui;
                 return;
             }
             this.switchBitmapMode(false);
-            this._textField.width = this._widthAutoSize ? (this.maxWidth <= 0 ? 10000 : this.maxWidth) : Math.ceil(this.width);
+            this._textField.width = this._widthAutoSize ? 10000 : Math.ceil(this.width);
             this.updateTextFieldText();
             this._textWidth = Math.ceil(this._textField.textWidth);
             if (this._textWidth > 0)
