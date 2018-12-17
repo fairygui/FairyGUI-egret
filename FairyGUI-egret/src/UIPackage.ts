@@ -31,12 +31,13 @@ module fairygui {
         }
 
         public static addPackage(resKey: string, descData: ArrayBuffer = null): UIPackage {
-			var realKey = resKey;
             if (!descData) {
-				descData = RES.getRes(realKey);
-                if (!descData)
-					realKey = resKey + "_fui";
-                    descData = RES.getRes(realKey);
+				descData = RES.getRes(resKey);
+                if (!descData) {
+                    //因为在设置default.res.json中引用的资源
+                    //EgretWing 工具会自动将资源名设定成 "文件名"+"_"+"文件扩展名"的格式.
+                    descData = RES.getRes(resKey + "_fui");
+                }
                 if (!descData)
                     throw "Resource '" + resKey + "' not found, please check default.res.json!";
             }
@@ -45,7 +46,7 @@ module fairygui {
             pkg.loadPackage(new ByteBuffer(descData), resKey);
             UIPackage._packageInstById[pkg.id] = pkg;
             UIPackage._packageInstByName[pkg.name] = pkg;
-            pkg.customId = realKey;
+            pkg.customId = resKey;
             return pkg;
         }
 
