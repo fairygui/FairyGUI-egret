@@ -7594,6 +7594,7 @@ var fairygui;
                 else {
                     if (this._downScaled) {
                         this._downScaled = false;
+                        this._rootContainer.invertedMatrix = null;
                         this.setScale(this.scaleX / this._downEffectValue, this.scaleY / this._downEffectValue);
                     }
                 }

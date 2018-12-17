@@ -291,6 +291,7 @@ module fairygui {
                 else {
                     if (this._downScaled) {
                         this._downScaled = false;
+                        this._rootContainer.invertedMatrix = <any>null;
                         this.setScale(this.scaleX / this._downEffectValue, this.scaleY / this._downEffectValue);
                     }
                 }
