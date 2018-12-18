@@ -11178,6 +11178,8 @@ var fairygui;
             set: function (value) {
                 if (this._url == value)
                     return;
+                //清除旧的url加载的资源
+                this.clearContent();
                 this._url = value;
                 this.loadContent();
                 this.updateGear(7);
@@ -11373,7 +11375,7 @@ var fairygui;
             configurable: true
         });
         GLoader.prototype.loadContent = function () {
-            this.clearContent();
+            //this.clearContent();
             if (!this._url)
                 return;
             if (fairygui.ToolSet.startsWith(this._url, "ui://"))
