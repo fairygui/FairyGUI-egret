@@ -377,8 +377,14 @@ module fairygui {
                     if (!item.decoded) {
                         item.decoded = true;
                         var sprite: AtlasSprite = this._sprites[item.id];
-                        if (sprite != null)
-                            item.texture = this.createSpriteTexture(sprite);
+                        if (sprite != null) {
+                            var atlas: egret.Texture = <egret.Texture>this.getItemAsset(sprite.atlas);
+                            item.texture = new egret.Texture();
+                            item.texture.bitmapData = atlas.bitmapData;
+                            item.texture.$initData(atlas.$bitmapX + sprite.rect.x, atlas.$bitmapY + sprite.rect.y,
+                                sprite.rect.width, sprite.rect.height, 0, 0, sprite.rect.width, sprite.rect.height,
+                                atlas.$sourceWidth, atlas.$sourceHeight, sprite.rotated);
+                        }
                     }
                     return item.texture;
 
@@ -425,32 +431,6 @@ module fairygui {
             }
         }
 
-        private createSpriteTexture(sprite: AtlasSprite): egret.Texture {
-            var atlasTexture: egret.Texture = this.getItemAsset(sprite.atlas);
-            if (atlasTexture == null)
-                return null;
-            else
-                return this.createSubTexture(atlasTexture, sprite.rect);
-        }
-
-        private createSubTexture(atlasTexture: egret.Texture, uvRect: egret.Rectangle): egret.Texture {
-            var texture: egret.Texture = new egret.Texture();
-            if (atlasTexture["_bitmapData"]) {
-                texture["_bitmapData"] = atlasTexture["_bitmapData"];
-                texture.$initData(atlasTexture["_bitmapX"] + uvRect.x, atlasTexture["_bitmapY"] + uvRect.y,
-                    uvRect.width, uvRect.height, 0, 0, uvRect.width, uvRect.height,
-                    atlasTexture["_sourceWidth"], atlasTexture["_sourceHeight"]);
-            }
-            else {
-                texture.bitmapData = atlasTexture.bitmapData;
-                texture.$initData(atlasTexture["$bitmapX"] + uvRect.x, atlasTexture["$bitmapY"] + uvRect.y,
-                    uvRect.width, uvRect.height, 0, 0, uvRect.width, uvRect.height,
-                    atlasTexture["$sourceWidth"], atlasTexture["$sourceHeight"]);
-            }
-
-            return texture;
-        }
-
         private loadMovieClip(item: PackageItem): void {
             var buffer: ByteBuffer = item.rawData;
 
@@ -468,21 +448,29 @@ module fairygui {
             var spriteId: string;
             var frame: Frame;
             var sprite: AtlasSprite;
+            var fx: number;
+            var fy: number;
 
             for (var i: number = 0; i < frameCount; i++) {
                 var nextPos: number = buffer.readShort();
                 nextPos += buffer.position;
 
                 frame = new Frame();
-                frame.rect.x = buffer.readInt();
-                frame.rect.y = buffer.readInt();
-                frame.rect.width = buffer.readInt();
-                frame.rect.height = buffer.readInt();
+                fx = buffer.readInt();
+                fy = buffer.readInt();
+                buffer.readInt();//width
+                buffer.readInt();//height
                 frame.addDelay = buffer.readInt();
                 spriteId = buffer.readS();
 
-                if (spriteId != null && (sprite = this._sprites[spriteId]) != null)
-                    frame.texture = this.createSpriteTexture(sprite);
+                if (spriteId != null && (sprite = this._sprites[spriteId]) != null) {
+                    var atlas: egret.Texture = <egret.Texture>this.getItemAsset(sprite.atlas);
+                    frame.texture = new egret.Texture();
+                    frame.texture.bitmapData = atlas.bitmapData;
+                    frame.texture.$initData(atlas.$bitmapX + sprite.rect.x, atlas.$bitmapY + sprite.rect.y,
+                        sprite.rect.width, sprite.rect.height, fx, fy, item.width, item.height,
+                        atlas.$sourceWidth, atlas.$sourceHeight, sprite.rotated);
+                }
                 item.frames[i] = frame;
 
                 buffer.position = nextPos;
@@ -547,7 +535,10 @@ module fairygui {
                     }
                 }
                 else {
-                    bg.texture = this.createSubTexture(mainTexture, new egret.Rectangle(bx + mainSprite.rect.x, by + mainSprite.rect.y, bg.width, bg.height));
+                    bg.texture = new egret.Texture();
+                    bg.texture.bitmapData = mainTexture.bitmapData;
+                    bg.texture.$initData(mainTexture.$bitmapX + bx + mainSprite.rect.x, mainTexture.$bitmapY + by + mainSprite.rect.y,
+                        bg.width, bg.height, 0, 0, bg.width, bg.height, bg.width, bg.height, mainSprite.rotated);
                 }
 
                 if (font.ttf)

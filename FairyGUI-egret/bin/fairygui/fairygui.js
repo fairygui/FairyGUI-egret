@@ -49,8 +49,6 @@ var fairygui;
             _this._rawWidth = 0;
             _this._rawHeight = 0;
             _this._sizePercentInGroup = 0;
-            //Size的实现方式，有两种，0-GObject的w/h等于DisplayObject的w/h。1-GObject的sourceWidth/sourceHeight等于DisplayObject的w/h，剩余部分由scale实现
-            _this._sizeImplType = 0;
             _this._id = "" + GObject._gInstanceCounter++;
             _this._name = "";
             _this.createDisplayObject();
@@ -358,16 +356,8 @@ var fairygui;
         GObject.prototype.updatePivotOffset = function () {
             if (this._displayObject != null) {
                 if (this._pivotX != 0 || this._pivotY != 0) {
-                    var px;
-                    var py;
-                    if (this._sizeImplType == 0) {
-                        px = this._pivotX * this._width;
-                        py = this._pivotY * this._height;
-                    }
-                    else {
-                        px = this._pivotX * this.sourceWidth;
-                        py = this._pivotY * this.sourceHeight;
-                    }
+                    var px = this._pivotX * this._width;
+                    var py = this._pivotY * this._height;
                     var pt = this._displayObject.matrix.transformPoint(px, py, GObject.sHelperPoint);
                     this._pivotOffsetX = this._pivotX * this._width - (pt.x - this._displayObject.x);
                     this._pivotOffsetY = this._pivotY * this._height - (pt.y - this._displayObject.y);
@@ -1072,21 +1062,15 @@ var fairygui;
             }
         };
         GObject.prototype.handleSizeChanged = function () {
-            if (this._displayObject != null && this._sizeImplType == 1 && this.sourceWidth != 0 && this.sourceHeight != 0) {
-                this._displayObject.scaleX = this._width / this.sourceWidth * this._scaleX;
-                this._displayObject.scaleY = this._height / this.sourceHeight * this._scaleY;
+            if (this._displayObject != null) {
+                this._displayObject.width = this.width;
+                this._displayObject.height = this.height;
             }
         };
         GObject.prototype.handleScaleChanged = function () {
             if (this._displayObject != null) {
-                if (this._sizeImplType == 0 || this.sourceWidth == 0 || this.sourceHeight == 0) {
-                    this._displayObject.scaleX = this._scaleX;
-                    this._displayObject.scaleY = this._scaleY;
-                }
-                else {
-                    this._displayObject.scaleX = this._width / this.sourceWidth * this._scaleX;
-                    this._displayObject.scaleY = this._height / this.sourceHeight * this._scaleY;
-                }
+                this._displayObject.scaleX = this._scaleX;
+                this._displayObject.scaleY = this._scaleY;
             }
         };
         GObject.prototype.handleGrayedChanged = function () {
@@ -1736,6 +1720,32 @@ var fairygui;
         RelationType[RelationType["BottomExt_Bottom"] = 23] = "BottomExt_Bottom";
         RelationType[RelationType["Size"] = 24] = "Size";
     })(RelationType = fairygui.RelationType || (fairygui.RelationType = {}));
+    ;
+    var FillMethod;
+    (function (FillMethod) {
+        FillMethod[FillMethod["None"] = 0] = "None";
+        FillMethod[FillMethod["Horizontal"] = 1] = "Horizontal";
+        FillMethod[FillMethod["Vertical"] = 2] = "Vertical";
+        FillMethod[FillMethod["Radial90"] = 3] = "Radial90";
+        FillMethod[FillMethod["Radial180"] = 4] = "Radial180";
+        FillMethod[FillMethod["Radial360"] = 5] = "Radial360";
+    })(FillMethod = fairygui.FillMethod || (fairygui.FillMethod = {}));
+    ;
+    var FillOrigin;
+    (function (FillOrigin) {
+        FillOrigin[FillOrigin["Top"] = 0] = "Top";
+        FillOrigin[FillOrigin["Bottom"] = 1] = "Bottom";
+        FillOrigin[FillOrigin["Left"] = 2] = "Left";
+        FillOrigin[FillOrigin["Right"] = 3] = "Right";
+    })(FillOrigin = fairygui.FillOrigin || (fairygui.FillOrigin = {}));
+    ;
+    var FillOrigin90;
+    (function (FillOrigin90) {
+        FillOrigin90[FillOrigin90["TopLeft"] = 0] = "TopLeft";
+        FillOrigin90[FillOrigin90["TopRight"] = 1] = "TopRight";
+        FillOrigin90[FillOrigin90["BottomLeft"] = 2] = "BottomLeft";
+        FillOrigin90[FillOrigin90["BottomRight"] = 3] = "BottomRight";
+    })(FillOrigin90 = fairygui.FillOrigin90 || (fairygui.FillOrigin90 = {}));
     ;
 })(fairygui || (fairygui = {}));
 var fairygui;
@@ -6880,7 +6890,6 @@ var fairygui;
     var Frame = (function () {
         function Frame() {
             this.addDelay = 0;
-            this.rect = new egret.Rectangle();
         }
         return Frame;
     }());
@@ -6908,25 +6917,18 @@ var fairygui;
             _this._frameElapsed = 0; //当前帧延迟
             _this._reversed = false;
             _this._repeatedCount = 0;
-            //comment out below line before 5.1.0
-            if (!egret.nativeRender) {
-                _this.$renderNode = new egret.sys.NormalBitmapNode();
-            }
-            //comment out below line after 5.1.0
-            //this.$renderNode = new egret.sys.BitmapNode();
             _this.touchEnabled = false;
             _this.setPlaySettings();
             return _this;
         }
-        MovieClip.prototype.createNativeDisplayObject = function () {
-            this.$nativeDisplayObject = new egret_native.NativeDisplayObject(11 /* BITMAP_TEXT */);
-        };
         Object.defineProperty(MovieClip.prototype, "frames", {
             get: function () {
                 return this._frames;
             },
             set: function (value) {
                 this._frames = value;
+                this.scale9Grid = null;
+                this.fillMode = egret.BitmapFillMode.SCALE;
                 if (this._frames != null)
                     this._frameCount = this._frames.length;
                 else
@@ -7148,92 +7150,16 @@ var fairygui;
         MovieClip.prototype.drawFrame = function () {
             if (this._frameCount > 0 && this._frame < this._frames.length) {
                 var frame = this._frames[this._frame];
-                this._texture = frame.texture;
-                this._frameRect = frame.rect;
+                this.texture = frame.texture;
             }
             else
-                this._texture = null;
-            if (this["$updateRenderNode"]) {
-                var self_1 = this;
-                self_1.$renderDirty = true;
-                var p = self_1.$parent;
-                if (p && !p.$cacheDirty) {
-                    p.$cacheDirty = true;
-                    p.$cacheDirtyUp();
-                }
-                var maskedObject = self_1.$maskedObject;
-                if (maskedObject && !maskedObject.$cacheDirty) {
-                    maskedObject.$cacheDirty = true;
-                    maskedObject.$cacheDirtyUp();
-                }
-            }
-            else {
-                var self_2 = this;
-                self_2.$invalidateContentBounds();
-            }
+                this.texture = null;
         };
         MovieClip.prototype.checkTimer = function () {
             if (this._playing && this._frameCount > 0 && this.stage != null)
                 fairygui.GTimers.inst.add(1, 0, this.update, this);
             else
                 fairygui.GTimers.inst.remove(this.update, this);
-        };
-        //comment this function before 5.1.0
-        MovieClip.prototype.$updateRenderNode = function () {
-            var texture = this._texture;
-            if (texture) {
-                var offsetX = Math.round(texture.$offsetX) + this._frameRect.x;
-                var offsetY = Math.round(texture.$offsetY) + this._frameRect.y;
-                var bitmapWidth = texture.$bitmapWidth;
-                var bitmapHeight = texture.$bitmapHeight;
-                var textureWidth = texture.$getTextureWidth();
-                var textureHeight = texture.$getTextureHeight();
-                var destW = Math.round(texture.$getScaleBitmapWidth());
-                var destH = Math.round(texture.$getScaleBitmapHeight());
-                var sourceWidth = texture.$sourceWidth;
-                var sourceHeight = texture.$sourceHeight;
-                egret.sys.BitmapNode.$updateTextureData(this.$renderNode, texture.$bitmapData, texture.$bitmapX, texture.$bitmapY, bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight, destW, destH, sourceWidth, sourceHeight, egret.BitmapFillMode.SCALE, this._smoothing);
-            }
-        };
-        //comment out this function after 5.1.0
-        /*
-        $render(): void {
-            var texture = this._texture;
-            if (texture) {
-                var offsetX: number = Math.round(texture._offsetX) + this._frameRect.x;
-                var offsetY: number = Math.round(texture._offsetY) + this._frameRect.y;
-                var bitmapWidth: number = texture._bitmapWidth;
-                var bitmapHeight: number = texture._bitmapHeight;
-                var textureWidth: number = texture.$getTextureWidth();
-                var textureHeight: number = texture.$getTextureHeight();
-                var destW: number = Math.round(texture.$getScaleBitmapWidth());
-                var destH: number = Math.round(texture.$getScaleBitmapHeight());
-                var sourceWidth: number = texture._sourceWidth;
-                var sourceHeight: number = texture._sourceHeight;
-
-                egret.sys.BitmapNode.$updateTextureData
-                    //before 3.1.7 egret.Bitmap.$drawImage
-                    (<egret.sys.BitmapNode>this.$renderNode, texture._bitmapData,
-                    texture._bitmapX, texture._bitmapY,
-                    bitmapWidth, bitmapHeight,
-                    offsetX, offsetY,
-                    textureWidth, textureHeight,
-                    destW, destH,
-                    sourceWidth, sourceHeight,
-                    null, egret.BitmapFillMode.SCALE, this._smoothing);
-            }
-        }*/
-        MovieClip.prototype.$measureContentBounds = function (bounds) {
-            if (this._texture) {
-                var x = this._frameRect.x;
-                var y = this._frameRect.y;
-                var w = this._texture.$getTextureWidth();
-                var h = this._texture.$getTextureHeight();
-                bounds.setTo(x, y, w, h);
-            }
-            else {
-                bounds.setEmpty();
-            }
         };
         MovieClip.prototype.$onAddToStage = function (stage, nestLevel) {
             _super.prototype.$onAddToStage.call(this, stage, nestLevel);
@@ -7245,7 +7171,7 @@ var fairygui;
             fairygui.GTimers.inst.remove(this.update, this);
         };
         return MovieClip;
-    }(egret.DisplayObject));
+    }(egret.Bitmap));
     fairygui.MovieClip = MovieClip;
     __reflect(MovieClip.prototype, "fairygui.MovieClip");
 })(fairygui || (fairygui = {}));
@@ -8707,6 +8633,11 @@ var fairygui;
         __extends(GImage, _super);
         function GImage() {
             var _this = _super.call(this) || this;
+            _this._fillMethod = fairygui.FillMethod.None;
+            _this._fillOrigin = fairygui.FillOrigin.Left;
+            _this._fillAmount = 100;
+            _this._fillClockwise = false;
+            _this.fillStart = 0;
             _this._color = 0xFFFFFF;
             _this._flip = fairygui.FlipType.None;
             return _this;
@@ -8770,6 +8701,75 @@ var fairygui;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(GImage.prototype, "fillMethod", {
+            get: function () {
+                return this._fillMethod;
+            },
+            set: function (value) {
+                if (this._fillMethod != value) {
+                    this._fillMethod = value;
+                    if (this._fillMethod != 0) {
+                        this.setupFill();
+                    }
+                    else {
+                        var mask = this._content.mask;
+                        this._content.mask = null;
+                        if (mask instanceof egret.Shape) {
+                            if (mask.parent) {
+                                mask.parent.removeChild(mask);
+                            }
+                        }
+                    }
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GImage.prototype, "fillOrigin", {
+            get: function () {
+                return this._fillOrigin;
+            },
+            set: function (value) {
+                if (this._fillOrigin != value) {
+                    this._fillOrigin = value;
+                    if (this._fillMethod != 0) {
+                        this.setupFill();
+                    }
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GImage.prototype, "fillClockwise", {
+            get: function () {
+                return this._fillClockwise;
+            },
+            set: function (value) {
+                if (this._fillClockwise != value) {
+                    this._fillClockwise = value;
+                    if (this._fillMethod != 0) {
+                        this.setupFill();
+                    }
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GImage.prototype, "fillAmount", {
+            get: function () {
+                return this._fillAmount;
+            },
+            set: function (value) {
+                if (this._fillAmount != value) {
+                    this._fillAmount = fairygui.ToolSet.clamp(value, 0, 100);
+                    if (this._fillMethod != 0) {
+                        this.setupFill();
+                    }
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(GImage.prototype, "texture", {
             get: function () {
                 return this._content.texture;
@@ -8798,6 +8798,57 @@ var fairygui;
             this._content.touchEnabled = false;
             this.setDisplayObject(this._content);
         };
+        GImage.prototype.setupFill = function () {
+            var mask = this._content.mask;
+            var width = this._content.width;
+            var height = this._content.height;
+            if (this._fillMethod == fairygui.FillMethod.Horizontal || this._fillMethod == fairygui.FillMethod.Vertical) {
+                if (!mask || mask instanceof egret.DisplayObject) {
+                    mask = new egret.Rectangle(0, 0, width, height);
+                }
+                if (this._fillMethod == fairygui.FillMethod.Horizontal) {
+                    mask.y = 0;
+                    if (this._fillOrigin == fairygui.FillOrigin.Top) {
+                        mask.x = width * (this._fillAmount / 100 - 1);
+                    }
+                    else {
+                        mask.x = width * (1 - this._fillAmount / 100);
+                    }
+                }
+                else {
+                    mask.x = 0;
+                    if (this._fillOrigin == fairygui.FillOrigin.Top) {
+                        mask.y = height * (this._fillAmount / 100 - 1);
+                    }
+                    else {
+                        mask.y = height * (1 - this._fillAmount / 100);
+                    }
+                }
+            }
+            else if (this._fillMethod != fairygui.FillMethod.None && this._content.parent) {
+                if (!mask || mask instanceof egret.Rectangle) {
+                    mask = new egret.Shape();
+                    this._content.parent.addChild(mask);
+                    mask.x = this.x;
+                    mask.y = this.y;
+                }
+                width = this.scaleX * width;
+                height = this.scaleY * height;
+                fairygui.GraphicsHelper.fillImage(this._fillMethod, this._fillAmount, this._fillOrigin, this._fillClockwise, mask.graphics, width, height);
+            }
+            this._content.mask = mask;
+        };
+        GImage.prototype.removeFromParent = function () {
+            if (this._fillMethod != fairygui.FillMethod.None) {
+                var mask = this._content.mask;
+                if (mask instanceof egret.Shape) {
+                    if (mask.parent) {
+                        mask.parent.removeChild(mask);
+                    }
+                }
+            }
+            _super.prototype.removeFromParent.call(this);
+        };
         GImage.prototype.dispose = function () {
             _super.prototype.dispose.call(this);
         };
@@ -8816,6 +8867,13 @@ var fairygui;
         };
         GImage.prototype.handleXYChanged = function () {
             _super.prototype.handleXYChanged.call(this);
+            if (this._fillMethod != fairygui.FillMethod.None) {
+                var mask = this._content.mask;
+                if (mask instanceof egret.Shape) {
+                    mask.x = this._content.x;
+                    mask.y = this._content.y;
+                }
+            }
             if (this._flip != fairygui.FlipType.None) {
                 if (this._content.scaleX == -1)
                     this._content.x += this.width;
@@ -8823,16 +8881,18 @@ var fairygui;
                     this._content.y += this.height;
             }
         };
-        GImage.prototype.handleSizeChanged = function () {
-            this._content.width = this.width;
-            this._content.height = this.height;
-        };
         GImage.prototype.setup_beforeAdd = function (buffer, beginPos) {
             _super.prototype.setup_beforeAdd.call(this, buffer, beginPos);
             buffer.seek(beginPos, 5);
             if (buffer.readBool())
                 this.color = buffer.readColor();
             this.flip = buffer.readByte();
+            this._fillMethod = buffer.readByte();
+            if (this._fillMethod != 0) {
+                this._fillOrigin = buffer.readByte();
+                this._fillClockwise = buffer.readBool();
+                this.fillAmount = buffer.readFloat();
+            }
         };
         return GImage;
     }(fairygui.GObject));
@@ -11140,13 +11200,11 @@ var fairygui;
         __extends(GLoader, _super);
         function GLoader() {
             var _this = _super.call(this) || this;
-            _this._frame = 0;
             _this._color = 0;
             _this._contentSourceWidth = 0;
             _this._contentSourceHeight = 0;
             _this._contentWidth = 0;
             _this._contentHeight = 0;
-            _this._playing = true;
             _this._url = "";
             _this._fill = fairygui.LoaderFillType.None;
             _this._align = fairygui.AlignType.Left;
@@ -11160,9 +11218,11 @@ var fairygui;
             this._container["$owner"] = this;
             this._container.hitArea = new egret.Rectangle();
             this.setDisplayObject(this._container);
+            this._content = new fairygui.MovieClip();
+            this._container.addChild(this._content);
         };
         GLoader.prototype.dispose = function () {
-            if (this._contentItem == null && (this._content instanceof egret.Bitmap)) {
+            if (this._contentItem == null) {
                 var texture = this._content.texture;
                 if (texture != null)
                     this.freeExternal(texture);
@@ -11264,13 +11324,11 @@ var fairygui;
         });
         Object.defineProperty(GLoader.prototype, "playing", {
             get: function () {
-                return this._playing;
+                return this._content.playing;
             },
             set: function (value) {
-                if (this._playing != value) {
-                    this._playing = value;
-                    if (this._content instanceof fairygui.MovieClip)
-                        this._content.playing = value;
+                if (this._content.playing != value) {
+                    this._content.playing = value;
                     this.updateGear(5);
                 }
             },
@@ -11279,13 +11337,11 @@ var fairygui;
         });
         Object.defineProperty(GLoader.prototype, "frame", {
             get: function () {
-                return this._frame;
+                return this._content.frame;
             },
             set: function (value) {
-                if (this._frame != value) {
-                    this._frame = value;
-                    if (this._content instanceof fairygui.MovieClip)
-                        this._content.frame = value;
+                if (this._content.frame != value) {
+                    this._content.frame = value;
                     this.updateGear(5);
                 }
             },
@@ -11294,21 +11350,16 @@ var fairygui;
         });
         Object.defineProperty(GLoader.prototype, "timeScale", {
             get: function () {
-                if (this._content instanceof fairygui.MovieClip)
-                    return this._content.timeScale;
-                else
-                    return 1;
+                return this._content.timeScale;
             },
             set: function (value) {
-                if (this._content instanceof fairygui.MovieClip)
-                    this._content.timeScale = value;
+                this._content.timeScale = value;
             },
             enumerable: true,
             configurable: true
         });
         GLoader.prototype.advance = function (timeInMiniseconds) {
-            if (this._content instanceof fairygui.MovieClip)
-                this._content.advance(timeInMiniseconds);
+            this._content.advance(timeInMiniseconds);
         };
         Object.defineProperty(GLoader.prototype, "color", {
             get: function () {
@@ -11353,15 +11404,12 @@ var fairygui;
         });
         Object.defineProperty(GLoader.prototype, "texture", {
             get: function () {
-                if (this._content instanceof egret.Bitmap)
-                    return this._content.texture;
-                else
-                    return null;
+                return this._content.texture;
             },
             set: function (value) {
                 this.url = null;
-                this.switchToMovieMode(false);
                 this._content.texture = value;
+                this._content.frames = null;
                 if (value != null) {
                     this._contentSourceWidth = value.textureWidth;
                     this._contentSourceHeight = value.textureHeight;
@@ -11394,28 +11442,24 @@ var fairygui;
                         this.setErrorState();
                     }
                     else {
-                        this.switchToMovieMode(false);
-                        var bm = this._content;
-                        bm.texture = this._contentItem.texture;
-                        bm.scale9Grid = this._contentItem.scale9Grid;
+                        this._content.texture = this._contentItem.texture;
+                        this._content.scale9Grid = this._contentItem.scale9Grid;
                         if (this._contentItem.scaleByTile)
-                            bm.fillMode = egret.BitmapFillMode.REPEAT;
+                            this._content.fillMode = egret.BitmapFillMode.REPEAT;
                         else
-                            bm.fillMode = egret.BitmapFillMode.SCALE;
+                            this._content.fillMode = egret.BitmapFillMode.SCALE;
                         this._contentSourceWidth = this._contentItem.width;
                         this._contentSourceHeight = this._contentItem.height;
                         this.updateLayout();
                     }
                 }
                 else if (this._contentItem.type == fairygui.PackageItemType.MovieClip) {
-                    this.switchToMovieMode(true);
                     this._contentSourceWidth = this._contentItem.width;
                     this._contentSourceHeight = this._contentItem.height;
-                    var mc = this._content;
-                    mc.interval = this._contentItem.interval;
-                    mc.swing = this._contentItem.swing;
-                    mc.repeatDelay = this._contentItem.repeatDelay;
-                    mc.frames = this._contentItem.frames;
+                    this._content.interval = this._contentItem.interval;
+                    this._content.swing = this._contentItem.swing;
+                    this._content.repeatDelay = this._contentItem.repeatDelay;
+                    this._content.frames = this._contentItem.frames;
                     this.updateLayout();
                 }
                 else if (this._contentItem.type == fairygui.PackageItemType.Component) {
@@ -11440,29 +11484,12 @@ var fairygui;
             else
                 this.setErrorState();
         };
-        GLoader.prototype.switchToMovieMode = function (value) {
-            if (value) {
-                if (!(this._content instanceof fairygui.MovieClip))
-                    this._content = new fairygui.MovieClip();
-            }
-            else {
-                if (!(this._content instanceof egret.Bitmap))
-                    this._content = new egret.Bitmap();
-            }
-            this._container.addChild(this._content);
-        };
         GLoader.prototype.loadExternal = function () {
             RES.getResAsync(this._url, this.__getResCompleted, this);
         };
         GLoader.prototype.freeExternal = function (texture) {
         };
         GLoader.prototype.onExternalLoadSuccess = function (texture) {
-            if (!(this._content instanceof egret.Bitmap)) {
-                this._content = new egret.Bitmap();
-                this._container.addChild(this._content);
-            }
-            else
-                this._container.addChild(this._content);
             this._content.texture = texture;
             this._content.scale9Grid = null;
             this._content.fillMode = egret.BitmapFillMode.SCALE;
@@ -11526,8 +11553,8 @@ var fairygui;
                     else {
                         this._content.x = 0;
                         this._content.y = 0;
-                        this._content.scaleX = 1;
-                        this._content.scaleY = 1;
+                        this._content.width = this._contentWidth;
+                        this._content.height = this._contentHeight;
                     }
                     return;
                 }
@@ -11566,13 +11593,9 @@ var fairygui;
             if (this._content2 != null) {
                 this._content2.setScale(sx, sy);
             }
-            else if (this._content instanceof egret.Bitmap) {
+            else {
                 this._content.width = this._contentWidth;
                 this._content.height = this._contentHeight;
-            }
-            else {
-                this._content.scaleX = sx;
-                this._content.scaleY = sy;
             }
             var nx, ny;
             if (this._align == fairygui.AlignType.Center)
@@ -11596,13 +11619,11 @@ var fairygui;
         };
         GLoader.prototype.clearContent = function () {
             this.clearErrorState();
-            if (this._content != null && this._content.parent != null)
-                this._container.removeChild(this._content);
-            if (this._contentItem == null && (this._content instanceof egret.Bitmap)) {
-                var texture = this._content.texture;
-                if (texture != null)
-                    this.freeExternal(texture);
+            if (this._contentItem == null && this._content.texture != null) {
+                this.freeExternal(this._content.texture);
             }
+            this._content.texture = null;
+            this._content.frames = null;
             if (this._content2 != null) {
                 this._container.removeChild(this._content2.displayObject);
                 this._content2.dispose();
@@ -11625,8 +11646,8 @@ var fairygui;
             this._shrinkOnly = buffer.readBool();
             this._autoSize = buffer.readBool();
             this._showErrorSign = buffer.readBool();
-            this._playing = buffer.readBool();
-            this._frame = buffer.readInt();
+            this._content.playing = buffer.readBool();
+            this._content.frame = buffer.readInt();
             if (buffer.readBool())
                 this.color = buffer.readColor();
             var fillMethod = buffer.readByte();
@@ -11646,9 +11667,7 @@ var fairygui;
     var GMovieClip = (function (_super) {
         __extends(GMovieClip, _super);
         function GMovieClip() {
-            var _this = _super.call(this) || this;
-            _this._sizeImplType = 1;
-            return _this;
+            return _super.call(this) || this;
         }
         Object.defineProperty(GMovieClip.prototype, "color", {
             get: function () {
@@ -15966,8 +15985,12 @@ var fairygui;
                     if (!item.decoded) {
                         item.decoded = true;
                         var sprite = this._sprites[item.id];
-                        if (sprite != null)
-                            item.texture = this.createSpriteTexture(sprite);
+                        if (sprite != null) {
+                            var atlas = this.getItemAsset(sprite.atlas);
+                            item.texture = new egret.Texture();
+                            item.texture.bitmapData = atlas.bitmapData;
+                            item.texture.$initData(atlas.$bitmapX + sprite.rect.x, atlas.$bitmapY + sprite.rect.y, sprite.rect.width, sprite.rect.height, 0, 0, sprite.rect.width, sprite.rect.height, atlas.$sourceWidth, atlas.$sourceHeight, sprite.rotated);
+                        }
                     }
                     return item.texture;
                 case fairygui.PackageItemType.Atlas:
@@ -16007,25 +16030,6 @@ var fairygui;
                     return null;
             }
         };
-        UIPackage.prototype.createSpriteTexture = function (sprite) {
-            var atlasTexture = this.getItemAsset(sprite.atlas);
-            if (atlasTexture == null)
-                return null;
-            else
-                return this.createSubTexture(atlasTexture, sprite.rect);
-        };
-        UIPackage.prototype.createSubTexture = function (atlasTexture, uvRect) {
-            var texture = new egret.Texture();
-            if (atlasTexture["_bitmapData"]) {
-                texture["_bitmapData"] = atlasTexture["_bitmapData"];
-                texture.$initData(atlasTexture["_bitmapX"] + uvRect.x, atlasTexture["_bitmapY"] + uvRect.y, uvRect.width, uvRect.height, 0, 0, uvRect.width, uvRect.height, atlasTexture["_sourceWidth"], atlasTexture["_sourceHeight"]);
-            }
-            else {
-                texture.bitmapData = atlasTexture.bitmapData;
-                texture.$initData(atlasTexture["$bitmapX"] + uvRect.x, atlasTexture["$bitmapY"] + uvRect.y, uvRect.width, uvRect.height, 0, 0, uvRect.width, uvRect.height, atlasTexture["$sourceWidth"], atlasTexture["$sourceHeight"]);
-            }
-            return texture;
-        };
         UIPackage.prototype.loadMovieClip = function (item) {
             var buffer = item.rawData;
             buffer.seek(0, 0);
@@ -16038,18 +16042,24 @@ var fairygui;
             var spriteId;
             var frame;
             var sprite;
+            var fx;
+            var fy;
             for (var i = 0; i < frameCount; i++) {
                 var nextPos = buffer.readShort();
                 nextPos += buffer.position;
                 frame = new fairygui.Frame();
-                frame.rect.x = buffer.readInt();
-                frame.rect.y = buffer.readInt();
-                frame.rect.width = buffer.readInt();
-                frame.rect.height = buffer.readInt();
+                fx = buffer.readInt();
+                fy = buffer.readInt();
+                buffer.readInt(); //width
+                buffer.readInt(); //height
                 frame.addDelay = buffer.readInt();
                 spriteId = buffer.readS();
-                if (spriteId != null && (sprite = this._sprites[spriteId]) != null)
-                    frame.texture = this.createSpriteTexture(sprite);
+                if (spriteId != null && (sprite = this._sprites[spriteId]) != null) {
+                    var atlas = this.getItemAsset(sprite.atlas);
+                    frame.texture = new egret.Texture();
+                    frame.texture.bitmapData = atlas.bitmapData;
+                    frame.texture.$initData(atlas.$bitmapX + sprite.rect.x, atlas.$bitmapY + sprite.rect.y, sprite.rect.width, sprite.rect.height, fx, fy, item.width, item.height, atlas.$sourceWidth, atlas.$sourceHeight, sprite.rotated);
+                }
                 item.frames[i] = frame;
                 buffer.position = nextPos;
             }
@@ -16104,7 +16114,9 @@ var fairygui;
                     }
                 }
                 else {
-                    bg.texture = this.createSubTexture(mainTexture, new egret.Rectangle(bx + mainSprite.rect.x, by + mainSprite.rect.y, bg.width, bg.height));
+                    bg.texture = new egret.Texture();
+                    bg.texture.bitmapData = mainTexture.bitmapData;
+                    bg.texture.$initData(mainTexture.$bitmapX + bx + mainSprite.rect.x, mainTexture.$bitmapY + by + mainSprite.rect.y, bg.width, bg.height, 0, 0, bg.width, bg.height, bg.width, bg.height, mainSprite.rotated);
                 }
                 if (font.ttf)
                     bg.lineHeight = lineHeight;
@@ -16910,4 +16922,180 @@ var fairygui;
     }(egret.ByteArray));
     fairygui.ByteBuffer = ByteBuffer;
     __reflect(ByteBuffer.prototype, "fairygui.ByteBuffer");
+})(fairygui || (fairygui = {}));
+var fairygui;
+(function (fairygui) {
+    var GraphicsHelper = (function () {
+        function GraphicsHelper() {
+        }
+        GraphicsHelper.fillImage = function (method, amount, origin, clockwise, graphics, width, height) {
+            graphics.clear();
+            if (amount < 100) {
+                graphics.lineStyle(0);
+                graphics.beginFill(0);
+                amount = amount / 100;
+                var startAngle = 0;
+                var endAngle = 0;
+                var radius = Math.ceil(Math.sqrt(width * width + height * height));
+                var cx = width / 2;
+                var cy = height / 2;
+                switch (method) {
+                    case fairygui.FillMethod.Radial90:
+                        if (origin == fairygui.FillOrigin90.TopRight) {
+                            cx = width;
+                            cy = 0;
+                            graphics.moveTo(cx, cy);
+                            if (clockwise) {
+                                startAngle = Math.PI / 2;
+                                graphics.lineTo(cx - radius, cy);
+                            }
+                            else {
+                                startAngle = Math.PI;
+                                graphics.lineTo(cx, cy + radius);
+                            }
+                        }
+                        else if (origin == fairygui.FillOrigin90.TopLeft) {
+                            cx = 0;
+                            cy = 0;
+                            graphics.moveTo(cx, cy);
+                            if (clockwise) {
+                                startAngle = 0;
+                                graphics.lineTo(cx, cy + radius);
+                            }
+                            else {
+                                startAngle = Math.PI / 2;
+                                graphics.lineTo(cx + radius, cy);
+                            }
+                        }
+                        else if (origin == fairygui.FillOrigin90.BottomRight) {
+                            cx = width;
+                            cy = height;
+                            graphics.moveTo(cx, cy);
+                            if (clockwise) {
+                                startAngle = Math.PI;
+                                graphics.lineTo(cx - radius, cy);
+                            }
+                            else {
+                                startAngle = Math.PI * 3 / 2;
+                                graphics.lineTo(cx, cy - radius);
+                            }
+                        }
+                        else {
+                            cx = 0;
+                            cy = height;
+                            graphics.moveTo(cx, cy);
+                            if (clockwise) {
+                                startAngle = Math.PI * 3 / 2;
+                                graphics.lineTo(cx, cy - radius);
+                            }
+                            else {
+                                startAngle = 0;
+                                graphics.lineTo(cx + radius, cy);
+                            }
+                        }
+                        if (clockwise) {
+                            endAngle = startAngle + amount * Math.PI / 2;
+                        }
+                        else {
+                            endAngle = startAngle - amount * Math.PI / 2;
+                        }
+                        graphics.drawArc(cx, cy, radius, startAngle, endAngle, !clockwise);
+                        graphics.lineTo(cx, cy);
+                        break;
+                    case fairygui.FillMethod.Radial180:
+                        if (origin == fairygui.FillOrigin.Right) {
+                            cx = width;
+                            graphics.moveTo(cx, cy);
+                            graphics.lineTo(cx, cy - radius);
+                            if (clockwise) {
+                                startAngle = Math.PI / 2;
+                            }
+                            else {
+                                startAngle = Math.PI * 3 / 2;
+                            }
+                        }
+                        else if (origin == fairygui.FillOrigin.Bottom) {
+                            startAngle = Math.PI;
+                            cy = height;
+                            graphics.moveTo(cx, cy);
+                            graphics.lineTo(cx - radius, cy);
+                            if (clockwise) {
+                                startAngle = Math.PI;
+                            }
+                            else {
+                                startAngle = 0;
+                            }
+                        }
+                        else if (origin == fairygui.FillOrigin.Left) {
+                            cx = 0;
+                            graphics.moveTo(cx, cy);
+                            graphics.lineTo(cx - radius, cy);
+                            if (clockwise) {
+                                startAngle = Math.PI * 3 / 2;
+                            }
+                            else {
+                                startAngle = Math.PI / 2;
+                            }
+                        }
+                        else {
+                            cy = 0;
+                            graphics.moveTo(cx, cy);
+                            graphics.lineTo(cx + radius, cy);
+                            if (clockwise) {
+                                startAngle = 0;
+                            }
+                            else {
+                                startAngle = Math.PI;
+                            }
+                        }
+                        if (clockwise) {
+                            endAngle = startAngle + amount * Math.PI;
+                        }
+                        else {
+                            endAngle = startAngle - amount * Math.PI;
+                        }
+                        graphics.drawArc(cx, cy, radius, startAngle, endAngle, !clockwise);
+                        graphics.lineTo(cx, cy);
+                        break;
+                    case fairygui.FillMethod.Radial360:
+                        startAngle = 0;
+                        if (amount >= 1) {
+                            graphics.drawCircle(cx, cy, radius);
+                        }
+                        else {
+                            graphics.moveTo(cx, cy);
+                            if (origin == fairygui.FillOrigin.Right) {
+                                startAngle = 0;
+                                graphics.lineTo(cx + radius, cy);
+                            }
+                            else if (origin == fairygui.FillOrigin.Bottom) {
+                                startAngle = Math.PI / 2;
+                                graphics.lineTo(cx, cy + radius);
+                            }
+                            else if (origin == fairygui.FillOrigin.Left) {
+                                startAngle = Math.PI;
+                                graphics.lineTo(cx - radius, cy);
+                            }
+                            else {
+                                startAngle = Math.PI * 3 / 2;
+                                graphics.lineTo(cx, cy - radius);
+                            }
+                            if (clockwise) {
+                                endAngle = startAngle + amount * Math.PI * 2;
+                            }
+                            else {
+                                endAngle = startAngle - amount * Math.PI * 2;
+                            }
+                            graphics.drawArc(cx, cy, radius, startAngle, endAngle, !clockwise);
+                            graphics.lineTo(cx, cy);
+                        }
+                        break;
+                }
+                graphics.endFill();
+            }
+        };
+        return GraphicsHelper;
+    }());
+    fairygui.GraphicsHelper = GraphicsHelper;
+    __reflect(GraphicsHelper.prototype, "fairygui.GraphicsHelper");
 })(fairygui || (fairygui = {}));

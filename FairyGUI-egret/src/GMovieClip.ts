@@ -6,7 +6,6 @@ module fairygui {
 
         public constructor() {
             super();
-            this._sizeImplType = 1;
         }
 
         public get color(): number {

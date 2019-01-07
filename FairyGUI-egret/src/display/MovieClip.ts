@@ -1,15 +1,11 @@
 
 module fairygui {
 
-    export class MovieClip extends egret.DisplayObject {
+    export class MovieClip extends egret.Bitmap {
         public interval: number = 0;
         public swing: boolean;
         public repeatDelay: number = 0;
         public timeScale: number = 1;
-
-        private _texture: egret.Texture;
-        private _needRebuild: boolean;
-        private _frameRect: egret.Rectangle;
 
         private _playing: boolean = true;
         private _frameCount: number = 0;
@@ -31,20 +27,9 @@ module fairygui {
         public constructor() {
             super();
 
-            //comment out below line before 5.1.0
-             if (!egret.nativeRender) {
-                this.$renderNode = new egret.sys.NormalBitmapNode();
-             }
-            //comment out below line after 5.1.0
-            //this.$renderNode = new egret.sys.BitmapNode();
-
             this.touchEnabled = false;
 
             this.setPlaySettings();
-        }
-
-        protected createNativeDisplayObject(): void {
-            this.$nativeDisplayObject = new egret_native.NativeDisplayObject(egret_native.NativeObjectType.BITMAP_TEXT);
         }
 
         public get frames(): Array<Frame> {
@@ -53,6 +38,9 @@ module fairygui {
 
         public set frames(value: Array<Frame>) {
             this._frames = value;
+            this.scale9Grid = null;
+            this.fillMode = egret.BitmapFillMode.SCALE;
+
             if (this._frames != null)
                 this._frameCount = this._frames.length;
             else
@@ -288,30 +276,10 @@ module fairygui {
         private drawFrame(): void {
             if (this._frameCount > 0 && this._frame < this._frames.length) {
                 var frame: Frame = this._frames[this._frame];
-                this._texture = frame.texture;
-                this._frameRect = frame.rect;
+                this.texture = frame.texture;
             }
             else
-                this._texture = null;
-
-            if (this["$updateRenderNode"]) {
-                let self = <any>this;
-                self.$renderDirty = true;
-                let p = self.$parent;
-                if (p && !p.$cacheDirty) {
-                    p.$cacheDirty = true;
-                    p.$cacheDirtyUp();
-                }
-                let maskedObject = self.$maskedObject;
-                if (maskedObject && !maskedObject.$cacheDirty) {
-                    maskedObject.$cacheDirty = true;
-                    maskedObject.$cacheDirtyUp();
-                }
-            }
-            else {
-                let self = <any>this;
-                self.$invalidateContentBounds();
-            }
+                this.texture = null;
         }
 
         private checkTimer(): void {
@@ -319,69 +287,6 @@ module fairygui {
                 GTimers.inst.add(1, 0, this.update, this);
             else
                 GTimers.inst.remove(this.update, this);
-        }
-
-        //comment this function before 5.1.0
-        $updateRenderNode(): void {
-            var texture = this._texture;
-            if (texture) {
-                var offsetX: number = Math.round(texture.$offsetX) + this._frameRect.x;
-                var offsetY: number = Math.round(texture.$offsetY) + this._frameRect.y;
-                var bitmapWidth: number = texture.$bitmapWidth;
-                var bitmapHeight: number = texture.$bitmapHeight;
-                var textureWidth: number = texture.$getTextureWidth();
-                var textureHeight: number = texture.$getTextureHeight();
-                var destW: number = Math.round(texture.$getScaleBitmapWidth());
-                var destH: number = Math.round(texture.$getScaleBitmapHeight());
-                var sourceWidth: number = texture.$sourceWidth;
-                var sourceHeight: number = texture.$sourceHeight;
-
-                egret.sys.BitmapNode.$updateTextureData(<egret.sys.NormalBitmapNode>this.$renderNode, texture.$bitmapData, texture.$bitmapX, texture.$bitmapY,
-                    bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight, destW, destH, sourceWidth, sourceHeight, egret.BitmapFillMode.SCALE, this._smoothing);
-            }
-        }
-
-        //comment out this function after 5.1.0
-        /*
-        $render(): void {
-            var texture = this._texture;
-            if (texture) {
-                var offsetX: number = Math.round(texture._offsetX) + this._frameRect.x;
-                var offsetY: number = Math.round(texture._offsetY) + this._frameRect.y;
-                var bitmapWidth: number = texture._bitmapWidth;
-                var bitmapHeight: number = texture._bitmapHeight;
-                var textureWidth: number = texture.$getTextureWidth();
-                var textureHeight: number = texture.$getTextureHeight();
-                var destW: number = Math.round(texture.$getScaleBitmapWidth());
-                var destH: number = Math.round(texture.$getScaleBitmapHeight());
-                var sourceWidth: number = texture._sourceWidth;
-                var sourceHeight: number = texture._sourceHeight;
-
-                egret.sys.BitmapNode.$updateTextureData
-                    //before 3.1.7 egret.Bitmap.$drawImage
-                    (<egret.sys.BitmapNode>this.$renderNode, texture._bitmapData,
-                    texture._bitmapX, texture._bitmapY,
-                    bitmapWidth, bitmapHeight,
-                    offsetX, offsetY,
-                    textureWidth, textureHeight,
-                    destW, destH,
-                    sourceWidth, sourceHeight,
-                    null, egret.BitmapFillMode.SCALE, this._smoothing);
-            }
-        }*/
-
-        $measureContentBounds(bounds: egret.Rectangle): void {
-            if (this._texture) {
-                var x: number = this._frameRect.x;
-                var y: number = this._frameRect.y;
-                var w: number = this._texture.$getTextureWidth();
-                var h: number = this._texture.$getTextureHeight();
-
-                bounds.setTo(x, y, w, h);
-            }
-            else {
-                bounds.setEmpty();
-            }
         }
 
         $onAddToStage(stage: egret.Stage, nestLevel: number): void {

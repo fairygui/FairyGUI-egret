@@ -55,8 +55,6 @@ module fairygui {
         public _underConstruct: boolean;
         public _gearLocked: boolean;
         public _sizePercentInGroup: number = 0;
-        //Size的实现方式，有两种，0-GObject的w/h等于DisplayObject的w/h。1-GObject的sourceWidth/sourceHeight等于DisplayObject的w/h，剩余部分由scale实现
-        public _sizeImplType: number = 0;
 
         public static _gInstanceCounter: number = 0;
 
@@ -351,16 +349,8 @@ module fairygui {
         private updatePivotOffset(): void {
             if (this._displayObject != null) {
                 if (this._pivotX != 0 || this._pivotY != 0) {
-                    var px: number;
-                    var py: number;
-                    if (this._sizeImplType == 0) {
-                        px = this._pivotX * this._width;
-                        py = this._pivotY * this._height;
-                    }
-                    else {
-                        px = this._pivotX * this.sourceWidth;
-                        py = this._pivotY * this.sourceHeight;
-                    }
+                    var px: number = this._pivotX * this._width;
+                    var py: number = this._pivotY * this._height;
                     var pt: egret.Point = this._displayObject.matrix.transformPoint(px, py, GObject.sHelperPoint);
                     this._pivotOffsetX = this._pivotX * this._width - (pt.x - this._displayObject.x);
                     this._pivotOffsetY = this._pivotY * this._height - (pt.y - this._displayObject.y);
@@ -975,22 +965,16 @@ module fairygui {
         }
 
         protected handleSizeChanged(): void {
-            if (this._displayObject != null && this._sizeImplType == 1 && this.sourceWidth != 0 && this.sourceHeight != 0) {
-                this._displayObject.scaleX = this._width / this.sourceWidth * this._scaleX;
-                this._displayObject.scaleY = this._height / this.sourceHeight * this._scaleY;
+            if (this._displayObject != null) {
+                this._displayObject.width = this.width;
+                this._displayObject.height = this.height;
             }
         }
 
         protected handleScaleChanged(): void {
             if (this._displayObject != null) {
-                if (this._sizeImplType == 0 || this.sourceWidth == 0 || this.sourceHeight == 0) {
-                    this._displayObject.scaleX = this._scaleX;
-                    this._displayObject.scaleY = this._scaleY;
-                }
-                else {
-                    this._displayObject.scaleX = this._width / this.sourceWidth * this._scaleX;
-                    this._displayObject.scaleY = this._height / this.sourceHeight * this._scaleY;
-                }
+                this._displayObject.scaleX = this._scaleX;
+                this._displayObject.scaleY = this._scaleY;
             }
         }
 

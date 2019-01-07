@@ -49,7 +49,6 @@ declare module fairygui {
         _underConstruct: boolean;
         _gearLocked: boolean;
         _sizePercentInGroup: number;
-        _sizeImplType: number;
         static _gInstanceCounter: number;
         static XY_CHANGED: string;
         static SIZE_CHANGED: string;
@@ -377,6 +376,26 @@ declare module fairygui {
         BottomExt_Top = 22,
         BottomExt_Bottom = 23,
         Size = 24,
+    }
+    enum FillMethod {
+        None = 0,
+        Horizontal = 1,
+        Vertical = 2,
+        Radial90 = 3,
+        Radial180 = 4,
+        Radial360 = 5,
+    }
+    enum FillOrigin {
+        Top = 0,
+        Bottom = 1,
+        Left = 2,
+        Right = 3,
+    }
+    enum FillOrigin90 {
+        TopLeft = 0,
+        TopRight = 1,
+        BottomLeft = 2,
+        BottomRight = 3,
     }
 }
 declare module fairygui {
@@ -1083,21 +1102,17 @@ declare module fairygui {
 }
 declare module fairygui {
     class Frame {
-        rect: egret.Rectangle;
         addDelay: number;
         texture: egret.Texture;
         constructor();
     }
 }
 declare module fairygui {
-    class MovieClip extends egret.DisplayObject {
+    class MovieClip extends egret.Bitmap {
         interval: number;
         swing: boolean;
         repeatDelay: number;
         timeScale: number;
-        private _texture;
-        private _needRebuild;
-        private _frameRect;
         private _playing;
         private _frameCount;
         private _frames;
@@ -1114,7 +1129,6 @@ declare module fairygui {
         private _reversed;
         private _repeatedCount;
         constructor();
-        protected createNativeDisplayObject(): void;
         frames: Array<Frame>;
         readonly frameCount: number;
         frame: number;
@@ -1127,8 +1141,6 @@ declare module fairygui {
         private update();
         private drawFrame();
         private checkTimer();
-        $updateRenderNode(): void;
-        $measureContentBounds(bounds: egret.Rectangle): void;
         $onAddToStage(stage: egret.Stage, nestLevel: number): void;
         $onRemoveFromStage(): void;
     }
@@ -1307,17 +1319,27 @@ declare module fairygui {
         private _color;
         private _flip;
         private _matrix;
+        private _fillMethod;
+        private _fillOrigin;
+        private _fillAmount;
+        private _fillClockwise;
+        protected fillStart: number;
         constructor();
         private getColorMatrix();
         color: number;
         private applyColor();
         flip: FlipType;
+        fillMethod: FillMethod;
+        fillOrigin: FillOrigin | FillOrigin90;
+        fillClockwise: boolean;
+        fillAmount: number;
         texture: egret.Texture;
         protected createDisplayObject(): void;
+        protected setupFill(): void;
+        removeFromParent(): void;
         dispose(): void;
         constructFromResource(): void;
         protected handleXYChanged(): void;
-        protected handleSizeChanged(): void;
         setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
     }
 }
@@ -1464,8 +1486,6 @@ declare module fairygui {
         private _fill;
         private _shrinkOnly;
         private _showErrorSign;
-        private _playing;
-        private _frame;
         private _color;
         private _contentItem;
         private _contentSourceWidth;
@@ -1495,12 +1515,11 @@ declare module fairygui {
         color: number;
         private applyColor();
         showErrorSign: boolean;
-        readonly content: egret.Bitmap | fairygui.MovieClip;
+        readonly content: MovieClip;
         readonly component: GComponent;
         texture: egret.Texture;
         protected loadContent(): void;
         protected loadFromPackage(itemURL: string): void;
-        private switchToMovieMode(value);
         protected loadExternal(): void;
         protected freeExternal(texture: egret.Texture): void;
         protected onExternalLoadSuccess(texture: egret.Texture): void;
@@ -2077,8 +2096,6 @@ declare module fairygui {
         getItemByName(resName: string): PackageItem;
         getItemAssetByName(resName: string): any;
         getItemAsset(item: PackageItem): any;
-        private createSpriteTexture(sprite);
-        private createSubTexture(atlasTexture, uvRect);
         private loadMovieClip(item);
         private loadFont(item);
     }
@@ -2188,5 +2205,10 @@ declare module fairygui {
         readChar(): string;
         readBuffer(): ByteBuffer;
         seek(indexTablePos: number, blockIndex: number): boolean;
+    }
+}
+declare module fairygui {
+    class GraphicsHelper {
+        static fillImage(method: FillMethod, amount: number, origin: FillOrigin | FillOrigin90, clockwise: boolean, graphics: egret.Graphics, width: number, height: number): void;
     }
 }
