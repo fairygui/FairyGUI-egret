@@ -26,6 +26,7 @@ declare module fairygui {
         private _focusable;
         private _tooltips;
         private _pixelSnapping;
+        private _disposed;
         private _relations;
         private _group;
         private _gears;
@@ -139,6 +140,7 @@ declare module fairygui {
         static cast(obj: egret.DisplayObject): GObject;
         text: string;
         icon: string;
+        readonly isDisposed: boolean;
         dispose(): void;
         addClickListener(listener: Function, thisObj: any): void;
         removeClickListener(listener: Function, thisObj: any): void;
@@ -216,6 +218,7 @@ declare module fairygui {
         protected _owner: GObject;
         protected _controller: Controller;
         constructor(owner: GObject);
+        dispose(): void;
         controller: Controller;
         readonly tweenConfig: GearTweenConfig;
         setup(buffer: ByteBuffer): void;
@@ -519,6 +522,7 @@ declare module fairygui {
         protected _color: number;
         protected _leading: number;
         protected _letterSpacing: number;
+        protected _underline: boolean;
         protected _text: string;
         protected _ubbEnabled: boolean;
         protected _templateVars: any;
@@ -535,6 +539,7 @@ declare module fairygui {
         protected _bitmapPool: Array<egret.Bitmap>;
         protected static GUTTER_X: number;
         protected static GUTTER_Y: number;
+        protected static _htmlParser: egret.HtmlTextParser;
         constructor();
         protected createDisplayObject(): void;
         private switchBitmapMode(val);
@@ -1566,7 +1571,6 @@ declare module fairygui {
         private _barMaxHeightDelta;
         private _barStartX;
         private _barStartY;
-        private _tweening;
         constructor();
         titleType: ProgressTitleType;
         max: number;
@@ -1576,7 +1580,6 @@ declare module fairygui {
         protected constructExtension(buffer: ByteBuffer): void;
         protected handleSizeChanged(): void;
         setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
-        dispose(): void;
     }
 }
 declare module fairygui {

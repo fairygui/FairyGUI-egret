@@ -25,9 +25,9 @@ module fairygui {
 
         public set editable(val: boolean) {
             if (val)
-                this._textField.type == egret.TextFieldType.INPUT;
+                this._textField.type = egret.TextFieldType.INPUT;
             else
-                this._textField.type == egret.TextFieldType.DYNAMIC;
+                this._textField.type = egret.TextFieldType.DYNAMIC;
         }
 
         public get editable(): boolean {

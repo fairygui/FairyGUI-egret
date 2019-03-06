@@ -36,6 +36,7 @@ var fairygui;
             _this._handlingController = false;
             _this._focusable = false;
             _this._pixelSnapping = false;
+            _this._disposed = false;
             _this.sourceWidth = 0;
             _this.sourceHeight = 0;
             _this.initWidth = 0;
@@ -880,10 +881,25 @@ var fairygui;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(GObject.prototype, "isDisposed", {
+            get: function () {
+                return this._disposed;
+            },
+            enumerable: true,
+            configurable: true
+        });
         GObject.prototype.dispose = function () {
+            if (this._disposed)
+                return;
+            this._disposed = true;
             this.removeFromParent();
             this._relations.dispose();
             this._displayObject = null;
+            for (var i = 0; i < 8; i++) {
+                var gear = this._gears[i];
+                if (gear != null)
+                    gear.dispose();
+            }
         };
         GObject.prototype.addClickListener = function (listener, thisObj) {
             this.addEventListener(egret.TouchEvent.TOUCH_TAP, listener, thisObj);
@@ -1461,6 +1477,12 @@ var fairygui;
         function GearBase(owner) {
             this._owner = owner;
         }
+        GearBase.prototype.dispose = function () {
+            if (this._tweenConfig != null && this._tweenConfig._tweener != null) {
+                this._tweenConfig._tweener.kill();
+                this._tweenConfig._tweener = null;
+            }
+        };
         Object.defineProperty(GearBase.prototype, "controller", {
             get: function () {
                 return this._controller;
@@ -2863,6 +2885,7 @@ var fairygui;
             _this._fontSize = 0;
             _this._leading = 0;
             _this._letterSpacing = 0;
+            _this._underline = false;
             _this._textWidth = 0;
             _this._textHeight = 0;
             _this._fontSize = 12;
@@ -2921,8 +2944,24 @@ var fairygui;
             var text2 = this._text;
             if (this._templateVars != null)
                 text2 = this.parseTemplate(text2);
-            if (this._ubbEnabled)
-                this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(fairygui.ToolSet.encodeHTML(text2)));
+            if (this._ubbEnabled) {
+                var arr = GTextField._htmlParser.parser(fairygui.ToolSet.parseUBB(fairygui.ToolSet.encodeHTML(text2)));
+                if (this._underline) {
+                    for (var i = 0; i < arr.length; i++) {
+                        var element = arr[i];
+                        if (element.style)
+                            element.style.underline = true;
+                        else
+                            element.style = { underline: true };
+                    }
+                }
+                this._textField.textFlow = arr;
+            }
+            else if (this._underline) {
+                var arr = new Array(1);
+                arr[0] = { text: text2, style: { underline: true } };
+                this._textField.textFlow = arr;
+            }
             else
                 this._textField.text = text2;
         };
@@ -3034,12 +3073,10 @@ var fairygui;
         });
         Object.defineProperty(GTextField.prototype, "underline", {
             get: function () {
-                //return this._underline;
-                return false;
+                return this._underline;
             },
             set: function (value) {
-                //not support yet
-                //this._textField.underline = value;
+                this._underline = value;
             },
             enumerable: true,
             configurable: true
@@ -3573,7 +3610,7 @@ var fairygui;
             this._autoSize = buffer.readByte();
             this._widthAutoSize = this._autoSize == fairygui.AutoSizeType.Both;
             this._heightAutoSize = this._autoSize == fairygui.AutoSizeType.Both || this._autoSize == fairygui.AutoSizeType.Height;
-            buffer.readBool(); //this._textField.underline
+            this._underline = buffer.readBool();
             this._textField.italic = buffer.readBool();
             this._textField.bold = buffer.readBool();
             this._textField.multiline = !buffer.readBool();
@@ -3597,6 +3634,7 @@ var fairygui;
         };
         GTextField.GUTTER_X = 2;
         GTextField.GUTTER_Y = 2;
+        GTextField._htmlParser = new egret.HtmlTextParser();
         return GTextField;
     }(fairygui.GObject));
     fairygui.GTextField = GTextField;
@@ -4764,6 +4802,7 @@ var fairygui;
             this._valueSize = 1;
             this._startValue.x = start;
             this._endValue.x = end;
+            this._value.x = start;
             this._duration = duration;
             return this;
         };
@@ -4773,6 +4812,8 @@ var fairygui;
             this._endValue.x = end;
             this._startValue.y = start2;
             this._endValue.y = end2;
+            this._value.x = start;
+            this._value.y = start2;
             this._duration = duration;
             return this;
         };
@@ -4784,6 +4825,9 @@ var fairygui;
             this._endValue.y = end2;
             this._startValue.z = start3;
             this._endValue.z = end3;
+            this._value.x = start;
+            this._value.y = start2;
+            this._value.z = start3;
             this._duration = duration;
             return this;
         };
@@ -4797,6 +4841,10 @@ var fairygui;
             this._endValue.z = end3;
             this._startValue.w = start4;
             this._endValue.w = end4;
+            this._value.x = start;
+            this._value.y = start2;
+            this._value.z = start3;
+            this._value.w = start4;
             this._duration = duration;
             return this;
         };
@@ -4804,6 +4852,7 @@ var fairygui;
             this._valueSize = 4;
             this._startValue.color = start;
             this._endValue.color = end;
+            this._value.color = start;
             this._duration = duration;
             return this;
         };
@@ -5081,7 +5130,9 @@ var fairygui;
                     freePosCount++;
                 }
                 else {
-                    if (!tweener._paused)
+                    if ((tweener._target instanceof fairygui.GObject) && (tweener._target).isDisposed)
+                        tweener._killed = true;
+                    else if (!tweener._paused)
                         tweener._update(dt);
                     if (freePosStart != -1) {
                         TweenManager._activeTweens[freePosStart] = tweener;
@@ -6132,8 +6183,15 @@ var fairygui;
             for (var i = 0; i < cnt; i++) {
                 var item = this._items[i];
                 if (item.label == label) {
-                    item.targetId = newTarget.id;
-                    item.target = null;
+                    item.targetId = (newTarget == this._owner || newTarget == null) ? "" : newTarget.id;
+                    if (this._playing) {
+                        if (item.targetId.length > 0)
+                            item.target = this._owner.getChildById(item.targetId);
+                        else
+                            item.target = this._owner;
+                    }
+                    else
+                        item.target = null;
                 }
             }
         };
@@ -11780,7 +11838,6 @@ var fairygui;
             _this._barMaxHeightDelta = 0;
             _this._barStartX = 0;
             _this._barStartY = 0;
-            _this._tweening = false;
             _this._titleType = fairygui.ProgressTitleType.Percent;
             _this._value = 50;
             _this._max = 100;
@@ -11817,11 +11874,8 @@ var fairygui;
                 return this._value;
             },
             set: function (value) {
-                if (this._tweening) {
-                    fairygui.GTween.kill(this, true, this.update);
-                    this._tweening = false;
-                }
                 if (this._value != value) {
+                    fairygui.GTween.kill(this, false, this.update);
                     this._value = value;
                     this.update(this._value);
                 }
@@ -11830,19 +11884,16 @@ var fairygui;
             configurable: true
         });
         GProgressBar.prototype.tweenValue = function (value, duration) {
-            if (this._value != value) {
-                if (this._tweening) {
-                    fairygui.GTween.kill(this, false, this.update);
-                    this._tweening = false;
-                }
-                var oldValule = this._value;
-                this._value = value;
-                this._tweening = true;
-                return fairygui.GTween.to(oldValule, this._value, duration).setTarget(this, this.update).setEase(fairygui.EaseType.Linear)
-                    .onComplete(function () { this._tweening = false; }, this);
+            var oldValule;
+            var tweener = fairygui.GTween.getTween(this, this.update);
+            if (tweener != null) {
+                oldValule = tweener.value.x;
+                tweener.kill();
             }
             else
-                return null;
+                oldValule = this._value;
+            this._value = value;
+            return fairygui.GTween.to(oldValule, this._value, duration).setTarget(this, this.update).setEase(fairygui.EaseType.Linear);
         };
         GProgressBar.prototype.update = function (newValue) {
             var percent = this._max != 0 ? Math.min(newValue / this._max, 1) : 0;
@@ -11925,11 +11976,6 @@ var fairygui;
             this._max = buffer.readInt();
             this.update(this._value);
         };
-        GProgressBar.prototype.dispose = function () {
-            if (this._tweening)
-                fairygui.GTween.kill(this);
-            _super.prototype.dispose.call(this);
-        };
         return GProgressBar;
     }(fairygui.GComponent));
     fairygui.GProgressBar = GProgressBar;
@@ -11960,10 +12006,21 @@ var fairygui;
             var text2 = this._text;
             if (this._templateVars != null)
                 text2 = this.parseTemplate(text2);
+            var arr;
             if (this._ubbEnabled)
-                this._textField.textFlow = (new egret.HtmlTextParser).parser(fairygui.ToolSet.parseUBB(text2));
+                arr = fairygui.GTextField._htmlParser.parser(fairygui.ToolSet.parseUBB(text2));
             else
-                this._textField.textFlow = (new egret.HtmlTextParser).parser(text2);
+                arr = fairygui.GTextField._htmlParser.parser(text2);
+            if (this._underline) {
+                for (var i = 0; i < arr.length; i++) {
+                    var element = arr[i];
+                    if (element.style)
+                        element.style.underline = true;
+                    else
+                        element.style = { underline: true };
+                }
+            }
+            this._textField.textFlow = arr;
         };
         return GRichTextField;
     }(fairygui.GTextField));
@@ -12917,9 +12974,9 @@ var fairygui;
             },
             set: function (val) {
                 if (val)
-                    this._textField.type == egret.TextFieldType.INPUT;
+                    this._textField.type = egret.TextFieldType.INPUT;
                 else
-                    this._textField.type == egret.TextFieldType.DYNAMIC;
+                    this._textField.type = egret.TextFieldType.DYNAMIC;
             },
             enumerable: true,
             configurable: true
