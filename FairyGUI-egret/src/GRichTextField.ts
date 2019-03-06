@@ -13,10 +13,21 @@ module fairygui {
             var text2: string = this._text;
             if (this._templateVars != null)
                 text2 = this.parseTemplate(text2);
+            let arr;
             if (this._ubbEnabled)
-                this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(text2));
+                arr = GTextField._htmlParser.parser(ToolSet.parseUBB(text2));
             else
-                this._textField.textFlow = (new egret.HtmlTextParser).parser(text2);
+                arr = GTextField._htmlParser.parser(text2);
+            if (this._underline) {
+                for (var i = 0; i < arr.length; i++) {
+                    let element = arr[i];
+                    if (element.style)
+                        element.style.underline = true;
+                    else
+                        element.style = <egret.ITextStyle>{ underline: true };
+                }
+            }
+            this._textField.textFlow = arr;
         }
     }
 }

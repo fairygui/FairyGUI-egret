@@ -11,6 +11,7 @@ module fairygui {
         protected _color: number;
         protected _leading: number = 0;
         protected _letterSpacing: number = 0;
+        protected _underline: boolean = false;
         protected _text: string;
         protected _ubbEnabled: boolean;
         protected _templateVars: any;
@@ -31,6 +32,8 @@ module fairygui {
 
         protected static GUTTER_X: number = 2;
         protected static GUTTER_Y: number = 2;
+
+        protected static _htmlParser: egret.HtmlTextParser = new egret.HtmlTextParser();
 
         public constructor() {
             super();
@@ -92,8 +95,24 @@ module fairygui {
             var text2: string = this._text;
             if (this._templateVars != null)
                 text2 = this.parseTemplate(text2);
-            if (this._ubbEnabled)
-                this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(ToolSet.encodeHTML(text2)));
+            if (this._ubbEnabled) {
+                let arr = GTextField._htmlParser.parser(ToolSet.parseUBB(ToolSet.encodeHTML(text2)));
+                if (this._underline) {
+                    for (var i = 0; i < arr.length; i++) {
+                        let element = arr[i];
+                        if (element.style)
+                            element.style.underline = true;
+                        else
+                            element.style = <egret.ITextStyle>{ underline: true };
+                    }
+                }
+                this._textField.textFlow = arr;
+            }
+            else if (this._underline) {
+                let arr = new Array<egret.ITextElement>(1);
+                arr[0] = <egret.ITextElement>{ text: text2, style: <egret.ITextStyle>{ underline: true } };
+                this._textField.textFlow = arr;
+            }
             else
                 this._textField.text = text2;
         }
@@ -198,13 +217,11 @@ module fairygui {
         }
 
         public get underline(): boolean {
-            //return this._underline;
-            return false;
+            return this._underline;
         }
 
         public set underline(value: boolean) {
-            //not support yet
-            //this._textField.underline = value;
+            this._underline = value;
         }
 
         public get bold(): boolean {
@@ -776,7 +793,7 @@ module fairygui {
             this._autoSize = buffer.readByte();
             this._widthAutoSize = this._autoSize == AutoSizeType.Both;
             this._heightAutoSize = this._autoSize == AutoSizeType.Both || this._autoSize == AutoSizeType.Height;
-            buffer.readBool(); //this._textField.underline
+            this._underline = buffer.readBool();
             this._textField.italic = buffer.readBool();
             this._textField.bold = buffer.readBool();
             this._textField.multiline = !buffer.readBool();
