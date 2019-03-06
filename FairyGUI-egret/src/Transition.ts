@@ -372,8 +372,16 @@ module fairygui {
             for (var i: number = 0; i < cnt; i++) {
                 var item: TransitionItem = this._items[i];
                 if (item.label == label) {
-                    item.targetId = newTarget.id;
-                    item.target = null;
+					item.targetId = (newTarget == this._owner || newTarget == null) ? "" : newTarget.id;
+					if (this._playing)
+					{
+						if (item.targetId.length > 0)
+							item.target = this._owner.getChildById(item.targetId);
+						else
+							item.target = this._owner;
+					}
+					else
+						item.target = null;
                 }
             }
         }

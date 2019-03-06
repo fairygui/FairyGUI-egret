@@ -12,6 +12,13 @@ module fairygui {
             this._owner = owner;
         }
 
+        public dispose(): void {
+            if (this._tweenConfig != null && this._tweenConfig._tweener != null) {
+                this._tweenConfig._tweener.kill();
+                this._tweenConfig._tweener = null;
+            }
+        }
+
         public get controller(): Controller {
             return this._controller;
         }

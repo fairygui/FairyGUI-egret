@@ -215,6 +215,7 @@ module fairygui {
             this._valueSize = 1;
             this._startValue.x = start;
             this._endValue.x = end;
+            this._value.x = start;
             this._duration = duration;
             return this;
         }
@@ -225,6 +226,8 @@ module fairygui {
             this._endValue.x = end;
             this._startValue.y = start2;
             this._endValue.y = end2;
+            this._value.x = start;
+            this._value.y = start2;
             this._duration = duration;
             return this;
         }
@@ -238,6 +241,9 @@ module fairygui {
             this._endValue.y = end2;
             this._startValue.z = start3;
             this._endValue.z = end3;
+            this._value.x = start;
+            this._value.y = start2;
+            this._value.z = start3;
             this._duration = duration;
             return this;
         }
@@ -253,6 +259,10 @@ module fairygui {
             this._endValue.z = end3;
             this._startValue.w = start4;
             this._endValue.w = end4;
+            this._value.x = start;
+            this._value.y = start2;
+            this._value.z = start3;
+            this._value.w = start4;
             this._duration = duration;
             return this;
         }
@@ -261,6 +271,7 @@ module fairygui {
             this._valueSize = 4;
             this._startValue.color = start;
             this._endValue.color = end;
+            this._value.color = start;
             this._duration = duration;
             return this;
         }

@@ -29,6 +29,7 @@ module fairygui {
         private _focusable: boolean = false;
         private _tooltips: string;
         private _pixelSnapping: boolean = false;
+        private _disposed: boolean = false;
 
         private _relations: Relations;
         private _group: GGroup;
@@ -781,10 +782,23 @@ module fairygui {
         public set icon(value: string) {
         }
 
+        public get isDisposed(): boolean {
+            return this._disposed;
+        }
+
         public dispose(): void {
+            if (this._disposed)
+                return;
+
+            this._disposed = true;
             this.removeFromParent();
             this._relations.dispose();
             this._displayObject = null;
+            for (var i: number = 0; i < 8; i++) {
+                var gear: GearBase = this._gears[i];
+                if (gear != null)
+                    gear.dispose();
+            }
         }
 
         public addClickListener(listener: Function, thisObj: any): void {

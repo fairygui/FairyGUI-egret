@@ -18,8 +18,6 @@ module fairygui {
         private _barStartX: number = 0;
         private _barStartY: number = 0;
 
-        private _tweening: boolean = false;
-
         public constructor() {
             super();
 
@@ -55,33 +53,27 @@ module fairygui {
         }
 
         public set value(value: number) {
-            if (this._tweening) {
-                GTween.kill(this, true, this.update);
-                this._tweening = false;
-            }
-
             if (this._value != value) {
+                GTween.kill(this, false, this.update);
+
                 this._value = value;
                 this.update(this._value);
             }
         }
 
         public tweenValue(value: number, duration: number): GTweener {
-            if (this._value != value) {
-                if (this._tweening) {
-                    GTween.kill(this, false, this.update);
-                    this._tweening = false;
-                }
+            var oldValule: number;
 
-                var oldValule: number = this._value;
-                this._value = value;
-
-                this._tweening = true;
-                return GTween.to(oldValule, this._value, duration).setTarget(this, this.update).setEase(EaseType.Linear)
-                    .onComplete(function (): void { this._tweening = false; }, this);
+            var tweener: GTweener = GTween.getTween(this, this.update);
+            if (tweener != null) {
+                oldValule = tweener.value.x;
+                tweener.kill();
             }
             else
-                return null;
+                oldValule = this._value;
+
+            this._value = value;
+            return GTween.to(oldValule, this._value, duration).setTarget(this, this.update).setEase(EaseType.Linear);
         }
 
         public update(newValue: number): void {
@@ -180,12 +172,6 @@ module fairygui {
             this._max = buffer.readInt();
 
             this.update(this._value);
-        }
-
-        public dispose(): void {
-            if (this._tweening)
-                GTween.kill(this);
-            super.dispose();
         }
     }
 }
