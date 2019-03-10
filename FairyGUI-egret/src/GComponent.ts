@@ -5,6 +5,7 @@ module fairygui {
         private _sortingChildCount: number = 0;
         private _opaque: boolean;
         private _applyingController: Controller;
+        private _graphics: egret.Graphics;
 
         protected _margin: Margin;
         protected _trackBounds: boolean;
@@ -61,6 +62,9 @@ module fairygui {
                 var obj: GObject = this._children[i];
                 obj.parent = null;//avoid removeFromParent call
                 obj.dispose();
+            }
+            if (this._graphics) {
+                this._graphics.$onRemoveFromStage();
             }
 
             this._boundsChanged = false;
@@ -627,6 +631,14 @@ module fairygui {
 
         public set mask(value: egret.DisplayObject | egret.Rectangle) {
             this._rootContainer.mask = value;
+        }
+
+        public get graphics(): egret.Graphics {
+            if (this._graphics == null) {
+                this._graphics = new egret.Graphics();
+                this._graphics.$setTarget(this._container);
+            }
+            return this._graphics;
         }
 
         public get baseUserData(): string {
