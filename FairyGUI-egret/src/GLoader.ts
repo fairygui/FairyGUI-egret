@@ -209,9 +209,10 @@ module fairygui {
 
         public set texture(value: egret.Texture) {
             this.url = null;
-
-            this._content.texture = value;
             this._content.frames = null;
+            
+            this._content.texture = value;
+
             if (value != null) {
                 this._contentSourceWidth = value.textureWidth;
                 this._contentSourceHeight = value.textureHeight;
