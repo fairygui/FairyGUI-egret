@@ -403,6 +403,10 @@ module fairygui {
             }
             this._bitmapContainer.removeChildren();
 
+            if(this._color != ColorEnum.White){
+                SetObjectColor(this._bitmapContainer, this._color)
+            }
+
             if (!this._lines)
                 this._lines = new Array<LineInfo>();
             else
@@ -426,6 +430,20 @@ module fairygui {
             var text2: string = this._text;
             if (this._templateVars != null)
                 text2 = this.parseTemplate(text2);
+            let textStyleMap = null
+            if(this._ubbEnabled){
+                var arr = GTextField._htmlParser.parser(fairygui.ToolSet.parseUBB(fairygui.ToolSet.encodeHTML(text2)));
+                text2 = ""
+                textStyleMap = {}
+                let styleIndex = 0
+                for(let si=0; si<arr.length; si++){
+                    let sText = arr[si].text
+                    text2 += sText
+                    for(let sj=0; sj<sText.length; sj++){
+                        textStyleMap[styleIndex++] = arr[si].style
+                    }
+                }
+            }
             var textLength: number = text2.length;
             for (var offset: number = 0; offset < textLength; ++offset) {
                 var ch: string = text2.charAt(offset);
@@ -480,8 +498,16 @@ module fairygui {
                 else {
                     var glyph: BMGlyph = this._bitmapFont.glyphs[ch];
                     if (glyph) {
-                        glyphWidth = Math.ceil(glyph.advance * fontScale);
-                        glyphHeight = Math.ceil(glyph.lineHeight * fontScale);
+                        var cFontScale: number = fontScale
+                        if(textStyleMap != null){
+                            let textStyle = textStyleMap[offset]
+                            if(textStyle != null && textStyle.size){
+                                cFontScale = textStyle.size / this._bitmapFont.size;
+                            }
+                        }
+
+                        glyphWidth = Math.ceil(glyph.advance * cFontScale);
+                        glyphHeight = Math.ceil(glyph.lineHeight * cFontScale);
                     }
                     else {
                         glyphWidth = 0;
@@ -598,6 +624,7 @@ module fairygui {
             var charIndent: number = 0;
             rectWidth = this.width - GTextField.GUTTER_X * 2;
             var lineCount: number = this._lines.length;
+            var charIndex = 0
             for (var i: number = 0; i < lineCount; i++) {
                 line = this._lines[i];
                 charX = GTextField.GUTTER_X;
@@ -623,23 +650,37 @@ module fairygui {
 
                     glyph = this._bitmapFont.glyphs[ch];
                     if (glyph != null) {
-                        charIndent = (line.height + line.textHeight) / 2 - Math.ceil(glyph.lineHeight * fontScale);
+                        var cFontScale: number = fontScale
+                        let textStyle : egret.ITextStyle = null
+                        if(textStyleMap != null){
+                            textStyle = textStyleMap[charIndex++]
+                            if(textStyle != null && textStyle.size){
+                                cFontScale = textStyle.size / this._bitmapFont.size;
+                            }
+                        }
+
+                        charIndent = (line.height + line.textHeight) / 2 - Math.ceil(glyph.lineHeight * cFontScale);
                         var bm: egret.Bitmap;
-                        if (this._bitmapPool.length)
+                        if (this._bitmapPool.length){
                             bm = this._bitmapPool.pop();
+                            bm.filters = null
+                        }
                         else {
                             bm = new egret.Bitmap();
                             bm.smoothing = true;
                         }
-                        bm.x = charX + lineIndent + Math.ceil(glyph.offsetX * fontScale);
-                        bm.y = line.y + charIndent + Math.ceil(glyph.offsetY * fontScale);
+                        bm.x = charX + lineIndent + Math.ceil(glyph.offsetX * cFontScale);
+                        bm.y = line.y + charIndent + Math.ceil(glyph.offsetY * cFontScale);
                         bm["$backupY"] = bm.y;
                         bm.texture = glyph.texture;
-                        bm.scaleX = fontScale;
-                        bm.scaleY = fontScale;
+                        bm.scaleX = cFontScale;
+                        bm.scaleY = cFontScale;
+                        if(textStyle != null && textStyle.textColor){
+                            SetObjectColor(bm, textStyle.textColor)
+                        }
                         this._bitmapContainer.addChild(bm);
 
-                        charX += letterSpacing + Math.ceil(glyph.advance * fontScale);
+                        charX += letterSpacing + Math.ceil(glyph.advance * cFontScale);
                     }
                     else {
                         charX += letterSpacing;
