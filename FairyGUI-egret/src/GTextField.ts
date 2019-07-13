@@ -848,6 +848,10 @@ module fairygui {
 
             if (buffer.readBool())
                 this._templateVars = {};
+
+            if(UIPackage.onCreateGTextField != null){
+                UIPackage.onCreateGTextField.call(null, this)
+            }
         }
 
         public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {

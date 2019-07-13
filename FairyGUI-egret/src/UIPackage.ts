@@ -12,6 +12,8 @@ module fairygui {
         //internal
         public static _constructing: number = 0;
 
+        public static onCreateGTextField : Function//创建TextField时的回调，用于全局字体统一替换
+
         private static _packageInstById: any = {};
         private static _packageInstByName: any = {};
 
