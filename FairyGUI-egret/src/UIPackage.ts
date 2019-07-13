@@ -538,7 +538,7 @@ module fairygui {
                     bg.texture = new egret.Texture();
                     bg.texture.bitmapData = mainTexture.bitmapData;
                     bg.texture.$initData(mainTexture.$bitmapX + bx + mainSprite.rect.x, mainTexture.$bitmapY + by + mainSprite.rect.y,
-                        bg.width, bg.height, 0, 0, bg.width, bg.height, bg.width, bg.height, mainSprite.rotated);
+                        bg.width, bg.height, 0, 0, bg.width, bg.height, mainTexture.bitmapData.width, mainTexture.bitmapData.height, mainSprite.rotated);
                 }
 
                 if (font.ttf)
