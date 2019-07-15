@@ -406,6 +406,11 @@ module fairygui {
             if(this._color != ColorEnum.White){
                 SetObjectColor(this._bitmapContainer, this._color)
             }
+            else{
+                if(this._bitmapContainer.filters != null){
+                    this._bitmapContainer.filters = null
+                }
+            }
 
             if (!this._lines)
                 this._lines = new Array<LineInfo>();
