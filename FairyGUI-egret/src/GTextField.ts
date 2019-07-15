@@ -496,21 +496,23 @@ module fairygui {
                     wordChars = 0;
                 }
 
+                var cFontSize = this._fontSize
+                var cFontScale = fontScale
+                if(textStyleMap != null){
+                    let textStyle = textStyleMap[offset]
+                    if(textStyle != null && textStyle.size){
+                        cFontScale = textStyle.size / this._bitmapFont.size;
+                        cFontSize = textStyle.size
+                    }
+                }
+
                 if (cc == 32) {
-                    glyphWidth = Math.ceil(this._fontSize / 2);
-                    glyphHeight = this._fontSize;
+                    glyphWidth = Math.ceil(cFontSize / 2);
+                    glyphHeight = cFontSize;
                 }
                 else {
                     var glyph: BMGlyph = this._bitmapFont.glyphs[ch];
                     if (glyph) {
-                        var cFontScale: number = fontScale
-                        if(textStyleMap != null){
-                            let textStyle = textStyleMap[offset]
-                            if(textStyle != null && textStyle.size){
-                                cFontScale = textStyle.size / this._bitmapFont.size;
-                            }
-                        }
-
                         glyphWidth = Math.ceil(glyph.advance * cFontScale);
                         glyphHeight = Math.ceil(glyph.lineHeight * cFontScale);
                     }
@@ -645,25 +647,28 @@ module fairygui {
                     ch = line.text.charAt(j);
                     cc = ch.charCodeAt(0);
 
-                    if (cc == 10)
-                        continue;
+                    var cFontSize = this._fontSize
+                    var cFontScale = fontScale
+                    let textStyle : egret.ITextStyle = null
+                    if(textStyleMap != null){
+                        textStyle = textStyleMap[charIndex++]
+                        if(textStyle != null && textStyle.size){
+                            cFontScale = textStyle.size / this._bitmapFont.size;
+                            cFontSize = textStyle.size
+                        }
+                    }
 
+                    if (cc == 10){
+                        continue;
+                    }
+                        
                     if (cc == 32) {
-                        charX += letterSpacing + Math.ceil(this._fontSize / 2);
+                        charX += letterSpacing + Math.ceil(cFontSize / 2);
                         continue;
                     }
 
                     glyph = this._bitmapFont.glyphs[ch];
                     if (glyph != null) {
-                        var cFontScale: number = fontScale
-                        let textStyle : egret.ITextStyle = null
-                        if(textStyleMap != null){
-                            textStyle = textStyleMap[charIndex++]
-                            if(textStyle != null && textStyle.size){
-                                cFontScale = textStyle.size / this._bitmapFont.size;
-                            }
-                        }
-
                         charIndent = (line.height + line.textHeight) / 2 - Math.ceil(glyph.lineHeight * cFontScale);
                         var bm: egret.Bitmap;
                         if (this._bitmapPool.length){
