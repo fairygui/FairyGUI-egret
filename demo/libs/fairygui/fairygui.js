@@ -1,4 +1,6 @@
-var __extends = (this && this.__extends) || (function () {
+window.fgui = {};
+window.fairygui = window.fgui;
+window.__extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
         function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
@@ -43,8 +45,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-window.fgui = {};
-window.fairygui = window.fgui;
+
 (function (fgui) {
     var AsyncOperation = (function () {
         function AsyncOperation() {
