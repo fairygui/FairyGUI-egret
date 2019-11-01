@@ -1,0 +1,39 @@
+{
+	"initial": [
+		"libs/modules/egret/egret.js",
+		"libs/modules/egret/egret.web.js",
+		"libs/modules/assetsmanager/assetsmanager.js",
+		"libs/modules/game/game.js",
+		"libs/modules/tween/tween.js",
+		"libs/modules/promise/promise.js",
+		"libs/rawinflate/rawinflate.js",
+		"libs/fairygui/fairygui.js"
+	],
+	"game": [
+		"bin-debug/demo/JoystickModule.js",
+		"bin-debug/LoadingUI.js",
+		"bin-debug/Platform.js",
+		"bin-debug/demo/BagDemo.js",
+		"bin-debug/demo/BasicsDemo.js",
+		"bin-debug/demo/ChatDemo.js",
+		"bin-debug/demo/CooldownDemo.js",
+		"bin-debug/demo/DemoEntry.js",
+		"bin-debug/demo/EmojiParser.js",
+		"bin-debug/demo/GuideDemo.js",
+		"bin-debug/demo/HitTestDemo.js",
+		"bin-debug/demo/JoystickDemo.js",
+		"bin-debug/Main.js",
+		"bin-debug/demo/ListEffectDemo.js",
+		"bin-debug/demo/LoopListDemo.js",
+		"bin-debug/demo/MailItem.js",
+		"bin-debug/demo/MainMenu.js",
+		"bin-debug/demo/ModalWaitingDemo.js",
+		"bin-debug/demo/PullToRefreshDemo.js",
+		"bin-debug/demo/ScrollPaneDemo.js",
+		"bin-debug/demo/ScrollPaneHeader.js",
+		"bin-debug/demo/TestWin.js",
+		"bin-debug/demo/TransitionDemo.js",
+		"bin-debug/demo/TreeViewDemo.js",
+		"bin-debug/demo/VirtualListDemo.js"
+	]
+}

@@ -1,0 +1,201 @@
+{
+	"groups": [
+		{
+			"keys": "MainMenu,MainMenu_atlas0",
+			"name": "preload"
+		}
+	],
+	"resources": [
+		{
+			"name": "Bag",
+			"type": "bin",
+			"url": "assets/UI/Bag.fui"
+		},
+		{
+			"name": "Bag_atlas0",
+			"type": "image",
+			"url": "assets/UI/Bag_atlas0.png"
+		},
+
+		{
+			"url": "assets/UI/Basics_atlas0.png",
+			"type": "image",
+			"name": "Basics_atlas0"
+		},
+		{
+			"url": "assets/UI/Basics_gojg7u.wav",
+			"type": "sound",
+			"name": "Basics_gojg7u"
+		},
+		{
+			"url": "assets/UI/Basics_o4lt7w.wav",
+			"type": "sound",
+			"name": "Basics_o4lt7w"
+		},
+		{
+			"url": "assets/UI/Basics.fui",
+			"type": "bin",
+			"name": "Basics"
+		},
+
+		{
+			"name": "Chat",
+			"type": "bin",
+			"url": "assets/UI/Chat.fui"
+		},
+		{
+			"name": "Chat_atlas0",
+			"type": "image",
+			"url": "assets/UI/Chat_atlas0.png"
+		},
+
+		{
+			"name": "Cooldown",
+			"type": "bin",
+			"url": "assets/UI/Cooldown.fui"
+		},
+		{
+			"name": "Cooldown_atlas0",
+			"type": "image",
+			"url": "assets/UI/Cooldown_atlas0.png"
+		},
+
+		{
+			"name": "Guide",
+			"type": "bin",
+			"url": "assets/UI/Guide.fui"
+		},
+		{
+			"name": "Guide_atlas0",
+			"type": "image",
+			"url": "assets/UI/Guide_atlas0.png"
+		},
+
+		{
+			"name": "HitTest",
+			"type": "bin",
+			"url": "assets/UI/HitTest.fui"
+		},
+		{
+			"name": "HitTest_atlas0",
+			"type": "image",
+			"url": "assets/UI/HitTest_atlas0.png"
+		},
+
+		{
+			"name": "Joystick",
+			"type": "bin",
+			"url": "assets/UI/Joystick.fui"
+		},
+		{
+			"name": "Joystick_atlas0",
+			"type": "image",
+			"url": "assets/UI/Joystick_atlas0.png"
+		},
+
+		{
+			"name": "ListEffect",
+			"type": "bin",
+			"url": "assets/UI/ListEffect.fui"
+		},
+		{
+			"name": "ListEffect_atlas0",
+			"type": "image",
+			"url": "assets/UI/ListEffect_atlas0.png"
+		},
+
+		{
+			"name": "LoopList",
+			"type": "bin",
+			"url": "assets/UI/LoopList.fui"
+		},
+		{
+			"name": "LoopList_atlas0",
+			"type": "image",
+			"url": "assets/UI/LoopList_atlas0.png"
+		},
+
+		{
+			"name": "MainMenu",
+			"type": "bin",
+			"url": "assets/UI/MainMenu.fui"
+		},
+		{
+			"name": "MainMenu_atlas0",
+			"type": "image",
+			"url": "assets/UI/MainMenu_atlas0.png"
+		},
+
+		{
+			"name": "ModalWaiting",
+			"type": "bin",
+			"url": "assets/UI/ModalWaiting.fui"
+		},
+		{
+			"name": "ModalWaiting_atlas0",
+			"type": "image",
+			"url": "assets/UI/ModalWaiting_atlas0.png"
+		},
+
+		{
+			"url": "assets/UI/PullToRefresh.fui",
+			"type": "bin",
+			"name": "PullToRefresh"
+		},
+		{
+			"url": "assets/UI/PullToRefresh_atlas0.png",
+			"type": "image",
+			"name": "PullToRefresh_atlas0"
+		},
+
+		{
+			"url": "assets/UI/ScrollPane.fui",
+			"type": "bin",
+			"name": "ScrollPane"
+		},
+		{
+			"url": "assets/UI/ScrollPane_atlas0.png",
+			"type": "image",
+			"name": "ScrollPane_atlas0"
+		},
+
+		{
+			"url": "assets/UI/Transition.fui",
+			"type": "bin",
+			"name": "Transition"
+		},
+		{
+			"url": "assets/UI/Transition_atlas0.png",
+			"type": "image",
+			"name": "Transition_atlas0"
+		},
+		{
+			"url": "assets/UI/Transition_lvxrs.mp3",
+			"type": "sound",
+			"name": "Transition_lvxrs",
+			"soundType": "effect"
+		},
+
+		{
+			"name": "TreeView",
+			"type": "bin",
+			"url": "assets/UI/TreeView.fui"
+		},
+		{
+			"name": "TreeView_atlas0",
+			"type": "image",
+			"url": "assets/UI/TreeView_atlas0.png"
+		},
+
+		{
+			"name": "VirtualList",
+			"type": "bin",
+			"url": "assets/UI/VirtualList.fui"
+		},
+		{
+			"name": "VirtualList_atlas0",
+			"type": "image",
+			"url": "assets/UI/VirtualList_atlas0.png"
+		}
+	]
+}

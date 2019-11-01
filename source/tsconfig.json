@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "module": "system",
+    "target": "es5",
+    "declaration": true,
+    "sourceMap": false,
+    "removeComments": true,
+    "outFile": "./fairygui.js",
+    "lib": [
+      "es5",
+      "dom",
+      "es2015.promise"
+  ] ,
+  },
+  "include": [
+    "src",
+    "lib"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
