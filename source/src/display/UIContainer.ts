@@ -39,6 +39,9 @@ module fgui {
         }
 
         public $hitTest(stageX: number, stageY: number): egret.DisplayObject {
+            if(!this.$visible)
+                return null;
+
             if (this._hitArea) {
                 if (!this.touchEnabled)
                     return null;

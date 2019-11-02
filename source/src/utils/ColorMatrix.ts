@@ -59,10 +59,10 @@ module fgui {
         }
 
         public adjustColor(p_brightness: number, p_contrast: number, p_saturation: number, p_hue: number): void {
-            this.adjustHue(p_hue);
-            this.adjustContrast(p_contrast);
             this.adjustBrightness(p_brightness);
+            this.adjustContrast(p_contrast);
             this.adjustSaturation(p_saturation);
+            this.adjustHue(p_hue);
         }
 
         public adjustBrightness(p_val: number): void {

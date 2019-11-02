@@ -1953,15 +1953,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             else if (bm == 5)
                 this.blendMode = egret.BlendMode.ERASE;
             var filter = buffer.readByte();
-            if (filter == 1) {
-                var cm = new fgui.ColorMatrix();
-                cm.adjustBrightness(buffer.readFloat());
-                cm.adjustContrast(buffer.readFloat());
-                cm.adjustSaturation(buffer.readFloat());
-                cm.adjustHue(buffer.readFloat());
-                var cf = new egret.ColorMatrixFilter(cm.matrix);
-                this.filters = [cf];
-            }
+            if (filter == 1 && this._displayObject)
+                fgui.ToolSet.setColorFilter(this._displayObject, [buffer.readFloat(), buffer.readFloat(), buffer.readFloat(), buffer.readFloat()]);
             var str = buffer.readS();
             if (str != null)
                 this.data = str;
@@ -16110,6 +16103,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             configurable: true
         });
         UIContainer.prototype.$hitTest = function (stageX, stageY) {
+            if (!this.$visible)
+                return null;
             if (this._hitArea) {
                 if (!this.touchEnabled)
                     return null;
@@ -18284,10 +18279,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 0, 0, 0, 1, 0]);
         };
         ColorMatrix.prototype.adjustColor = function (p_brightness, p_contrast, p_saturation, p_hue) {
-            this.adjustHue(p_hue);
-            this.adjustContrast(p_contrast);
             this.adjustBrightness(p_brightness);
+            this.adjustContrast(p_contrast);
             this.adjustSaturation(p_saturation);
+            this.adjustHue(p_hue);
         };
         ColorMatrix.prototype.adjustBrightness = function (p_val) {
             p_val = this.cleanValue(p_val, 1) * 255;
@@ -18831,7 +18826,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             var filters = obj.filters;
             var toApplyColor;
             var toApplyGray;
-            if (typeof (color) == "boolean") {
+            var tp = typeof (color);
+            if (tp == "boolean") {
                 toApplyColor = filter ? filter.$_color_ : null;
                 toApplyGray = color;
             }
@@ -18869,7 +18865,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                     mat[i_1] = ToolSet.grayScaleMatrix[i_1];
             }
             else if (toApplyColor instanceof Array) {
-                mat = fgui.ColorMatrix.getMatrix(toApplyColor[0], toApplyColor[1], toApplyColor[2], toApplyColor[3]);
+                fgui.ColorMatrix.getMatrix(toApplyColor[0], toApplyColor[1], toApplyColor[2], toApplyColor[3], mat);
             }
             else {
                 for (var i_2 = 0; i_2 < 20; i_2++) {

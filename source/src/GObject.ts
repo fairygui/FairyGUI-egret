@@ -1116,15 +1116,9 @@ module fgui {
                 this.blendMode = egret.BlendMode.ERASE;
 
             var filter: number = buffer.readByte();
-            if (filter == 1) {
-                var cm: ColorMatrix = new ColorMatrix();
-                cm.adjustBrightness(buffer.readFloat());
-                cm.adjustContrast(buffer.readFloat());
-                cm.adjustSaturation(buffer.readFloat());
-                cm.adjustHue(buffer.readFloat());
-                var cf: egret.ColorMatrixFilter = new egret.ColorMatrixFilter(cm.matrix);
-                this.filters = [cf];
-            }
+            if (filter == 1 && this._displayObject)
+                ToolSet.setColorFilter(this._displayObject,
+                    [buffer.readFloat(), buffer.readFloat(), buffer.readFloat(), buffer.readFloat()]);
 
             var str: string = buffer.readS();
             if (str != null)
