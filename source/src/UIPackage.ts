@@ -207,7 +207,6 @@ module fgui {
                 throw "FairyGUI: old package format found in '" + resKey + "'";
 
             buffer.version = buffer.readInt();
-            var ver2: boolean = buffer.version >= 2;
             var compressed: boolean = buffer.readBool();
             this._id = buffer.readUTF();
             this._name = buffer.readUTF();
@@ -216,9 +215,12 @@ module fgui {
             if (compressed) {
                 var buf: Uint8Array = new Uint8Array(buffer.buffer, buffer.position, buffer.length - buffer.position);
                 var inflater: Zlib.RawInflate = new Zlib.RawInflate(buf);
-                buffer = new ByteBuffer(inflater.decompress());
+                let buffer2: ByteBuffer = new ByteBuffer(inflater.decompress());
+                buffer2.version = buffer.version;
+                buffer = buffer2;
             }
 
+            var ver2: boolean = buffer.version >= 2;
             var indexTablePos: number = buffer.position;
             var cnt: number;
             var i: number;
@@ -589,7 +591,7 @@ module fgui {
                     frame.texture.bitmapData = atlas.bitmapData;
                     frame.texture.$initData(atlas.$bitmapX + sprite.rect.x, atlas.$bitmapY + sprite.rect.y,
                         sprite.rect.width, sprite.rect.height,
-                        fx, fy, 
+                        fx, fy,
                         item.width, item.height,
                         atlas.$sourceWidth, atlas.$sourceHeight, sprite.rotated);
                 }
@@ -651,10 +653,10 @@ module fgui {
                     bg.texture = new egret.Texture();
                     bg.texture.bitmapData = mainTexture.bitmapData;
                     bg.texture.$initData(mainTexture.$bitmapX + bx + mainSprite.rect.x, mainTexture.$bitmapY + by + mainSprite.rect.y,
-                        bg.width, bg.height, 
+                        bg.width, bg.height,
                         mainSprite.offset.x, mainSprite.offset.y,
                         mainSprite.originalSize.x, mainSprite.originalSize.y,
-                        mainTexture.$sourceWidth, mainTexture.$sourceHeight, 
+                        mainTexture.$sourceWidth, mainTexture.$sourceHeight,
                         mainSprite.rotated);
 
                     bg.lineHeight = lineHeight;

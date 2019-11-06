@@ -14525,7 +14525,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             if (buffer.readUnsignedInt() != 0x46475549)
                 throw "FairyGUI: old package format found in '" + resKey + "'";
             buffer.version = buffer.readInt();
-            var ver2 = buffer.version >= 2;
             var compressed = buffer.readBool();
             this._id = buffer.readUTF();
             this._name = buffer.readUTF();
@@ -14533,8 +14532,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             if (compressed) {
                 var buf = new Uint8Array(buffer.buffer, buffer.position, buffer.length - buffer.position);
                 var inflater = new Zlib.RawInflate(buf);
-                buffer = new fgui.ByteBuffer(inflater.decompress());
+                var buffer2 = new fgui.ByteBuffer(inflater.decompress());
+                buffer2.version = buffer.version;
+                buffer = buffer2;
             }
+            var ver2 = buffer.version >= 2;
             var indexTablePos = buffer.position;
             var cnt;
             var i;
