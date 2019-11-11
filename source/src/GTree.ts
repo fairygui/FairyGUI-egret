@@ -111,7 +111,7 @@ namespace fgui {
         }
 
         private createCell(node: GTreeNode): void {
-            var child: GComponent = this.getFromPool(node._resURL) as GComponent;
+            var child: GComponent = this.getFromPool(node._resURL ? node._resURL : this.defaultItem) as GComponent;
             if (!child)
                 throw new Error("cannot create tree node object.");
 
@@ -134,11 +134,11 @@ namespace fgui {
             if (cc)
                 cc.selectedIndex = node.isFolder ? 0 : 1;
 
-            if(node.isFolder)
+            if (node.isFolder)
                 child.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__cellMouseDown, this);
 
             if (this.treeNodeRender)
-                this.treeNodeRender(node, child);
+                this.treeNodeRender.call(this.callbackThisObj, node, child);
         }
 
         public _afterInserted(node: GTreeNode): void {
@@ -148,7 +148,7 @@ namespace fgui {
             var index: number = this.getInsertIndexForNode(node);
             this.addChildAt(node._cell, index);
             if (this.treeNodeRender)
-                this.treeNodeRender(node, node._cell);
+                this.treeNodeRender.call(this.callbackThisObj, node, node._cell);
 
             if (node.isFolder && node.expanded)
                 this.checkChildren(node, index);
@@ -183,13 +183,13 @@ namespace fgui {
             }
 
             if (this.treeNodeWillExpand != null)
-                this.treeNodeWillExpand(node, true);
+                this.treeNodeWillExpand.call(this.callbackThisObj, node, true);
 
             if (node._cell == null)
                 return;
 
             if (this.treeNodeRender)
-                this.treeNodeRender(node, node._cell);
+                this.treeNodeRender.call(this.callbackThisObj, node, node._cell);
 
             var cc: Controller = node._cell.getController("expanded");
             if (cc)
@@ -206,13 +206,13 @@ namespace fgui {
             }
 
             if (this.treeNodeWillExpand)
-                this.treeNodeWillExpand(node, false);
+                this.treeNodeWillExpand.call(this.callbackThisObj, node, false);
 
             if (node._cell == null)
                 return;
 
             if (this.treeNodeRender)
-                this.treeNodeRender(node, node._cell);
+                this.treeNodeRender.call(this.callbackThisObj, node, node._cell);
 
             var cc: Controller = node._cell.getController("expanded");
             if (cc)

@@ -1261,7 +1261,8 @@ declare namespace fgui {
         expanded: boolean;
         readonly isFolder: boolean;
         readonly parent: GTreeNode;
-        readonly text: string;
+        text: string;
+        icon: string;
         readonly cell: GComponent;
         readonly level: number;
         _setLevel(value: number): void;
@@ -1702,6 +1703,7 @@ declare module fgui {
         private _items;
         private _itemsById;
         private _itemsByName;
+        private _resKey;
         private _customId;
         private _sprites;
         private _dependencies;
@@ -1720,7 +1722,7 @@ declare module fgui {
         static getByName(name: string): UIPackage;
         static loadPackage(resKey: string): Promise<UIPackage>;
         static addPackage(resKey: string, descData?: ArrayBuffer): UIPackage;
-        static removePackage(packageId: string): void;
+        static removePackage(packageIdOrName: string): void;
         static createObject(pkgName: string, resName: string, userClass?: any): GObject;
         static createObjectFromURL(url: string, userClass?: any): GObject;
         static getItemURL(pkgName: string, resName: string): string;

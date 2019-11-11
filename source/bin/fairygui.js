@@ -9957,7 +9957,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             }
         };
         GTree.prototype.createCell = function (node) {
-            var child = this.getFromPool(node._resURL);
+            var child = this.getFromPool(node._resURL ? node._resURL : this.defaultItem);
             if (!child)
                 throw new Error("cannot create tree node object.");
             child._treeNode = node;
@@ -9977,7 +9977,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             if (node.isFolder)
                 child.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__cellMouseDown, this);
             if (this.treeNodeRender)
-                this.treeNodeRender(node, child);
+                this.treeNodeRender.call(this.callbackThisObj, node, child);
         };
         GTree.prototype._afterInserted = function (node) {
             if (!node._cell)
@@ -9985,7 +9985,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             var index = this.getInsertIndexForNode(node);
             this.addChildAt(node._cell, index);
             if (this.treeNodeRender)
-                this.treeNodeRender(node, node._cell);
+                this.treeNodeRender.call(this.callbackThisObj, node, node._cell);
             if (node.isFolder && node.expanded)
                 this.checkChildren(node, index);
         };
@@ -10013,11 +10013,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 return;
             }
             if (this.treeNodeWillExpand != null)
-                this.treeNodeWillExpand(node, true);
+                this.treeNodeWillExpand.call(this.callbackThisObj, node, true);
             if (node._cell == null)
                 return;
             if (this.treeNodeRender)
-                this.treeNodeRender(node, node._cell);
+                this.treeNodeRender.call(this.callbackThisObj, node, node._cell);
             var cc = node._cell.getController("expanded");
             if (cc)
                 cc.selectedIndex = 1;
@@ -10030,11 +10030,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 return;
             }
             if (this.treeNodeWillExpand)
-                this.treeNodeWillExpand(node, false);
+                this.treeNodeWillExpand.call(this.callbackThisObj, node, false);
             if (node._cell == null)
                 return;
             if (this.treeNodeRender)
-                this.treeNodeRender(node, node._cell);
+                this.treeNodeRender.call(this.callbackThisObj, node, node._cell);
             var cc = node._cell.getController("expanded");
             if (cc)
                 cc.selectedIndex = 0;
@@ -10239,6 +10239,24 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                     return this._cell.text;
                 else
                     return null;
+            },
+            set: function (value) {
+                if (this._cell != null)
+                    this._cell.text = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GTreeNode.prototype, "icon", {
+            get: function () {
+                if (this._cell != null)
+                    return this._cell.icon;
+                else
+                    return null;
+            },
+            set: function (value) {
+                if (this._cell != null)
+                    this._cell.icon = value;
             },
             enumerable: true,
             configurable: true
@@ -14395,7 +14413,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                                     case 1:
                                         asset = _a.sent();
                                         pkg = new UIPackage();
-                                        pkg.loadPackage(new fgui.ByteBuffer(asset), resKey);
+                                        pkg._resKey = resKey;
+                                        pkg.loadPackage(new fgui.ByteBuffer(asset));
                                         cnt = pkg._items.length;
                                         urls = [];
                                         for (i = 0; i < cnt; i++) {
@@ -14419,7 +14438,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                                     case 5:
                                         UIPackage._instById[pkg.id] = pkg;
                                         UIPackage._instByName[pkg.name] = pkg;
-                                        UIPackage._instById[resKey] = pkg;
+                                        UIPackage._instById[pkg._resKey] = pkg;
                                         resolve(pkg);
                                         return [3, 7];
                                     case 6:
@@ -14440,20 +14459,25 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                     throw "Resource '" + resKey + "' not found, please check default.res.json!";
             }
             var pkg = new UIPackage();
-            pkg.loadPackage(new fgui.ByteBuffer(descData), resKey);
+            pkg._resKey = resKey;
+            pkg.loadPackage(new fgui.ByteBuffer(descData));
             UIPackage._instById[pkg.id] = pkg;
             UIPackage._instByName[pkg.name] = pkg;
             UIPackage._instById[resKey] = pkg;
-            pkg.customId = resKey;
             return pkg;
         };
-        UIPackage.removePackage = function (packageId) {
-            var pkg = UIPackage._instById[packageId];
+        UIPackage.removePackage = function (packageIdOrName) {
+            var pkg = UIPackage._instById[packageIdOrName];
+            if (!pkg)
+                pkg = UIPackage._instByName[packageIdOrName];
+            if (!pkg)
+                throw new Error("unknown package: " + packageIdOrName);
             pkg.dispose();
             delete UIPackage._instById[pkg.id];
+            delete UIPackage._instByName[pkg.name];
+            delete UIPackage._instById[pkg._resKey];
             if (pkg._customId != null)
                 delete UIPackage._instById[pkg._customId];
-            delete UIPackage._instByName[pkg.name];
         };
         UIPackage.createObject = function (pkgName, resName, userClass) {
             if (userClass === void 0) { userClass = null; }
@@ -14521,9 +14545,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         UIPackage.setStringsSource = function (source) {
             fgui.TranslationHelper.loadFromXML(source);
         };
-        UIPackage.prototype.loadPackage = function (buffer, resKey) {
+        UIPackage.prototype.loadPackage = function (buffer) {
             if (buffer.readUnsignedInt() != 0x46475549)
-                throw "FairyGUI: old package format found in '" + resKey + "'";
+                throw "FairyGUI: old package format found in '" + this._resKey + "'";
             buffer.version = buffer.readInt();
             var compressed = buffer.readBool();
             this._id = buffer.readUTF();
@@ -14565,7 +14589,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             }
             buffer.seek(indexTablePos, 1);
             var pi;
-            resKey = resKey + "_";
+            var fileNamePrefix = this._resKey + "_";
             cnt = buffer.readShort();
             for (i = 0; i < cnt; i++) {
                 nextPos = buffer.readInt();
@@ -14625,7 +14649,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                     case fgui.PackageItemType.Sound:
                     case fgui.PackageItemType.Misc:
                         {
-                            pi.file = resKey + fgui.ToolSet.getFileName(pi.file);
+                            pi.file = fileNamePrefix + fgui.ToolSet.getFileName(pi.file);
                             break;
                         }
                 }
@@ -14695,16 +14719,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             var cnt = this._items.length;
             for (var i = 0; i < cnt; i++) {
                 var pi = this._items[i];
-                var texture = pi.texture;
-                if (texture != null)
-                    texture.dispose();
-                else if (pi.frames != null) {
-                    var frameCount = pi.frames.length;
-                    for (var j = 0; j < frameCount; j++) {
-                        texture = pi.frames[j].texture;
-                        if (texture != null)
-                            texture.dispose();
-                    }
+                if (pi.type == fgui.PackageItemType.Atlas) {
+                    RES.destroyRes(pi.file, false);
+                }
+                else if (pi.type == fgui.PackageItemType.Sound) {
                 }
             }
         };
@@ -18856,22 +18874,25 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             }
             if (!filters)
                 filters = [filter];
-            else
-                filters.push(filter);
+            else {
+                var i_1 = filters.indexOf(filter);
+                if (i_1 == -1)
+                    filters.push(filter);
+            }
             obj.filters = filters;
             filter.$_color_ = toApplyColor;
             filter.$_grayed_ = toApplyGray;
             var mat = filter.matrix;
             if (toApplyGray) {
-                for (var i_1 = 0; i_1 < 20; i_1++)
-                    mat[i_1] = ToolSet.grayScaleMatrix[i_1];
+                for (var i_2 = 0; i_2 < 20; i_2++)
+                    mat[i_2] = ToolSet.grayScaleMatrix[i_2];
             }
             else if (toApplyColor instanceof Array) {
                 fgui.ColorMatrix.getMatrix(toApplyColor[0], toApplyColor[1], toApplyColor[2], toApplyColor[3], mat);
             }
             else {
-                for (var i_2 = 0; i_2 < 20; i_2++) {
-                    mat[i_2] = (i_2 == 0 || i_2 == 6 || i_2 == 12 || i_2 == 18) ? 1 : 0;
+                for (var i_3 = 0; i_3 < 20; i_3++) {
+                    mat[i_3] = (i_3 == 0 || i_3 == 6 || i_3 == 12 || i_3 == 18) ? 1 : 0;
                 }
                 mat[0] = ((color >> 16) & 0xFF) / 255;
                 mat[6] = ((color >> 8) & 0xFF) / 255;
