@@ -7,6 +7,7 @@ module fgui {
         private _items: Array<PackageItem>;
         private _itemsById: any;
         private _itemsByName: any;
+        private _resKey: string;
         private _customId: string;
         private _sprites: any;
 
@@ -72,7 +73,8 @@ module fgui {
 
                 const asset = await RES.getResAsync(resKey);
                 pkg = new UIPackage();
-                pkg.loadPackage(new ByteBuffer(asset), resKey);
+                pkg._resKey = resKey;
+                pkg.loadPackage(new ByteBuffer(asset));
                 let cnt: number = pkg._items.length;
                 let urls = [];
                 for (var i: number = 0; i < cnt; i++) {
@@ -91,7 +93,7 @@ module fgui {
                     }
                     UIPackage._instById[pkg.id] = pkg;
                     UIPackage._instByName[pkg.name] = pkg;
-                    UIPackage._instById[resKey] = pkg;
+                    UIPackage._instById[pkg._resKey] = pkg;
 
                     resolve(pkg);
                 }
@@ -108,21 +110,27 @@ module fgui {
             }
 
             var pkg: UIPackage = new UIPackage();
-            pkg.loadPackage(new ByteBuffer(descData), resKey);
+            pkg._resKey = resKey;
+            pkg.loadPackage(new ByteBuffer(descData));
             UIPackage._instById[pkg.id] = pkg;
             UIPackage._instByName[pkg.name] = pkg;
             UIPackage._instById[resKey] = pkg;
-            pkg.customId = resKey;
             return pkg;
         }
 
-        public static removePackage(packageId: string): void {
-            var pkg: UIPackage = UIPackage._instById[packageId];
+        public static removePackage(packageIdOrName: string): void {
+            var pkg: UIPackage = UIPackage._instById[packageIdOrName];
+            if (!pkg)
+                pkg = UIPackage._instByName[packageIdOrName];
+            if (!pkg)
+                throw new Error("unknown package: " + packageIdOrName);
+
             pkg.dispose();
             delete UIPackage._instById[pkg.id];
+            delete UIPackage._instByName[pkg.name];
+            delete UIPackage._instById[pkg._resKey];
             if (pkg._customId != null)
                 delete UIPackage._instById[pkg._customId];
-            delete UIPackage._instByName[pkg.name];
         }
 
         public static createObject(pkgName: string, resName: string, userClass: any = null): GObject {
@@ -202,9 +210,9 @@ module fgui {
             TranslationHelper.loadFromXML(source);
         }
 
-        private loadPackage(buffer: ByteBuffer, resKey: string): void {
+        private loadPackage(buffer: ByteBuffer): void {
             if (buffer.readUnsignedInt() != 0x46475549)
-                throw "FairyGUI: old package format found in '" + resKey + "'";
+                throw "FairyGUI: old package format found in '" + this._resKey + "'";
 
             buffer.version = buffer.readInt();
             var compressed: boolean = buffer.readBool();
@@ -256,7 +264,7 @@ module fgui {
             buffer.seek(indexTablePos, 1);
 
             var pi: PackageItem;
-            resKey = resKey + "_";
+            var fileNamePrefix: string = this._resKey + "_";
 
             cnt = buffer.readShort();
             for (i = 0; i < cnt; i++) {
@@ -326,7 +334,7 @@ module fgui {
                     case PackageItemType.Sound:
                     case PackageItemType.Misc:
                         {
-                            pi.file = resKey + ToolSet.getFileName(pi.file);
+                            pi.file = fileNamePrefix + ToolSet.getFileName(pi.file);
                             break;
                         }
                 }
@@ -410,16 +418,12 @@ module fgui {
             var cnt: number = this._items.length;
             for (var i: number = 0; i < cnt; i++) {
                 var pi: PackageItem = this._items[i];
-                var texture: egret.Texture = pi.texture;
-                if (texture != null)
-                    texture.dispose();
-                else if (pi.frames != null) {
-                    var frameCount: number = pi.frames.length;
-                    for (var j: number = 0; j < frameCount; j++) {
-                        texture = pi.frames[j].texture;
-                        if (texture != null)
-                            texture.dispose();
-                    }
+                if (pi.type == PackageItemType.Atlas) {
+                    RES.destroyRes(pi.file, false);
+                }
+                else if (pi.type == PackageItemType.Sound) {
+                    //egret failed to do this
+                    //RES.destroyRes(pi.file, false);
                 }
             }
         }
