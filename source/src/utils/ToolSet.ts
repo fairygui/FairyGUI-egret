@@ -211,8 +211,11 @@ module fgui {
             }
             if (!filters)
                 filters = [filter];
-            else
-                filters.push(filter);
+            else {
+                let i: number = filters.indexOf(filter);
+                if (i == -1)
+                    filters.push(filter);
+            }
             obj.filters = filters;
 
             (<any>filter).$_color_ = toApplyColor;
