@@ -10194,6 +10194,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 (function (fgui) {
     var GTreeNode = (function () {
         function GTreeNode(hasChild, resURL) {
+            this._expanded = false;
             this._level = 0;
             this._resURL = resURL;
             if (hasChild)
@@ -18228,6 +18229,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             var ba = new ByteBuffer(new Uint8Array(this.buffer, this.position, count));
             ba.stringTable = this.stringTable;
             ba.version = this.version;
+            this.position += count;
             return ba;
         };
         ByteBuffer.prototype.seek = function (indexTablePos, blockIndex) {

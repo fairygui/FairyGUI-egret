@@ -59,6 +59,7 @@ module fgui {
             var ba: ByteBuffer = new ByteBuffer(new Uint8Array(this.buffer, this.position, count));
             ba.stringTable = this.stringTable;
             ba.version = this.version;
+            this.position += count;
             return ba;
         }
 
