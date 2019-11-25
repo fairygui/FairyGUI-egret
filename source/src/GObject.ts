@@ -955,6 +955,7 @@ module fgui {
             this._displayObject.touchEnabled = old.touchEnabled;
             this._displayObject.scaleX = old.scaleX;
             this._displayObject.scaleY = old.scaleY;
+            ToolSet.setColorFilter(this._displayObject, this._grayed);
 
             if (this._displayObject instanceof egret.DisplayObjectContainer)
                 (<egret.DisplayObjectContainer>this._displayObject).touchChildren = this._touchable;

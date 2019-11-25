@@ -1815,6 +1815,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             this._displayObject.touchEnabled = old.touchEnabled;
             this._displayObject.scaleX = old.scaleX;
             this._displayObject.scaleY = old.scaleY;
+            fgui.ToolSet.setColorFilter(this._displayObject, this._grayed);
             if (this._displayObject instanceof egret.DisplayObjectContainer)
                 this._displayObject.touchChildren = this._touchable;
         };
