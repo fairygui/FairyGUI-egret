@@ -4114,7 +4114,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         GGraph.prototype.drawRegularPolygon = function (lineSize, lineColor, lineAlpha, fillColor, fillAlpha, sides, startAngle, distances) {
             if (startAngle === void 0) { startAngle = 0; }
             if (distances === void 0) { distances = null; }
-            this._type = 3;
+            this._type = 4;
             this._lineSize = lineSize;
             this._lineColor = lineColor;
             this._lineAlpha = lineAlpha;
@@ -4126,7 +4126,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             this.updateGraph();
         };
         GGraph.prototype.drawPolygon = function (lineSize, lineColor, lineAlpha, fillColor, fillAlpha, points) {
-            this._type = 4;
+            this._type = 3;
             this._lineSize = lineSize;
             this._lineColor = lineColor;
             this._lineAlpha = lineAlpha;

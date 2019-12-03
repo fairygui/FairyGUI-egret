@@ -57,7 +57,7 @@ module fgui {
 
         public drawRegularPolygon(lineSize: number, lineColor: number, lineAlpha: number,
             fillColor: number, fillAlpha: number, sides: number, startAngle: number = 0, distances: number[] = null): void {
-            this._type = 3;
+            this._type = 4;
             this._lineSize = lineSize;
             this._lineColor = lineColor;
             this._lineAlpha = lineAlpha;
@@ -70,7 +70,7 @@ module fgui {
         }
 
         public drawPolygon(lineSize: number, lineColor: number, lineAlpha: number, fillColor: number, fillAlpha: number, points: any[]): void {
-            this._type = 4;
+            this._type = 3;
             this._lineSize = lineSize;
             this._lineColor = lineColor;
             this._lineAlpha = lineAlpha;
