@@ -155,6 +155,8 @@ module fgui {
                                 //selected title
                                 if ((value = compStrings[elementId + "-" + j + "-0"]) != null)
                                     buffer.writeS(value);
+                                else
+                                    buffer.skip(2);
 
                                 if (buffer.version >= 2) {
                                     buffer.skip(6);

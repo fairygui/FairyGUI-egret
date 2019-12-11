@@ -14185,6 +14185,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                                     buffer.skip(2);
                                 if ((value = compStrings[elementId + "-" + j + "-0"]) != null)
                                     buffer.writeS(value);
+                                else
+                                    buffer.skip(2);
                                 if (buffer.version >= 2) {
                                     buffer.skip(6);
                                     buffer.skip(buffer.readUnsignedShort() * 4);
