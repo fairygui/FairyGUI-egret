@@ -629,8 +629,8 @@ module fgui {
                             bm = new egret.Bitmap();
                             bm.smoothing = true;
                         }
-                        bm.x = charX + lineIndent + Math.ceil(glyph.offsetX * fontScale);
-                        bm.y = line.y + charIndent + Math.ceil(glyph.offsetY * fontScale);
+                        bm.x = charX + lineIndent + Math.ceil(glyph.x * fontScale);
+                        bm.y = line.y + charIndent + Math.ceil(glyph.y * fontScale);
                         bm["$backupY"] = bm.y;
                         bm.texture = glyph.texture;
                         bm.scaleX = fontScale;

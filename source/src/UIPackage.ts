@@ -640,8 +640,8 @@ module fgui {
                 var img: string = buffer.readS();
                 var bx: number = buffer.readInt();
                 var by: number = buffer.readInt();
-                bg.offsetX = buffer.readInt();
-                bg.offsetY = buffer.readInt();
+                bg.x = buffer.readInt();
+                bg.y = buffer.readInt();
                 bg.width = buffer.readInt();
                 bg.height = buffer.readInt();
                 bg.advance = buffer.readInt();
@@ -676,12 +676,13 @@ module fgui {
 
                     if (bg.advance == 0) {
                         if (xadvance == 0)
-                            bg.advance = bg.offsetX + bg.width;
+                            bg.advance = bg.x + bg.width;
                         else
+                        
                             bg.advance = xadvance;
                     }
 
-                    bg.lineHeight = bg.offsetY < 0 ? bg.height : (bg.offsetY + bg.height);
+                    bg.lineHeight = bg.y < 0 ? bg.height : (bg.y + bg.height);
                     if (bg.lineHeight < font.size)
                         bg.lineHeight = font.size;
                 }

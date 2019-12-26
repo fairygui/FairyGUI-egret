@@ -8621,8 +8621,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                             bm = new egret.Bitmap();
                             bm.smoothing = true;
                         }
-                        bm.x = charX + lineIndent + Math.ceil(glyph.offsetX * fontScale);
-                        bm.y = line.y + charIndent + Math.ceil(glyph.offsetY * fontScale);
+                        bm.x = charX + lineIndent + Math.ceil(glyph.x * fontScale);
+                        bm.y = line.y + charIndent + Math.ceil(glyph.y * fontScale);
                         bm["$backupY"] = bm.y;
                         bm.texture = glyph.texture;
                         bm.scaleX = fontScale;
@@ -14911,8 +14911,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 var img = buffer.readS();
                 var bx = buffer.readInt();
                 var by = buffer.readInt();
-                bg.offsetX = buffer.readInt();
-                bg.offsetY = buffer.readInt();
+                bg.x = buffer.readInt();
+                bg.y = buffer.readInt();
                 bg.width = buffer.readInt();
                 bg.height = buffer.readInt();
                 bg.advance = buffer.readInt();
@@ -14939,11 +14939,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                     }
                     if (bg.advance == 0) {
                         if (xadvance == 0)
-                            bg.advance = bg.offsetX + bg.width;
+                            bg.advance = bg.x + bg.width;
                         else
                             bg.advance = xadvance;
                     }
-                    bg.lineHeight = bg.offsetY < 0 ? bg.height : (bg.offsetY + bg.height);
+                    bg.lineHeight = bg.y < 0 ? bg.height : (bg.y + bg.height);
                     if (bg.lineHeight < font.size)
                         bg.lineHeight = font.size;
                 }
@@ -15375,8 +15375,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         function BMGlyph() {
             this.x = 0;
             this.y = 0;
-            this.offsetX = 0;
-            this.offsetY = 0;
             this.width = 0;
             this.height = 0;
             this.advance = 0;

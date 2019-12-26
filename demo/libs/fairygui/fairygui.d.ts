@@ -1843,8 +1843,6 @@ declare module fgui {
     class BMGlyph {
         x: number;
         y: number;
-        offsetX: number;
-        offsetY: number;
         width: number;
         height: number;
         advance: number;

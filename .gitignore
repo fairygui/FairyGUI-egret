@@ -1,4 +1,5 @@
 node_modules
 .DS_Store
 .objs
-demo/bin-debug
+bin-debug
+bin-release
