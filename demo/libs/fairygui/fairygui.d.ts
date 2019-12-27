@@ -673,6 +673,8 @@ declare module fgui {
         addAfterMe(target: GObject): void;
         setNativeObject(obj: egret.DisplayObject): void;
         protected createDisplayObject(): void;
+        getProp(index: number): any;
+        setProp(index: number, value: any): void;
         protected handleSizeChanged(): void;
         setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
     }

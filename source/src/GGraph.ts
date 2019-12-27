@@ -224,6 +224,20 @@ module fgui {
             this.setDisplayObject(sprite);
         }
 
+        public getProp(index: number): any {
+            if (index == ObjectPropID.Color)
+                return this.color;
+            else
+                return super.getProp(index);
+        }
+
+        public setProp(index: number, value: any): void {
+            if (index == ObjectPropID.Color)
+                this.color = value;
+            else
+                super.setProp(index, value);
+        }
+        
         protected handleSizeChanged(): void {
             super.handleSizeChanged();
             

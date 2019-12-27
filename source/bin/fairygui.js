@@ -4265,6 +4265,18 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             this._graphics = sprite.graphics;
             this.setDisplayObject(sprite);
         };
+        GGraph.prototype.getProp = function (index) {
+            if (index == fgui.ObjectPropID.Color)
+                return this.color;
+            else
+                return _super.prototype.getProp.call(this, index);
+        };
+        GGraph.prototype.setProp = function (index, value) {
+            if (index == fgui.ObjectPropID.Color)
+                this.color = value;
+            else
+                _super.prototype.setProp.call(this, index, value);
+        };
         GGraph.prototype.handleSizeChanged = function () {
             _super.prototype.handleSizeChanged.call(this);
             if (this._type != 0)
