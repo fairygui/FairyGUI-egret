@@ -169,7 +169,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 di = this._itemList[this._index];
                 if (di.packageItem != null) {
                     obj = fgui.UIObjectFactory.newObject(di.packageItem);
-                    obj.packageItem = di.packageItem;
                     this._objectPool.push(obj);
                     fgui.UIPackage._constructing++;
                     if (di.packageItem.type == fgui.PackageItemType.Component) {
@@ -2923,9 +2922,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             this.constructFromResource2(null, 0);
         };
         GComponent.prototype.constructFromResource2 = function (objectPool, poolIndex) {
-            if (!this.packageItem.decoded) {
-                this.packageItem.decoded = true;
-                fgui.TranslationHelper.translateComponent(this.packageItem);
+            var contentItem = this.packageItem.getBranch();
+            if (!contentItem.decoded) {
+                contentItem.decoded = true;
+                fgui.TranslationHelper.translateComponent(contentItem);
             }
             var i;
             var dataLen;
@@ -2935,7 +2935,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             var f2;
             var i1;
             var i2;
-            var buffer = this.packageItem.rawData;
+            var buffer = contentItem.rawData;
             buffer.seek(0, 0);
             this._underConstruct = true;
             this.sourceWidth = buffer.readInt();
@@ -3002,12 +3002,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                         if (pkgId != null)
                             pkg = fgui.UIPackage.getById(pkgId);
                         else
-                            pkg = this.packageItem.owner;
+                            pkg = contentItem.owner;
                         pi = pkg != null ? pkg.getItemById(src) : null;
                     }
                     if (pi != null) {
                         child = fgui.UIObjectFactory.newObject(pi);
-                        child.packageItem = pi;
                         child.constructFromResource();
                     }
                     else
@@ -3052,7 +3051,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             i1 = buffer.readInt();
             i2 = buffer.readInt();
             if (hitTestId != null) {
-                pi = this.packageItem.owner.getItemById(hitTestId);
+                pi = contentItem.owner.getItemById(hitTestId);
                 if (pi != null && pi.pixelHitTestData != null)
                     this._rootContainer.hitArea = new fgui.PixelHitTest(pi.pixelHitTestData, i1, i2);
             }
@@ -3078,7 +3077,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             this._underConstruct = false;
             this.buildNativeDisplayList();
             this.setBoundsChangedFlag();
-            if (this.packageItem.objectType != fgui.ObjectType.Component)
+            if (contentItem.objectType != fgui.ObjectType.Component)
                 this.constructExtension(buffer);
             this.onConstruct();
         };
@@ -14317,11 +14316,21 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             if (!pi.extensionType)
                 pi.extensionType = UIObjectFactory.extensions["ui://" + pi.owner.name + "/" + pi.name];
         };
-        UIObjectFactory.newObject = function (pi) {
-            if (pi.extensionType != null)
-                return new pi.extensionType();
+        UIObjectFactory.newObject = function (pi, userClass) {
+            var obj;
+            if (pi.type == fgui.PackageItemType.Component) {
+                if (userClass)
+                    obj = new userClass();
+                else if (pi.extensionType)
+                    obj = new pi.extensionType();
+                else
+                    obj = UIObjectFactory.newObject2(pi.objectType);
+            }
             else
-                return this.newObject2(pi.objectType);
+                obj = UIObjectFactory.newObject2(pi.objectType);
+            if (obj)
+                obj.packageItem = pi;
+            return obj;
         };
         UIObjectFactory.newObject2 = function (type) {
             switch (type) {
@@ -14468,7 +14477,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             });
         };
         UIPackage.addPackage = function (resKey, descData) {
-            if (descData === void 0) { descData = null; }
             if (!descData) {
                 descData = RES.getRes(resKey);
                 if (!descData)
@@ -14496,7 +14504,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 delete UIPackage._instById[pkg._customId];
         };
         UIPackage.createObject = function (pkgName, resName, userClass) {
-            if (userClass === void 0) { userClass = null; }
             var pkg = UIPackage.getByName(pkgName);
             if (pkg)
                 return pkg.createObject(resName, userClass);
@@ -14504,7 +14511,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 return null;
         };
         UIPackage.createObjectFromURL = function (url, userClass) {
-            if (userClass === void 0) { userClass = null; }
             var pi = UIPackage.getItemByURL(url);
             if (pi)
                 return pi.owner.internalCreateObject(pi, userClass);
@@ -14771,7 +14777,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             configurable: true
         });
         UIPackage.prototype.createObject = function (resName, userClass) {
-            if (userClass === void 0) { userClass = null; }
             var pi = this._itemsByName[resName];
             if (pi)
                 return this.internalCreateObject(pi, userClass);
@@ -14779,20 +14784,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 return null;
         };
         UIPackage.prototype.internalCreateObject = function (item, userClass) {
-            if (userClass === void 0) { userClass = null; }
-            var g;
-            if (item.type == fgui.PackageItemType.Component) {
-                if (userClass != null)
-                    g = new userClass();
-                else
-                    g = fgui.UIObjectFactory.newObject(item);
-            }
-            else
-                g = fgui.UIObjectFactory.newObject(item);
+            var g = fgui.UIObjectFactory.newObject(item, userClass);
             if (g == null)
                 return null;
             UIPackage._constructing++;
-            g.packageItem = item;
             g.constructFromResource();
             UIPackage._constructing--;
             return g;

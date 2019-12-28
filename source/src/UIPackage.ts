@@ -102,7 +102,7 @@ module fgui {
             });
         }
 
-        public static addPackage(resKey: string, descData: ArrayBuffer = null): UIPackage {
+        public static addPackage(resKey: string, descData?: ArrayBuffer): UIPackage {
             if (!descData) {
                 descData = RES.getRes(resKey);
                 if (!descData)
@@ -133,7 +133,7 @@ module fgui {
                 delete UIPackage._instById[pkg._customId];
         }
 
-        public static createObject(pkgName: string, resName: string, userClass: any = null): GObject {
+        public static createObject(pkgName: string, resName: string, userClass?: any): GObject {
             var pkg: UIPackage = UIPackage.getByName(pkgName);
             if (pkg)
                 return pkg.createObject(resName, userClass);
@@ -141,7 +141,7 @@ module fgui {
                 return null;
         }
 
-        public static createObjectFromURL(url: string, userClass: any = null): GObject {
+        public static createObjectFromURL(url: string, userClass?: any): GObject {
             var pi: PackageItem = UIPackage.getItemByURL(url);
             if (pi)
                 return pi.owner.internalCreateObject(pi, userClass);
@@ -448,7 +448,7 @@ module fgui {
                 UIPackage._instById[this._customId] = this;
         }
 
-        public createObject(resName: string, userClass: any = null): GObject {
+        public createObject(resName: string, userClass?: any): GObject {
             var pi: PackageItem = this._itemsByName[resName];
             if (pi)
                 return this.internalCreateObject(pi, userClass);
@@ -456,22 +456,13 @@ module fgui {
                 return null;
         }
 
-        public internalCreateObject(item: PackageItem, userClass: any = null): GObject {
-            var g: GObject;
-            if (item.type == PackageItemType.Component) {
-                if (userClass != null)
-                    g = new userClass();
-                else
-                    g = UIObjectFactory.newObject(item);
-            }
-            else
-                g = UIObjectFactory.newObject(item);
+        public internalCreateObject(item: PackageItem, userClass?: any): GObject {
+            var g: GObject = UIObjectFactory.newObject(item, userClass);
 
             if (g == null)
                 return null;
 
             UIPackage._constructing++;
-            g.packageItem = item;
             g.constructFromResource();
             UIPackage._constructing--;
             return g;

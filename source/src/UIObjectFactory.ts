@@ -33,11 +33,24 @@ module fgui {
                 pi.extensionType = UIObjectFactory.extensions["ui://" + pi.owner.name + "/" + pi.name];
         }
 
-        public static newObject(pi: PackageItem): GObject {
-            if (pi.extensionType != null)
-                return new pi.extensionType();
+        public static newObject(pi: PackageItem, userClass?: any): GObject {
+            var obj: GObject;
+
+            if (pi.type == PackageItemType.Component) {
+                if (userClass)
+                    obj = new userClass();
+                else if (pi.extensionType)
+                    obj = new pi.extensionType();
+                else
+                    obj = UIObjectFactory.newObject2(pi.objectType);
+            }
             else
-                return this.newObject2(pi.objectType);
+                obj = UIObjectFactory.newObject2(pi.objectType);
+
+            if (obj)
+                obj.packageItem = pi;
+
+            return obj;
         }
 
         public static newObject2(type: ObjectType): GObject {

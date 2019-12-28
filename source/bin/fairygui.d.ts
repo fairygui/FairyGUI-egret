@@ -1694,7 +1694,7 @@ declare module fgui {
         static setPackageItemExtension(url: string, type: any): void;
         static setLoaderExtension(type: any): void;
         static resolvePackageItemExtension(pi: PackageItem): void;
-        static newObject(pi: PackageItem): GObject;
+        static newObject(pi: PackageItem, userClass?: any): GObject;
         static newObject2(type: ObjectType): GObject;
     }
 }

@@ -158,7 +158,6 @@ module fgui {
                 di = this._itemList[this._index];
                 if (di.packageItem != null) {
                     obj = UIObjectFactory.newObject(di.packageItem);
-                    obj.packageItem = di.packageItem;
                     this._objectPool.push(obj);
 
                     UIPackage._constructing++;
