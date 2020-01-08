@@ -159,7 +159,7 @@ module fgui {
                 return;
 
             this._selectedIndex = val;
-            if (this.selectedIndex >= 0 && this.selectedIndex < this._items.length) {
+            if (this._selectedIndex >= 0 && this._selectedIndex < this._items.length) {
                 this.text = this._items[this._selectedIndex];
                 if (this._icons != null && this._selectedIndex < this._icons.length)
                     this.icon = this._icons[this._selectedIndex];
@@ -426,11 +426,8 @@ module fgui {
             if (this.dropdown.parent instanceof GRoot)
                 (<GRoot><any>(this.dropdown.parent)).hidePopup();
 
-            this._selectedIndex = index;
-            if (this._selectedIndex >= 0)
-                this.text = this._items[this._selectedIndex];
-            else
-                this.text = "";
+            this._selectedIndex = -1;
+            this.selectedIndex = index;
             this.dispatchEvent(new StateChangeEvent(StateChangeEvent.CHANGED));
         }
 
