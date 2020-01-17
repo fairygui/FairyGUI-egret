@@ -91,14 +91,13 @@ module fgui {
                         RES.createGroup(group, urls, true);
                         await RES.loadGroup(group);
                     }
-                    UIPackage._instById[pkg.id] = pkg;
-                    UIPackage._instByName[pkg.name] = pkg;
-                    UIPackage._instById[pkg._resKey] = pkg;
-
-                    resolve(pkg);
                 }
-                else
-                    resolve(pkg);
+
+                UIPackage._instById[pkg.id] = pkg;
+                UIPackage._instByName[pkg.name] = pkg;
+                UIPackage._instById[pkg._resKey] = pkg;
+
+                resolve(pkg);
             });
         }
 

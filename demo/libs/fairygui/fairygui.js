@@ -3788,7 +3788,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 if (this._selectedIndex == val)
                     return;
                 this._selectedIndex = val;
-                if (this.selectedIndex >= 0 && this.selectedIndex < this._items.length) {
+                if (this._selectedIndex >= 0 && this._selectedIndex < this._items.length) {
                     this.text = this._items[this._selectedIndex];
                     if (this._icons != null && this._selectedIndex < this._icons.length)
                         this.icon = this._icons[this._selectedIndex];
@@ -4021,11 +4021,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         GComboBox.prototype.__clickItem2 = function (index) {
             if (this.dropdown.parent instanceof fgui.GRoot)
                 (this.dropdown.parent).hidePopup();
-            this._selectedIndex = index;
-            if (this._selectedIndex >= 0)
-                this.text = this._items[this._selectedIndex];
-            else
-                this.text = "";
+            this._selectedIndex = -1;
+            this.selectedIndex = index;
             this.dispatchEvent(new fgui.StateChangeEvent(fgui.StateChangeEvent.CHANGED));
         };
         GComboBox.prototype.__rollover = function (evt) {
@@ -14447,7 +14444,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                                             if (pi.type == fgui.PackageItemType.Atlas || pi.type == fgui.PackageItemType.Sound)
                                                 urls.push(pi.file);
                                         }
-                                        if (!(urls.length > 0)) return [3, 6];
+                                        if (!(urls.length > 0)) return [3, 5];
                                         if (!(urls.length == 1)) return [3, 3];
                                         return [4, RES.getResAsync(urls[0])];
                                     case 2:
@@ -14465,11 +14462,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                                         UIPackage._instByName[pkg.name] = pkg;
                                         UIPackage._instById[pkg._resKey] = pkg;
                                         resolve(pkg);
-                                        return [3, 7];
-                                    case 6:
-                                        resolve(pkg);
-                                        _a.label = 7;
-                                    case 7: return [2];
+                                        return [2];
                                 }
                             });
                         }); })];
