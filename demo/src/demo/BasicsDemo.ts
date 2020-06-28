@@ -5,7 +5,7 @@ class BasicDemo {
     private _demoContainer: fgui.GComponent;
     private _cc: fgui.Controller;
 
-    private _demoObjects: any;
+    private _demoObjects: { [index: string]: fgui.GComponent };
 
     public constructor() {
     }
@@ -19,7 +19,7 @@ class BasicDemo {
         fgui.UIConfig.buttonSound = "ui://Basics/click";
 
         this._view = fgui.UIPackage.createObject("Basics", "Main").asCom;
-        this._view.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
+        this._view.makeFullScreen();
         fgui.GRoot.inst.addChild(this._view);
 
         this._backBtn = this._view.getChild("btn_Back");
@@ -47,11 +47,11 @@ class BasicDemo {
         fgui.UIPackage.removePackage("Basics");
     }
 
-    private runDemo(evt: Event): void {
-        var type: string = (<fgui.GObject><any>(evt.currentTarget)).name.substr(4);
+    private runDemo(evt: egret.Event): void {
+        var type: string = (<fgui.GObject>(evt.currentTarget)).name.substr(4);
         var obj: fgui.GComponent = this._demoObjects[type];
         if (obj == null) {
-            obj = fgui.UIPackage.createObject("Basics", "Demo_" + type).asCom;
+            obj = <fgui.GComponent>fgui.UIPackage.createObject("Basics", "Demo_" + type);
             this._demoObjects[type] = obj;
         }
 
@@ -95,7 +95,7 @@ class BasicDemo {
         }
     }
 
-    private onClickBack(evt: Event): void {
+    private onClickBack(evt: egret.Event): void {
         this._cc.selectedIndex = 0;
         this._backBtn.visible = false;
     }
@@ -118,7 +118,7 @@ class BasicDemo {
     }
 
     private __clickLink(evt: egret.TextEvent): void {
-        var obj: fgui.GRichTextField = <fgui.GRichTextField><any>evt.currentTarget;
+        var obj: fgui.GRichTextField = <fgui.GRichTextField>(evt.currentTarget);
         obj.text = "[img]ui://9leh0eyft9fj5f[/img][color=#FF0000]你点击了链接[/color]：" + evt.text;
     }
 
@@ -174,8 +174,8 @@ class BasicDemo {
     }
 
     private __clickPopup1(evt: egret.Event): void {
-        var btn: fgui.GObject = <fgui.GObject><any>evt.currentTarget;
-        this._pm.show(btn, true);
+        var btn: fgui.GObject = <fgui.GObject>evt.currentTarget;
+        this._pm.show(btn);
     }
 
     private __clickPopup2(evt: egret.Event): void {
@@ -188,11 +188,11 @@ class BasicDemo {
         var btnA: fgui.GObject = obj.getChild("a");
         btnA.draggable = true;
 
-        var btnB: fgui.GButton = obj.getChild("b").asButton;
+        var btnB: fgui.GButton = <fgui.GButton>obj.getChild("b");
         btnB.draggable = true;
         btnB.addEventListener(fgui.DragEvent.DRAG_START, this.__onDragStart, this);
 
-        var btnC: fgui.GButton = obj.getChild("c").asButton;
+        var btnC: fgui.GButton = <fgui.GButton>obj.getChild("c");
         btnC.icon = null;
         btnC.addEventListener(fgui.DropEvent.DROP, this.__onDrop, this);
 
@@ -213,12 +213,12 @@ class BasicDemo {
         //取消对原目标的拖动，换成一个替代品
         evt.preventDefault();
 
-        var btn: fgui.GButton = <fgui.GButton><any>evt.currentTarget;
+        var btn: fgui.GButton = <fgui.GButton>evt.currentTarget;
         fgui.DragDropManager.inst.startDrag(btn, btn.icon, btn.icon);
     }
 
     private __onDrop(evt: fgui.DropEvent): void {
-        var btn: fgui.GButton = <fgui.GButton><any>evt.currentTarget;
+        var btn: fgui.GButton = <fgui.GButton>evt.currentTarget;
         btn.icon = evt.source;
     }
 
@@ -307,8 +307,8 @@ class BasicDemo {
         var obj: fgui.GComponent = this._demoObjects["ProgressBar"];
         var cnt: number = obj.numChildren;
         for (var i: number = 0; i < cnt; i++) {
-            var child: fgui.GProgressBar = obj.getChildAt(i) as fgui.GProgressBar;
-            if (child != null) {
+            var child: fgui.GObject = obj.getChildAt(i);
+            if (child instanceof fgui.GProgressBar) {
                 child.value += 1;
                 if (child.value > child.max)
                     child.value = 0;

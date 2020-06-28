@@ -12,7 +12,7 @@ class ListEffectDemo {
         fgui.UIObjectFactory.setExtension("ui://ListEffect/mailItem", MailItem);
 
         this._view = fgui.UIPackage.createObject("ListEffect", "Main").asCom;
-        this._view.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
+        this._view.makeFullScreen();
         fgui.GRoot.inst.addChild(this._view);
 
         this._list = this._view.getChild("mailList").asList;

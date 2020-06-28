@@ -29,15 +29,15 @@ declare module fgui {
         constructor();
         dispose(): void;
         selectedIndex: number;
-        setSelectedIndex(value?: number): void;
+        setSelectedIndex(value: number): void;
         readonly previsousIndex: number;
         selectedPage: string;
         setSelectedPage(value: string): void;
         readonly previousPage: string;
         readonly pageCount: number;
-        getPageName(index?: number): string;
+        getPageName(index: number): string;
         addPage(name?: string): void;
-        addPageAt(name: string, index?: number): void;
+        addPageAt(name: string, index: number): void;
         removePage(name: string): void;
         removePageAt(index?: number): void;
         clearPages(): void;
@@ -62,7 +62,7 @@ declare module fgui {
         constructor();
         readonly dragAgent: GObject;
         readonly dragging: boolean;
-        startDrag(source: GObject, icon: string, sourceData: any, touchPointID?: number): void;
+        startDrag(source: GObject, icon: string, sourceData?: any, touchPointID?: number): void;
         cancel(): void;
         private __dragEnd;
     }
@@ -333,7 +333,7 @@ declare module fgui {
         setSkew(xv: number, yv: number): void;
         pivotX: number;
         pivotY: number;
-        setPivot(xv: number, yv?: number, asAnchor?: boolean): void;
+        setPivot(xv: number, yv: number, asAnchor?: boolean): void;
         readonly pivotAsAnchor: boolean;
         protected internalSetPivot(xv: number, yv: number, asAnchor: boolean): void;
         private updatePivotOffset;
@@ -593,7 +593,7 @@ declare module fgui {
         protected _list: GList;
         private _items;
         private _values;
-        private _icons;
+        private _icons?;
         private _visibleItemCount;
         private _itemsUpdated;
         private _selectedIndex;
@@ -791,7 +791,7 @@ declare module fgui {
         readonly itemPool: GObjectPool;
         getFromPool(url?: string): GObject;
         returnToPool(obj: GObject): void;
-        addChildAt(child: GObject, index?: number): GObject;
+        addChildAt(child: GObject, index: number): GObject;
         addItem(url?: string): GObject;
         addItemFromPool(url?: string): GObject;
         removeChildAt(index: number, dispose?: boolean): GObject;
@@ -1591,7 +1591,7 @@ declare module fgui {
         dispose(): void;
         readonly playing: boolean;
         setValue(label: string, ...args: any[]): void;
-        setHook(label: string, callback: Function, caller: any): void;
+        setHook(label: string, callback: Function, caller?: any): void;
         clearHooks(): void;
         setTarget(label: string, newTarget: GObject): void;
         setDuration(label: string, value: number): void;
@@ -1828,15 +1828,7 @@ declare module fgui {
     }
 }
 declare namespace fgui {
-    class FillUtils {
-        static fill(w: number, h: number, method: number, origin: number, clockwise: boolean, amount: number): Array<number>;
-        static fillHorizontal(w: number, h: number, origin: number, amount: number): Array<number>;
-        static fillVertical(w: number, h: number, origin: number, amount: number): Array<number>;
-        static fillRadial90(w: number, h: number, origin: number, clockwise: boolean, amount: number): Array<number>;
-        private static movePoints;
-        static fillRadial180(w: number, h: number, origin: number, clockwise: boolean, amount: number): Array<number>;
-        static fillRadial360(w: number, h: number, origin: number, clockwise: boolean, amount: number): Array<number>;
-    }
+    function fillImage(w: number, h: number, method: number, origin: number, clockwise: boolean, amount: number): Array<number>;
 }
 declare module fgui {
     class Image extends egret.Bitmap {
@@ -2343,11 +2335,11 @@ declare module fgui {
         constructor();
         private getItem;
         private findItem;
-        add(delayInMiniseconds: number, repeat: number, callback: Function, thisObj: any, callbackParam?: any): void;
-        callLater(callback: Function, thisObj: any, callbackParam?: any): void;
-        callDelay(delay: number, callback: Function, thisObj: any, callbackParam?: any): void;
-        exists(callback: Function, thisObj: any): boolean;
-        remove(callback: Function, thisObj: any): void;
+        add(delayInMiniseconds: number, repeat: number, callback: Function, thisObj?: any, callbackParam?: any): void;
+        callLater(callback: Function, thisObj?: any, callbackParam?: any): void;
+        callDelay(delay: number, callback: Function, thisObj?: any, callbackParam?: any): void;
+        exists(callback: Function, thisObj?: any): boolean;
+        remove(callback: Function, thisObj?: any): void;
         private __timer;
     }
 }

@@ -243,7 +243,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             configurable: true
         });
         Controller.prototype.setSelectedIndex = function (value) {
-            if (value === void 0) { value = 0; }
             if (this._selectedIndex != value) {
                 if (value > this._pageIds.length - 1)
                     throw "index out of bounds: " + value;
@@ -301,15 +300,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             configurable: true
         });
         Controller.prototype.getPageName = function (index) {
-            if (index === void 0) { index = 0; }
             return this._pageNames[index];
         };
         Controller.prototype.addPage = function (name) {
-            if (name === void 0) { name = ""; }
-            this.addPageAt(name, this._pageIds.length);
+            this.addPageAt(name || "", this._pageIds.length);
         };
         Controller.prototype.addPageAt = function (name, index) {
-            if (index === void 0) { index = 0; }
             var nid = "" + (_nextPageId++);
             if (index == this._pageIds.length) {
                 this._pageIds.push(nid);
@@ -1069,7 +1065,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             configurable: true
         });
         GObject.prototype.setPivot = function (xv, yv, asAnchor) {
-            if (yv === void 0) { yv = 0; }
             if (this._pivotX != xv || this._pivotY != yv || this._pivotAsAnchor != asAnchor) {
                 this._pivotX = xv;
                 this._pivotY = yv;
@@ -5208,7 +5203,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             configurable: true
         });
         GList.prototype.getFromPool = function (url) {
-            if (url === void 0) { url = null; }
             if (!url)
                 url = this._defaultItem;
             var obj = this._pool.getObject(url);
@@ -5221,7 +5215,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             this._pool.returnObject(obj);
         };
         GList.prototype.addChildAt = function (child, index) {
-            if (index === void 0) { index = 0; }
             _super.prototype.addChildAt.call(this, child, index);
             if (child instanceof fgui.GButton) {
                 child.selected = false;
@@ -5328,7 +5321,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             return result;
         };
         GList.prototype.addSelection = function (index, scrollItToView) {
-            if (scrollItToView === void 0) { scrollItToView = false; }
             if (this._selectionMode == fgui.ListSelectionMode.None)
                 return;
             this.checkVirtualList();
@@ -5337,7 +5329,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             if (scrollItToView)
                 this.scrollToView(index);
             this._lastSelectedIndex = index;
-            var obj = null;
+            var obj;
             if (this._virtual) {
                 var ii = this._virtualItems[index];
                 if (ii.obj)
@@ -5354,7 +5346,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         GList.prototype.removeSelection = function (index) {
             if (this._selectionMode == fgui.ListSelectionMode.None)
                 return;
-            var obj = null;
+            var obj;
             if (this._virtual) {
                 var ii = this._virtualItems[index];
                 if (ii.obj)
@@ -5685,7 +5677,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             }
             else {
                 var i = itemCount - 1;
-                var obj = null;
+                var obj;
                 while (i >= 0) {
                     obj = this.getChildAt(i);
                     if (!this.foldInvisibleItems || obj.visible)
@@ -6528,7 +6520,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 ii = this._virtualItems[i];
                 ii.updateFlag = this.itemInfoVer;
             }
-            var lastObj = null;
+            var lastObj;
             var insertIndex = 0;
             for (i = startIndex; i < lastIndex; i++) {
                 if (i >= this._realNumItems)
@@ -11204,7 +11196,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             this._items.push(newItem);
         };
         Relations.prototype.remove = function (target, relationType) {
-            relationType = relationType | 0;
+            relationType = relationType || 0;
             var cnt = this._items.length;
             var i = 0;
             while (i < cnt) {
@@ -11591,7 +11583,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             configurable: true
         });
         ScrollPane.prototype.setPosX = function (value, ani) {
-            if (ani === void 0) { ani = false; }
             this._owner.ensureBoundsCorrect();
             if (this._loop == 1)
                 value = this.loopCheckingNewPos(value, "x");
@@ -11612,7 +11603,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             configurable: true
         });
         ScrollPane.prototype.setPosY = function (value, ani) {
-            if (ani === void 0) { ani = false; }
             this._owner.ensureBoundsCorrect();
             if (this._loop == 1)
                 value = this.loopCheckingNewPos(value, "y");
@@ -11745,40 +11735,34 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             configurable: true
         });
         ScrollPane.prototype.scrollTop = function (ani) {
-            if (ani === void 0) { ani = false; }
             this.setPercY(0, ani);
         };
         ScrollPane.prototype.scrollBottom = function (ani) {
-            if (ani === void 0) { ani = false; }
             this.setPercY(1, ani);
         };
         ScrollPane.prototype.scrollUp = function (ratio, ani) {
-            if (ratio === void 0) { ratio = 1; }
-            if (ani === void 0) { ani = false; }
+            ratio = ratio || 1;
             if (this._pageMode)
                 this.setPosY(this._yPos - this._pageSize.y * ratio, ani);
             else
                 this.setPosY(this._yPos - this._scrollStep * ratio, ani);
         };
         ScrollPane.prototype.scrollDown = function (ratio, ani) {
-            if (ratio === void 0) { ratio = 1; }
-            if (ani === void 0) { ani = false; }
+            ratio = ratio || 1;
             if (this._pageMode)
                 this.setPosY(this._yPos + this._pageSize.y * ratio, ani);
             else
                 this.setPosY(this._yPos + this._scrollStep * ratio, ani);
         };
         ScrollPane.prototype.scrollLeft = function (ratio, ani) {
-            if (ratio === void 0) { ratio = 1; }
-            if (ani === void 0) { ani = false; }
+            ratio = ratio || 1;
             if (this._pageMode)
                 this.setPosX(this._xPos - this._pageSize.x * ratio, ani);
             else
                 this.setPosX(this._xPos - this._scrollStep * ratio, ani);
         };
         ScrollPane.prototype.scrollRight = function (ratio, ani) {
-            if (ratio === void 0) { ratio = 1; }
-            if (ani === void 0) { ani = false; }
+            ratio = ratio || 1;
             if (this._pageMode)
                 this.setPosX(this._xPos + this._pageSize.x * ratio, ani);
             else
@@ -15180,284 +15164,279 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    var FillUtils = (function () {
-        function FillUtils() {
+    function fillImage(w, h, method, origin, clockwise, amount) {
+        if (amount <= 0)
+            return null;
+        else if (amount >= 0.9999)
+            return [0, 0, w, 0, w, h, 0, h];
+        var points;
+        switch (method) {
+            case fgui.FillMethod.Horizontal:
+                points = fillHorizontal(w, h, origin, amount);
+                break;
+            case fgui.FillMethod.Vertical:
+                points = fillVertical(w, h, origin, amount);
+                break;
+            case fgui.FillMethod.Radial90:
+                points = fillRadial90(w, h, origin, clockwise, amount);
+                break;
+            case fgui.FillMethod.Radial180:
+                points = fillRadial180(w, h, origin, clockwise, amount);
+                break;
+            case fgui.FillMethod.Radial360:
+                points = fillRadial360(w, h, origin, clockwise, amount);
+                break;
         }
-        FillUtils.fill = function (w, h, method, origin, clockwise, amount) {
-            if (amount <= 0)
-                return null;
-            else if (amount >= 0.9999)
-                return [0, 0, w, 0, w, h, 0, h];
-            var points;
-            switch (method) {
-                case fgui.FillMethod.Horizontal:
-                    points = FillUtils.fillHorizontal(w, h, origin, amount);
-                    break;
-                case fgui.FillMethod.Vertical:
-                    points = FillUtils.fillVertical(w, h, origin, amount);
-                    break;
-                case fgui.FillMethod.Radial90:
-                    points = FillUtils.fillRadial90(w, h, origin, clockwise, amount);
-                    break;
-                case fgui.FillMethod.Radial180:
-                    points = FillUtils.fillRadial180(w, h, origin, clockwise, amount);
-                    break;
-                case fgui.FillMethod.Radial360:
-                    points = FillUtils.fillRadial360(w, h, origin, clockwise, amount);
-                    break;
-            }
-            return points;
-        };
-        FillUtils.fillHorizontal = function (w, h, origin, amount) {
-            var w2 = w * amount;
-            if (origin == fgui.FillOrigin.Left || origin == fgui.FillOrigin.Top)
-                return [0, 0, w2, 0, w2, h, 0, h];
-            else
-                return [w, 0, w, h, w - w2, h, w - w2, 0];
-        };
-        FillUtils.fillVertical = function (w, h, origin, amount) {
-            var h2 = h * amount;
-            if (origin == fgui.FillOrigin.Left || origin == fgui.FillOrigin.Top)
-                return [0, 0, 0, h2, w, h2, w, 0];
-            else
-                return [0, h, w, h, w, h - h2, 0, h - h2];
-        };
-        FillUtils.fillRadial90 = function (w, h, origin, clockwise, amount) {
-            if (clockwise && (origin == fgui.FillOrigin.TopRight || origin == fgui.FillOrigin.BottomLeft)
-                || !clockwise && (origin == fgui.FillOrigin.TopLeft || origin == fgui.FillOrigin.BottomRight)) {
-                amount = 1 - amount;
-            }
-            var v, v2, h2;
-            v = Math.tan(Math.PI / 2 * amount);
-            h2 = w * v;
-            v2 = (h2 - h) / h2;
-            var points;
-            switch (origin) {
-                case fgui.FillOrigin.TopLeft:
+        return points;
+    }
+    fgui.fillImage = fillImage;
+    function fillHorizontal(w, h, origin, amount) {
+        var w2 = w * amount;
+        if (origin == fgui.FillOrigin.Left || origin == fgui.FillOrigin.Top)
+            return [0, 0, w2, 0, w2, h, 0, h];
+        else
+            return [w, 0, w, h, w - w2, h, w - w2, 0];
+    }
+    function fillVertical(w, h, origin, amount) {
+        var h2 = h * amount;
+        if (origin == fgui.FillOrigin.Left || origin == fgui.FillOrigin.Top)
+            return [0, 0, 0, h2, w, h2, w, 0];
+        else
+            return [0, h, w, h, w, h - h2, 0, h - h2];
+    }
+    function fillRadial90(w, h, origin, clockwise, amount) {
+        if (clockwise && (origin == fgui.FillOrigin.TopRight || origin == fgui.FillOrigin.BottomLeft)
+            || !clockwise && (origin == fgui.FillOrigin.TopLeft || origin == fgui.FillOrigin.BottomRight)) {
+            amount = 1 - amount;
+        }
+        var v, v2, h2;
+        v = Math.tan(Math.PI / 2 * amount);
+        h2 = w * v;
+        v2 = (h2 - h) / h2;
+        var points;
+        switch (origin) {
+            case fgui.FillOrigin.TopLeft:
+                if (clockwise) {
+                    if (h2 <= h)
+                        points = [0, 0, w, h2, w, 0];
+                    else
+                        points = [0, 0, w * (1 - v2), h, w, h, w, 0];
+                }
+                else {
+                    if (h2 <= h)
+                        points = [0, 0, w, h2, w, h, 0, h];
+                    else
+                        points = [0, 0, w * (1 - v2), h, 0, h];
+                }
+                break;
+            case fgui.FillOrigin.TopRight:
+                if (clockwise) {
+                    if (h2 <= h)
+                        points = [w, 0, 0, h2, 0, h, w, h];
+                    else
+                        points = [w, 0, w * v2, h, w, h];
+                }
+                else {
+                    if (h2 <= h)
+                        points = [w, 0, 0, h2, 0, 0];
+                    else
+                        points = [w, 0, w * v2, h, 0, h, 0, 0];
+                }
+                break;
+            case fgui.FillOrigin.BottomLeft:
+                if (clockwise) {
+                    if (h2 <= h)
+                        points = [0, h, w, h - h2, w, 0, 0, 0];
+                    else
+                        points = [0, h, w * (1 - v2), 0, 0, 0];
+                }
+                else {
+                    if (h2 <= h)
+                        points = [0, h, w, h - h2, w, h];
+                    else
+                        points = [0, h, w * (1 - v2), 0, w, 0, w, h];
+                }
+                break;
+            case fgui.FillOrigin.BottomRight:
+                if (clockwise) {
+                    if (h2 <= h)
+                        points = [w, h, 0, h - h2, 0, h];
+                    else
+                        points = [w, h, w * v2, 0, 0, 0, 0, h];
+                }
+                else {
+                    if (h2 <= h)
+                        points = [w, h, 0, h - h2, 0, 0, w, 0];
+                    else
+                        points = [w, h, w * v2, 0, w, 0];
+                }
+                break;
+        }
+        return points;
+    }
+    function movePoints(points, offsetX, offsetY) {
+        var cnt = points.length;
+        for (var i = 0; i < cnt; i += 2) {
+            points[i] += offsetX;
+            points[i + 1] += offsetY;
+        }
+    }
+    function fillRadial180(w, h, origin, clockwise, amount) {
+        var points;
+        switch (origin) {
+            case fgui.FillOrigin.Top:
+                if (amount <= 0.5) {
+                    amount = amount / 0.5;
+                    points = fillRadial90(w / 2, h, clockwise ? fgui.FillOrigin.TopLeft : fgui.FillOrigin.TopRight, clockwise, amount);
+                    if (clockwise)
+                        movePoints(points, w / 2, 0);
+                }
+                else {
+                    amount = (amount - 0.5) / 0.5;
+                    points = fillRadial90(w / 2, h, clockwise ? fgui.FillOrigin.TopRight : fgui.FillOrigin.TopLeft, clockwise, amount);
+                    if (clockwise)
+                        points.push(w, h, w, 0);
+                    else {
+                        movePoints(points, w / 2, 0);
+                        points.push(0, h, 0, 0);
+                    }
+                }
+                break;
+            case fgui.FillOrigin.Bottom:
+                if (amount <= 0.5) {
+                    amount = amount / 0.5;
+                    points = fillRadial90(w / 2, h, clockwise ? fgui.FillOrigin.BottomRight : fgui.FillOrigin.BottomLeft, clockwise, amount);
+                    if (!clockwise)
+                        movePoints(points, w / 2, 0);
+                }
+                else {
+                    amount = (amount - 0.5) / 0.5;
+                    points = fillRadial90(w / 2, h, clockwise ? fgui.FillOrigin.BottomLeft : fgui.FillOrigin.BottomRight, clockwise, amount);
                     if (clockwise) {
-                        if (h2 <= h)
-                            points = [0, 0, w, h2, w, 0];
-                        else
-                            points = [0, 0, w * (1 - v2), h, w, h, w, 0];
+                        movePoints(points, w / 2, 0);
+                        points.push(0, 0, 0, h);
                     }
-                    else {
-                        if (h2 <= h)
-                            points = [0, 0, w, h2, w, h, 0, h];
-                        else
-                            points = [0, 0, w * (1 - v2), h, 0, h];
-                    }
-                    break;
-                case fgui.FillOrigin.TopRight:
+                    else
+                        points.push(w, 0, w, h);
+                }
+                break;
+            case fgui.FillOrigin.Left:
+                if (amount <= 0.5) {
+                    amount = amount / 0.5;
+                    points = fillRadial90(w, h / 2, clockwise ? fgui.FillOrigin.BottomLeft : fgui.FillOrigin.TopLeft, clockwise, amount);
+                    if (!clockwise)
+                        movePoints(points, 0, h / 2);
+                }
+                else {
+                    amount = (amount - 0.5) / 0.5;
+                    points = fillRadial90(w, h / 2, clockwise ? fgui.FillOrigin.TopLeft : fgui.FillOrigin.BottomLeft, clockwise, amount);
                     if (clockwise) {
-                        if (h2 <= h)
-                            points = [w, 0, 0, h2, 0, h, w, h];
-                        else
-                            points = [w, 0, w * v2, h, w, h];
+                        movePoints(points, 0, h / 2);
+                        points.push(w, 0, 0, 0);
                     }
+                    else
+                        points.push(w, h, 0, h);
+                }
+                break;
+            case fgui.FillOrigin.Right:
+                if (amount <= 0.5) {
+                    amount = amount / 0.5;
+                    points = fillRadial90(w, h / 2, clockwise ? fgui.FillOrigin.TopRight : fgui.FillOrigin.BottomRight, clockwise, amount);
+                    if (clockwise)
+                        movePoints(points, 0, h / 2);
+                }
+                else {
+                    amount = (amount - 0.5) / 0.5;
+                    points = fillRadial90(w, h / 2, clockwise ? fgui.FillOrigin.BottomRight : fgui.FillOrigin.TopRight, clockwise, amount);
+                    if (clockwise)
+                        points.push(0, h, w, h);
                     else {
-                        if (h2 <= h)
-                            points = [w, 0, 0, h2, 0, 0];
-                        else
-                            points = [w, 0, w * v2, h, 0, h, 0, 0];
+                        movePoints(points, 0, h / 2);
+                        points.push(0, 0, w, 0);
                     }
-                    break;
-                case fgui.FillOrigin.BottomLeft:
+                }
+                break;
+        }
+        return points;
+    }
+    function fillRadial360(w, h, origin, clockwise, amount) {
+        var points;
+        switch (origin) {
+            case fgui.FillOrigin.Top:
+                if (amount <= 0.5) {
+                    amount = amount / 0.5;
+                    points = fillRadial180(w / 2, h, clockwise ? fgui.FillOrigin.Left : fgui.FillOrigin.Right, clockwise, amount);
+                    if (clockwise)
+                        movePoints(points, w / 2, 0);
+                }
+                else {
+                    amount = (amount - 0.5) / 0.5;
+                    points = fillRadial180(w / 2, h, clockwise ? fgui.FillOrigin.Right : fgui.FillOrigin.Left, clockwise, amount);
+                    if (clockwise)
+                        points.push(w, h, w, 0, w / 2, 0);
+                    else {
+                        movePoints(points, w / 2, 0);
+                        points.push(0, h, 0, 0, w / 2, 0);
+                    }
+                }
+                break;
+            case fgui.FillOrigin.Bottom:
+                if (amount <= 0.5) {
+                    amount = amount / 0.5;
+                    points = fillRadial180(w / 2, h, clockwise ? fgui.FillOrigin.Right : fgui.FillOrigin.Left, clockwise, amount);
+                    if (!clockwise)
+                        movePoints(points, w / 2, 0);
+                }
+                else {
+                    amount = (amount - 0.5) / 0.5;
+                    points = fillRadial180(w / 2, h, clockwise ? fgui.FillOrigin.Left : fgui.FillOrigin.Right, clockwise, amount);
                     if (clockwise) {
-                        if (h2 <= h)
-                            points = [0, h, w, h - h2, w, 0, 0, 0];
-                        else
-                            points = [0, h, w * (1 - v2), 0, 0, 0];
+                        movePoints(points, w / 2, 0);
+                        points.push(0, 0, 0, h, w / 2, h);
                     }
-                    else {
-                        if (h2 <= h)
-                            points = [0, h, w, h - h2, w, h];
-                        else
-                            points = [0, h, w * (1 - v2), 0, w, 0, w, h];
-                    }
-                    break;
-                case fgui.FillOrigin.BottomRight:
+                    else
+                        points.push(w, 0, w, h, w / 2, h);
+                }
+                break;
+            case fgui.FillOrigin.Left:
+                if (amount <= 0.5) {
+                    amount = amount / 0.5;
+                    points = fillRadial180(w, h / 2, clockwise ? fgui.FillOrigin.Bottom : fgui.FillOrigin.Top, clockwise, amount);
+                    if (!clockwise)
+                        movePoints(points, 0, h / 2);
+                }
+                else {
+                    amount = (amount - 0.5) / 0.5;
+                    points = fillRadial180(w, h / 2, clockwise ? fgui.FillOrigin.Top : fgui.FillOrigin.Bottom, clockwise, amount);
                     if (clockwise) {
-                        if (h2 <= h)
-                            points = [w, h, 0, h - h2, 0, h];
-                        else
-                            points = [w, h, w * v2, 0, 0, 0, 0, h];
+                        movePoints(points, 0, h / 2);
+                        points.push(w, 0, 0, 0, 0, h / 2);
                     }
+                    else
+                        points.push(w, h, 0, h, 0, h / 2);
+                }
+                break;
+            case fgui.FillOrigin.Right:
+                if (amount <= 0.5) {
+                    amount = amount / 0.5;
+                    points = fillRadial180(w, h / 2, clockwise ? fgui.FillOrigin.Top : fgui.FillOrigin.Bottom, clockwise, amount);
+                    if (clockwise)
+                        movePoints(points, 0, h / 2);
+                }
+                else {
+                    amount = (amount - 0.5) / 0.5;
+                    points = fillRadial180(w, h / 2, clockwise ? fgui.FillOrigin.Bottom : fgui.FillOrigin.Top, clockwise, amount);
+                    if (clockwise)
+                        points.push(0, h, w, h, w, h / 2);
                     else {
-                        if (h2 <= h)
-                            points = [w, h, 0, h - h2, 0, 0, w, 0];
-                        else
-                            points = [w, h, w * v2, 0, w, 0];
+                        movePoints(points, 0, h / 2);
+                        points.push(0, 0, w, 0, w, h / 2);
                     }
-                    break;
-            }
-            return points;
-        };
-        FillUtils.movePoints = function (points, offsetX, offsetY) {
-            var cnt = points.length;
-            for (var i = 0; i < cnt; i += 2) {
-                points[i] += offsetX;
-                points[i + 1] += offsetY;
-            }
-        };
-        FillUtils.fillRadial180 = function (w, h, origin, clockwise, amount) {
-            var points;
-            switch (origin) {
-                case fgui.FillOrigin.Top:
-                    if (amount <= 0.5) {
-                        amount = amount / 0.5;
-                        points = FillUtils.fillRadial90(w / 2, h, clockwise ? fgui.FillOrigin.TopLeft : fgui.FillOrigin.TopRight, clockwise, amount);
-                        if (clockwise)
-                            FillUtils.movePoints(points, w / 2, 0);
-                    }
-                    else {
-                        amount = (amount - 0.5) / 0.5;
-                        points = FillUtils.fillRadial90(w / 2, h, clockwise ? fgui.FillOrigin.TopRight : fgui.FillOrigin.TopLeft, clockwise, amount);
-                        if (clockwise)
-                            points.push(w, h, w, 0);
-                        else {
-                            FillUtils.movePoints(points, w / 2, 0);
-                            points.push(0, h, 0, 0);
-                        }
-                    }
-                    break;
-                case fgui.FillOrigin.Bottom:
-                    if (amount <= 0.5) {
-                        amount = amount / 0.5;
-                        points = FillUtils.fillRadial90(w / 2, h, clockwise ? fgui.FillOrigin.BottomRight : fgui.FillOrigin.BottomLeft, clockwise, amount);
-                        if (!clockwise)
-                            FillUtils.movePoints(points, w / 2, 0);
-                    }
-                    else {
-                        amount = (amount - 0.5) / 0.5;
-                        points = FillUtils.fillRadial90(w / 2, h, clockwise ? fgui.FillOrigin.BottomLeft : fgui.FillOrigin.BottomRight, clockwise, amount);
-                        if (clockwise) {
-                            FillUtils.movePoints(points, w / 2, 0);
-                            points.push(0, 0, 0, h);
-                        }
-                        else
-                            points.push(w, 0, w, h);
-                    }
-                    break;
-                case fgui.FillOrigin.Left:
-                    if (amount <= 0.5) {
-                        amount = amount / 0.5;
-                        points = FillUtils.fillRadial90(w, h / 2, clockwise ? fgui.FillOrigin.BottomLeft : fgui.FillOrigin.TopLeft, clockwise, amount);
-                        if (!clockwise)
-                            FillUtils.movePoints(points, 0, h / 2);
-                    }
-                    else {
-                        amount = (amount - 0.5) / 0.5;
-                        points = FillUtils.fillRadial90(w, h / 2, clockwise ? fgui.FillOrigin.TopLeft : fgui.FillOrigin.BottomLeft, clockwise, amount);
-                        if (clockwise) {
-                            FillUtils.movePoints(points, 0, h / 2);
-                            points.push(w, 0, 0, 0);
-                        }
-                        else
-                            points.push(w, h, 0, h);
-                    }
-                    break;
-                case fgui.FillOrigin.Right:
-                    if (amount <= 0.5) {
-                        amount = amount / 0.5;
-                        points = FillUtils.fillRadial90(w, h / 2, clockwise ? fgui.FillOrigin.TopRight : fgui.FillOrigin.BottomRight, clockwise, amount);
-                        if (clockwise)
-                            FillUtils.movePoints(points, 0, h / 2);
-                    }
-                    else {
-                        amount = (amount - 0.5) / 0.5;
-                        points = FillUtils.fillRadial90(w, h / 2, clockwise ? fgui.FillOrigin.BottomRight : fgui.FillOrigin.TopRight, clockwise, amount);
-                        if (clockwise)
-                            points.push(0, h, w, h);
-                        else {
-                            FillUtils.movePoints(points, 0, h / 2);
-                            points.push(0, 0, w, 0);
-                        }
-                    }
-                    break;
-            }
-            return points;
-        };
-        FillUtils.fillRadial360 = function (w, h, origin, clockwise, amount) {
-            var points;
-            switch (origin) {
-                case fgui.FillOrigin.Top:
-                    if (amount <= 0.5) {
-                        amount = amount / 0.5;
-                        points = FillUtils.fillRadial180(w / 2, h, clockwise ? fgui.FillOrigin.Left : fgui.FillOrigin.Right, clockwise, amount);
-                        if (clockwise)
-                            FillUtils.movePoints(points, w / 2, 0);
-                    }
-                    else {
-                        amount = (amount - 0.5) / 0.5;
-                        points = FillUtils.fillRadial180(w / 2, h, clockwise ? fgui.FillOrigin.Right : fgui.FillOrigin.Left, clockwise, amount);
-                        if (clockwise)
-                            points.push(w, h, w, 0, w / 2, 0);
-                        else {
-                            FillUtils.movePoints(points, w / 2, 0);
-                            points.push(0, h, 0, 0, w / 2, 0);
-                        }
-                    }
-                    break;
-                case fgui.FillOrigin.Bottom:
-                    if (amount <= 0.5) {
-                        amount = amount / 0.5;
-                        points = FillUtils.fillRadial180(w / 2, h, clockwise ? fgui.FillOrigin.Right : fgui.FillOrigin.Left, clockwise, amount);
-                        if (!clockwise)
-                            FillUtils.movePoints(points, w / 2, 0);
-                    }
-                    else {
-                        amount = (amount - 0.5) / 0.5;
-                        points = FillUtils.fillRadial180(w / 2, h, clockwise ? fgui.FillOrigin.Left : fgui.FillOrigin.Right, clockwise, amount);
-                        if (clockwise) {
-                            FillUtils.movePoints(points, w / 2, 0);
-                            points.push(0, 0, 0, h, w / 2, h);
-                        }
-                        else
-                            points.push(w, 0, w, h, w / 2, h);
-                    }
-                    break;
-                case fgui.FillOrigin.Left:
-                    if (amount <= 0.5) {
-                        amount = amount / 0.5;
-                        points = FillUtils.fillRadial180(w, h / 2, clockwise ? fgui.FillOrigin.Bottom : fgui.FillOrigin.Top, clockwise, amount);
-                        if (!clockwise)
-                            FillUtils.movePoints(points, 0, h / 2);
-                    }
-                    else {
-                        amount = (amount - 0.5) / 0.5;
-                        points = FillUtils.fillRadial180(w, h / 2, clockwise ? fgui.FillOrigin.Top : fgui.FillOrigin.Bottom, clockwise, amount);
-                        if (clockwise) {
-                            FillUtils.movePoints(points, 0, h / 2);
-                            points.push(w, 0, 0, 0, 0, h / 2);
-                        }
-                        else
-                            points.push(w, h, 0, h, 0, h / 2);
-                    }
-                    break;
-                case fgui.FillOrigin.Right:
-                    if (amount <= 0.5) {
-                        amount = amount / 0.5;
-                        points = FillUtils.fillRadial180(w, h / 2, clockwise ? fgui.FillOrigin.Top : fgui.FillOrigin.Bottom, clockwise, amount);
-                        if (clockwise)
-                            FillUtils.movePoints(points, 0, h / 2);
-                    }
-                    else {
-                        amount = (amount - 0.5) / 0.5;
-                        points = FillUtils.fillRadial180(w, h / 2, clockwise ? fgui.FillOrigin.Bottom : fgui.FillOrigin.Top, clockwise, amount);
-                        if (clockwise)
-                            points.push(0, h, w, h, w, h / 2);
-                        else {
-                            FillUtils.movePoints(points, 0, h / 2);
-                            points.push(0, 0, w, 0, w, h / 2);
-                        }
-                    }
-                    break;
-            }
-            return points;
-        };
-        return FillUtils;
-    }());
-    fgui.FillUtils = FillUtils;
+                }
+                break;
+        }
+        return points;
+    }
 })(fgui || (fgui = {}));
 
 (function (fgui) {
@@ -15583,7 +15562,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             g.clear();
             if (w == 0 || h == 0)
                 return;
-            var points = fgui.FillUtils.fill(w, h, this._fillMethod, this._fillOrigin, this._fillClockwise, this._fillAmount);
+            var points = fgui.fillImage(w, h, this._fillMethod, this._fillOrigin, this._fillClockwise, this._fillAmount);
             if (!points)
                 return;
             g.beginFill(0, 1);
@@ -17936,7 +17915,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 this.stringTable[index] = value;
         };
         ByteBuffer.prototype.readColor = function (hasAlpha) {
-            if (hasAlpha === void 0) { hasAlpha = false; }
             var r = this.readUnsignedByte();
             var g = this.readUnsignedByte();
             var b = this.readUnsignedByte();
@@ -18138,7 +18116,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             return null;
         };
         GTimers.prototype.add = function (delayInMiniseconds, repeat, callback, thisObj, callbackParam) {
-            if (callbackParam === void 0) { callbackParam = null; }
             var item = this.findItem(callback, thisObj);
             if (!item) {
                 item = this.getItem();
@@ -18154,11 +18131,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             item.end = false;
         };
         GTimers.prototype.callLater = function (callback, thisObj, callbackParam) {
-            if (callbackParam === void 0) { callbackParam = null; }
             this.add(1, 1, callback, thisObj, callbackParam);
         };
         GTimers.prototype.callDelay = function (delay, callback, thisObj, callbackParam) {
-            if (callbackParam === void 0) { callbackParam = null; }
             this.add(delay, 1, callback, thisObj, callbackParam);
         };
         GTimers.prototype.exists = function (callback, thisObj) {
@@ -18217,7 +18192,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             this.repeat = 0;
         }
         TimerItem.prototype.advance = function (elapsed) {
-            if (elapsed === void 0) { elapsed = 0; }
             this.counter += elapsed;
             if (this.counter >= this.delay) {
                 this.counter -= this.delay;

@@ -1,9 +1,9 @@
 
-class Message {
-    public sender: string;
-    public senderIcon: string;
-    public msg: string;
-    public fromMe: boolean;
+interface Message {
+    sender?: string;
+    senderIcon?: string;
+    msg?: string;
+    fromMe?: boolean;
 }
 
 class ChatDemo {
@@ -45,7 +45,7 @@ class ChatDemo {
     private addMsg(sender: string, senderIcon: string, msg: string, fromMe: boolean) {
         let isScrollBottom: boolean = this._list.scrollPane.isBottomMost;
 
-        let newMessage = new Message();
+        let newMessage: Message = {};
         newMessage.sender = sender;
         newMessage.senderIcon = senderIcon;
         newMessage.msg = msg;
@@ -54,7 +54,7 @@ class ChatDemo {
 
         if (newMessage.fromMe) {
             if (this._messages.length == 1 || Math.random() < 0.5) {
-                let replyMessage = new Message();
+                let replyMessage: Message = {};
                 replyMessage.sender = "FairyGUI";
                 replyMessage.senderIcon = "r1";
                 replyMessage.msg = "Today is a good day. ";
@@ -86,10 +86,10 @@ class ChatDemo {
             item.getChild("name").text = msg.sender;
         item.icon = fgui.UIPackage.getItemURL("Chat", msg.senderIcon);
 
-        var txtObj:fgui.GRichTextField = item.getChild("msg").asRichTextField;
+        var txtObj: fgui.GRichTextField = item.getChild("msg").asRichTextField;
         txtObj.width = txtObj.initWidth;
         txtObj.text = this._emojiParser.parse(msg.msg);
-        if(txtObj.textWidth<txtObj.width)
+        if (txtObj.textWidth < txtObj.width)
             txtObj.width = txtObj.textWidth;
     }
 

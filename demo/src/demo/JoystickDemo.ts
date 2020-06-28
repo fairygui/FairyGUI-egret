@@ -11,7 +11,7 @@ class JoystickDemo {
         await fgui.UIPackage.loadPackage("Joystick");
 
         this._view = fgui.UIPackage.createObject("Joystick", "Main").asCom;
-        this._view.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
+        this._view.makeFullScreen();
         fgui.GRoot.inst.addChild(this._view);
 
         this._text = this._view.getChild("n9").asTextField;
