@@ -5,7 +5,7 @@ module fgui {
 
         public static DROP: string = "__drop";
 
-        public constructor(type: string, source: any = null) {
+        public constructor(type: string, source?: any) {
             super(type, false);
             this.source = source;
         }

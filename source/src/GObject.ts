@@ -12,31 +12,31 @@ module fgui {
         private _rotation: number = 0;
         private _visible: boolean = true;
         private _touchable: boolean = true;
-        private _grayed: boolean = false;
-        private _draggable: boolean = false;
+        private _grayed: boolean;
+        private _draggable: boolean;
         private _scaleX: number = 1;
         private _scaleY: number = 1;
         private _skewX: number = 0;
         private _skewY: number = 0;
         private _pivotX: number = 0;
         private _pivotY: number = 0;
-        private _pivotAsAnchor: boolean = false;
+        private _pivotAsAnchor: boolean;
         private _pivotOffsetX: number = 0;
         private _pivotOffsetY: number = 0;
         private _sortingOrder: number = 0;
         private _internalVisible: boolean = true;
-        private _handlingController: boolean = false;
-        private _focusable: boolean = false;
-        private _tooltips: string;
-        private _pixelSnapping: boolean = false;
-        private _disposed: boolean = false;
+        private _handlingController?: boolean;
+        private _tooltips?: string;
+        private _pixelSnapping?: boolean;
+        private _disposed?: boolean = false;
+        private _dragTesting?: boolean;
+        private _dragStartPoint?: egret.Point;
 
         private _relations: Relations;
-        private _group: GGroup;
+        private _group?: GGroup;
         private _gears: GearBase[];
         private _displayObject: egret.DisplayObject;
-        private _dragBounds: egret.Rectangle;
-        private _colorFilter: egret.ColorMatrixFilter;
+        private _dragBounds?: egret.Rectangle;
 
         public sourceWidth: number = 0;
         public sourceHeight: number = 0;
@@ -55,11 +55,9 @@ module fgui {
         public _id: string;
         public _name: string;
         public _underConstruct: boolean;
-        public _gearLocked: boolean;
+        public _gearLocked?: boolean;
         public _sizePercentInGroup: number = 0;
-        public _treeNode: GTreeNode;
-
-        public static _gInstanceCounter: number = 0;
+        public _treeNode?: GTreeNode;
 
         public static XY_CHANGED: string = "__xyChanged";
         public static SIZE_CHANGED: string = "__sizeChanged";
@@ -69,7 +67,7 @@ module fgui {
         public constructor() {
             super();
 
-            this._id = "" + GObject._gInstanceCounter++;
+            this._id = "" + _gInstanceCounter++;
             this._name = "";
 
             this.createDisplayObject();
@@ -115,19 +113,19 @@ module fgui {
 
                 this.handleXYChanged();
                 if (this instanceof GGroup)
-                    (<GGroup><any>this).moveChildren(dx, dy);
+                    this.moveChildren(dx, dy);
 
                 this.updateGear(1);
 
                 if (this._parent && !(this._parent instanceof GList)) {
                     this._parent.setBoundsChangedFlag();
-                    if (this._group != null)
+                    if (this._group)
                         this._group.setBoundsChangedFlag(true);
                     this.dispatchEventWith(GObject.XY_CHANGED);
                 }
 
-                if (GObject.draggingObject == this && !GObject.sUpdateInDragging)
-                    this.localToGlobalRect(0, 0, this._width, this._height, GObject.sGlobalRect);
+                if (GObject.draggingObject == this && !sUpdateInDragging)
+                    this.localToGlobalRect(0, 0, this._width, this._height, sGlobalRect);
             }
         }
 
@@ -164,9 +162,9 @@ module fgui {
             }
         }
 
-        public center(restraint: boolean = false): void {
+        public center(restraint?: boolean): void {
             var r: GComponent;
-            if (this._parent != null)
+            if (this._parent)
                 r = this.parent;
             else
                 r = this.root;
@@ -200,7 +198,7 @@ module fgui {
             this.setSize(this._rawWidth, value);
         }
 
-        public setSize(wv: number, hv: number, ignorePivot: boolean = false): void {
+        public setSize(wv: number, hv: number, ignorePivot?: boolean): void {
             if (this._rawWidth != wv || this._rawHeight != hv) {
                 this._rawWidth = wv;
                 this._rawHeight = hv;
@@ -230,14 +228,14 @@ module fgui {
                 }
 
                 if (this instanceof GGroup)
-                    (<GGroup><any>this).resizeChildren(dWidth, dHeight);
+                    this.resizeChildren(dWidth, dHeight);
 
                 this.updateGear(2);
 
                 if (this._parent) {
                     this._relations.onOwnerSizeChanged(dWidth, dHeight, this._pivotAsAnchor || !ignorePivot);
                     this._parent.setBoundsChangedFlag();
-                    if (this._group != null)
+                    if (this._group)
                         this._group.setBoundsChangedFlag();
                 }
 
@@ -307,7 +305,7 @@ module fgui {
             if (this._skewX != xv || this._skewY != yv) {
                 this._skewX = xv;
                 this._skewY = yv;
-                if (this._displayObject != null) {
+                if (this._displayObject) {
                     this._displayObject.skewX = xv;
                     this._displayObject.skewY = yv;
                 }
@@ -331,7 +329,7 @@ module fgui {
             this.setPivot(this._pivotX, value);
         }
 
-        public setPivot(xv: number, yv: number = 0, asAnchor: boolean = false): void {
+        public setPivot(xv: number, yv: number, asAnchor?: boolean): void {
             if (this._pivotX != xv || this._pivotY != yv || this._pivotAsAnchor != asAnchor) {
                 this._pivotX = xv;
                 this._pivotY = yv;
@@ -345,7 +343,7 @@ module fgui {
             return this._pivotAsAnchor;
         }
 
-        protected internalSetPivot(xv: number, yv: number = 0, asAnchor: boolean): void {
+        protected internalSetPivot(xv: number, yv: number, asAnchor: boolean): void {
             this._pivotX = xv;
             this._pivotY = yv;
             this._pivotAsAnchor = asAnchor;
@@ -354,11 +352,11 @@ module fgui {
         }
 
         private updatePivotOffset(): void {
-            if (this._displayObject != null) {
+            if (this._displayObject) {
                 if (this._pivotX != 0 || this._pivotY != 0) {
                     var px: number = this._pivotX * this._width;
                     var py: number = this._pivotY * this._height;
-                    var pt: egret.Point = this._displayObject.matrix.transformPoint(px, py, GObject.sHelperPoint);
+                    var pt: egret.Point = this._displayObject.matrix.transformPoint(px, py, sHelperPoint);
                     this._pivotOffsetX = this._pivotX * this._width - (pt.x - this._displayObject.x);
                     this._pivotOffsetY = this._pivotY * this._height - (pt.y - this._displayObject.y);
                 }
@@ -390,10 +388,10 @@ module fgui {
                     //Touch is not supported by GImage/GMovieClip/GTextField
                     return;
 
-                if (this._displayObject != null) {
+                if (this._displayObject) {
                     this._displayObject.touchEnabled = this._touchable;
                     if (this._displayObject instanceof egret.DisplayObjectContainer)
-                        (<egret.DisplayObjectContainer>this._displayObject).touchChildren = this._touchable;
+                        this._displayObject.touchChildren = this._touchable;
                 }
             }
         }
@@ -493,17 +491,9 @@ module fgui {
             if (this._sortingOrder != value) {
                 var old: number = this._sortingOrder;
                 this._sortingOrder = value;
-                if (this._parent != null)
+                if (this._parent)
                     this._parent.childSortingOrderChanged(this, old, this._sortingOrder);
             }
-        }
-
-        public get focusable(): boolean {
-            return this._focusable;
-        }
-
-        public set focusable(value: boolean) {
-            this._focusable = value;
         }
 
         public get focused(): boolean {
@@ -511,11 +501,7 @@ module fgui {
         }
 
         public requestFocus(): void {
-            var p: GObject = this;
-            while (p && !p._focusable)
-                p = p.parent;
-            if (p != null)
-                this.root.focus = p;
+            this.root.focus = this;
         }
 
         public get tooltips(): string {
@@ -551,7 +537,7 @@ module fgui {
         }
 
         public get resourceURL(): string {
-            if (this.packageItem != null)
+            if (this.packageItem)
                 return "ui://" + this.packageItem.owner.id + this.packageItem.id;
             else
                 return null;
@@ -559,10 +545,10 @@ module fgui {
 
         public set group(value: GGroup) {
             if (this._group != value) {
-                if (this._group != null)
+                if (this._group)
                     this._group.setBoundsChangedFlag();
                 this._group = value;
-                if (this._group != null)
+                if (this._group)
                     this._group.setBoundsChangedFlag();
             }
         }
@@ -583,7 +569,7 @@ module fgui {
                 return;
 
             var gear: GearBase = this._gears[index];
-            if (gear != null && gear.controller != null)
+            if (gear && gear.controller)
                 gear.updateState();
         }
 
@@ -592,7 +578,7 @@ module fgui {
         }
 
         public updateGearFromRelations(index: number, dx: number, dy: number): void {
-            if (this._gears[index] != null)
+            if (this._gears[index])
                 this._gears[index].updateFromRelations(dx, dy);
         }
 
@@ -648,12 +634,12 @@ module fgui {
             return this._relations;
         }
 
-        public addRelation(target: GObject, relationType: number, usePercent: boolean = false): void {
+        public addRelation(target: GObject, relationType: number, usePercent?: boolean): void {
             this._relations.add(target, relationType, usePercent);
         }
 
-        public removeRelation(target: GObject, relationType: number = 0): void {
-            this._relations.remove(target, relationType);
+        public removeRelation(target: GObject, relationType?: number): void {
+            this._relations.remove(target, relationType || 0);
         }
 
         public get displayObject(): egret.DisplayObject {
@@ -684,12 +670,12 @@ module fgui {
 
         public get root(): GRoot {
             if (this instanceof GRoot)
-                return <GRoot><any>this;
+                return this;
 
             var p: GObject = this._parent;
             while (p) {
                 if (p instanceof GRoot)
-                    return <GRoot><any>p;
+                    return p;
                 p = p.parent;
             }
             return GRoot.inst;
@@ -795,16 +781,16 @@ module fgui {
             this._displayObject = null;
             for (var i: number = 0; i < 10; i++) {
                 var gear: GearBase = this._gears[i];
-                if (gear != null)
+                if (gear)
                     gear.dispose();
             }
         }
 
-        public addClickListener(listener: Function, thisObj: any): void {
+        public addClickListener(listener: Function, thisObj?: any): void {
             this.addEventListener(egret.TouchEvent.TOUCH_TAP, listener, thisObj);
         }
 
-        public removeClickListener(listener: Function, thisObj: any): void {
+        public removeClickListener(listener: Function, thisObj?: any): void {
             this.removeEventListener(egret.TouchEvent.TOUCH_TAP, listener, thisObj);
         }
 
@@ -812,18 +798,18 @@ module fgui {
             return this.hasEventListener(egret.TouchEvent.TOUCH_TAP);
         }
 
-        public addEventListener(type: string, listener: Function, thisObject: any): void {
+        public addEventListener(type: string, listener: Function, thisObject?: any): void {
             super.addEventListener(type, listener, thisObject);
 
-            if (this._displayObject != null) {
+            if (this._displayObject) {
                 this._displayObject.addEventListener(type, this._reDispatch, this);
             }
         }
 
-        public removeEventListener(type: string, listener: Function, thisObject: any): void {
+        public removeEventListener(type: string, listener: Function, thisObject?: any): void {
             super.removeEventListener(type, listener, thisObject);
 
-            if (this._displayObject != null && !this.hasEventListener(type)) {
+            if (this._displayObject && !this.hasEventListener(type)) {
                 this._displayObject.removeEventListener(type, this._reDispatch, this);
             }
         }
@@ -851,7 +837,7 @@ module fgui {
             this._dragBounds = value;
         }
 
-        public startDrag(touchPointID: number = -1): void {
+        public startDrag(touchPointID?: number): void {
             if (this._displayObject.stage == null)
                 return;
 
@@ -866,17 +852,22 @@ module fgui {
             return GObject.draggingObject == this;
         }
 
-        public localToGlobal(ax: number = 0, ay: number = 0, resultPoint?: egret.Point): egret.Point {
+        public localToGlobal(ax?: number, ay?: number, result?: egret.Point): egret.Point {
+            ax = ax || 0;
+            ay = ay || 0;
+
             if (this._pivotAsAnchor) {
                 ax += this._pivotX * this._width;
                 ay += this._pivotY * this._height;
             }
 
-            return this._displayObject.localToGlobal(ax, ay, resultPoint);
+            return this._displayObject.localToGlobal(ax, ay, result);
         }
 
-        public globalToLocal(ax: number = 0, ay: number = 0, resultPoint?: egret.Point): egret.Point {
-            var pt: egret.Point = this._displayObject.globalToLocal(ax, ay, resultPoint);
+        public globalToLocal(ax?: number, ay?: number, result?: egret.Point): egret.Point {
+            ax = ax || 0;
+            ay = ay || 0;
+            var pt: egret.Point = this._displayObject.globalToLocal(ax, ay, result);
             if (this._pivotAsAnchor) {
                 pt.x -= this._pivotX * this._width;
                 pt.y -= this._pivotY * this._height;
@@ -884,48 +875,58 @@ module fgui {
             return pt;
         }
 
-        public localToRoot(ax: number = 0, ay: number = 0, resultPoint?: egret.Point): egret.Point {
-            var pt: egret.Point = this._displayObject.localToGlobal(ax, ay, resultPoint);
+        public localToRoot(ax?: number, ay?: number, result?: egret.Point): egret.Point {
+            ax = ax || 0;
+            ay = ay || 0;
+            var pt: egret.Point = this._displayObject.localToGlobal(ax, ay, result);
             pt.x /= GRoot.contentScaleFactor;
             pt.y /= GRoot.contentScaleFactor;
             return pt;
         }
 
-        public rootToLocal(ax: number = 0, ay: number = 0, resultPoint?: egret.Point): egret.Point {
+        public rootToLocal(ax?: number, ay?: number, resultPoint?: egret.Point): egret.Point {
+            ax = ax || 0;
+            ay = ay || 0;
             ax *= GRoot.contentScaleFactor;
             ay *= GRoot.contentScaleFactor;
             return this._displayObject.globalToLocal(ax, ay, resultPoint);
         }
 
-        public localToGlobalRect(ax: number = 0, ay: number = 0, aWidth: number = 0, aHeight: number = 0, resultRect?: egret.Rectangle): egret.Rectangle {
-            if (resultRect == null)
-                resultRect = new egret.Rectangle();
+        public localToGlobalRect(ax?: number, ay?: number, aw?: number, ah?: number, result?: egret.Rectangle): egret.Rectangle {
+            ax = ax || 0;
+            ay = ay || 0;
+            aw = aw || 0;
+            ah = ah || 0;
+            result = result || new egret.Rectangle();
             var pt: egret.Point = this.localToGlobal(ax, ay);
-            resultRect.x = pt.x;
-            resultRect.y = pt.y;
-            pt = this.localToGlobal(ax + aWidth, ay + aHeight);
-            resultRect.right = pt.x;
-            resultRect.bottom = pt.y;
-            return resultRect;
+            result.x = pt.x;
+            result.y = pt.y;
+            pt = this.localToGlobal(ax + aw, ay + ah);
+            result.right = pt.x;
+            result.bottom = pt.y;
+            return result;
         }
 
-        public globalToLocalRect(ax: number = 0, ay: number = 0, aWidth: number = 0, aHeight: number = 0, resultRect?: egret.Rectangle): egret.Rectangle {
-            if (resultRect == null)
-                resultRect = new egret.Rectangle();
+        public globalToLocalRect(ax?: number, ay?: number, aw?: number, ah?: number, result?: egret.Rectangle): egret.Rectangle {
+            ax = ax || 0;
+            ay = ay || 0;
+            aw = aw || 0;
+            ah = ah || 0;
+            result = result || new egret.Rectangle();
             var pt: egret.Point = this.globalToLocal(ax, ay);
-            resultRect.x = pt.x;
-            resultRect.y = pt.y;
-            pt = this.globalToLocal(ax + aWidth, ay + aHeight);
-            resultRect.right = pt.x;
-            resultRect.bottom = pt.y;
-            return resultRect;
+            result.x = pt.x;
+            result.y = pt.y;
+            pt = this.globalToLocal(ax + aw, ay + ah);
+            result.right = pt.x;
+            result.bottom = pt.y;
+            return result;
         }
 
         public handleControllerChanged(c: Controller): void {
             this._handlingController = true;
             for (var i: number = 0; i < 10; i++) {
                 var gear: GearBase = this._gears[i];
-                if (gear != null && gear.controller == c)
+                if (gear && gear.controller == c)
                     gear.apply();
             }
             this._handlingController = false;
@@ -941,7 +942,7 @@ module fgui {
                 return;
 
             var old: egret.DisplayObject = this._displayObject;
-            if (this._displayObject.parent != null) {
+            if (this._displayObject && this._displayObject.parent) {
                 var i: number = this._displayObject.parent.getChildIndex(this._displayObject);
                 this._displayObject.parent.addChildAt(newObj, i);
                 this._displayObject.parent.removeChild(this._displayObject);
@@ -958,7 +959,7 @@ module fgui {
             ToolSet.setColorFilter(this._displayObject, this._grayed);
 
             if (this._displayObject instanceof egret.DisplayObjectContainer)
-                (<egret.DisplayObjectContainer>this._displayObject).touchChildren = this._touchable;
+                this._displayObject.touchChildren = this._touchable;
         }
 
         protected handleXYChanged(): void {
@@ -1007,7 +1008,7 @@ module fgui {
             if (this._displayObject)
                 this._displayObject.visible = this.internalVisible2;
             if (this instanceof GGroup)
-                (<GGroup>this).handleVisibleChanged();
+                this.handleVisibleChanged();
         }
 
         public getProp(index: number): any {
@@ -1153,12 +1154,6 @@ module fgui {
 
         //drag support
         //-------------------------------------------------------------------
-        private static sGlobalDragStart: egret.Point = new egret.Point();
-        private static sGlobalRect: egret.Rectangle = new egret.Rectangle();
-        private static sHelperPoint: egret.Point = new egret.Point();
-        private static sDragHelperRect: egret.Rectangle = new egret.Rectangle();
-        private static sUpdateInDragging: boolean;
-        private _touchDownPoint: egret.Point;
 
         private initDrag(): void {
             if (this._draggable)
@@ -1167,29 +1162,39 @@ module fgui {
                 this.removeEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__begin, this);
         }
 
-        private dragBegin(evt: egret.TouchEvent): void {
-            if (GObject.draggingObject != null)
-                GObject.draggingObject.stopDrag();
+        private dragBegin(evt?: egret.TouchEvent): void {
+            if (GObject.draggingObject) {
+                let tmp: GObject = GObject.draggingObject;
+                tmp.stopDrag();
+                GObject.draggingObject = null;
 
-            if (evt != null) {
-                GObject.sGlobalDragStart.x = evt.stageX;
-                GObject.sGlobalDragStart.y = evt.stageY;
+                var dragEvent: DragEvent = new DragEvent(DragEvent.DRAG_END);
+                dragEvent.stageX = evt.stageX;
+                dragEvent.stageY = evt.stageY;
+                dragEvent.touchPointID = evt.touchPointID;
+                tmp.dispatchEvent(dragEvent);
+            }
+
+            if (evt) {
+                sGlobalDragStart.x = evt.stageX;
+                sGlobalDragStart.y = evt.stageY;
             }
             else {
-                GObject.sGlobalDragStart.x = GRoot.mouseX;
-                GObject.sGlobalDragStart.y = GRoot.mouseY;
+                sGlobalDragStart.x = GRoot.mouseX;
+                sGlobalDragStart.y = GRoot.mouseY;
             }
-            this.localToGlobalRect(0, 0, this._width, this._height, GObject.sGlobalRect);
+            this.localToGlobalRect(0, 0, this._width, this._height, sGlobalRect);
+            this._dragTesting = true;
             GObject.draggingObject = this;
 
-            GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__moving2, this);
-            GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__end2, this);
+            GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__moving, this);
+            GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__end, this);
         }
 
         private dragEnd(): void {
             if (GObject.draggingObject == this) {
-                GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.__moving2, this);
-                GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__end2, this);
+                this.reset();
+                this._dragTesting = false;
                 GObject.draggingObject = null;
             }
         }
@@ -1200,77 +1205,77 @@ module fgui {
         }
 
         private __begin(evt: egret.TouchEvent): void {
-            if (this._touchDownPoint == null)
-                this._touchDownPoint = new egret.Point();
-            this._touchDownPoint.x = evt.stageX;
-            this._touchDownPoint.y = evt.stageY;
+            if (this._dragStartPoint == null)
+                this._dragStartPoint = new egret.Point();
+            this._dragStartPoint.x = evt.stageX;
+            this._dragStartPoint.y = evt.stageY;
+            this._dragTesting = true;
 
             GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__moving, this);
             GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__end, this);
         }
 
-        private __end(evt: egret.TouchEvent): void {
-            this.reset();
-        }
-
         private __moving(evt: egret.TouchEvent): void {
-            var sensitivity: number = UIConfig.touchDragSensitivity;
-            if (this._touchDownPoint != null
-                && Math.abs(this._touchDownPoint.x - evt.stageX) < sensitivity
-                && Math.abs(this._touchDownPoint.y - evt.stageY) < sensitivity)
-                return;
+            if (GObject.draggingObject != this && this._draggable && this._dragTesting) {
+                var sensitivity: number = UIConfig.touchDragSensitivity;
+                if (Math.abs(this._dragStartPoint.x - evt.stageX) < sensitivity
+                    && Math.abs(this._dragStartPoint.y - evt.stageY) < sensitivity)
+                    return;
 
-            this.reset();
+                this._dragTesting = false;
 
-            var dragEvent: DragEvent = new DragEvent(DragEvent.DRAG_START);
-            dragEvent.stageX = evt.stageX;
-            dragEvent.stageY = evt.stageY;
-            dragEvent.touchPointID = evt.touchPointID;
-            this.dispatchEvent(dragEvent);
+                var dragEvent: DragEvent = new DragEvent(DragEvent.DRAG_START);
+                dragEvent.stageX = evt.stageX;
+                dragEvent.stageY = evt.stageY;
+                dragEvent.touchPointID = evt.touchPointID;
+                this.dispatchEvent(dragEvent);
 
-            if (!dragEvent.isDefaultPrevented())
-                this.dragBegin(evt);
-        }
-
-        private __moving2(evt: egret.TouchEvent): void {
-            var xx: number = evt.stageX - GObject.sGlobalDragStart.x + GObject.sGlobalRect.x;
-            var yy: number = evt.stageY - GObject.sGlobalDragStart.y + GObject.sGlobalRect.y;
-
-            if (this._dragBounds != null) {
-                var rect: egret.Rectangle = GRoot.inst.localToGlobalRect(this._dragBounds.x, this._dragBounds.y,
-                    this._dragBounds.width, this._dragBounds.height, GObject.sDragHelperRect);
-                if (xx < rect.x)
-                    xx = rect.x;
-                else if (xx + GObject.sGlobalRect.width > rect.right) {
-                    xx = rect.right - GObject.sGlobalRect.width;
-                    if (xx < rect.x)
-                        xx = rect.x;
-                }
-
-                if (yy < rect.y)
-                    yy = rect.y;
-                else if (yy + GObject.sGlobalRect.height > rect.bottom) {
-                    yy = rect.bottom - GObject.sGlobalRect.height;
-                    if (yy < rect.y)
-                        yy = rect.y;
-                }
+                if (!dragEvent.isDefaultPrevented())
+                    this.dragBegin(evt);
             }
 
-            GObject.sUpdateInDragging = true;
-            var pt: egret.Point = this.parent.globalToLocal(xx, yy, GObject.sHelperPoint);
-            this.setXY(Math.round(pt.x), Math.round(pt.y));
-            GObject.sUpdateInDragging = false;
+            if (GObject.draggingObject == this) {
 
-            var dragEvent: DragEvent = new DragEvent(DragEvent.DRAG_MOVING);
-            dragEvent.stageX = evt.stageX;
-            dragEvent.stageY = evt.stageY;
-            dragEvent.touchPointID = evt.touchPointID;
-            this.dispatchEvent(dragEvent);
+                var xx: number = evt.stageX - sGlobalDragStart.x + sGlobalRect.x;
+                var yy: number = evt.stageY - sGlobalDragStart.y + sGlobalRect.y;
+
+                if (this._dragBounds) {
+                    var rect: egret.Rectangle = GRoot.inst.localToGlobalRect(this._dragBounds.x, this._dragBounds.y,
+                        this._dragBounds.width, this._dragBounds.height, sDragHelperRect);
+                    if (xx < rect.x)
+                        xx = rect.x;
+                    else if (xx + sGlobalRect.width > rect.right) {
+                        xx = rect.right - sGlobalRect.width;
+                        if (xx < rect.x)
+                            xx = rect.x;
+                    }
+
+                    if (yy < rect.y)
+                        yy = rect.y;
+                    else if (yy + sGlobalRect.height > rect.bottom) {
+                        yy = rect.bottom - sGlobalRect.height;
+                        if (yy < rect.y)
+                            yy = rect.y;
+                    }
+                }
+
+                sUpdateInDragging = true;
+                var pt: egret.Point = this.parent.globalToLocal(xx, yy, sHelperPoint);
+                this.setXY(Math.round(pt.x), Math.round(pt.y));
+                sUpdateInDragging = false;
+
+                var dragEvent: DragEvent = new DragEvent(DragEvent.DRAG_MOVING);
+                dragEvent.stageX = evt.stageX;
+                dragEvent.stageY = evt.stageY;
+                dragEvent.touchPointID = evt.touchPointID;
+                this.dispatchEvent(dragEvent);
+            }
         }
 
-        private __end2(evt: egret.TouchEvent): void {
+        private __end(evt: egret.TouchEvent): void {
             if (GObject.draggingObject == this) {
-                this.stopDrag();
+                GObject.draggingObject = null;
+                this.reset();
 
                 var dragEvent: DragEvent = new DragEvent(DragEvent.DRAG_END);
                 dragEvent.stageX = evt.stageX;
@@ -1281,4 +1286,11 @@ module fgui {
         }
         //-------------------------------------------------------------------
     }
+
+    var _gInstanceCounter: number = 0;
+    var sGlobalDragStart: egret.Point = new egret.Point();
+    var sGlobalRect: egret.Rectangle = new egret.Rectangle();
+    var sHelperPoint: egret.Point = new egret.Point();
+    var sDragHelperRect: egret.Rectangle = new egret.Rectangle();
+    var sUpdateInDragging: boolean;
 }

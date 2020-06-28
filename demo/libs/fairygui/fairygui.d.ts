@@ -1,6 +1,6 @@
 declare module fgui {
     class AsyncOperation {
-        callback: Function;
+        callback: (obj: GObject) => void;
         callbackObj: any;
         private _itemList;
         private _objectPool;
@@ -21,12 +21,11 @@ declare module fgui {
         private _previousIndex;
         private _pageIds;
         private _pageNames;
-        private _actions;
+        private _actions?;
         name: string;
         parent: GComponent;
-        autoRadioGroupDepth: boolean;
+        autoRadioGroupDepth?: boolean;
         changing: boolean;
-        private static _nextPageId;
         constructor();
         dispose(): void;
         selectedIndex: number;
@@ -124,7 +123,9 @@ declare module fgui {
         Font = 5,
         Swf = 6,
         Misc = 7,
-        Unknown = 8
+        Unknown = 8,
+        Spine = 9,
+        DragonBones = 10
     }
     enum ObjectType {
         Image = 0,
@@ -144,7 +145,8 @@ declare module fgui {
         ProgressBar = 14,
         Slider = 15,
         ScrollBar = 16,
-        Tree = 17
+        Tree = 17,
+        Loader3D = 18
     }
     enum ProgressTitleType {
         Percent = 0,
@@ -272,17 +274,17 @@ declare module fgui {
         private _pivotOffsetY;
         private _sortingOrder;
         private _internalVisible;
-        private _handlingController;
-        private _focusable;
-        private _tooltips;
-        private _pixelSnapping;
-        private _disposed;
+        private _handlingController?;
+        private _tooltips?;
+        private _pixelSnapping?;
+        private _disposed?;
+        private _dragTesting?;
+        private _dragStartPoint?;
         private _relations;
-        private _group;
+        private _group?;
         private _gears;
         private _displayObject;
-        private _dragBounds;
-        private _colorFilter;
+        private _dragBounds?;
         sourceWidth: number;
         sourceHeight: number;
         initWidth: number;
@@ -299,10 +301,9 @@ declare module fgui {
         _id: string;
         _name: string;
         _underConstruct: boolean;
-        _gearLocked: boolean;
+        _gearLocked?: boolean;
         _sizePercentInGroup: number;
-        _treeNode: GTreeNode;
-        static _gInstanceCounter: number;
+        _treeNode?: GTreeNode;
         static XY_CHANGED: string;
         static SIZE_CHANGED: string;
         static SIZE_DELAY_CHANGE: string;
@@ -348,7 +349,6 @@ declare module fgui {
         readonly internalVisible2: boolean;
         readonly internalVisible3: boolean;
         sortingOrder: number;
-        focusable: boolean;
         readonly focused: boolean;
         requestFocus(): void;
         tooltips: string;
@@ -398,23 +398,23 @@ declare module fgui {
         readonly isDisposed: boolean;
         readonly treeNode: GTreeNode;
         dispose(): void;
-        addClickListener(listener: Function, thisObj: any): void;
-        removeClickListener(listener: Function, thisObj: any): void;
+        addClickListener(listener: Function, thisObj?: any): void;
+        removeClickListener(listener: Function, thisObj?: any): void;
         hasClickListener(): boolean;
-        addEventListener(type: string, listener: Function, thisObject: any): void;
-        removeEventListener(type: string, listener: Function, thisObject: any): void;
+        addEventListener(type: string, listener: Function, thisObject?: any): void;
+        removeEventListener(type: string, listener: Function, thisObject?: any): void;
         private _reDispatch;
         draggable: boolean;
         dragBounds: egret.Rectangle;
         startDrag(touchPointID?: number): void;
         stopDrag(): void;
         readonly dragging: boolean;
-        localToGlobal(ax?: number, ay?: number, resultPoint?: egret.Point): egret.Point;
-        globalToLocal(ax?: number, ay?: number, resultPoint?: egret.Point): egret.Point;
-        localToRoot(ax?: number, ay?: number, resultPoint?: egret.Point): egret.Point;
+        localToGlobal(ax?: number, ay?: number, result?: egret.Point): egret.Point;
+        globalToLocal(ax?: number, ay?: number, result?: egret.Point): egret.Point;
+        localToRoot(ax?: number, ay?: number, result?: egret.Point): egret.Point;
         rootToLocal(ax?: number, ay?: number, resultPoint?: egret.Point): egret.Point;
-        localToGlobalRect(ax?: number, ay?: number, aWidth?: number, aHeight?: number, resultRect?: egret.Rectangle): egret.Rectangle;
-        globalToLocalRect(ax?: number, ay?: number, aWidth?: number, aHeight?: number, resultRect?: egret.Rectangle): egret.Rectangle;
+        localToGlobalRect(ax?: number, ay?: number, aw?: number, ah?: number, result?: egret.Rectangle): egret.Rectangle;
+        globalToLocalRect(ax?: number, ay?: number, aw?: number, ah?: number, result?: egret.Rectangle): egret.Rectangle;
         handleControllerChanged(c: Controller): void;
         protected createDisplayObject(): void;
         protected switchDisplayObject(newObj: egret.DisplayObject): void;
@@ -429,27 +429,19 @@ declare module fgui {
         constructFromResource(): void;
         setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
         setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
-        private static sGlobalDragStart;
-        private static sGlobalRect;
-        private static sHelperPoint;
-        private static sDragHelperRect;
-        private static sUpdateInDragging;
-        private _touchDownPoint;
         private initDrag;
         private dragBegin;
         private dragEnd;
         private reset;
         private __begin;
-        private __end;
         private __moving;
-        private __moving2;
-        private __end2;
+        private __end;
     }
 }
 declare module fgui {
     class GComponent extends GObject {
         private _sortingChildCount;
-        private _applyingController;
+        private _applyingController?;
         protected _margin: Margin;
         protected _trackBounds: boolean;
         protected _boundsChanged: boolean;
@@ -461,7 +453,7 @@ declare module fgui {
         _transitions: Array<Transition>;
         _rootContainer: UIContainer;
         _container: egret.DisplayObjectContainer;
-        _scrollPane: ScrollPane;
+        _scrollPane?: ScrollPane;
         _alignOffset: egret.Point;
         constructor();
         protected createDisplayObject(): void;
@@ -473,18 +465,18 @@ declare module fgui {
         removeChild(child: GObject, dispose?: boolean): GObject;
         removeChildAt(index: number, dispose?: boolean): GObject;
         removeChildren(beginIndex?: number, endIndex?: number, dispose?: boolean): void;
-        getChildAt(index?: number): GObject;
+        getChildAt(index: number): GObject;
         getChild(name: string): GObject;
         getChildByPath(path: String): GObject;
         getVisibleChild(name: string): GObject;
         getChildInGroup(name: string, group: GGroup): GObject;
         getChildById(id: string): GObject;
         getChildIndex(child: GObject): number;
-        setChildIndex(child: GObject, index?: number): void;
+        setChildIndex(child: GObject, index: number): void;
         setChildIndexBefore(child: GObject, index: number): number;
         private _setChildIndex;
         swapChildren(child1: GObject, child2: GObject): void;
-        swapChildrenAt(index1: number, index2?: number): void;
+        swapChildrenAt(index1: number, index2: number): void;
         readonly numChildren: number;
         isAncestorOf(child: GObject): boolean;
         addController(controller: Controller): void;
@@ -546,13 +538,13 @@ declare module fgui {
         private _sound;
         private _soundVolumeScale;
         private _buttonController;
-        private _relatedController;
+        private _relatedController?;
         private _relatedPageId;
         private _changeStateOnClick;
-        private _linkedPopup;
+        private _linkedPopup?;
         private _downEffect;
         private _downEffectValue;
-        private _downScaled;
+        private _downScaled?;
         private _down;
         private _over;
         static UP: string;
@@ -588,8 +580,6 @@ declare module fgui {
         setProp(index: number, value: any): void;
         protected constructExtension(buffer: ByteBuffer): void;
         setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
-        private __rollover;
-        private __rollout;
         private __mousedown;
         private __mouseup;
         private __click;
@@ -609,7 +599,7 @@ declare module fgui {
         private _selectedIndex;
         private _buttonController;
         private _popupDirection;
-        private _selectionController;
+        private _selectionController?;
         private _over;
         private _down;
         constructor();
@@ -638,8 +628,6 @@ declare module fgui {
         private __popupWinClosed;
         private __clickItem;
         private __clickItem2;
-        private __rollover;
-        private __rollout;
         private __mousedown;
         private __mouseup;
     }
@@ -653,17 +641,17 @@ declare module fgui {
         private _lineAlpha;
         private _fillColor;
         private _fillAlpha;
-        private _cornerRadius;
-        private _sides;
-        private _startAngle;
-        private _polygonPoints;
-        private _distances;
+        private _cornerRadius?;
+        private _sides?;
+        private _startAngle?;
+        private _polygonPoints?;
+        private _distances?;
         constructor();
         readonly graphics: egret.Graphics;
         drawRect(lineSize: number, lineColor: number, lineAlpha: number, fillColor: number, fillAlpha: number, corner?: Array<number>): void;
         drawEllipse(lineSize: number, lineColor: number, lineAlpha: number, fillColor: number, fillAlpha: number): void;
         drawRegularPolygon(lineSize: number, lineColor: number, lineAlpha: number, fillColor: number, fillAlpha: number, sides: number, startAngle?: number, distances?: number[]): void;
-        drawPolygon(lineSize: number, lineColor: number, lineAlpha: number, fillColor: number, fillAlpha: number, points: any[]): void;
+        drawPolygon(lineSize: number, lineColor: number, lineAlpha: number, fillColor: number, fillAlpha: number, points: number[]): void;
         distances: number[];
         clearGraphics(): void;
         color: number;
@@ -684,8 +672,8 @@ declare namespace fgui {
         private _layout;
         private _lineGap;
         private _columnGap;
-        private _excludeInvisibles;
-        private _autoSizeDisabled;
+        private _excludeInvisibles?;
+        private _autoSizeDisabled?;
         private _mainGridIndex;
         private _mainGridMinSize;
         private _boundsChanged;
@@ -756,8 +744,8 @@ declare module fgui {
 }
 declare module fgui {
     class GList extends GComponent {
-        itemRenderer: Function;
-        itemProvider: Function;
+        itemRenderer: (index: number, item: GObject) => void;
+        itemProvider: (index: number) => string;
         callbackThisObj: any;
         scrollItemToViewOnClick: boolean;
         foldInvisibleItems: boolean;
@@ -774,17 +762,17 @@ declare module fgui {
         private _selectionController;
         private _lastSelectedIndex;
         private _pool;
-        private _virtual;
-        private _loop;
+        private _virtual?;
+        private _loop?;
         private _numItems;
         private _realNumItems;
         private _firstIndex;
         private _curLineItemCount;
         private _curLineItemCount2;
-        private _itemSize;
+        private _itemSize?;
         private _virtualListChanged;
-        private _virtualItems;
-        private _eventLocked;
+        private _virtualItems?;
+        private _eventLocked?;
         private itemInfoVer;
         constructor();
         dispose(): void;
@@ -807,7 +795,7 @@ declare module fgui {
         addItem(url?: string): GObject;
         addItemFromPool(url?: string): GObject;
         removeChildAt(index: number, dispose?: boolean): GObject;
-        removeChildToPoolAt(index?: number): void;
+        removeChildToPoolAt(index: number): void;
         removeChildToPool(child: GObject): void;
         removeChildrenToPool(beginIndex?: number, endIndex?: number): void;
         selectedIndex: number;
@@ -828,7 +816,7 @@ declare module fgui {
         protected handleSizeChanged(): void;
         handleControllerChanged(c: Controller): void;
         private updateSelectionController;
-        getSnappingPosition(xValue: number, yValue: number, resultPoint?: egret.Point): egret.Point;
+        getSnappingPosition(xValue: number, yValue: number, result?: egret.Point): egret.Point;
         scrollToView(index: number, ani?: boolean, setFirst?: boolean): void;
         getFirstChildInView(): number;
         childIndexToItemIndex(index: number): number;
@@ -846,7 +834,6 @@ declare module fgui {
         private getIndexOnPos2;
         private getIndexOnPos3;
         private handleScroll;
-        private static pos_param;
         private handleScroll1;
         private handleScroll2;
         private handleScroll3;
@@ -881,14 +868,10 @@ declare module fgui {
         private _shrinkOnly;
         private _showErrorSign;
         private _contentItem;
-        private _contentSourceWidth;
-        private _contentSourceHeight;
-        private _contentWidth;
-        private _contentHeight;
         private _container;
         private _content;
-        private _errorSign;
-        private _content2;
+        private _errorSign?;
+        private _content2?;
         private _updatingLayout;
         private static _errorSignPool;
         constructor();
@@ -908,6 +891,10 @@ declare module fgui {
         readonly content: MovieClip;
         readonly component: GComponent;
         texture: egret.Texture;
+        fillMethod: number;
+        fillOrigin: number;
+        fillClockwise: boolean;
+        fillAmount: number;
         protected loadContent(): void;
         protected loadFromPackage(itemURL: string): void;
         protected loadExternal(): void;
@@ -968,6 +955,7 @@ declare module fgui {
         value: number;
         tweenValue(value: number, duration: number): GTweener;
         update(newValue: number): void;
+        private setFillAmount;
         protected constructExtension(buffer: ByteBuffer): void;
         protected handleSizeChanged(): void;
         setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
@@ -976,7 +964,7 @@ declare module fgui {
 declare module fgui {
     class GTextField extends GObject {
         protected _textField: egret.TextField;
-        protected _bitmapContainer: egret.DisplayObjectContainer;
+        protected _bitmapContainer?: egret.DisplayObjectContainer;
         protected _font: string;
         protected _fontSize: number;
         protected _align: AlignType;
@@ -987,7 +975,9 @@ declare module fgui {
         protected _underline: boolean;
         protected _text: string;
         protected _ubbEnabled: boolean;
-        protected _templateVars: any;
+        protected _templateVars?: {
+            [index: string]: string;
+        };
         protected _autoSize: AutoSizeType;
         protected _widthAutoSize: boolean;
         protected _heightAutoSize: boolean;
@@ -996,11 +986,9 @@ declare module fgui {
         protected _textWidth: number;
         protected _textHeight: number;
         protected _requireRender: boolean;
-        protected _bitmapFont: BitmapFont;
-        protected _lines: Array<LineInfo>;
-        protected _bitmapPool: Array<egret.Bitmap>;
-        protected static GUTTER_X: number;
-        protected static GUTTER_Y: number;
+        protected _bitmapFont?: BitmapFont;
+        protected _lines?: Array<LineInfo>;
+        protected _bitmapPool?: Array<egret.Bitmap>;
         protected static _htmlParser: egret.HtmlTextParser;
         constructor();
         protected createDisplayObject(): void;
@@ -1034,7 +1022,9 @@ declare module fgui {
         private renderWithBitmapFont;
         protected handleSizeChanged(): void;
         protected parseTemplate(template: string): string;
-        templateVars: any;
+        templateVars: {
+            [index: string]: string;
+        };
         setVar(name: string, value: string): GTextField;
         flushVars(): void;
         protected handleGrayedChanged(): void;
@@ -1044,17 +1034,12 @@ declare module fgui {
         setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
         setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
     }
-    class LineInfo {
+    interface LineInfo {
         width: number;
         height: number;
         textHeight: number;
         text: string;
         y: number;
-        private static pool;
-        static borrow(): LineInfo;
-        static returns(value: LineInfo): void;
-        static returnList(value: Array<LineInfo>): void;
-        constructor();
     }
 }
 declare module fgui {
@@ -1071,7 +1056,6 @@ declare module fgui {
         private _popupStack;
         private _justClosedPopups;
         private _modalWaitPane;
-        private _focusedObject;
         private _tooltipWin;
         private _defaultTooltipWin;
         private _volumeScale;
@@ -1083,7 +1067,6 @@ declare module fgui {
         static shiftKeyDown: boolean;
         static mouseX: number;
         static mouseY: number;
-        static FOCUS_CHANGED: string;
         static readonly inst: GRoot;
         constructor();
         readonly nativeStage: egret.Stage;
@@ -1099,8 +1082,8 @@ declare module fgui {
         readonly modalLayer: GGraph;
         readonly hasModalWindow: boolean;
         readonly modalWaiting: boolean;
-        showPopup(popup: GObject, target?: GObject, downward?: any): void;
-        togglePopup(popup: GObject, target?: GObject, downward?: any): void;
+        showPopup(popup: GObject, target?: GObject, dir?: PopupDirection | boolean): void;
+        togglePopup(popup: GObject, target?: GObject, dir?: PopupDirection | boolean): void;
         hidePopup(popup?: GObject): void;
         readonly hasAnyPopup: boolean;
         private closePopup;
@@ -1141,7 +1124,6 @@ declare module fgui {
         readonly gripDragging: boolean;
         protected constructExtension(buffer: ByteBuffer): void;
         private __gripMouseDown;
-        private static sScrollbarHelperPoint;
         private __gripMouseMove;
         private __gripMouseUp;
         private __arrowButton1Click;
@@ -1183,7 +1165,6 @@ declare module fgui {
         protected handleSizeChanged(): void;
         setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
         private __gripMouseDown;
-        private static sSilderHelperPoint;
         private __gripMouseMove;
         private __gripMouseUp;
         private __barMouseDown;
@@ -1191,7 +1172,6 @@ declare module fgui {
 }
 declare module fgui {
     class GTextInput extends GTextField {
-        private _changed;
         private _promptText;
         private _password;
         constructor();
@@ -1220,7 +1200,6 @@ declare namespace fgui {
         private _clickToExpand;
         private _rootNode;
         private _expandedStatusInEvt;
-        private static helperIntList;
         constructor();
         readonly rootNode: GTreeNode;
         indent: number;
@@ -1258,7 +1237,7 @@ declare namespace fgui {
         private _level;
         private _tree;
         _cell: GComponent;
-        _resURL: string;
+        _resURL?: string;
         constructor(hasChild: boolean, resURL?: string);
         expanded: boolean;
         readonly isFolder: boolean;
@@ -1310,7 +1289,7 @@ declare namespace fgui {
         offsetY: number;
         scaleX: number;
         scaleY: number;
-        constructor(data: PixelHitTestData, offsetX?: number, offsetY?: number);
+        constructor(data: PixelHitTestData, offsetX: number, offsetY: number);
         contains(x: number, y: number): boolean;
     }
     class PixelHitTestData {
@@ -1325,31 +1304,31 @@ declare module fgui {
     class PackageItem {
         owner: UIPackage;
         type: PackageItemType;
-        objectType: ObjectType;
+        objectType?: ObjectType;
         id: string;
         name: string;
         width: number;
         height: number;
         file: string;
-        decoded: boolean;
-        rawData: ByteBuffer;
-        highResolution: Array<string>;
-        branches: Array<string>;
-        scale9Grid: egret.Rectangle;
-        scaleByTile: boolean;
-        tileGridIndice: number;
-        smoothing: boolean;
-        texture: egret.Texture;
-        pixelHitTestData: PixelHitTestData;
-        interval: number;
-        repeatDelay: number;
-        swing: boolean;
-        frames: Array<Frame>;
-        extensionType: any;
-        sound: egret.Sound;
-        bitmapFont: BitmapFont;
+        decoded?: boolean;
+        rawData?: ByteBuffer;
+        highResolution?: Array<string>;
+        branches?: Array<string>;
+        scale9Grid?: egret.Rectangle;
+        scaleByTile?: boolean;
+        tileGridIndice?: number;
+        smoothing?: boolean;
+        texture?: egret.Texture;
+        pixelHitTestData?: PixelHitTestData;
+        interval?: number;
+        repeatDelay?: number;
+        swing?: boolean;
+        frames?: Array<Frame>;
+        extensionType?: any;
+        sound?: egret.Sound;
+        bitmapFont?: BitmapFont;
         constructor();
-        load(): any;
+        load(): Object;
         getBranch(): PackageItem;
         getHighResolution(): PackageItem;
         toString(): string;
@@ -1361,8 +1340,8 @@ declare module fgui {
         protected _list: GList;
         constructor(resourceURL?: string);
         dispose(): void;
-        addItem(caption: string, callback?: Function): GButton;
-        addItemAt(caption: string, index: number, callback?: Function): GButton;
+        addItem(caption: string, callback?: (item?: ItemEvent) => void): GButton;
+        addItemAt(caption: string, index: number, callback?: (item?: ItemEvent) => void): GButton;
         addSeperator(): void;
         getItemName(index: number): string;
         setItemText(name: string, caption: string): void;
@@ -1376,7 +1355,7 @@ declare module fgui {
         readonly itemCount: number;
         readonly contentPane: GComponent;
         readonly list: GList;
-        show(target?: GObject, downward?: any): void;
+        show(target?: GObject, dir?: PopupDirection | boolean): void;
         private __clickItem;
         private __clickItem2;
         private __addedToStage;
@@ -1449,17 +1428,17 @@ declare module fgui {
         private _scrollBarMargin;
         private _bouncebackEffect;
         private _touchEffect;
-        private _scrollBarDisplayAuto;
+        private _scrollBarDisplayAuto?;
         private _vScrollNone;
         private _hScrollNone;
         private _needRefresh;
         private _refreshBarAxis;
-        private _displayOnLeft;
-        private _snapToItem;
-        _displayInDemand: boolean;
-        private _pageMode;
-        private _inertiaDisabled;
-        private _floating;
+        private _displayOnLeft?;
+        private _snapToItem?;
+        _displayInDemand?: boolean;
+        private _pageMode?;
+        private _inertiaDisabled?;
+        private _floating?;
         private _xPos;
         private _yPos;
         private _viewSize;
@@ -1485,24 +1464,16 @@ declare module fgui {
         private _tweenDuration;
         private _tweenStart;
         private _tweenChange;
-        private _pageController;
-        private _hzScrollBar;
-        private _vtScrollBar;
-        private _header;
-        private _footer;
+        private _pageController?;
+        private _hzScrollBar?;
+        private _vtScrollBar?;
+        private _header?;
+        private _footer?;
         static draggingPane: ScrollPane;
-        private static _gestureFlag;
         static SCROLL: string;
         static SCROLL_END: string;
         static PULL_DOWN_RELEASE: string;
         static PULL_UP_RELEASE: string;
-        static TWEEN_TIME_GO: number;
-        static TWEEN_TIME_DEFAULT: number;
-        static PULL_RATIO: number;
-        private static sHelperPoint;
-        private static sHelperRect;
-        private static sEndPos;
-        private static sOldChange;
         constructor(owner: GComponent);
         setup(buffer: ByteBuffer): void;
         dispose(): void;
@@ -1544,7 +1515,7 @@ declare module fgui {
         scrollDown(ratio?: number, ani?: boolean): void;
         scrollLeft(ratio?: number, ani?: boolean): void;
         scrollRight(ratio?: number, ani?: boolean): void;
-        scrollToView(target: any, ani?: boolean, setFirst?: boolean): void;
+        scrollToView(target: egret.Rectangle | GObject, ani?: boolean, setFirst?: boolean): void;
         isChildInView(obj: GObject): boolean;
         cancelDragging(): void;
         lockHeader(size: number): void;
@@ -1583,7 +1554,6 @@ declare module fgui {
         private checkRefreshBar;
         private tweenUpdate;
         private runTween;
-        private static easeFunc;
     }
 }
 declare module fgui {
@@ -1609,12 +1579,9 @@ declare module fgui {
         private _timeScale;
         private _startTime;
         private _endTime;
-        static OPTION_IGNORE_DISPLAY_CONTROLLER: number;
-        static OPTION_AUTO_STOP_DISABLED: number;
-        static OPTION_AUTO_STOP_AT_END: number;
         constructor(owner: GComponent);
-        play(onComplete?: Function, onCompleteObj?: any, onCompleteParam?: any, times?: number, delay?: number, startTime?: number, endTime?: number): void;
-        playReverse(onComplete?: Function, onCompleteObj?: any, onCompleteParam?: any, times?: number, delay?: number): void;
+        play(onComplete?: () => void, onCompleteObj?: any, onCompleteParam?: any, times?: number, delay?: number, startTime?: number, endTime?: number): void;
+        playReverse(onComplete?: () => void, onCompleteObj?: any, onCompleteParam?: any, times?: number, delay?: number): void;
         changePlayTimes(value: number): void;
         setAutoPlay(value: boolean, times?: number, delay?: number): void;
         private _play;
@@ -1651,7 +1618,11 @@ declare module fgui {
 }
 declare module fgui {
     class TranslationHelper {
-        static strings: Object;
+        static strings: {
+            [index: string]: {
+                [index: string]: string;
+            };
+        };
         static loadFromXML(source: string): void;
         static translateComponent(item: PackageItem): void;
     }
@@ -1687,15 +1658,16 @@ declare module fgui {
 }
 declare module fgui {
     class UIObjectFactory {
-        static extensions: any;
-        private static loaderType;
+        static extensions: {
+            [index: string]: new () => GComponent;
+        };
+        static loaderType: new () => GLoader;
         constructor();
-        static setExtension(url: string, type: any): void;
-        static setPackageItemExtension(url: string, type: any): void;
-        static setLoaderExtension(type: any): void;
+        static setExtension(url: string, type: new () => GComponent): void;
+        static setPackageItemExtension(url: string, type: new () => GComponent): void;
+        static setLoaderExtension(type: new () => GLoader): void;
         static resolvePackageItemExtension(pi: PackageItem): void;
-        static newObject(pi: PackageItem, userClass?: any): GObject;
-        static newObject2(type: ObjectType): GObject;
+        static newObject(type: number | PackageItem, userClass?: new () => GObject): GObject;
     }
 }
 declare module fgui {
@@ -1718,15 +1690,15 @@ declare module fgui {
         private static _vars;
         constructor();
         static branch: string;
-        static getVar(key: string): any;
-        static setVar(key: string, value: any): void;
+        static getVar(key: string): string;
+        static setVar(key: string, value: string): void;
         static getById(id: string): UIPackage;
         static getByName(name: string): UIPackage;
         static loadPackage(resKey: string): Promise<UIPackage>;
         static addPackage(resKey: string, descData?: ArrayBuffer): UIPackage;
         static removePackage(packageIdOrName: string): void;
-        static createObject(pkgName: string, resName: string, userClass?: any): GObject;
-        static createObjectFromURL(url: string, userClass?: any): GObject;
+        static createObject(pkgName: string, resName: string, userClass?: new () => GObject): GObject;
+        static createObjectFromURL(url: string, userClass?: new () => GObject): GObject;
         static getItemURL(pkgName: string, resName: string): string;
         static getItemByURL(url: string): PackageItem;
         static normalizeURL(url: string): string;
@@ -1736,12 +1708,12 @@ declare module fgui {
         readonly id: string;
         readonly name: string;
         customId: string;
-        createObject(resName: string, userClass?: any): GObject;
-        internalCreateObject(item: PackageItem, userClass?: any): GObject;
+        createObject(resName: string, userClass?: new () => GObject): GObject;
+        internalCreateObject(item: PackageItem, userClass?: new () => GObject): GObject;
         getItemById(itemId: string): PackageItem;
         getItemByName(resName: string): PackageItem;
-        getItemAssetByName(resName: string): any;
-        getItemAsset(item: PackageItem): any;
+        getItemAssetByName(resName: string): Object;
+        getItemAsset(item: PackageItem): Object;
         private loadMovieClip;
         private loadFont;
     }
@@ -1755,9 +1727,9 @@ declare module fgui {
         private _contentArea;
         private _frame;
         private _modal;
-        private _uiSources;
-        private _inited;
-        private _loading;
+        private _uiSources?;
+        private _inited?;
+        private _loading?;
         protected _requestingCmd: number;
         bringToFontOnClick: boolean;
         constructor();
@@ -1837,32 +1809,33 @@ declare module fgui {
         id: string;
         size: number;
         ttf: boolean;
-        glyphs: any;
+        glyphs: {
+            [index: string]: BMGlyph;
+        };
         resizable: boolean;
         tint: boolean;
         constructor();
     }
-    class BMGlyph {
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-        advance: number;
-        lineHeight: number;
-        channel: number;
-        texture: egret.Texture;
-        constructor();
+    interface BMGlyph {
+        x?: number;
+        y?: number;
+        width?: number;
+        height?: number;
+        advance?: number;
+        lineHeight?: number;
+        channel?: number;
+        texture?: egret.Texture;
     }
 }
 declare namespace fgui {
     class FillUtils {
-        static fill(w: number, h: number, method: number, origin: number, clockwise: boolean, amount: number): any[];
-        static fillHorizontal(w: number, h: number, origin: number, amount: number): any[];
-        static fillVertical(w: number, h: number, origin: number, amount: number): any[];
-        static fillRadial90(w: number, h: number, origin: number, clockwise: boolean, amount: number): any[];
+        static fill(w: number, h: number, method: number, origin: number, clockwise: boolean, amount: number): Array<number>;
+        static fillHorizontal(w: number, h: number, origin: number, amount: number): Array<number>;
+        static fillVertical(w: number, h: number, origin: number, amount: number): Array<number>;
+        static fillRadial90(w: number, h: number, origin: number, clockwise: boolean, amount: number): Array<number>;
         private static movePoints;
-        static fillRadial180(w: number, h: number, origin: number, clockwise: boolean, amount: number): any[];
-        static fillRadial360(w: number, h: number, origin: number, clockwise: boolean, amount: number): any[];
+        static fillRadial180(w: number, h: number, origin: number, clockwise: boolean, amount: number): Array<number>;
+        static fillRadial360(w: number, h: number, origin: number, clockwise: boolean, amount: number): Array<number>;
     }
 }
 declare module fgui {
@@ -1870,9 +1843,9 @@ declare module fgui {
         private _fillMethod;
         private _fillOrigin;
         private _fillAmount;
-        private _fillClockwise;
-        private _mask;
-        private _maskDirtyFlag;
+        private _fillClockwise?;
+        private _mask?;
+        private _maskDirtyFlag?;
         private _color;
         constructor();
         color: number;
@@ -1887,10 +1860,9 @@ declare module fgui {
     }
 }
 declare module fgui {
-    class Frame {
-        addDelay: number;
-        texture: egret.Texture;
-        constructor();
+    interface Frame {
+        addDelay?: number;
+        texture?: egret.Texture;
     }
     class MovieClip extends Image {
         interval: number;
@@ -1931,10 +1903,10 @@ declare module fgui {
 }
 declare module fgui {
     class UIContainer extends egret.DisplayObjectContainer {
-        private _hitArea;
-        private _cachedMatrix;
-        private _cachedHitArea;
-        private _opaque;
+        private _hitArea?;
+        private _cachedMatrix?;
+        private _cachedHitArea?;
+        private _opaque?;
         constructor();
         cacheHitArea(value: boolean): void;
         hitArea: PixelHitTest | egret.DisplayObject;
@@ -1983,8 +1955,7 @@ declare namespace fgui {
         static disableAllTweenEffect: boolean;
         protected _owner: GObject;
         protected _controller: Controller;
-        protected _tweenConfig: GearTweenConfig;
-        private static Classes;
+        protected _tweenConfig?: GearTweenConfig;
         static create(owner: GObject, index: number): GearBase;
         constructor(owner: GObject);
         dispose(): void;
@@ -2129,14 +2100,10 @@ declare namespace fgui {
         updateFromRelations(dx: number, dy: number): void;
     }
 }
-declare module fgui {
-    class EaseManager {
-        private static _PiOver2;
-        private static _TwoPi;
-        static evaluate(easeType: number, time: number, duration: number, overshootOrAmplitude: number, period: number): number;
-    }
+declare namespace fgui {
+    function evaluateEase(easeType: number, time: number, duration: number, overshootOrAmplitude: number, period: number): number;
 }
-declare module fgui {
+declare namespace fgui {
     class EaseType {
         static Linear: number;
         static SineIn: number;
@@ -2177,11 +2144,9 @@ declare namespace fgui {
         private _segments;
         private _points;
         private _fullLength;
-        private static helperPoints;
         constructor();
         readonly length: number;
-        create2(pt1: GPathPoint, pt2: GPathPoint, pt3?: GPathPoint, pt4?: GPathPoint): void;
-        create(points: Array<GPathPoint>): void;
+        create(pt1: Array<GPathPoint> | GPathPoint, pt2?: GPathPoint, pt3?: GPathPoint, pt4?: GPathPoint): void;
         private createSplineSegment;
         clear(): void;
         getPointAt(t: number, result?: egret.Point): egret.Point;
@@ -2225,9 +2190,9 @@ declare namespace fgui {
         static toColor(start: number, end: number, duration: number): GTweener;
         static delayedCall(delay: number): GTweener;
         static shake(startX: number, startY: number, amplitude: number, duration: number): GTweener;
-        static isTweening(target: Object, propType?: any): Boolean;
-        static kill(target: Object, complete?: boolean, propType?: any): void;
-        static getTween(target: Object, propType?: any): GTweener;
+        static isTweening(target: any, propType?: any): Boolean;
+        static kill(target: any, complete?: boolean, propType?: any): void;
+        static getTween(target: any, propType?: any): GTweener;
     }
 }
 declare module fgui {
@@ -2263,7 +2228,6 @@ declare module fgui {
         private _ended;
         private _elapsedTime;
         private _normalizedTime;
-        private static helperPoint;
         constructor();
         setDelay(value: number): GTweener;
         readonly delay: number;
@@ -2277,14 +2241,14 @@ declare module fgui {
         readonly repeat: number;
         setTimeScale(value: number): GTweener;
         setSnapping(value: boolean): GTweener;
-        setTarget(value: Object, propType?: Object): GTweener;
-        readonly target: Object;
+        setTarget(value: any, propType?: any): GTweener;
+        readonly target: any;
         setUserData(value: any): GTweener;
         readonly userData: any;
         setPath(value: GPath): GTweener;
-        onUpdate(callback: Function, caller: any): GTweener;
-        onStart(callback: Function, caller: any): GTweener;
-        onComplete(callback: Function, caller: any): GTweener;
+        onUpdate(callback: Function, caller?: any): GTweener;
+        onStart(callback: Function, caller?: any): GTweener;
+        onComplete(callback: Function, caller?: any): GTweener;
         readonly startValue: TweenValue;
         readonly endValue: TweenValue;
         readonly value: TweenValue;
@@ -2312,19 +2276,14 @@ declare module fgui {
 }
 declare module fgui {
     class TweenManager {
-        private static _activeTweens;
-        private static _tweenerPool;
-        private static _totalActiveTweens;
-        private static _lastTime;
-        private static _inited;
         static createTween(): GTweener;
-        static isTweening(target: any, propType: any): boolean;
-        static killTweens(target: any, completed: boolean, propType: any): boolean;
-        static getTween(target: any, propType: any): GTweener;
+        static isTweening(target: any, propType?: any): boolean;
+        static killTweens(target: any, completed?: boolean, propType?: any): boolean;
+        static getTween(target: any, propType?: any): GTweener;
         private static update;
     }
 }
-declare module fgui {
+declare namespace fgui {
     class TweenValue {
         x: number;
         y: number;
@@ -2339,7 +2298,7 @@ declare module fgui {
 }
 declare module fgui {
     class ByteBuffer extends egret.ByteArray {
-        stringTable: Array<string>;
+        stringTable?: Array<string>;
         version: number;
         constructor(buffer?: ArrayBuffer | Uint8Array, bufferExtSize?: number);
         skip(count: number): void;
@@ -2353,18 +2312,10 @@ declare module fgui {
         seek(indexTablePos: number, blockIndex: number): boolean;
     }
 }
-declare module fgui {
+declare namespace fgui {
     class ColorMatrix {
-        matrix: Array<number>;
-        private static IDENTITY_MATRIX;
-        private static LENGTH;
-        private static LUMA_R;
-        private static LUMA_G;
-        private static LUMA_B;
-        private static helper;
-        static create(p_brightness: number, p_contrast: number, p_saturation: number, p_hue: number): ColorMatrix;
-        static getMatrix(p_brightness: number, p_contrast: number, p_saturation: number, p_hue: number, result?: number[]): number[];
-        constructor();
+        readonly matrix: Array<number>;
+        constructor(p_brightness?: number, p_contrast?: number, p_saturation?: number, p_hue?: number);
         reset(): void;
         invert(): void;
         adjustColor(p_brightness: number, p_contrast: number, p_saturation: number, p_hue: number): void;
@@ -2388,15 +2339,13 @@ declare module fgui {
         private _lastTime;
         static deltaTime: number;
         static time: number;
-        static inst: GTimers;
-        private static FPS24;
+        static readonly inst: GTimers;
         constructor();
         private getItem;
         private findItem;
         add(delayInMiniseconds: number, repeat: number, callback: Function, thisObj: any, callbackParam?: any): void;
         callLater(callback: Function, thisObj: any, callbackParam?: any): void;
         callDelay(delay: number, callback: Function, thisObj: any, callbackParam?: any): void;
-        callBy24Fps(callback: Function, thisObj: any, callbackParam?: any): void;
         exists(callback: Function, thisObj: any): boolean;
         remove(callback: Function, thisObj: any): void;
         private __timer;
@@ -2406,7 +2355,9 @@ declare module fgui {
     class UBBParser {
         private _text;
         private _readPos;
-        protected _handlers: any;
+        protected _handlers: {
+            [index: string]: (tagName: string, end: boolean, attr: string) => string;
+        };
         smallFontSize: number;
         normalFontSize: number;
         largeFontSize: number;
@@ -2426,26 +2377,19 @@ declare module fgui {
 }
 declare module fgui {
     class ToolSet {
-        constructor();
         static getFileName(source: string): string;
         static startsWith(source: string, str: string, ignoreCase?: boolean): boolean;
-        static endsWith(source: string, str: string, ignoreCase?: boolean): boolean;
-        static trim(targetString: string): string;
-        static trimLeft(targetString: string): string;
         static trimRight(targetString: string): string;
         static convertToHtmlColor(argb: number, hasAlpha?: boolean): string;
         static convertFromHtmlColor(str: string, hasAlpha?: boolean): number;
         static displayObjectToGObject(obj: egret.DisplayObject): GObject;
         static encodeHTML(str: string): string;
-        static defaultUBBParser: UBBParser;
-        static parseUBB(text: string): string;
         static clamp(value: number, min: number, max: number): number;
         static clamp01(value: number): number;
         static lerp(start: number, end: number, percent: number): number;
         static repeat(t: number, length: number): number;
         static distance(x1: number, y1: number, x2: number, y2: number): number;
         static fillPath(ctx: egret.Graphics, points: number[], px: number, py: number): void;
-        private static grayScaleMatrix;
         static setColorFilter(obj: egret.DisplayObject, color?: number | number[] | boolean): void;
     }
 }

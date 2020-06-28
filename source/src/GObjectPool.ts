@@ -2,7 +2,7 @@
 module fgui {
 
     export class GObjectPool {
-        private _pool: any;
+        private _pool: { [index: string]: Array<GObject> };
         private _count: number = 0;
 
         public constructor() {
@@ -11,13 +11,13 @@ module fgui {
 
         public clear(): void {
             for (var i1 in this._pool) {
-				var arr: Array<GObject> = this._pool[i1];
-				var cnt: number = arr.length;
-				for (var i: number = 0; i < cnt; i++)
-					arr[i].dispose();
-			}
-			this._pool = {};
-			this._count = 0;
+                var arr: Array<GObject> = this._pool[i1];
+                var cnt: number = arr.length;
+                for (var i: number = 0; i < cnt; i++)
+                    arr[i].dispose();
+            }
+            this._pool = {};
+            this._count = 0;
         }
 
         public get count(): number {
@@ -30,7 +30,7 @@ module fgui {
                 return null;
 
             var arr: Array<GObject> = this._pool[url];
-            if (arr != null && arr.length) {
+            if (arr && arr.length) {
                 this._count--;
                 return arr.shift();
             }

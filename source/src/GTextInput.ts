@@ -2,7 +2,6 @@
 module fgui {
 
     export class GTextInput extends GTextField {
-        private _changed: boolean;
         private _promptText: string;
         private _password: boolean;
 
@@ -104,12 +103,12 @@ module fgui {
         protected updateTextFieldText(): void {
             if (!this._text && this._promptText) {
                 this._textField.displayAsPassword = false;
-                this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(this._promptText));
+                this._textField.textFlow = (new egret.HtmlTextParser).parser(UBBParser.inst.parse(this._promptText));
             }
             else {
                 this._textField.displayAsPassword = this._password;
                 if (this._ubbEnabled)
-                    this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(ToolSet.encodeHTML(this._text)));
+                    this._textField.textFlow = (new egret.HtmlTextParser).parser(UBBParser.inst.parse(ToolSet.encodeHTML(this._text)));
                 else
                     this._textField.text = this._text;
             }
@@ -152,7 +151,7 @@ module fgui {
 
             if (!this._text && this._promptText) {
                 this._textField.displayAsPassword = false;
-                this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(ToolSet.encodeHTML(this._promptText)));
+                this._textField.textFlow = (new egret.HtmlTextParser).parser(UBBParser.inst.parse(ToolSet.encodeHTML(this._promptText)));
             }
         }
 
@@ -171,7 +170,7 @@ module fgui {
             this._text = this._textField.text;
             if (!this._text && this._promptText) {
                 this._textField.displayAsPassword = false;
-                this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(ToolSet.encodeHTML(this._promptText)));
+                this._textField.textFlow = (new egret.HtmlTextParser).parser(UBBParser.inst.parse(ToolSet.encodeHTML(this._promptText)));
             }
         }
     }

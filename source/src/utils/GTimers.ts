@@ -12,9 +12,7 @@ module fgui {
         public static deltaTime: number = 0;
         public static time: number = 0;
 
-        public static inst: GTimers = new GTimers();
-
-        private static FPS24: number = 1000 / 24;
+        public static readonly inst: GTimers = new GTimers();
 
         public constructor() {
             this._items = new Array<TimerItem>();
@@ -32,7 +30,7 @@ module fgui {
                 return new TimerItem();
         }
 
-        private findItem(callback: Function, thisObj: any): TimerItem {
+        private findItem(callback: Function, thisObj?: any): TimerItem {
             var len: number = this._items.length;
             for (var i: number = 0; i < len; i++) {
                 var item: TimerItem = this._items[i];
@@ -42,7 +40,7 @@ module fgui {
             return null;
         }
 
-        public add(delayInMiniseconds: number, repeat: number, callback: Function, thisObj: any, callbackParam: any = null): void {
+        public add(delayInMiniseconds: number, repeat: number, callback: Function, thisObj?: any, callbackParam?: any): void {
             var item: TimerItem = this.findItem(callback, thisObj);
             if (!item) {
                 item = this.getItem();
@@ -58,24 +56,20 @@ module fgui {
             item.end = false;
         }
 
-        public callLater(callback: Function, thisObj: any, callbackParam: any = null): void {
+        public callLater(callback: Function, thisObj?: any, callbackParam?: any): void {
             this.add(1, 1, callback, thisObj, callbackParam);
         }
 
-        public callDelay(delay: number, callback: Function, thisObj: any, callbackParam: any = null): void {
+        public callDelay(delay: number, callback: Function, thisObj?: any, callbackParam?: any): void {
             this.add(delay, 1, callback, thisObj, callbackParam);
         }
 
-        public callBy24Fps(callback: Function, thisObj: any, callbackParam: any = null): void {
-            this.add(GTimers.FPS24, 0, callback, thisObj, callbackParam);
-        }
-
-        public exists(callback: Function, thisObj: any): boolean {
+        public exists(callback: Function, thisObj?: any): boolean {
             var item: TimerItem = this.findItem(callback, thisObj);
             return item != null;
         }
 
-        public remove(callback: Function, thisObj: any): void {
+        public remove(callback: Function, thisObj?: any): void {
             var item: TimerItem = this.findItem(callback, thisObj);
             if (item) {
                 var i: number = this._items.indexOf(item);
@@ -93,7 +87,7 @@ module fgui {
             GTimers.time = timeStamp;
             GTimers.deltaTime = timeStamp - this._lastTime;
             this._lastTime = timeStamp;
-            
+
             this._enumI = 0;
             this._enumCount = this._items.length;
 
@@ -139,7 +133,7 @@ module fgui {
         public constructor() {
         }
 
-        public advance(elapsed: number = 0): boolean {
+        public advance(elapsed: number): boolean {
             this.counter += elapsed;
             if (this.counter >= this.delay) {
                 this.counter -= this.delay;

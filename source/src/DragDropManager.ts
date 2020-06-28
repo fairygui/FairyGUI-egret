@@ -31,8 +31,8 @@ module fgui {
             return this._agent.parent != null;
         }
 
-        public startDrag(source: GObject, icon: string, sourceData: any, touchPointID: number = -1): void {
-            if (this._agent.parent != null)
+        public startDrag(source: GObject, icon: string, sourceData?: any, touchPointID?: number): void {
+            if (this._agent.parent)
                 return;
 
             this._sourceData = sourceData;
@@ -44,7 +44,7 @@ module fgui {
         }
 
         public cancel(): void {
-            if (this._agent.parent != null) {
+            if (this._agent.parent) {
                 this._agent.stopDrag();
                 GRoot.inst.removeChild(this._agent);
                 this._sourceData = null;
@@ -61,7 +61,7 @@ module fgui {
             this._sourceData = null;
 
             var obj: GObject = GRoot.inst.getObjectUnderPoint(evt.stageX, evt.stageY);
-            while (obj != null) {
+            while (obj) {
                 if (obj.hasEventListener(DropEvent.DROP)) {
                     var dropEvt: DropEvent = new DropEvent(DropEvent.DROP, sourceData);
                     obj.requestFocus();

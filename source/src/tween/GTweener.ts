@@ -36,8 +36,6 @@ module fgui {
         private _elapsedTime: number;
         private _normalizedTime: number;
 
-        private static helperPoint: egret.Point = new egret.Point();
-
         public constructor() {
             this._startValue = new TweenValue();
             this._endValue = new TweenValue();
@@ -85,7 +83,7 @@ module fgui {
             return this;
         }
 
-        public setRepeat(repeat: number, yoyo: boolean = false): GTweener {
+        public setRepeat(repeat: number, yoyo?: boolean): GTweener {
             this._repeat = repeat;
             this._yoyo = yoyo;
             return this;
@@ -105,13 +103,13 @@ module fgui {
             return this;
         }
 
-        public setTarget(value: Object, propType: Object = null): GTweener {
+        public setTarget(value: any, propType?: any): GTweener {
             this._target = value;
             this._propType = propType;
             return this;
         }
 
-        public get target(): Object {
+        public get target(): any {
             return this._target;
         }
 
@@ -129,19 +127,19 @@ module fgui {
             return this;
         }
 
-        public onUpdate(callback: Function, caller: any): GTweener {
+        public onUpdate(callback: Function, caller?: any): GTweener {
             this._onUpdate = callback;
             this._onUpdateCaller = caller;
             return this;
         }
 
-        public onStart(callback: Function, caller: any): GTweener {
+        public onStart(callback: Function, caller?: any): GTweener {
             this._onStart = callback;
             this._onStartCaller = caller;
             return this;
         }
 
-        public onComplete(callback: Function, caller: any): GTweener {
+        public onComplete(callback: Function, caller?: any): GTweener {
             this._onComplete = callback;
             this._onCompleteCaller = caller;
             return this;
@@ -180,9 +178,6 @@ module fgui {
             return this;
         }
 
-		/**
-		 * seek position of the tween, in seconds.
-		 */
         public seek(time: number): void {
             if (this._killed)
                 return;
@@ -198,7 +193,7 @@ module fgui {
             this.update();
         }
 
-        public kill(complete: boolean = false): void {
+        public kill(complete?: boolean): void {
             if (this._killed)
                 return;
 
@@ -392,7 +387,7 @@ module fgui {
                 this._ended = 1;
             }
 
-            this._normalizedTime = EaseManager.evaluate(this._easeType, reversed ? (this._duration - tt) : tt, this._duration,
+            this._normalizedTime = evaluateEase(this._easeType, reversed ? (this._duration - tt) : tt, this._duration,
                 this._easeOvershootOrAmplitude, this._easePeriod);
 
             this._value.setZero();
@@ -415,7 +410,7 @@ module fgui {
                 }
             }
             else if (this._path) {
-                var pt: egret.Point = GTweener.helperPoint;
+                var pt: egret.Point = s_vec2;
                 this._path.getPointAt(this._normalizedTime, pt);
                 if (this._snapping) {
                     pt.x = Math.round(pt.x);
@@ -505,4 +500,6 @@ module fgui {
             }
         }
     }
+
+    var s_vec2: egret.Point = new egret.Point();
 }

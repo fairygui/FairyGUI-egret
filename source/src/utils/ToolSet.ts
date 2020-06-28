@@ -3,8 +3,6 @@
 module fgui {
 
     export class ToolSet {
-        public constructor() {
-        }
 
         public static getFileName(source: string): string {
             var i: number = source.lastIndexOf("/");
@@ -20,7 +18,7 @@ module fgui {
                 return source;
         }
 
-        public static startsWith(source: string, str: string, ignoreCase: boolean = false): boolean {
+        public static startsWith(source: string, str: string, ignoreCase?: boolean): boolean {
             if (!source)
                 return false;
             else if (source.length < str.length)
@@ -34,35 +32,6 @@ module fgui {
             }
         }
 
-        public static endsWith(source: string, str: string, ignoreCase: boolean = false): boolean {
-            if (!source)
-                return false;
-            else if (source.length < str.length)
-                return false;
-            else {
-                source = source.substring(source.length - str.length);
-                if (!ignoreCase)
-                    return source == str;
-                else
-                    return source.toLowerCase() == str.toLowerCase();
-            }
-        }
-
-        public static trim(targetString: string): string {
-            return ToolSet.trimLeft(ToolSet.trimRight(targetString));
-        }
-
-        public static trimLeft(targetString: string): string {
-            var tempChar: string = "";
-            for (var i: number = 0; i < targetString.length; i++) {
-                tempChar = targetString.charAt(i);
-                if (tempChar != " " && tempChar != "\n" && tempChar != "\r") {
-                    break;
-                }
-            }
-            return targetString.substr(i);
-        }
-
         public static trimRight(targetString: string): string {
             var tempChar: string = "";
             for (var i: number = targetString.length - 1; i >= 0; i--) {
@@ -74,8 +43,7 @@ module fgui {
             return targetString.substring(0, i + 1);
         }
 
-
-        public static convertToHtmlColor(argb: number, hasAlpha: boolean = false): string {
+        public static convertToHtmlColor(argb: number, hasAlpha?: boolean): string {
             var alpha: string;
             if (hasAlpha)
                 alpha = (argb >> 24 & 0xFF).toString(16);
@@ -95,7 +63,7 @@ module fgui {
             return "#" + alpha + red + green + blue;
         }
 
-        public static convertFromHtmlColor(str: string, hasAlpha: boolean = false): number {
+        public static convertFromHtmlColor(str: string, hasAlpha?: boolean): number {
             if (str.length < 1)
                 return 0;
 
@@ -111,7 +79,7 @@ module fgui {
         }
 
         public static displayObjectToGObject(obj: egret.DisplayObject): GObject {
-            while (obj != null && !(obj instanceof egret.Stage)) {
+            while (obj && !(obj instanceof egret.Stage)) {
                 if (obj["$owner"])
                     return GObject.cast(obj);
 
@@ -124,12 +92,8 @@ module fgui {
             if (!str)
                 return "";
             else
-                return str.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("'", "&apos;");
-        }
-
-        public static defaultUBBParser: UBBParser = new UBBParser();
-        public static parseUBB(text: string): string {
-            return ToolSet.defaultUBBParser.parse(text);
+                return str.replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;").replace(/'/g, "&apos;").replace(/"/g, "&quot;");
         }
 
         public static clamp(value: number, min: number, max: number): number {
@@ -168,17 +132,11 @@ module fgui {
             ctx.lineTo(points[0] + px, points[1] + py);
         }
 
-        private static grayScaleMatrix = [
-            0.3, 0.6, 0, 0, 0,
-            0.3, 0.6, 0, 0, 0,
-            0.3, 0.6, 0, 0, 0,
-            0, 0, 0, 1, 0
-        ];
         public static setColorFilter(obj: egret.DisplayObject, color?: number | number[] | boolean): void {
             var filter: egret.ColorMatrixFilter = (<any>obj).$_colorFilter_; //cached instance
             var filters: egret.Filter[] = obj.filters;
 
-            var toApplyColor: any;
+            var toApplyColor: number | number[];
             var toApplyGray: boolean;
             var tp: string = typeof (color);
             if (tp == "boolean") //gray
@@ -187,11 +145,11 @@ module fgui {
                 toApplyGray = <boolean>color;
             }
             else {
-                toApplyColor = color == 0xFFFFFF ? null : color;
+                toApplyColor = color == 0xFFFFFF ? null : <number | number[]>color;
                 toApplyGray = filter ? (<any>filter).$_grayed_ : false;
             }
 
-            if ((!toApplyColor && toApplyColor != 0) && !toApplyGray) {
+            if ((!toApplyColor && toApplyColor !== 0) && !toApplyGray) {
                 if (filters && filter) {
                     var i: number = filters.indexOf(filter);
                     if (i != -1) {
@@ -225,10 +183,10 @@ module fgui {
 
             if (toApplyGray) {
                 for (let i = 0; i < 20; i++)
-                    mat[i] = ToolSet.grayScaleMatrix[i];
+                    mat[i] = grayScaleMatrix[i];
             }
             else if (toApplyColor instanceof Array) {
-                ColorMatrix.getMatrix(toApplyColor[0], toApplyColor[1], toApplyColor[2], toApplyColor[3], mat);
+                getColorMatrix(toApplyColor[0], toApplyColor[1], toApplyColor[2], toApplyColor[3], mat);
             }
             else {
                 for (let i = 0; i < 20; i++) {
@@ -242,5 +200,21 @@ module fgui {
 
             filter.matrix = mat;
         }
+    }
+
+    const grayScaleMatrix = [
+        0.3, 0.6, 0, 0, 0,
+        0.3, 0.6, 0, 0, 0,
+        0.3, 0.6, 0, 0, 0,
+        0, 0, 0, 1, 0
+    ];
+
+    let helper: ColorMatrix = new ColorMatrix();
+    function getColorMatrix(p_brightness: number, p_contrast: number, p_saturation: number, p_hue: number, result: number[]): void {
+        if (!result)
+            result = new Array<number>(ColorMatrix.length);
+        helper.reset();
+        helper.adjustColor(p_brightness, p_contrast, p_saturation, p_hue);
+        helper.matrix.forEach((e, i) => result[i] = e);
     }
 }

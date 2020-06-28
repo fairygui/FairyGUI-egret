@@ -2,13 +2,14 @@
 module fgui {
 
     export class UIContainer extends egret.DisplayObjectContainer {
-        private _hitArea: PixelHitTest | egret.DisplayObject;
-        private _cachedMatrix: egret.Matrix;
-        private _cachedHitArea: boolean;
-        private _opaque: boolean;
+        private _hitArea?: PixelHitTest | egret.DisplayObject;
+        private _cachedMatrix?: egret.Matrix;
+        private _cachedHitArea?: boolean;
+        private _opaque?: boolean;
 
         public constructor() {
             super();
+            
             this.touchEnabled = true;
             this.touchChildren = true;
         }
@@ -39,7 +40,7 @@ module fgui {
         }
 
         public $hitTest(stageX: number, stageY: number): egret.DisplayObject {
-            if(!this.$visible)
+            if (!this.$visible)
                 return null;
 
             if (this._hitArea) {

@@ -10,12 +10,12 @@ module fgui {
         }
 
         public get icon(): string {
-            if (this._iconObject != null)
+            if (this._iconObject)
                 return this._iconObject.icon;
         }
 
         public set icon(value: string) {
-            if (this._iconObject != null)
+            if (this._iconObject)
                 this._iconObject.icon = value;
             this.updateGear(7);
         }
@@ -43,7 +43,7 @@ module fgui {
 
         public get titleColor(): number {
             var tf: GTextField = this.getTextField();
-            if (tf != null)
+            if (tf)
                 return tf.color;
             else
                 return 0;
@@ -51,14 +51,14 @@ module fgui {
 
         public set titleColor(value: number) {
             var tf: GTextField = this.getTextField();
-            if (tf != null)
+            if (tf)
                 tf.color = value;
             this.updateGear(4);
         }
 
         public get titleFontSize(): number {
             var tf: GTextField = this.getTextField();
-            if (tf != null)
+            if (tf)
                 return tf.fontSize;
             else
                 return 0;
@@ -66,7 +66,7 @@ module fgui {
 
         public set titleFontSize(value: number) {
             var tf: GTextField = this.getTextField();
-            if (tf != null)
+            if (tf)
                 tf.fontSize = value;
         }
 
@@ -84,11 +84,9 @@ module fgui {
 
         public getTextField(): GTextField {
             if (this._titleObject instanceof GTextField)
-                return (<GTextField>this._titleObject);
-            else if (this._titleObject instanceof GLabel)
-                return (<GLabel>this._titleObject).getTextField();
-            else if (this._titleObject instanceof GButton)
-                return (<GButton>this._titleObject).getTextField();
+                return this._titleObject;
+            else if ((this._titleObject instanceof GLabel) || (this._titleObject instanceof GButton))
+                return this._titleObject.getTextField();
             else
                 return null;
         }
@@ -161,8 +159,8 @@ module fgui {
                 this.titleFontSize = iv;
 
             if (buffer.readBool()) {
-                var input: GTextInput = this.getTextField() as GTextInput;
-                if (input != null) {
+                var input: GTextField = this.getTextField();
+                if (input instanceof GTextInput) {
                     str = buffer.readS();
                     if (str != null)
                         input.promptText = str;

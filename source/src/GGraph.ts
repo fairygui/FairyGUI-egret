@@ -10,11 +10,11 @@ module fgui {
         private _lineAlpha: number;
         private _fillColor: number = 0;
         private _fillAlpha: number;
-        private _cornerRadius: Array<number>;
-        private _sides: number;
-        private _startAngle: number;
-        private _polygonPoints: any[];
-        private _distances: number[];
+        private _cornerRadius?: Array<number>;
+        private _sides?: number;
+        private _startAngle?: number;
+        private _polygonPoints?: any[];
+        private _distances?: number[];
 
         public constructor() {
             super();
@@ -23,8 +23,6 @@ module fgui {
             this._lineAlpha = 1;
             this._fillAlpha = 1;
             this._fillColor = 0xFFFFFF;
-            this._sides = 3;
-            this._startAngle = 0;
         }
 
         public get graphics(): egret.Graphics {
@@ -32,7 +30,7 @@ module fgui {
         }
 
         public drawRect(lineSize: number, lineColor: number, lineAlpha: number,
-            fillColor: number, fillAlpha: number, corner: Array<number> = null): void {
+            fillColor: number, fillAlpha: number, corner?: Array<number>): void {
             this._type = 1;
             this._lineSize = lineSize;
             this._lineColor = lineColor;
@@ -56,7 +54,7 @@ module fgui {
         }
 
         public drawRegularPolygon(lineSize: number, lineColor: number, lineAlpha: number,
-            fillColor: number, fillAlpha: number, sides: number, startAngle: number = 0, distances: number[] = null): void {
+            fillColor: number, fillAlpha: number, sides: number, startAngle?: number, distances?: number[]): void {
             this._type = 4;
             this._lineSize = lineSize;
             this._lineColor = lineColor;
@@ -64,12 +62,12 @@ module fgui {
             this._fillColor = fillColor;
             this._fillAlpha = fillAlpha;
             this._sides = sides;
-            this._startAngle = startAngle;
+            this._startAngle = startAngle || 0;
             this._distances = distances;
             this.updateGraph();
         }
 
-        public drawPolygon(lineSize: number, lineColor: number, lineAlpha: number, fillColor: number, fillAlpha: number, points: any[]): void {
+        public drawPolygon(lineSize: number, lineColor: number, lineAlpha: number, fillColor: number, fillAlpha: number, points: number[]): void {
             this._type = 3;
             this._lineSize = lineSize;
             this._lineColor = lineColor;
@@ -237,10 +235,10 @@ module fgui {
             else
                 super.setProp(index, value);
         }
-        
+
         protected handleSizeChanged(): void {
             super.handleSizeChanged();
-            
+
             if (this._type != 0)
                 this.updateGraph();
         }

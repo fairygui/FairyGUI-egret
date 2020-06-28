@@ -9,7 +9,6 @@ module fgui {
         private _popupStack: Array<GObject>;
         private _justClosedPopups: Array<GObject>;
         private _modalWaitPane: GObject;
-        private _focusedObject: GObject;
         private _tooltipWin: GObject;
         private _defaultTooltipWin: GObject;
         private _volumeScale: number;
@@ -23,8 +22,6 @@ module fgui {
         public static shiftKeyDown: boolean;
         public static mouseX: number;
         public static mouseY: number;
-
-        public static FOCUS_CHANGED: string = "FocusChanged";
 
         public static get inst(): GRoot {
             if (GRoot._inst == null)
@@ -96,7 +93,7 @@ module fgui {
                 this.setChildIndex(win, i);
         }
 
-        public showModalWait(msg: string = null): void {
+        public showModalWait(msg?: string): void {
             if (UIConfig.globalModalWaiting != null) {
                 if (this._modalWaitPane == null)
                     this._modalWaitPane = UIPackage.createObjectFromURL(UIConfig.globalModalWaiting);
@@ -118,8 +115,8 @@ module fgui {
             var cnt: number = arr.length;
             for (var i: number = 0; i < cnt; i++) {
                 var g: GObject = arr[i];
-                if ((g instanceof Window) && !(<Window><any>g).modal)
-                    (<Window><any>g).hide();
+                if ((g instanceof Window) && !g.modal)
+                    g.hide();
             }
         }
 
@@ -129,7 +126,7 @@ module fgui {
             for (var i: number = 0; i < cnt; i++) {
                 var g: GObject = arr[i];
                 if (g instanceof Window)
-                    (<Window><any>g).hide();
+                    g.hide();
             }
         }
 
@@ -138,7 +135,7 @@ module fgui {
             for (var i: number = cnt - 1; i >= 0; i--) {
                 var g: GObject = this.getChildAt(i);
                 if (g instanceof Window) {
-                    return <Window><any>g;
+                    return g;
                 }
             }
 
@@ -157,7 +154,7 @@ module fgui {
             return this._modalWaitPane && this._modalWaitPane.inContainer;
         }
 
-        public showPopup(popup: GObject, target: GObject = null, downward: any = null): void {
+        public showPopup(popup: GObject, target?: GObject, dir?: PopupDirection | boolean): void {
             if (this._popupStack.length > 0) {
                 var k: number = this._popupStack.indexOf(popup);
                 if (k != -1) {
@@ -167,9 +164,9 @@ module fgui {
             }
             this._popupStack.push(popup);
 
-            if (target != null) {
+            if (target) {
                 var p: GObject = target;
-                while (p != null) {
+                while (p) {
                     if (p.parent == this) {
                         if (popup.sortingOrder < p.sortingOrder) {
                             popup.sortingOrder = p.sortingOrder;
@@ -198,8 +195,8 @@ module fgui {
             if (xx + popup.width > this.width)
                 xx = xx + sizeW - popup.width;
             yy = pos.y + sizeH;
-            if ((downward == null && yy + popup.height > this.height)
-                || downward == false) {
+            if (((dir === undefined || dir === PopupDirection.Auto) && pos.y + popup.height > this.height)
+                || dir === false || dir === PopupDirection.Up) {
                 yy = pos.y - popup.height - 1;
                 if (yy < 0) {
                     yy = 0;
@@ -211,15 +208,15 @@ module fgui {
             popup.y = yy;
         }
 
-        public togglePopup(popup: GObject, target: GObject = null, downward: any = null): void {
+        public togglePopup(popup: GObject, target?: GObject, dir?: PopupDirection | boolean): void {
             if (this._justClosedPopups.indexOf(popup) != -1)
                 return;
 
-            this.showPopup(popup, target, downward);
+            this.showPopup(popup, target, dir);
         }
 
-        public hidePopup(popup: GObject = null): void {
-            if (popup != null) {
+        public hidePopup(popup?: GObject): void {
+            if (popup) {
                 var k: number = this._popupStack.indexOf(popup);
                 if (k != -1) {
                     for (var i: number = this._popupStack.length - 1; i >= k; i--)
@@ -239,9 +236,9 @@ module fgui {
         }
 
         private closePopup(target: GObject): void {
-            if (target.parent != null) {
+            if (target.parent) {
                 if (target instanceof Window)
-                    (<Window><any>target).hide();
+                    target.hide();
                 else
                     this.removeChild(target);
             }
@@ -262,14 +259,14 @@ module fgui {
             this.showTooltipsWin(this._defaultTooltipWin);
         }
 
-        public showTooltipsWin(tooltipWin: GObject, position: egret.Point = null): void {
+        public showTooltipsWin(tooltipWin: GObject, position?: egret.Point): void {
             this.hideTooltips();
 
             this._tooltipWin = tooltipWin;
 
             var xx: number = 0;
             var yy: number = 0;
-            if (position == null) {
+            if (!position) {
                 xx = GRoot.mouseX + 10;
                 yy = GRoot.mouseY + 20;
             }
@@ -300,7 +297,7 @@ module fgui {
         }
 
         public hideTooltips(): void {
-            if (this._tooltipWin != null) {
+            if (this._tooltipWin) {
                 if (this._tooltipWin.parent)
                     this.removeChild(this._tooltipWin);
                 this._tooltipWin = null;
@@ -316,24 +313,13 @@ module fgui {
         }
 
         public get focus(): GObject {
-            if (this._focusedObject && !this._focusedObject.onStage)
-                this._focusedObject = null;
-
-            return this._focusedObject;
+            return null;
         }
 
         public set focus(value: GObject) {
-            if (value && (!value.focusable || !value.onStage))
-                throw "invalid focus target";
-
-            this.setFocus(value);
         }
 
         private setFocus(value: GObject) {
-            if (this._focusedObject != value) {
-                this._focusedObject = value;
-                this.dispatchEventWith(GRoot.FOCUS_CHANGED);
-            }
         }
 
         public get volumeScale(): number {
@@ -344,7 +330,8 @@ module fgui {
             this._volumeScale = value;
         }
 
-        public playOneShotSound(sound: egret.Sound, volumeScale: number = 1) {
+        public playOneShotSound(sound: egret.Sound, volumeScale?: number) {
+            volumeScale = volumeScale || 1;
             var vs: number = this._volumeScale * volumeScale;
             var channel: egret.SoundChannel = sound.play(0, 1);
             channel.volume = vs;
@@ -353,12 +340,12 @@ module fgui {
         private adjustModalLayer(): void {
             var cnt: number = this.numChildren;
 
-            if (this._modalWaitPane != null && this._modalWaitPane.parent != null)
+            if (this._modalWaitPane && this._modalWaitPane.parent)
                 this.setChildIndex(this._modalWaitPane, cnt - 1);
 
             for (var i: number = cnt - 1; i >= 0; i--) {
                 var g: GObject = this.getChildAt(i);
-                if ((g instanceof Window) && (<Window><any>g).modal) {
+                if ((g instanceof Window) && g.modal) {
                     if (this._modalLayer.parent == null)
                         this.addChildAt(this._modalLayer, i);
                     else
@@ -367,7 +354,7 @@ module fgui {
                 }
             }
 
-            if (this._modalLayer.parent != null)
+            if (this._modalLayer.parent)
                 this.removeChild(this._modalLayer);
         }
 
@@ -397,27 +384,15 @@ module fgui {
             GRoot.mouseY = evt.stageY;
             GRoot.touchDown = true;
 
-            var mc: egret.DisplayObject = <egret.DisplayObject><any>(evt.target);
-            while (mc != this.displayObject.stage && mc != null) {
-                if (mc["$owner"]) {
-                    var gg: GObject = <GObject><any>mc["$owner"];
-                    if (gg.touchable && gg.focusable) {
-                        this.setFocus(gg);
-                        break;
-                    }
-                }
-                mc = mc.parent;
-            }
-
-            if (this._tooltipWin != null)
+            if (this._tooltipWin)
                 this.hideTooltips();
 
             this._justClosedPopups.length = 0;
             if (this._popupStack.length > 0) {
-                mc = <egret.DisplayObject><any>(evt.target);
-                while (mc != this.displayObject.stage && mc != null) {
+                let mc = <egret.DisplayObject>(evt.target);
+                while (mc != this.displayObject.stage && mc) {
                     if (mc["$owner"]) {
-                        var pindex: number = this._popupStack.indexOf(<GObject><any>mc["$owner"]);
+                        var pindex: number = this._popupStack.indexOf(<GObject>mc["$owner"]);
                         if (pindex != -1) {
                             for (var i: number = this._popupStack.length - 1; i > pindex; i--) {
                                 var popup: GObject = this._popupStack.pop();

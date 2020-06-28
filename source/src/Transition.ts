@@ -6,40 +6,36 @@ module fgui {
         private _owner: GComponent;
         private _ownerBaseX: number = 0;
         private _ownerBaseY: number = 0;
-        private _items: Array<TransitionItem>;
+        private _items: Array<Item>;
         private _totalTimes: number = 0;
         private _totalTasks: number = 0;
-        private _playing: boolean = false;
-        private _paused: boolean = false;
+        private _playing: boolean;
+        private _paused: boolean;
         private _onComplete: Function;
         private _onCompleteCaller: any;
         private _onCompleteParam: any;
         private _options: number = 0;
-        private _reversed: boolean = false;
+        private _reversed: boolean;
         private _totalDuration: number = 0;
-        private _autoPlay: boolean = false;
+        private _autoPlay: boolean;
         private _autoPlayTimes: number = 1;
         private _autoPlayDelay: number = 0;
         private _timeScale: number = 1;
         private _startTime: number = 0;
         private _endTime: number = 0;
 
-        public static OPTION_IGNORE_DISPLAY_CONTROLLER: number = 1;
-        public static OPTION_AUTO_STOP_DISABLED: number = 2;
-        public static OPTION_AUTO_STOP_AT_END: number = 4;
-
         public constructor(owner: GComponent) {
             this._owner = owner;
-            this._items = new Array<TransitionItem>();
+            this._items = new Array<Item>();
         }
 
-        public play(onComplete: Function = null, onCompleteObj: any = null, onCompleteParam: any = null,
-            times: number = 1, delay: number = 0, startTime: number = 0, endTime: number = -1) {
+        public play(onComplete?: () => void, onCompleteObj?: any, onCompleteParam?: any,
+            times?: number, delay?: number, startTime?: number, endTime?: number) {
             this._play(onComplete, onCompleteObj, onCompleteParam, times, delay, startTime, endTime, false);
         }
 
-        public playReverse(onComplete: Function = null, onCompleteObj: any = null, onCompleteParam: any = null,
-            times: number = 1, delay: number = 0) {
+        public playReverse(onComplete?: () => void, onCompleteObj?: any, onCompleteParam?: any,
+            times?: number, delay?: number) {
             this._play(onComplete, onCompleteObj, onCompleteParam, times, delay, 0, -1, true);
         }
 
@@ -47,7 +43,9 @@ module fgui {
             this._totalTimes = value;
         }
 
-        public setAutoPlay(value: boolean, times: number = -1, delay: number = 0) {
+        public setAutoPlay(value: boolean, times?: number, delay?: number) {
+            if (times == undefined) times = -1;
+            if (delay == undefined) delay = 0;
             if (this._autoPlay != value) {
                 this._autoPlay = value;
                 this._autoPlayTimes = times;
@@ -64,8 +62,13 @@ module fgui {
             }
         }
 
-        private _play(onComplete: Function = null, onCompleteCaller: any = null, onCompleteParam: any = null,
-            times: number = 1, delay: number = 0, startTime: number = 0, endTime: number = -1, reversed: boolean = false) {
+        private _play(onComplete: Function, onCompleteCaller: any, onCompleteParam: any,
+            times: number, delay: number, startTime: number, endTime: number, reversed: boolean) {
+            if (times == undefined) times = 1;
+            if (delay == undefined) delay = 0;
+            if (startTime == undefined) startTime = 0;
+            if (endTime == undefined) endTime = -1;
+
             this.stop(true, true);
 
             this._totalTimes = times;
@@ -80,8 +83,8 @@ module fgui {
 
             var cnt: number = this._items.length;
             for (var i: number = 0; i < cnt; i++) {
-                var item: TransitionItem = this._items[i];
-                if (item.target == null) {
+                var item: Item = this._items[i];
+                if (!item.target) {
                     if (item.targetId)
                         item.target = this._owner.getChildById(item.targetId);
                     else
@@ -90,17 +93,17 @@ module fgui {
                 else if (item.target != this._owner && item.target.parent != this._owner)
                     item.target = null;
 
-                if (item.target != null && item.type == TransitionActionType.Transition) {
-                    var trans: Transition = (item.target as GComponent).getTransition(item.value.transName);
+                if (item.target && item.type == ActionType.Transition) {
+                    var trans: Transition = (<GComponent>item.target).getTransition(item.value.transName);
                     if (trans == this)
                         trans = null;
-                    if (trans != null) {
+                    if (trans) {
                         if (item.value.playTimes == 0) //stop
                         {
                             var j: number;
                             for (j = i - 1; j >= 0; j--) {
-                                var item2: TransitionItem = this._items[j];
-                                if (item2.type == TransitionActionType.Transition) {
+                                var item2: Item = this._items[j];
+                                if (item2.type == ActionType.Transition) {
                                     if (item2.value.trans == trans) {
                                         item2.value.stopTime = item.time - item2.time;
                                         break;
@@ -125,7 +128,8 @@ module fgui {
                 GTween.delayedCall(delay).onComplete(this.onDelayedPlay, this);
         }
 
-        public stop(setToComplete: boolean = true, processCallback: boolean = false): void {
+        public stop(setToComplete?: boolean, processCallback?: boolean): void {
+            if (setToComplete == undefined) setToComplete = true;
             if (!this._playing)
                 return;
 
@@ -144,8 +148,8 @@ module fgui {
             var cnt: number = this._items.length;
             if (this._reversed) {
                 for (var i: number = cnt - 1; i >= 0; i--) {
-                    var item: TransitionItem = this._items[i];
-                    if (item.target == null)
+                    var item: Item = this._items[i];
+                    if (!item.target)
                         continue;
 
                     this.stopItem(item, setToComplete);
@@ -154,7 +158,7 @@ module fgui {
             else {
                 for (i = 0; i < cnt; i++) {
                     item = this._items[i];
-                    if (item.target == null)
+                    if (!item.target)
                         continue;
 
                     this.stopItem(item, setToComplete);
@@ -166,17 +170,17 @@ module fgui {
             }
         }
 
-        private stopItem(item: TransitionItem, setToComplete: boolean): void {
+        private stopItem(item: Item, setToComplete: boolean): void {
             if (item.displayLockToken != 0) {
                 item.target.releaseDisplayLock(item.displayLockToken);
                 item.displayLockToken = 0;
             }
 
-            if (item.tweener != null) {
+            if (item.tweener) {
                 item.tweener.kill(setToComplete);
                 item.tweener = null;
 
-                if (item.type == TransitionActionType.Shake && !setToComplete) //震动必须归位，否则下次就越震越远了。
+                if (item.type == ActionType.Shake && !setToComplete) //震动必须归位，否则下次就越震越远了。
                 {
                     item.target._gearLocked = true;
                     item.target.setXY(item.target.x - item.value.lastOffsetX, item.target.y - item.value.lastOffsetY);
@@ -184,9 +188,9 @@ module fgui {
                 }
             }
 
-            if (item.type == TransitionActionType.Transition) {
+            if (item.type == ActionType.Transition) {
                 var trans: Transition = item.value.trans;
-                if (trans != null)
+                if (trans)
                     trans.stop(setToComplete, false);
             }
         }
@@ -197,20 +201,20 @@ module fgui {
 
             this._paused = paused;
             var tweener: GTweener = GTween.getTween(this);
-            if (tweener != null)
+            if (tweener)
                 tweener.setPaused(paused);
 
             var cnt: number = this._items.length;
             for (var i: number = 0; i < cnt; i++) {
-                var item: TransitionItem = this._items[i];
-                if (item.target == null)
+                var item: Item = this._items[i];
+                if (!item.target)
                     continue;
 
-                if (item.type == TransitionActionType.Transition) {
-                    if (item.value.trans != null)
+                if (item.type == ActionType.Transition) {
+                    if (item.value.trans)
                         item.value.trans.setPaused(paused);
                 }
-                else if (item.type == TransitionActionType.Animation) {
+                else if (item.type == ActionType.Animation) {
                     if (paused) {
                         item.value.flag = item.target.getProp(ObjectPropID.Playing);
                         item.target.setProp(ObjectPropID.Playing, false);
@@ -219,7 +223,7 @@ module fgui {
                         item.target.setProp(ObjectPropID.Playing, item.value.flag);
                 }
 
-                if (item.tweener != null)
+                if (item.tweener)
                     item.tweener.setPaused(paused);
             }
         }
@@ -230,15 +234,15 @@ module fgui {
 
             var cnt: number = this._items.length;
             for (var i: number = 0; i < cnt; i++) {
-                var item: TransitionItem = this._items[i];
-                if (item.tweener != null) {
+                var item: Item = this._items[i];
+                if (item.tweener) {
                     item.tweener.kill();
                     item.tweener = null;
                 }
 
                 item.target = null;
                 item.hook = null;
-                if (item.tweenConfig != null)
+                if (item.tweenConfig)
                     item.tweenConfig.endHook = null;
             }
 
@@ -255,98 +259,98 @@ module fgui {
 
         public setValue(label: string, ...args): void {
             var cnt: number = this._items.length;
-            var value: any;
+            var value: TValue;
             for (var i: number = 0; i < cnt; i++) {
-                var item: TransitionItem = this._items[i];
+                var item: Item = this._items[i];
                 if (item.label == label) {
-                    if (item.tweenConfig != null)
+                    if (item.tweenConfig)
                         value = item.tweenConfig.startValue;
                     else
                         value = item.value;
                 }
-                else if (item.tweenConfig != null && item.tweenConfig.endLabel == label) {
+                else if (item.tweenConfig && item.tweenConfig.endLabel == label) {
                     value = item.tweenConfig.endValue;
                 }
                 else
                     continue;
 
                 switch (item.type) {
-                    case TransitionActionType.XY:
-                    case TransitionActionType.Size:
-                    case TransitionActionType.Pivot:
-                    case TransitionActionType.Scale:
-                    case TransitionActionType.Skew:
+                    case ActionType.XY:
+                    case ActionType.Size:
+                    case ActionType.Pivot:
+                    case ActionType.Scale:
+                    case ActionType.Skew:
                         value.b1 = true;
                         value.b2 = true;
                         value.f1 = parseFloat(args[0]);
                         value.f2 = parseFloat(args[1]);
                         break;
 
-                    case TransitionActionType.Alpha:
+                    case ActionType.Alpha:
                         value.f1 = parseFloat(args[0]);
                         break;
 
-                    case TransitionActionType.Rotation:
+                    case ActionType.Rotation:
                         value.f1 = parseFloat(args[0]);
                         break;
 
-                    case TransitionActionType.Color:
+                    case ActionType.Color:
                         value.f1 = parseFloat(args[0]);
                         break;
 
-                    case TransitionActionType.Animation:
+                    case ActionType.Animation:
                         value.frame = parseInt(args[0]);
                         if (args.length > 1)
                             value.playing = args[1];
                         break;
 
-                    case TransitionActionType.Visible:
+                    case ActionType.Visible:
                         value.visible = args[0];
                         break;
 
-                    case TransitionActionType.Sound:
+                    case ActionType.Sound:
                         value.sound = args[0];
                         if (args.length > 1)
                             value.volume = parseFloat(args[1]);
                         break;
 
-                    case TransitionActionType.Transition:
+                    case ActionType.Transition:
                         value.transName = args[0];
                         if (args.length > 1)
                             value.playTimes = parseInt(args[1]);
                         break;
 
-                    case TransitionActionType.Shake:
+                    case ActionType.Shake:
                         value.amplitude = parseFloat(args[0]);
                         if (args.length > 1)
                             value.duration = parseFloat(args[1]);
                         break;
 
-                    case TransitionActionType.ColorFilter:
+                    case ActionType.ColorFilter:
                         value.f1 = parseFloat(args[0]);
                         value.f2 = parseFloat(args[1]);
                         value.f3 = parseFloat(args[2]);
                         value.f4 = parseFloat(args[3]);
                         break;
 
-                    case TransitionActionType.Text:
-                    case TransitionActionType.Icon:
+                    case ActionType.Text:
+                    case ActionType.Icon:
                         value.text = args[0];
                         break;
                 }
             }
         }
 
-        public setHook(label: string, callback: Function, caller: any): void {
+        public setHook(label: string, callback: Function, caller?: any): void {
             var cnt: number = this._items.length;
             for (var i: number = 0; i < cnt; i++) {
-                var item: TransitionItem = this._items[i];
+                var item: Item = this._items[i];
                 if (item.label == label) {
                     item.hook = callback;
                     item.hookCaller = caller;
                     break;
                 }
-                else if (item.tweenConfig != null && item.tweenConfig.endLabel == label) {
+                else if (item.tweenConfig && item.tweenConfig.endLabel == label) {
                     item.tweenConfig.endHook = callback;
                     item.tweenConfig.endHookCaller = caller;
                     break;
@@ -357,10 +361,10 @@ module fgui {
         public clearHooks(): void {
             var cnt: number = this._items.length;
             for (var i: number = 0; i < cnt; i++) {
-                var item: TransitionItem = this._items[i];
+                var item: Item = this._items[i];
                 item.hook = null;
                 item.hookCaller = null;
-                if (item.tweenConfig != null) {
+                if (item.tweenConfig) {
                     item.tweenConfig.endHook = null;
                     item.tweenConfig.endHookCaller = null;
                 }
@@ -370,9 +374,9 @@ module fgui {
         public setTarget(label: string, newTarget: GObject): void {
             var cnt: number = this._items.length;
             for (var i: number = 0; i < cnt; i++) {
-                var item: TransitionItem = this._items[i];
+                var item: Item = this._items[i];
                 if (item.label == label) {
-                    item.targetId = (newTarget == this._owner || newTarget == null) ? "" : newTarget.id;
+                    item.targetId = (newTarget == this._owner || !newTarget) ? "" : newTarget.id;
                     if (this._playing) {
                         if (item.targetId.length > 0)
                             item.target = this._owner.getChildById(item.targetId);
@@ -388,8 +392,8 @@ module fgui {
         public setDuration(label: string, value: number): void {
             var cnt: number = this._items.length;
             for (var i: number = 0; i < cnt; i++) {
-                var item: TransitionItem = this._items[i];
-                if (item.tweenConfig != null && item.label == label)
+                var item: Item = this._items[i];
+                if (item.tweenConfig && item.label == label)
                     item.tweenConfig.duration = value;
             }
         }
@@ -397,10 +401,10 @@ module fgui {
         public getLabelTime(label: string): number {
             var cnt: number = this._items.length;
             for (var i: number = 0; i < cnt; i++) {
-                var item: TransitionItem = this._items[i];
+                var item: Item = this._items[i];
                 if (item.label == label)
                     return item.time;
-                else if (item.tweenConfig != null && item.tweenConfig.endLabel == label)
+                else if (item.tweenConfig && item.tweenConfig.endLabel == label)
                     return item.time + item.tweenConfig.duration;
             }
 
@@ -417,15 +421,15 @@ module fgui {
                 if (this._playing) {
                     var cnt: number = this._items.length;
                     for (var i: number = 0; i < cnt; i++) {
-                        var item: TransitionItem = this._items[i];
-                        if (item.tweener != null)
+                        var item: Item = this._items[i];
+                        if (item.tweener)
                             item.tweener.setTimeScale(value);
-                        else if (item.type == TransitionActionType.Transition) {
-                            if (item.value.trans != null)
+                        else if (item.type == ActionType.Transition) {
+                            if (item.value.trans)
                                 item.value.trans.timeScale = value;
                         }
-                        else if (item.type == TransitionActionType.Animation) {
-                            if (item.target != null)
+                        else if (item.type == ActionType.Animation) {
+                            if (item.target)
                                 item.target.setProp(ObjectPropID.TimeScale, value);
                         }
                     }
@@ -439,9 +443,9 @@ module fgui {
                 return;
 
             for (var i: number = 0; i < cnt; i++) {
-                var item: TransitionItem = this._items[i];
-                if (item.type == TransitionActionType.XY && item.targetId == targetId) {
-                    if (item.tweenConfig != null) {
+                var item: Item = this._items[i];
+                if (item.type == ActionType.XY && item.targetId == targetId) {
+                    if (item.tweenConfig) {
                         item.tweenConfig.startValue.f1 += dx;
                         item.tweenConfig.startValue.f2 += dy;
                         item.tweenConfig.endValue.f1 += dx;
@@ -461,8 +465,8 @@ module fgui {
         }
 
         public onOwnerRemovedFromStage(): void {
-            if ((this._options & Transition.OPTION_AUTO_STOP_DISABLED) == 0)
-                this.stop((this._options & Transition.OPTION_AUTO_STOP_AT_END) != 0 ? true : false, false);
+            if ((this._options & OPTION_AUTO_STOP_DISABLED) == 0)
+                this.stop((this._options & OPTION_AUTO_STOP_AT_END) != 0 ? true : false, false);
         }
 
         private onDelayedPlay(): void {
@@ -470,11 +474,11 @@ module fgui {
 
             this._playing = this._totalTasks > 0;
             if (this._playing) {
-                if ((this._options & Transition.OPTION_IGNORE_DISPLAY_CONTROLLER) != 0) {
+                if ((this._options & OPTION_IGNORE_DISPLAY_CONTROLLER) != 0) {
                     var cnt: number = this._items.length;
                     for (var i: number = 0; i < cnt; i++) {
-                        var item: TransitionItem = this._items[i];
-                        if (item.target != null && item.target != this._owner)
+                        var item: Item = this._items[i];
+                        if (item.target && item.target != this._owner)
                             item.displayLockToken = item.target.addDisplayLock();
                     }
                 }
@@ -497,17 +501,17 @@ module fgui {
             this._totalTasks = 0;
 
             var cnt: number = this._items.length;
-            var item: TransitionItem;
+            var item: Item;
             var needSkipAnimations: boolean = false;
             var i: number;
 
             if (!this._reversed) {
                 for (i = 0; i < cnt; i++) {
                     item = this._items[i];
-                    if (item.target == null)
+                    if (!item.target)
                         continue;
 
-                    if (item.type == TransitionActionType.Animation && this._startTime != 0 && item.time <= this._startTime) {
+                    if (item.type == ActionType.Animation && this._startTime != 0 && item.time <= this._startTime) {
                         needSkipAnimations = true;
                         item.value.flag = false;
                     }
@@ -518,7 +522,7 @@ module fgui {
             else {
                 for (i = cnt - 1; i >= 0; i--) {
                     item = this._items[i];
-                    if (item.target == null)
+                    if (!item.target)
                         continue;
 
                     this.playItem(item);
@@ -529,9 +533,9 @@ module fgui {
                 this.skipAnimations();
         }
 
-        private playItem(item: TransitionItem): void {
+        private playItem(item: Item): void {
             var time: number;
-            if (item.tweenConfig != null) {
+            if (item.tweenConfig) {
                 if (this._reversed)
                     time = (this._totalDuration - item.time - item.tweenConfig.duration);
                 else
@@ -552,23 +556,23 @@ module fgui {
                     item.value.b2 = startValue.b2 || endValue.b2;
 
                     switch (item.type) {
-                        case TransitionActionType.XY:
-                        case TransitionActionType.Size:
-                        case TransitionActionType.Scale:
-                        case TransitionActionType.Skew:
+                        case ActionType.XY:
+                        case ActionType.Size:
+                        case ActionType.Scale:
+                        case ActionType.Skew:
                             item.tweener = GTween.to2(startValue.f1, startValue.f2, endValue.f1, endValue.f2, item.tweenConfig.duration);
                             break;
 
-                        case TransitionActionType.Alpha:
-                        case TransitionActionType.Rotation:
+                        case ActionType.Alpha:
+                        case ActionType.Rotation:
                             item.tweener = GTween.to(startValue.f1, endValue.f1, item.tweenConfig.duration);
                             break;
 
-                        case TransitionActionType.Color:
+                        case ActionType.Color:
                             item.tweener = GTween.toColor(startValue.f1, endValue.f1, item.tweenConfig.duration);
                             break;
 
-                        case TransitionActionType.ColorFilter:
+                        case ActionType.ColorFilter:
                             item.tweener = GTween.to4(startValue.f1, startValue.f2, startValue.f3, startValue.f4,
                                 endValue.f1, endValue.f2, endValue.f3, endValue.f4, item.tweenConfig.duration);
                             break;
@@ -589,7 +593,7 @@ module fgui {
                     this._totalTasks++;
                 }
             }
-            else if (item.type == TransitionActionType.Shake) {
+            else if (item.type == ActionType.Shake) {
                 if (this._reversed)
                     time = (this._totalDuration - item.time - item.value.duration);
                 else
@@ -636,14 +640,14 @@ module fgui {
             var frame: number;
             var playStartTime: number;
             var playTotalTime: number;
-            var value: any;
+            var value: TValue;
             var target: GObject;
-            var item: TransitionItem;
+            var item: Item;
 
             var cnt: number = this._items.length;
             for (var i: number = 0; i < cnt; i++) {
                 item = this._items[i];
-                if (item.type != TransitionActionType.Animation || item.time > this._startTime)
+                if (item.type != ActionType.Animation || item.time > this._startTime)
                     continue;
 
                 value = item.value;
@@ -657,7 +661,7 @@ module fgui {
 
                 for (var j: number = i; j < cnt; j++) {
                     item = this._items[j];
-                    if (item.type != TransitionActionType.Animation || item.target != target || item.time > this._startTime)
+                    if (item.type != ActionType.Animation || item.target != target || item.time > this._startTime)
                         continue;
 
                     value = item.value;
@@ -697,7 +701,7 @@ module fgui {
         }
 
         private onDelayedPlayItem(tweener: GTweener): void {
-            var item: TransitionItem = tweener.target as TransitionItem;
+            var item: Item = <Item>tweener.target;
             item.tweener = null;
             this._totalTasks--;
 
@@ -708,9 +712,9 @@ module fgui {
         }
 
         private onTweenStart(tweener: GTweener): void {
-            var item: TransitionItem = <TransitionItem>tweener.target;
+            var item: Item = <Item>tweener.target;
 
-            if (item.type == TransitionActionType.XY || item.type == TransitionActionType.Size) //位置和大小要到start才最终确认起始值
+            if (item.type == ActionType.XY || item.type == ActionType.Size) //位置和大小要到start才最终确认起始值
             {
                 var startValue: TValue;
                 var endValue: TValue;
@@ -724,7 +728,7 @@ module fgui {
                     endValue = item.tweenConfig.endValue;
                 }
 
-                if (item.type == TransitionActionType.XY) {
+                if (item.type == ActionType.XY) {
                     if (item.target != this._owner) {
                         if (!startValue.b1)
                             tweener.startValue.x = item.target.x;
@@ -780,12 +784,12 @@ module fgui {
         }
 
         private onTweenUpdate(tweener: GTweener): void {
-            var item: TransitionItem = tweener.target as TransitionItem;
+            var item: Item = <Item>tweener.target;
             switch (item.type) {
-                case TransitionActionType.XY:
-                case TransitionActionType.Size:
-                case TransitionActionType.Scale:
-                case TransitionActionType.Skew:
+                case ActionType.XY:
+                case ActionType.Size:
+                case ActionType.Scale:
+                case ActionType.Skew:
                     item.value.f1 = tweener.value.x;
                     item.value.f2 = tweener.value.y;
                     if (item.tweenConfig.path) {
@@ -794,23 +798,23 @@ module fgui {
                     }
                     break;
 
-                case TransitionActionType.Alpha:
-                case TransitionActionType.Rotation:
+                case ActionType.Alpha:
+                case ActionType.Rotation:
                     item.value.f1 = tweener.value.x;
                     break;
 
-                case TransitionActionType.Color:
+                case ActionType.Color:
                     item.value.f1 = tweener.value.color;
                     break;
 
-                case TransitionActionType.ColorFilter:
+                case ActionType.ColorFilter:
                     item.value.f1 = tweener.value.x;
                     item.value.f2 = tweener.value.y;
                     item.value.f3 = tweener.value.z;
                     item.value.f4 = tweener.value.w;
                     break;
 
-                case TransitionActionType.Shake:
+                case ActionType.Shake:
                     item.value.offsetX = tweener.deltaValue.x;
                     item.value.offsetY = tweener.deltaValue.y;
                     break;
@@ -820,7 +824,7 @@ module fgui {
         }
 
         private onTweenComplete(tweener: GTweener): void {
-            var item: TransitionItem = tweener.target as TransitionItem;
+            var item: Item = <Item>tweener.target;
             item.tweener = null;
             this._totalTasks--;
 
@@ -830,15 +834,15 @@ module fgui {
             this.checkAllComplete();
         }
 
-        private onPlayTransCompleted(item: TransitionItem): void {
+        private onPlayTransCompleted(item: Item): void {
             this._totalTasks--;
 
             this.checkAllComplete();
         }
 
-        private callHook(item: TransitionItem, tweenEnd: boolean): void {
+        private callHook(item: Item, tweenEnd: boolean): void {
             if (tweenEnd) {
-                if (item.tweenConfig != null && item.tweenConfig.endHook != null)
+                if (item.tweenConfig && item.tweenConfig.endHook)
                     item.tweenConfig.endHook.call(item.tweenConfig.endHookCaller);
             }
             else {
@@ -861,8 +865,8 @@ module fgui {
 
                         var cnt: number = this._items.length;
                         for (var i: number = 0; i < cnt; i++) {
-                            var item: TransitionItem = this._items[i];
-                            if (item.target != null && item.displayLockToken != 0) {
+                            var item: Item = this._items[i];
+                            if (item.target && item.displayLockToken != 0) {
                                 item.target.releaseDisplayLock(item.displayLockToken);
                                 item.displayLockToken = 0;
                             }
@@ -882,12 +886,12 @@ module fgui {
             }
         }
 
-        private applyValue(item: TransitionItem): void {
+        private applyValue(item: Item): void {
             item.target._gearLocked = true;
             var value: any = item.value;
 
             switch (item.type) {
-                case TransitionActionType.XY:
+                case ActionType.XY:
                     if (item.target == this._owner) {
                         if (value.b1 && value.b2)
                             item.target.setXY(value.f1 + this._ownerBaseX, value.f2 + this._ownerBaseY);
@@ -917,7 +921,7 @@ module fgui {
                     }
                     break;
 
-                case TransitionActionType.Size:
+                case ActionType.Size:
                     if (!value.b1)
                         value.f1 = item.target.width;
                     if (!value.b2)
@@ -925,45 +929,45 @@ module fgui {
                     item.target.setSize(value.f1, value.f2);
                     break;
 
-                case TransitionActionType.Pivot:
+                case ActionType.Pivot:
                     item.target.setPivot(value.f1, value.f2, item.target.pivotAsAnchor);
                     break;
 
-                case TransitionActionType.Alpha:
+                case ActionType.Alpha:
                     item.target.alpha = value.f1;
                     break;
 
-                case TransitionActionType.Rotation:
+                case ActionType.Rotation:
                     item.target.rotation = value.f1;
                     break;
 
-                case TransitionActionType.Scale:
+                case ActionType.Scale:
                     item.target.setScale(value.f1, value.f2);
                     break;
 
-                case TransitionActionType.Skew:
+                case ActionType.Skew:
                     item.target.setSkew(value.f1, value.f2);
                     break;
 
-                case TransitionActionType.Color:
+                case ActionType.Color:
                     item.target.setProp(ObjectPropID.Color, value.f1);
                     break;
 
-                case TransitionActionType.Animation:
+                case ActionType.Animation:
                     if (value.frame >= 0)
                         item.target.setProp(ObjectPropID.Frame, value.frame);
                     item.target.setProp(ObjectPropID.Playing, value.playing);
                     item.target.setProp(ObjectPropID.TimeScale, this._timeScale);
                     break;
 
-                case TransitionActionType.Visible:
+                case ActionType.Visible:
                     item.target.visible = value.visible;
                     break;
 
-                case TransitionActionType.Transition:
+                case ActionType.Transition:
                     if (this._playing) {
                         var trans: Transition = value.trans;
-                        if (trans != null) {
+                        if (trans) {
                             this._totalTasks++;
                             var startTime: number = this._startTime > item.time ? (this._startTime - item.time) : 0;
                             var endTime: number = this._endTime >= 0 ? (this._endTime - item.time) : -1;
@@ -975,9 +979,9 @@ module fgui {
                     }
                     break;
 
-                case TransitionActionType.Sound:
+                case ActionType.Sound:
                     if (this._playing && item.time >= this._startTime) {
-                        if (value.audioClip == null) {
+                        if (!value.audioClip) {
                             var pi: PackageItem = UIPackage.getItemByURL(value.sound);
                             if (pi)
                                 value.audioClip = <egret.Sound>pi.owner.getItemAsset(pi);
@@ -987,22 +991,22 @@ module fgui {
                     }
                     break;
 
-                case TransitionActionType.Shake:
+                case ActionType.Shake:
                     item.target.setXY(item.target.x - value.lastOffsetX + value.offsetX, item.target.y - value.lastOffsetY + value.offsetY);
                     value.lastOffsetX = value.offsetX;
                     value.lastOffsetY = value.offsetY;
                     break;
 
-                case TransitionActionType.ColorFilter:
+                case ActionType.ColorFilter:
                     {
                         ToolSet.setColorFilter(item.target.displayObject, [value.f1, value.f2, value.f3, value.f4]);
                         break;
                     }
-                case TransitionActionType.Text:
+                case ActionType.Text:
                     item.target.text = value.text;
                     break;
 
-                case TransitionActionType.Icon:
+                case ActionType.Icon:
                     item.target.icon = value.text;
                     break;
             }
@@ -1024,7 +1028,7 @@ module fgui {
 
                 buffer.seek(curPos, 0);
 
-                var item: TransitionItem = new TransitionItem(buffer.readByte());
+                var item: Item = new Item(buffer.readByte());
                 this._items[i] = item;
 
                 item.time = buffer.readFloat();
@@ -1098,75 +1102,79 @@ module fgui {
             }
         }
 
-        private decodeValue(item: TransitionItem, buffer: ByteBuffer, value: any): void {
+        private decodeValue(item: Item, buffer: ByteBuffer, value: TValue): void {
             switch (item.type) {
-                case TransitionActionType.XY:
-                case TransitionActionType.Size:
-                case TransitionActionType.Pivot:
-                case TransitionActionType.Skew:
+                case ActionType.XY:
+                case ActionType.Size:
+                case ActionType.Pivot:
+                case ActionType.Skew:
                     value.b1 = buffer.readBool();
                     value.b2 = buffer.readBool();
                     value.f1 = buffer.readFloat();
                     value.f2 = buffer.readFloat();
 
-                    if (buffer.version >= 2 && item.type == TransitionActionType.XY)
+                    if (buffer.version >= 2 && item.type == ActionType.XY)
                         value.b3 = buffer.readBool(); //percent
                     break;
 
-                case TransitionActionType.Alpha:
-                case TransitionActionType.Rotation:
+                case ActionType.Alpha:
+                case ActionType.Rotation:
                     value.f1 = buffer.readFloat();
                     break;
 
-                case TransitionActionType.Scale:
+                case ActionType.Scale:
                     value.f1 = buffer.readFloat();
                     value.f2 = buffer.readFloat();
                     break;
 
-                case TransitionActionType.Color:
+                case ActionType.Color:
                     value.f1 = buffer.readColor();
                     break;
 
-                case TransitionActionType.Animation:
+                case ActionType.Animation:
                     value.playing = buffer.readBool();
                     value.frame = buffer.readInt();
                     break;
 
-                case TransitionActionType.Visible:
+                case ActionType.Visible:
                     value.visible = buffer.readBool();
                     break;
 
-                case TransitionActionType.Sound:
+                case ActionType.Sound:
                     value.sound = buffer.readS();
                     value.volume = buffer.readFloat();
                     break;
 
-                case TransitionActionType.Transition:
+                case ActionType.Transition:
                     value.transName = buffer.readS();
                     value.playTimes = buffer.readInt();
                     break;
 
-                case TransitionActionType.Shake:
+                case ActionType.Shake:
                     value.amplitude = buffer.readFloat();
                     value.duration = buffer.readFloat();
                     break;
 
-                case TransitionActionType.ColorFilter:
+                case ActionType.ColorFilter:
                     value.f1 = buffer.readFloat();
                     value.f2 = buffer.readFloat();
                     value.f3 = buffer.readFloat();
                     value.f4 = buffer.readFloat();
                     break;
 
-                case TransitionActionType.Text:
-                case TransitionActionType.Icon:
+                case ActionType.Text:
+                case ActionType.Icon:
                     value.text = buffer.readS();
                     break;
             }
         }
     }
 
-    class TransitionActionType {
+    const OPTION_IGNORE_DISPLAY_CONTROLLER: number = 1;
+    const OPTION_AUTO_STOP_DISABLED: number = 2;
+    const OPTION_AUTO_STOP_AT_END: number = 4;
+
+    class ActionType {
         public static XY: number = 0;
         public static Size: number = 1;
         public static Scale: number = 2;
@@ -1186,61 +1194,24 @@ module fgui {
         public static Unknown: number = 16;
     }
 
-    class TransitionItem {
+    class Item {
         public time: number;
         public targetId: string;
         public type: number;
-        public tweenConfig: TweenConfig;
-        public label: string;
-        public value: any;
-        public hook: Function;
-        public hookCaller: any;
+        public tweenConfig?: TweenConfig;
+        public label?: string;
+        public value?: TValue;
+        public hook?: Function;
+        public hookCaller?: any;
 
-        public tweener: GTweener;
+        public tweener?: GTweener;
         public target: GObject;
         public displayLockToken: number;
 
         public constructor(type: number) {
             this.type = type;
-
-            switch (type) {
-                case TransitionActionType.XY:
-                case TransitionActionType.Size:
-                case TransitionActionType.Scale:
-                case TransitionActionType.Pivot:
-                case TransitionActionType.Skew:
-                case TransitionActionType.Alpha:
-                case TransitionActionType.Rotation:
-                case TransitionActionType.Color:
-                case TransitionActionType.ColorFilter:
-                    this.value = new TValue();
-                    break;
-
-                case TransitionActionType.Animation:
-                    this.value = new TValue_Animation();
-                    break;
-
-                case TransitionActionType.Shake:
-                    this.value = new TValue_Shake();
-                    break;
-
-                case TransitionActionType.Sound:
-                    this.value = new TValue_Sound();
-                    break;
-
-                case TransitionActionType.Transition:
-                    this.value = new TValue_Transition();
-                    break;
-
-                case TransitionActionType.Visible:
-                    this.value = new TValue_Visible();
-                    break;
-
-                case TransitionActionType.Text:
-                case TransitionActionType.Icon:
-                    this.value = new TValue_Text();
-                    break;
-            }
+            this.value = {};
+            this.displayLockToken = 0;
         }
     }
 
@@ -1248,70 +1219,53 @@ module fgui {
         public duration: number = 0;
         public easeType: number;
         public repeat: number = 0;
-        public yoyo: boolean = false;
+        public yoyo?: boolean;
         public startValue: TValue;
         public endValue: TValue;
         public endLabel: string;
-        public endHook: Function;
-        public endHookCaller: any;
-        public path: GPath;
+        public endHook?: Function;
+        public endHookCaller?: any;
+        public path?: GPath;
 
         public constructor() {
             this.easeType = EaseType.QuadOut;
-            this.startValue = new TValue();
-            this.endValue = new TValue();
+            this.startValue = { b1: true, b2: true };
+            this.endValue = { b1: true, b2: true };
         }
     }
 
-    class TValue_Visible {
-        public visible: boolean;
-    }
+    interface TValue {
+        visible?: boolean;
 
-    class TValue_Animation {
-        public frame: number;
-        public playing: boolean;
-        public flag: boolean;
-    }
+        frame?: number;
+        playing?: boolean;
+        flag?: boolean;
 
-    class TValue_Sound {
-        public sound: string;
-        public volume: number;
-        public audioClip: egret.Sound;
-    }
+        sound?: string;
+        volume?: number;
+        audioClip?: egret.Sound;
 
-    class TValue_Transition {
-        public transName: string;
-        public playTimes: number;
-        public trans: Transition;
-        public stopTime: number;
-    }
+        transName?: string;
+        playTimes?: number;
+        trans?: Transition;
+        stopTime?: number;
 
-    class TValue_Shake {
-        public amplitude: number;
-        public duration: number;
-        public offsetX: number;
-        public offsetY: number;
-        public lastOffsetX: number;
-        public lastOffsetY: number;
-    }
+        amplitude?: number;
+        duration?: number;
+        offsetX?: number;
+        offsetY?: number;
+        lastOffsetX?: number;
+        lastOffsetY?: number;
 
-    class TValue_Text {
-        public text: string;
-    }
+        text?: string;
 
-    class TValue {
-        public f1: number;
-        public f2: number;
-        public f3: number;
-        public f4: number;
+        f1?: number;
+        f2?: number;
+        f3?: number;
+        f4?: number;
 
-        public b1: boolean;
-        public b2: boolean;
-        public b3: boolean;
-
-        public constructor() {
-            this.f1 = this.f2 = this.f3 = this.f4 = 0;
-            this.b1 = this.b2 = true;
-        }
+        b1?: boolean;
+        b2?: boolean;
+        b3?: boolean;
     }
 }

@@ -10,18 +10,11 @@ module fgui {
         private _fill: LoaderFillType;
         private _shrinkOnly: boolean;
         private _showErrorSign: boolean;
-
         private _contentItem: PackageItem;
-        private _contentSourceWidth: number = 0;
-        private _contentSourceHeight: number = 0;
-        private _contentWidth: number = 0;
-        private _contentHeight: number = 0;
-
         private _container: UIContainer;
         private _content: MovieClip;
-        private _errorSign: GObject;
-        private _content2: GComponent;
-
+        private _errorSign?: GObject;
+        private _content2?: GComponent;
         private _updatingLayout: boolean;
 
         private static _errorSignPool: GObjectPool = new GObjectPool();
@@ -46,12 +39,12 @@ module fgui {
         }
 
         public dispose(): void {
-            if (this._contentItem == null) {
+            if (!this._contentItem) {
                 var texture: egret.Texture = this._content.texture;
-                if (texture != null)
+                if (texture)
                     this.freeExternal(texture);
             }
-            if (this._content2 != null)
+            if (this._content2)
                 this._content2.dispose();
             super.dispose();
         }
@@ -194,15 +187,47 @@ module fgui {
 
             this._content.texture = value;
 
-            if (value != null) {
-                this._contentSourceWidth = value.textureWidth;
-                this._contentSourceHeight = value.textureHeight;
+            if (value) {
+                this.sourceWidth = value.textureWidth;
+                this.sourceHeight = value.textureHeight;
             }
             else {
-                this._contentSourceWidth = this._contentHeight = 0;
+                this.sourceWidth = this.sourceHeight = 0;
             }
 
             this.updateLayout();
+        }
+
+        public get fillMethod(): number {
+            return this._content.fillMethod;
+        }
+
+        public set fillMethod(value: number) {
+            this._content.fillMethod = value;
+        }
+
+        public get fillOrigin(): number {
+            return this._content.fillOrigin;
+        }
+
+        public set fillOrigin(value: number) {
+            this._content.fillOrigin = value;
+        }
+
+        public get fillClockwise(): boolean {
+            return this._content.fillClockwise;
+        }
+
+        public set fillClockwise(value: boolean) {
+            this._content.fillClockwise = value;
+        }
+
+        public get fillAmount(): number {
+            return this._content.fillAmount;
+        }
+
+        public set fillAmount(value: number) {
+            this._content.fillAmount = value;
         }
 
         protected loadContent(): void {
@@ -219,15 +244,15 @@ module fgui {
 
         protected loadFromPackage(itemURL: string) {
             this._contentItem = UIPackage.getItemByURL(itemURL);
-            if (this._contentItem != null) {
+            if (this._contentItem) {
                 this._contentItem = this._contentItem.getBranch();
-                this._contentSourceWidth = this._contentItem.width;
-                this._contentSourceHeight = this._contentItem.height;
+                this.sourceWidth = this._contentItem.width;
+                this.sourceHeight = this._contentItem.height;
                 this._contentItem = this._contentItem.getHighResolution();
                 this._contentItem.load();
 
                 if (this._autoSize)
-                    this.setSize(this._contentSourceWidth, this._contentSourceHeight);
+                    this.setSize(this.sourceWidth, this.sourceHeight);
 
                 if (this._contentItem.type == PackageItemType.Image) {
                     if (this._contentItem.texture == null) {
@@ -282,8 +307,8 @@ module fgui {
             this._content.texture = texture;
             this._content.scale9Grid = null;
             this._content.fillMode = egret.BitmapFillMode.SCALE;
-            this._contentSourceWidth = texture.textureWidth;
-            this._contentSourceHeight = texture.textureHeight;
+            this.sourceWidth = texture.textureWidth;
+            this.sourceHeight = texture.textureHeight;
             this.updateLayout();
         }
 
@@ -308,14 +333,14 @@ module fgui {
                 }
             }
 
-            if (this._errorSign != null) {
+            if (this._errorSign) {
                 this._errorSign.setSize(this.width, this.height);
                 this._container.addChild(this._errorSign.displayObject);
             }
         }
 
         private clearErrorState(): void {
-            if (this._errorSign != null) {
+            if (this._errorSign) {
                 this._container.removeChild(this._errorSign.displayObject);
                 GLoader._errorSignPool.returnObject(this._errorSign);
                 this._errorSign = null;
@@ -332,28 +357,28 @@ module fgui {
                 return;
             }
 
-            this._contentWidth = this._contentSourceWidth;
-            this._contentHeight = this._contentSourceHeight;
+            let cw = this.sourceWidth;
+            let ch = this.sourceHeight;
 
             if (this._autoSize) {
                 this._updatingLayout = true;
-                if (this._contentWidth == 0)
-                    this._contentWidth = 50;
-                if (this._contentHeight == 0)
-                    this._contentHeight = 30;
-                this.setSize(this._contentWidth, this._contentHeight);
+                if (cw == 0)
+                    cw = 50;
+                if (ch == 0)
+                    ch = 30;
+                this.setSize(cw, ch);
                 this._updatingLayout = false;
 
-                if (this._contentWidth == this._width && this._contentHeight == this._height) {
-                    if (this._content2 != null) {
+                if (cw == this._width && ch == this._height) {
+                    if (this._content2) {
                         this._content2.setXY(0, 0);
                         this._content2.setScale(1, 1);
                     }
                     else {
                         this._content.x = 0;
                         this._content.y = 0;
-                        this._content.width = this._contentWidth;
-                        this._content.height = this._contentHeight;
+                        this._content.width = cw;
+                        this._content.height = ch;
                     }
                     return;
                 }
@@ -361,8 +386,8 @@ module fgui {
 
             var sx: number = 1, sy: number = 1;
             if (this._fill != LoaderFillType.None) {
-                sx = this.width / this._contentSourceWidth;
-                sy = this.height / this._contentSourceHeight;
+                sx = this.width / this.sourceWidth;
+                sy = this.height / this.sourceHeight;
 
                 if (sx != 1 || sy != 1) {
                     if (this._fill == LoaderFillType.ScaleMatchHeight)
@@ -387,34 +412,34 @@ module fgui {
                         if (sy > 1)
                             sy = 1;
                     }
-                    this._contentWidth = this._contentSourceWidth * sx;
-                    this._contentHeight = this._contentSourceHeight * sy;
+                    cw = this.sourceWidth * sx;
+                    ch = this.sourceHeight * sy;
                 }
             }
 
-            if (this._content2 != null) {
+            if (this._content2) {
                 this._content2.setScale(sx, sy);
             }
             else {
-                this._content.width = this._contentWidth;
-                this._content.height = this._contentHeight;
+                this._content.width = cw;
+                this._content.height = ch;
             }
 
             var nx: number, ny: number;
             if (this._align == AlignType.Center)
-                nx = Math.floor((this.width - this._contentWidth) / 2);
+                nx = Math.floor((this.width - cw) / 2);
             else if (this._align == AlignType.Right)
-                nx = this.width - this._contentWidth;
+                nx = this.width - cw;
             else
                 nx = 0;
             if (this._verticalAlign == VertAlignType.Middle)
-                ny = Math.floor((this.height - this._contentHeight) / 2);
+                ny = Math.floor((this.height - ch) / 2);
             else if (this._verticalAlign == VertAlignType.Bottom)
-                ny = this.height - this._contentHeight;
+                ny = this.height - ch;
             else
                 ny = 0;
 
-            if (this._content2 != null)
+            if (this._content2)
                 this._content2.setXY(nx, ny);
             else {
                 this._content.x = nx;
@@ -425,13 +450,13 @@ module fgui {
         private clearContent(): void {
             this.clearErrorState();
 
-            if (this._contentItem == null && this._content.texture != null) {
+            if (!this._contentItem && this._content.texture) {
                 this.freeExternal(this._content.texture);
             }
             this._content.texture = null;
             this._content.frames = null;
 
-            if (this._content2 != null) {
+            if (this._content2) {
                 this._container.removeChild(this._content2.displayObject);
                 this._content2.dispose();
                 this._content2 = null;
@@ -441,7 +466,7 @@ module fgui {
 
         protected handleSizeChanged(): void {
             super.handleSizeChanged();
-            
+
             if (!this._updatingLayout)
                 this.updateLayout();
         }

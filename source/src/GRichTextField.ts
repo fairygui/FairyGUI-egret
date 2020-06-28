@@ -12,11 +12,11 @@ module fgui {
 
         protected updateTextFieldText(): void {
             var text2: string = this._text;
-            if (this._templateVars != null)
+            if (this._templateVars)
                 text2 = this.parseTemplate(text2);
             let arr;
             if (this._ubbEnabled)
-                arr = GTextField._htmlParser.parser(ToolSet.parseUBB(text2));
+                arr = GTextField._htmlParser.parser(UBBParser.inst.parse(text2));
             else
                 arr = GTextField._htmlParser.parser(text2);
             if (this._underline) {

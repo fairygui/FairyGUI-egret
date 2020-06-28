@@ -3,8 +3,8 @@ namespace fgui {
         private _layout: number = 0;
         private _lineGap: number = 0;
         private _columnGap: number = 0;
-        private _excludeInvisibles: boolean;
-        private _autoSizeDisabled: boolean;
+        private _excludeInvisibles?: boolean;
+        private _autoSizeDisabled?: boolean;
         private _mainGridIndex: number = -1;
         private _mainGridMinSize: number = 50;
 
@@ -26,16 +26,10 @@ namespace fgui {
             super.dispose();
         }
 
-        /**
-         * @see GroupLayout
-         */
         public get layout(): number {
             return this._layout;
         }
 
-        /**
-         * @see GroupLayout
-         */
         public set layout(value: number) {
             if (this._layout != value) {
                 this._layout = value;
@@ -106,15 +100,15 @@ namespace fgui {
             }
         }
 
-        public setBoundsChangedFlag(positionChangedOnly: boolean = false): void {
-            if (this._updating == 0 && this._parent != null) {
+        public setBoundsChangedFlag(positionChangedOnly?: boolean): void {
+            if (this._updating == 0 && this._parent) {
                 if (!positionChangedOnly)
                     this._percentReady = false;
 
                 if (!this._boundsChanged) {
                     this._boundsChanged = true;
                     if (this._layout != GroupLayoutType.None)
-                    GTimers.inst.callLater(this.ensureBoundsCorrect, this);
+                        GTimers.inst.callLater(this.ensureBoundsCorrect, this);
                 }
             }
         }
@@ -451,5 +445,4 @@ namespace fgui {
                 this.handleVisibleChanged();
         }
     }
-
 }

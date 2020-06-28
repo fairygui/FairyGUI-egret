@@ -16,13 +16,13 @@ module fgui {
         private _sound: string;
         private _soundVolumeScale: number;
         private _buttonController: Controller;
-        private _relatedController: Controller;
+        private _relatedController?: Controller;
         private _relatedPageId: string;
         private _changeStateOnClick: boolean;
-        private _linkedPopup: GObject;
+        private _linkedPopup?: GObject;
         private _downEffect: number;
         private _downEffectValue: number;
-        private _downScaled: boolean;
+        private _downScaled?: boolean;
 
         private _down: boolean;
         private _over: boolean;
@@ -54,7 +54,7 @@ module fgui {
         public set icon(value: string) {
             this._icon = value;
             value = (this._selected && this._selectedIcon) ? this._selectedIcon : this._icon;
-            if (this._iconObject != null)
+            if (this._iconObject)
                 this._iconObject.icon = value;
             this.updateGear(7);
         }
@@ -66,7 +66,7 @@ module fgui {
         public set selectedIcon(value: string) {
             this._selectedIcon = value;
             value = (this._selected && this._selectedIcon) ? this._selectedIcon : this._icon;
-            if (this._iconObject != null)
+            if (this._iconObject)
                 this._iconObject.icon = value;
         }
 
@@ -101,7 +101,7 @@ module fgui {
 
         public get titleColor(): number {
             var tf: GTextField = this.getTextField();
-            if (tf != null)
+            if (tf)
                 return tf.color;
             else
                 return 0;
@@ -109,13 +109,13 @@ module fgui {
 
         public set titleColor(value: number) {
             var tf: GTextField = this.getTextField();
-            if (tf != null)
+            if (tf)
                 tf.color = value;
         }
 
         public get titleFontSize(): number {
             var tf: GTextField = this.getTextField();
-            if (tf != null)
+            if (tf)
                 return tf.fontSize;
             else
                 return 0;
@@ -123,7 +123,7 @@ module fgui {
 
         public set titleFontSize(value: number) {
             var tf: GTextField = this.getTextField();
-            if (tf != null)
+            if (tf)
                 tf.fontSize = value;
         }
         public get sound(): string {
@@ -164,7 +164,7 @@ module fgui {
                     this._titleObject.text = this._selected ? this._selectedTitle : this._title;
                 if (this._selectedIcon) {
                     var str: string = this._selected ? this._selectedIcon : this._icon;
-                    if (this._iconObject != null)
+                    if (this._iconObject)
                         this._iconObject.icon = str;
                 }
                 if (this._relatedController
@@ -231,11 +231,9 @@ module fgui {
 
         public getTextField(): GTextField {
             if (this._titleObject instanceof GTextField)
-                return (<GTextField>this._titleObject);
-            else if (this._titleObject instanceof GLabel)
-                return (<GLabel>this._titleObject).getTextField();
-            else if (this._titleObject instanceof GButton)
-                return (<GButton>this._titleObject).getTextField();
+                return this._titleObject;
+            else if ((this._titleObject instanceof GLabel) || (this._titleObject instanceof GButton))
+                return this._titleObject.getTextField();
             else
                 return null;
         }
@@ -248,7 +246,7 @@ module fgui {
             this.removeEventListener(StateChangeEvent.CHANGED, listener, thisObj);
         }
 
-        public fireClick(downEffect: boolean = true): void {
+        public fireClick(downEffect?: boolean): void {
             if (downEffect && this._mode == ButtonMode.Common) {
                 this.setState(GButton.OVER);
                 GTimers.inst.add(100, 1, function () { this.setState(GButton.DOWN); }, this);
@@ -384,9 +382,9 @@ module fgui {
             this._buttonController = this.getController("button");
             this._titleObject = this.getChild("title");
             this._iconObject = this.getChild("icon");
-            if (this._titleObject != null)
+            if (this._titleObject)
                 this._title = this._titleObject.text;
-            if (this._iconObject != null)
+            if (this._iconObject)
                 this._icon = this._iconObject.icon;
 
             if (this._mode == ButtonMode.Common)
@@ -439,27 +437,27 @@ module fgui {
             this.selected = buffer.readBool();
         }
 
-        private __rollover(evt: egret.TouchEvent): void {
-            if (!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
-                return;
+        // private __rollover(evt: egret.TouchEvent): void {
+        //     if (!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
+        //         return;
 
-            this._over = true;
-            if (this._down)
-                return;
+        //     this._over = true;
+        //     if (this._down)
+        //         return;
 
-            this.setState(this._selected ? GButton.SELECTED_OVER : GButton.OVER);
-        }
+        //     this.setState(this._selected ? GButton.SELECTED_OVER : GButton.OVER);
+        // }
 
-        private __rollout(evt: egret.TouchEvent): void {
-            if (!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
-                return;
+        // private __rollout(evt: egret.TouchEvent): void {
+        //     if (!this._buttonController || !this._buttonController.hasPage(GButton.OVER))
+        //         return;
 
-            this._over = false;
-            if (this._down)
-                return;
+        //     this._over = false;
+        //     if (this._down)
+        //         return;
 
-            this.setState(this._selected ? GButton.DOWN : GButton.UP);
-        }
+        //     this.setState(this._selected ? GButton.DOWN : GButton.UP);
+        // }
 
         private __mousedown(evt: egret.TouchEvent): void {
             this._down = true;
@@ -472,9 +470,9 @@ module fgui {
                     this.setState(GButton.DOWN);
             }
 
-            if (this._linkedPopup != null) {
+            if (this._linkedPopup) {
                 if (this._linkedPopup instanceof Window)
-                    (<Window><any>(this._linkedPopup)).toggleStatus();
+                    this._linkedPopup.toggleStatus();
                 else
                     this.root.togglePopup(this._linkedPopup, this);
             }
@@ -485,7 +483,7 @@ module fgui {
                 GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__mouseup, this);
                 this._down = false;
 
-                if (this.displayObject == null)
+                if (!this.displayObject)
                     return;
 
                 if (this._mode == ButtonMode.Common) {

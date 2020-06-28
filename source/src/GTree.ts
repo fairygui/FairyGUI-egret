@@ -9,8 +9,6 @@ namespace fgui {
         private _rootNode: GTreeNode;
         private _expandedStatusInEvt: boolean;
 
-        private static helperIntList: number[] = new Array<number>();
-
         constructor() {
             super();
 
@@ -52,12 +50,12 @@ namespace fgui {
             if (!result)
                 result = new Array<GTreeNode>();
 
-            GTree.helperIntList.length = 0;
-            super.getSelection(GTree.helperIntList);
-            var cnt: number = GTree.helperIntList.length;
+            s_list.length = 0;
+            super.getSelection(s_list);
+            var cnt: number = s_list.length;
             var ret: Array<GTreeNode> = new Array<GTreeNode>();
             for (var i: number = 0; i < cnt; i++) {
-                var node: GTreeNode = this.getChildAt(GTree.helperIntList[i])._treeNode;
+                var node: GTreeNode = this.getChildAt(s_list[i])._treeNode;
                 ret.push(node);
             }
             return ret;
@@ -65,7 +63,7 @@ namespace fgui {
 
         public selectNode(node: GTreeNode, scrollItToView?: boolean): void {
             var parentNode: GTreeNode = node.parent;
-            while (parentNode != null && parentNode != this._rootNode) {
+            while (parentNode && parentNode != this._rootNode) {
                 parentNode.expanded = true;
                 parentNode = parentNode.parent;
             }
@@ -111,8 +109,8 @@ namespace fgui {
         }
 
         private createCell(node: GTreeNode): void {
-            var child: GComponent = this.getFromPool(node._resURL ? node._resURL : this.defaultItem) as GComponent;
-            if (!child)
+            var child: GObject = this.getFromPool(node._resURL ? node._resURL : this.defaultItem);
+            if (!(child instanceof GComponent))
                 throw new Error("cannot create tree node object.");
 
             child._treeNode = node;
@@ -195,7 +193,7 @@ namespace fgui {
             if (cc)
                 cc.selectedIndex = 1;
 
-            if (node._cell.parent != null)
+            if (node._cell.parent)
                 this.checkChildren(node, this.getChildIndex(node._cell));
         }
 
@@ -218,7 +216,7 @@ namespace fgui {
             if (cc)
                 cc.selectedIndex = 0;
 
-            if (node._cell.parent != null)
+            if (node._cell.parent)
                 this.hideFolderNode(node);
         }
 
@@ -288,8 +286,8 @@ namespace fgui {
         }
 
         private removeNode(node: GTreeNode): void {
-            if (node._cell != null) {
-                if (node._cell.parent != null)
+            if (node._cell) {
+                if (node._cell.parent)
                     this.removeChild(node._cell);
                 this.returnToPool(node._cell);
                 node._cell._treeNode = null;
@@ -392,4 +390,6 @@ namespace fgui {
             }
         }
     }
+
+    var s_list: number[] = new Array<number>();
 }

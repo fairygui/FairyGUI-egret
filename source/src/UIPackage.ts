@@ -1,34 +1,36 @@
 
 module fgui {
 
+    type PackageDependency = { id: string, name: string };
+
     export class UIPackage {
         private _id: string;
         private _name: string;
         private _items: Array<PackageItem>;
-        private _itemsById: any;
-        private _itemsByName: any;
+        private _itemsById: { [index: string]: PackageItem };
+        private _itemsByName: { [index: string]: PackageItem };
         private _resKey: string;
         private _customId: string;
-        private _sprites: any;
+        private _sprites: { [index: string]: AtlasSprite };
 
-        private _dependencies: Array<any>;
+        private _dependencies: Array<PackageDependency>;
         private _branches: Array<string>;
         public _branchIndex: number;
 
         //internal
         public static _constructing: number = 0;
 
-        private static _instById: any = {};
-        private static _instByName: any = {};
+        private static _instById: { [index: string]: UIPackage } = {};
+        private static _instByName: { [index: string]: UIPackage } = {};
         private static _branch: string = "";
-        private static _vars: any = {};
+        private static _vars: { [index: string]: string } = {};
 
         public constructor() {
             this._items = new Array<PackageItem>();
             this._itemsById = {};
             this._itemsByName = {};
             this._sprites = {};
-            this._dependencies = Array<any>();
+            this._dependencies = Array<PackageDependency>();
             this._branches = Array<string>();
             this._branchIndex = -1;
         }
@@ -47,11 +49,11 @@ module fgui {
             }
         }
 
-        public static getVar(key: string): any {
+        public static getVar(key: string): string {
             return UIPackage._vars[key];
         }
 
-        public static setVar(key: string, value: any) {
+        public static setVar(key: string, value: string) {
             UIPackage._vars[key] = value;
         }
 
@@ -132,7 +134,7 @@ module fgui {
                 delete UIPackage._instById[pkg._customId];
         }
 
-        public static createObject(pkgName: string, resName: string, userClass?: any): GObject {
+        public static createObject(pkgName: string, resName: string, userClass?: new () => GObject): GObject {
             var pkg: UIPackage = UIPackage.getByName(pkgName);
             if (pkg)
                 return pkg.createObject(resName, userClass);
@@ -140,7 +142,7 @@ module fgui {
                 return null;
         }
 
-        public static createObjectFromURL(url: string, userClass?: any): GObject {
+        public static createObjectFromURL(url: string, userClass?: new () => GObject): GObject {
             var pi: PackageItem = UIPackage.getItemByURL(url);
             if (pi)
                 return pi.owner.internalCreateObject(pi, userClass);
@@ -374,8 +376,7 @@ module fgui {
                 var itemId: string = buffer.readS();
                 pi = this._itemsById[buffer.readS()];
 
-                var sprite: AtlasSprite = new AtlasSprite();
-                sprite.atlas = pi;
+                let sprite: AtlasSprite = { atlas: pi, rect: new egret.Rectangle(), offset: new egret.Point(), originalSize: new egret.Point() };
                 sprite.rect.x = buffer.readInt();
                 sprite.rect.y = buffer.readInt();
                 sprite.rect.width = buffer.readInt();
@@ -447,7 +448,7 @@ module fgui {
                 UIPackage._instById[this._customId] = this;
         }
 
-        public createObject(resName: string, userClass?: any): GObject {
+        public createObject(resName: string, userClass?: new () => GObject): GObject {
             var pi: PackageItem = this._itemsByName[resName];
             if (pi)
                 return this.internalCreateObject(pi, userClass);
@@ -455,7 +456,7 @@ module fgui {
                 return null;
         }
 
-        public internalCreateObject(item: PackageItem, userClass?: any): GObject {
+        public internalCreateObject(item: PackageItem, userClass?: new () => GObject): GObject {
             var g: GObject = UIObjectFactory.newObject(item, userClass);
 
             if (g == null)
@@ -475,7 +476,7 @@ module fgui {
             return this._itemsByName[resName];
         }
 
-        public getItemAssetByName(resName: string): any {
+        public getItemAssetByName(resName: string): Object {
             var pi: PackageItem = this._itemsByName[resName];
             if (pi == null) {
                 throw "Resource not found -" + resName;
@@ -484,13 +485,13 @@ module fgui {
             return this.getItemAsset(pi);
         }
 
-        public getItemAsset(item: PackageItem): any {
+        public getItemAsset(item: PackageItem): Object {
             switch (item.type) {
                 case PackageItemType.Image:
                     if (!item.decoded) {
                         item.decoded = true;
                         var sprite: AtlasSprite = this._sprites[item.id];
-                        if (sprite != null) {
+                        if (sprite) {
                             var atlas: egret.Texture = <egret.Texture>this.getItemAsset(sprite.atlas);
                             item.texture = new egret.Texture();
                             item.texture.bitmapData = atlas.bitmapData;
@@ -562,7 +563,6 @@ module fgui {
             item.frames = Array<Frame>(frameCount);
 
             var spriteId: string;
-            var frame: Frame;
             var sprite: AtlasSprite;
             var fx: number;
             var fy: number;
@@ -571,7 +571,7 @@ module fgui {
                 var nextPos: number = buffer.readShort();
                 nextPos += buffer.position;
 
-                frame = new Frame();
+                let frame: Frame = {};
                 fx = buffer.readInt();
                 fy = buffer.readInt();
                 buffer.readInt();//width
@@ -610,20 +610,20 @@ module fgui {
             var xadvance: number = buffer.readInt();
             var lineHeight: number = buffer.readInt();
 
-            var mainTexture: egret.Texture = null;
+            var mainTexture: egret.Texture;
             var mainSprite: AtlasSprite = this._sprites[item.id];
-            if (mainSprite != null)
+            if (mainSprite)
                 mainTexture = <egret.Texture>(this.getItemAsset(mainSprite.atlas));
 
             buffer.seek(0, 1);
 
-            var bg: BMGlyph = null;
+            var bg: BMGlyph;
             var cnt: number = buffer.readInt();
             for (var i: number = 0; i < cnt; i++) {
                 var nextPos: number = buffer.readShort();
                 nextPos += buffer.position;
 
-                bg = new BMGlyph();
+                bg = {};
                 var ch: string = buffer.readChar();
                 font.glyphs[ch] = bg;
 
@@ -668,7 +668,7 @@ module fgui {
                         if (xadvance == 0)
                             bg.advance = bg.x + bg.width;
                         else
-                        
+
                             bg.advance = xadvance;
                     }
 
@@ -681,17 +681,11 @@ module fgui {
         }
     }
 
-    class AtlasSprite {
-        public atlas: PackageItem;
-        public rect: egret.Rectangle;
-        public offset: egret.Point;
-        public originalSize: egret.Point;
-        public rotated: boolean;
-
-        public constructor() {
-            this.rect = new egret.Rectangle();
-            this.offset = new egret.Point();
-            this.originalSize = new egret.Point();
-        }
+    interface AtlasSprite {
+        atlas: PackageItem;
+        rect: egret.Rectangle;
+        offset: egret.Point;
+        originalSize: egret.Point;
+        rotated?: boolean;
     }
 }

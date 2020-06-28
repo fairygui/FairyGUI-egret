@@ -10,14 +10,14 @@ module fgui {
 
         private _items: Array<string>;
         private _values: Array<string>;
-        private _icons: Array<string>;
+        private _icons?: Array<string>;
 
         private _visibleItemCount: number = 0;
         private _itemsUpdated: boolean;
         private _selectedIndex: number = 0;
         private _buttonController: Controller;
         private _popupDirection: number = PopupDirection.Auto;
-        private _selectionController: Controller;
+        private _selectionController?: Controller;
 
         private _over: boolean;
         private _down: boolean;
@@ -59,7 +59,7 @@ module fgui {
 
         public get titleColor(): number {
             var tf: GTextField = this.getTextField();
-            if (tf != null)
+            if (tf)
                 return tf.color;
             else
                 return 0;
@@ -67,13 +67,13 @@ module fgui {
 
         public set titleColor(value: number) {
             var tf: GTextField = this.getTextField();
-            if (tf != null)
+            if (tf)
                 tf.color = value;
         }
 
         public get titleFontSize(): number {
             var tf: GTextField = this.getTextField();
-            if (tf != null)
+            if (tf)
                 return tf.fontSize;
             else
                 return 0;
@@ -81,7 +81,7 @@ module fgui {
 
         public set titleFontSize(value: number) {
             var tf: GTextField = this.getTextField();
-            if (tf != null)
+            if (tf)
                 tf.fontSize = value;
         }
 
@@ -117,12 +117,12 @@ module fgui {
                     this._selectedIndex = 0;
 
                 this.text = this._items[this._selectedIndex];
-                if (this._icons != null && this._selectedIndex < this._icons.length)
+                if (this._icons && this._selectedIndex < this._icons.length)
                     this.icon = this._icons[this._selectedIndex];
             }
             else {
                 this.text = "";
-                if (this._icons != null)
+                if (this._icons)
                     this.icon = null;
                 this._selectedIndex = -1;
             }
@@ -135,7 +135,7 @@ module fgui {
 
         public set icons(value: Array<string>) {
             this._icons = value;
-            if (this._icons != null && this._selectedIndex != -1 && this._selectedIndex < this._icons.length)
+            if (this._icons && this._selectedIndex != -1 && this._selectedIndex < this._icons.length)
                 this.icon = this._icons[this._selectedIndex];
         }
 
@@ -161,12 +161,12 @@ module fgui {
             this._selectedIndex = val;
             if (this._selectedIndex >= 0 && this._selectedIndex < this._items.length) {
                 this.text = this._items[this._selectedIndex];
-                if (this._icons != null && this._selectedIndex < this._icons.length)
+                if (this._icons && this._selectedIndex < this._icons.length)
                     this.icon = this._icons[this._selectedIndex];
             }
             else {
                 this.text = "";
-                if (this._icons != null)
+                if (this._icons)
                     this.icon = null;
             }
 
@@ -194,11 +194,9 @@ module fgui {
 
         public getTextField(): GTextField {
             if (this._titleObject instanceof GTextField)
-                return (<GTextField>this._titleObject);
-            else if (this._titleObject instanceof GLabel)
-                return (<GLabel>this._titleObject).getTextField();
-            else if (this._titleObject instanceof GButton)
-                return (<GButton>this._titleObject).getTextField();
+                return this._titleObject;
+            else if ((this._titleObject instanceof GLabel) || (this._titleObject instanceof GButton))
+                return this._titleObject.getTextField();
             else
                 return null;
         }
@@ -306,7 +304,7 @@ module fgui {
         }
 
         private updateSelectionController(): void {
-            if (this._selectionController != null && !this._selectionController.changing
+            if (this._selectionController && !this._selectionController.changing
                 && this._selectedIndex < this._selectionController.pageCount) {
                 var c: Controller = this._selectionController;
                 this._selectionController = null;
@@ -392,7 +390,7 @@ module fgui {
                     var item: GObject = this._list.addItemFromPool();
                     item.name = i < this._values.length ? this._values[i] : "";
                     item.text = this._items[i];
-                    item.icon = (this._icons != null && i < this._icons.length) ? this._icons[i] : null;
+                    item.icon = (this._icons && i < this._icons.length) ? this._icons[i] : null;
                 }
                 this._list.resizeToFit(this._visibleItemCount);
             }
@@ -400,13 +398,7 @@ module fgui {
             this.dropdown.width = this.width;
             this._list.ensureBoundsCorrect();
 
-            var downward: any = null;
-            if (this._popupDirection == PopupDirection.Down)
-                downward = true;
-            else if (this._popupDirection == PopupDirection.Up)
-                downward = false;
-
-            this.root.togglePopup(this.dropdown, this, downward);
+            this.root.togglePopup(this.dropdown, this, this._popupDirection);
             if (this.dropdown.parent)
                 this.setState(GButton.DOWN);
         }
@@ -424,31 +416,31 @@ module fgui {
 
         private __clickItem2(index: number): void {
             if (this.dropdown.parent instanceof GRoot)
-                (<GRoot><any>(this.dropdown.parent)).hidePopup();
+                this.dropdown.parent.hidePopup();
 
             this._selectedIndex = -1;
             this.selectedIndex = index;
             this.dispatchEvent(new StateChangeEvent(StateChangeEvent.CHANGED));
         }
 
-        private __rollover(evt: egret.TouchEvent): void {
-            this._over = true;
-            if (this._down || this.dropdown && this.dropdown.parent)
-                return;
+        // private __rollover(evt: egret.TouchEvent): void {
+        //     this._over = true;
+        //     if (this._down || this.dropdown && this.dropdown.parent)
+        //         return;
 
-            this.setState(GButton.OVER);
-        }
+        //     this.setState(GButton.OVER);
+        // }
 
-        private __rollout(evt: egret.TouchEvent): void {
-            this._over = false;
-            if (this._down || this.dropdown && this.dropdown.parent)
-                return;
+        // private __rollout(evt: egret.TouchEvent): void {
+        //     this._over = false;
+        //     if (this._down || this.dropdown && this.dropdown.parent)
+        //         return;
 
-            this.setState(GButton.UP);
-        }
+        //     this.setState(GButton.UP);
+        // }
 
         private __mousedown(evt: egret.TouchEvent): void {
-            if ((evt.target instanceof egret.TextField) && (<egret.TextField><any>evt.target).type == egret.TextFieldType.INPUT)
+            if ((evt.target instanceof egret.TextField) && evt.target.type == egret.TextFieldType.INPUT)
                 return;
 
             this._down = true;

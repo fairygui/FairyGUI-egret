@@ -8,8 +8,7 @@ module fgui {
 
         public static CLICK: string = "___itemClick";
 
-        public constructor(type: string, itemObject: GObject = null,
-            stageX: number = 0, stageY: number = 0) {
+        public constructor(type: string, itemObject: GObject = null, stageX: number = 0, stageY: number = 0) {
             super(type, false);
             this.itemObject = itemObject;
             this.stageX = stageX;

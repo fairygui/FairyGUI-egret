@@ -1,9 +1,11 @@
 module fgui {
     export class TranslationHelper {
-        public static strings: Object = null;
+        public static strings: { [index: string]: { [index: string]: string } };
 
         public static loadFromXML(source: string): void {
-            TranslationHelper.strings = {};
+            let strings = {};
+            TranslationHelper.strings = strings;
+
             var xml: any = egret.XML.parse(source);
             var nodes: any = xml.children;
             var length1: number = nodes.length;
@@ -18,10 +20,10 @@ module fgui {
 
                     var key2: string = key.substr(0, i);
                     var key3: string = key.substr(i + 1);
-                    var col: any = TranslationHelper.strings[key2];
+                    var col: any = strings[key2];
                     if (!col) {
                         col = {};
-                        TranslationHelper.strings[key2] = col;
+                        strings[key2] = col;
                     }
                     col[key3] = text;
                 }
@@ -32,7 +34,7 @@ module fgui {
             if (TranslationHelper.strings == null)
                 return;
 
-            var compStrings: Object = TranslationHelper.strings[item.owner.id + item.id];
+            var compStrings: { [index: string]: string } = TranslationHelper.strings[item.owner.id + item.id];
             if (compStrings == null)
                 return;
 

@@ -1,12 +1,9 @@
 ///<reference path="Image.ts"/>
 
 module fgui {
-    export class Frame {
-        public addDelay: number = 0;
-        public texture: egret.Texture;
-
-        public constructor() {
-        }
+    export interface Frame {
+        addDelay?: number;
+        texture?: egret.Texture;
     }
 
     export class MovieClip extends Image {
@@ -26,7 +23,7 @@ module fgui {
         private _status: number = 0; //0-none, 1-next loop, 2-ending, 3-ended
         private _callback: Function;
         private _callbackObj: any;
-        private _smoothing: boolean = true;
+        private _smoothing: boolean;
 
         private _frameElapsed: number = 0; //当前帧延迟
         private _reversed: boolean = false;
@@ -49,7 +46,7 @@ module fgui {
             this.scale9Grid = null;
             this.fillMode = egret.BitmapFillMode.SCALE;
 
-            if (this._frames != null)
+            if (this._frames)
                 this._frameCount = this._frames.length;
             else
                 this._frameCount = 0;
@@ -81,7 +78,7 @@ module fgui {
 
         public set frame(value: number) {
             if (this._frame != value) {
-                if (this._frames != null && value >= this._frameCount)
+                if (this._frames && value >= this._frameCount)
                     value = this._frameCount - 1;
 
                 this._frame = value;
@@ -180,9 +177,12 @@ module fgui {
         }
 
         //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
-        public setPlaySettings(start: number = 0, end: number = -1,
-            times: number = 0, endAt: number = -1,
-            endCallback: Function = null, callbackObj: any = null): void {
+        public setPlaySettings(start?: number, end?: number, times?: number, endAt?: number, endCallback?: Function, callbackObj?: any): void {
+            if (start == undefined) start = 0;
+            if (end == undefined) end = -1;
+            if (times == undefined) times = 0;
+            if (endAt == undefined) endAt = -1;
+            
             this._start = start;
             this._end = end;
             if (this._end == -1 || this._end > this._frameCount - 1)

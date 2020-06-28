@@ -220,13 +220,12 @@ module fgui {
             this._gripObject.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_END, this.__gripMouseUp, this);
         }
 
-        private static sSilderHelperPoint: egret.Point = new egret.Point();
         private __gripMouseMove(evt: egret.TouchEvent): void {
             if (!this.canDrag) {
                 return;
             }
 
-            var pt: egret.Point = this.globalToLocal(evt.stageX, evt.stageY, GSlider.sSilderHelperPoint);
+            var pt: egret.Point = this.globalToLocal(evt.stageX, evt.stageY, s_vec2);
             var deltaX: number = pt.x - this._clickPos.x;
             var deltaY: number = pt.y - this._clickPos.y;
             if (this._reverse) {
@@ -251,7 +250,7 @@ module fgui {
             if (!this.changeOnClick)
                 return;
 
-            var pt: egret.Point = this._gripObject.globalToLocal(evt.stageX, evt.stageY, GSlider.sSilderHelperPoint);
+            var pt: egret.Point = this._gripObject.globalToLocal(evt.stageX, evt.stageY, s_vec2);
             var percent: number = ToolSet.clamp01((this._value - this._min) / (this._max - this._min));
             var delta: number;
             if (this._barObjectH)
@@ -265,4 +264,6 @@ module fgui {
             this.updateWithPercent(percent, true);
         }
     }
+
+    var s_vec2: egret.Point = new egret.Point();
 }

@@ -1,4 +1,4 @@
-module fgui {
+namespace fgui {
     export class TweenValue {
         public x: number;
         public y: number;

@@ -7,7 +7,7 @@ namespace fgui {
         public scaleX: number;
         public scaleY: number;
 
-        constructor(data: PixelHitTestData, offsetX: number = 0, offsetY: number = 0) {
+        constructor(data: PixelHitTestData, offsetX: number, offsetY: number) {
             this._data = data;
             this.offsetX = offsetX;
             this.offsetY = offsetY;

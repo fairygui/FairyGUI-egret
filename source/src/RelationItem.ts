@@ -100,7 +100,7 @@ module fgui {
         }
 
         public dispose(): void {
-            if (this._target != null) {
+            if (this._target) {
                 this.releaseRefTarget(this._target);
                 this._target = null;
             }
@@ -144,7 +144,7 @@ module fgui {
 
                 this._owner.updateGearFromRelations(1, ox, oy);
 
-                if (this._owner.parent != null) {
+                if (this._owner.parent) {
                     var len: number = this._owner.parent._transitions.length;
                     if (len > 0) {
                         for (var i: number = 0; i < len; ++i) {
@@ -550,7 +550,7 @@ module fgui {
 
                 this._owner.updateGearFromRelations(1, ox, oy);
 
-                if (this._owner.parent != null) {
+                if (this._owner.parent) {
                     var len: number = this._owner.parent._transitions.length;
                     if (len > 0) {
                         for (var i: number = 0; i < len; ++i) {
@@ -586,7 +586,7 @@ module fgui {
 
                 this._owner.updateGearFromRelations(1, ox, oy);
 
-                if (this._owner.parent != null) {
+                if (this._owner.parent) {
                     var len: number = this._owner.parent._transitions.length;
                     if (len > 0) {
                         for (var i: number = 0; i < len; ++i) {

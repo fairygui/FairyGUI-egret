@@ -78,7 +78,7 @@ module fgui {
         }
 
         public set texture(value: egret.Texture) {
-            if (value != null) {
+            if (value) {
                 this.sourceWidth = value.textureWidth;
                 this.sourceHeight = value.textureHeight;
             }

@@ -1,19 +1,18 @@
 
 module fgui {
+    var _nextPageId: number = 0;
 
     export class Controller extends egret.EventDispatcher {
         private _selectedIndex: number = 0;
         private _previousIndex: number = 0;
         private _pageIds: Array<string>;
         private _pageNames: Array<string>;
-        private _actions: Array<ControllerAction>;
+        private _actions?: Array<ControllerAction>;
 
         public name: string;
         public parent: GComponent;
-        public autoRadioGroupDepth: boolean;
-        public changing: boolean = false;
-
-        private static _nextPageId: number = 0;
+        public autoRadioGroupDepth?: boolean;
+        public changing: boolean;
 
         public constructor() {
             super();
@@ -48,7 +47,7 @@ module fgui {
         }
 
         //功能和设置selectedIndex一样，但不会触发事件
-        public setSelectedIndex(value: number = 0): void {
+        public setSelectedIndex(value: number): void {
             if (this._selectedIndex != value) {
                 if (value > this._pageIds.length - 1)
                     throw "index out of bounds: " + value;
@@ -98,16 +97,16 @@ module fgui {
             return this._pageIds.length;
         }
 
-        public getPageName(index: number = 0): string {
+        public getPageName(index: number): string {
             return this._pageNames[index];
         }
 
-        public addPage(name: string = ""): void {
-            this.addPageAt(name, this._pageIds.length);
+        public addPage(name?: string): void {
+            this.addPageAt(name || "", this._pageIds.length);
         }
 
-        public addPageAt(name: string, index: number = 0): void {
-            var nid: string = "" + (Controller._nextPageId++);
+        public addPageAt(name: string, index: number): void {
+            var nid: string = "" + (_nextPageId++);
             if (index == this._pageIds.length) {
                 this._pageIds.push(nid);
                 this._pageNames.push(name);
@@ -255,7 +254,7 @@ module fgui {
 
             cnt = buffer.readShort();
             if (cnt > 0) {
-                if (this._actions == null)
+                if (!this._actions)
                     this._actions = new Array<ControllerAction>();
 
                 for (i = 0; i < cnt; i++) {
@@ -270,7 +269,7 @@ module fgui {
                 }
             }
 
-            if (this.parent != null && this._pageIds.length > 0)
+            if (this.parent && this._pageIds.length > 0)
                 this._selectedIndex = homePageIndex;
             else
                 this._selectedIndex = -1;

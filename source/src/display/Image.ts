@@ -3,9 +3,9 @@ module fgui {
         private _fillMethod: number = 0;
         private _fillOrigin: number = 0;
         private _fillAmount: number = 0;
-        private _fillClockwise: boolean = false;
-        private _mask: egret.Shape;
-        private _maskDirtyFlag: boolean = false;
+        private _fillClockwise?: boolean;
+        private _mask?: egret.Shape;
+        private _maskDirtyFlag?: boolean;
         private _color: number;
 
         constructor() {
@@ -125,8 +125,8 @@ module fgui {
             if (w == 0 || h == 0)
                 return;
 
-            var points: any[] = FillUtils.fill(w, h, this._fillMethod, this._fillOrigin, this._fillClockwise, this._fillAmount);
-            if (points == null)
+            var points: Array<number> = fillImage(w, h, this._fillMethod, this._fillOrigin, this._fillClockwise, this._fillAmount);
+            if (!points)
                 return;
 
             g.beginFill(0, 1);

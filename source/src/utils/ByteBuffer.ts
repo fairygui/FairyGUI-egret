@@ -1,7 +1,7 @@
 module fgui {
 
     export class ByteBuffer extends egret.ByteArray {
-        public stringTable: Array<string> = null;
+        public stringTable?: Array<string>;
         public version: number = 0;
 
         public constructor(buffer?: ArrayBuffer | Uint8Array, bufferExtSize?: number) {
@@ -40,7 +40,7 @@ module fgui {
                 this.stringTable[index] = value;
         }
 
-        public readColor(hasAlpha: boolean = false): number {
+        public readColor(hasAlpha?: boolean): number {
             var r: number = this.readUnsignedByte();
             var g: number = this.readUnsignedByte();
             var b: number = this.readUnsignedByte();

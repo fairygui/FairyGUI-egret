@@ -51,9 +51,9 @@ module fgui {
 
         public get minSize(): number {
             if (this._vertical)
-                return (this._arrowButton1 != null ? this._arrowButton1.height : 0) + (this._arrowButton2 != null ? this._arrowButton2.height : 0);
+                return (this._arrowButton1 ? this._arrowButton1.height : 0) + (this._arrowButton2 ? this._arrowButton2.height : 0);
             else
-                return (this._arrowButton1 != null ? this._arrowButton1.width : 0) + (this._arrowButton2 != null ? this._arrowButton2.width : 0);
+                return (this._arrowButton1 ? this._arrowButton1.width : 0) + (this._arrowButton2 ? this._arrowButton2.width : 0);
         }
 
         public get gripDragging(): boolean {
@@ -104,12 +104,11 @@ module fgui {
             this._grip.displayObject.stage.addEventListener(egret.TouchEvent.TOUCH_END, this.__gripMouseUp, this);
         }
 
-        private static sScrollbarHelperPoint: egret.Point = new egret.Point();
         private __gripMouseMove(evt: egret.TouchEvent): void {
             if (!this.onStage)
                 return;
 
-            var pt: egret.Point = this.globalToLocal(evt.stageX, evt.stageY, GScrollBar.sScrollbarHelperPoint);
+            var pt: egret.Point = this.globalToLocal(evt.stageX, evt.stageY, s_vec2);
             if (this._vertical) {
                 var curY: number = pt.y - this._dragOffset.y;
                 this._target.setPercY((curY - this._bar.y) / (this._bar.height - this._grip.height), false);
@@ -151,7 +150,7 @@ module fgui {
         }
 
         private __barMouseDown(evt: egret.TouchEvent): void {
-            var pt: egret.Point = this._grip.globalToLocal(evt.stageX, evt.stageY, GScrollBar.sScrollbarHelperPoint);
+            var pt: egret.Point = this._grip.globalToLocal(evt.stageX, evt.stageY, s_vec2);
             if (this._vertical) {
                 if (pt.y < 0)
                     this._target.scrollUp(4);
@@ -166,4 +165,6 @@ module fgui {
             }
         }
     }
+
+    var s_vec2: egret.Point = new egret.Point();
 }

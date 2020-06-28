@@ -4,7 +4,7 @@ module fgui {
 
     export class GComponent extends GObject {
         private _sortingChildCount: number = 0;
-        private _applyingController: Controller;
+        private _applyingController?: Controller;
 
         protected _margin: Margin;
         protected _trackBounds: boolean;
@@ -18,7 +18,7 @@ module fgui {
         public _transitions: Array<Transition>;
         public _rootContainer: UIContainer;
         public _container: egret.DisplayObjectContainer;
-        public _scrollPane: ScrollPane;
+        public _scrollPane?: ScrollPane;
         public _alignOffset: egret.Point;
 
         public constructor() {
@@ -129,7 +129,7 @@ module fgui {
             return i;
         }
 
-        public removeChild(child: GObject, dispose: boolean = false): GObject {
+        public removeChild(child: GObject, dispose?: boolean): GObject {
             var childIndex: number = this._children.indexOf(child);
             if (childIndex != -1) {
                 this.removeChildAt(childIndex, dispose);
@@ -137,7 +137,7 @@ module fgui {
             return child;
         }
 
-        public removeChildAt(index: number, dispose: boolean = false): GObject {
+        public removeChildAt(index: number, dispose?: boolean): GObject {
             if (index >= 0 && index < this.numChildren) {
                 var child: GObject = this._children[index];
                 child.parent = null;
@@ -165,7 +165,10 @@ module fgui {
             }
         }
 
-        public removeChildren(beginIndex: number = 0, endIndex: number = -1, dispose: boolean = false): void {
+        public removeChildren(beginIndex?: number, endIndex?: number, dispose?: boolean): void {
+            if (beginIndex == undefined) beginIndex = 0;
+            if (endIndex == undefined) endIndex = -1;
+
             if (endIndex < 0 || endIndex >= this.numChildren)
                 endIndex = this.numChildren - 1;
 
@@ -173,7 +176,7 @@ module fgui {
                 this.removeChildAt(beginIndex, dispose);
         }
 
-        public getChildAt(index: number = 0): GObject {
+        public getChildAt(index: number): GObject {
             if (index >= 0 && index < this.numChildren)
                 return this._children[index];
             else
@@ -249,7 +252,7 @@ module fgui {
             return this._children.indexOf(child);
         }
 
-        public setChildIndex(child: GObject, index: number = 0): void {
+        public setChildIndex(child: GObject, index: number): void {
             var oldIndex: number = this._children.indexOf(child);
             if (oldIndex == -1)
                 throw "Not a child of this container";
@@ -286,7 +289,7 @@ module fgui {
                 return this._setChildIndex(child, oldIndex, index);
         }
 
-        private _setChildIndex(child: GObject, oldIndex: number, index: number = 0): number {
+        private _setChildIndex(child: GObject, oldIndex: number, index: number): number {
             var cnt: number = this._children.length;
             if (index > cnt)
                 index = cnt;
@@ -340,7 +343,7 @@ module fgui {
             this.swapChildrenAt(index1, index2);
         }
 
-        public swapChildrenAt(index1: number, index2: number = 0): void {
+        public swapChildrenAt(index1: number, index2: number): void {
             var child1: GObject = this._children[index1];
             var child2: GObject = this._children[index2];
 
@@ -353,7 +356,7 @@ module fgui {
         }
 
         public isAncestorOf(child: GObject): boolean {
-            if (child == null)
+            if (!child)
                 return false;
 
             var p: GComponent = child.parent;
@@ -435,7 +438,7 @@ module fgui {
                             if (g == child)
                                 break;
 
-                            if (g.displayObject != null && g.displayObject.parent != null)
+                            if (g.displayObject && g.displayObject.parent)
                                 index++;
                         }
                         this._container.addChildAt(child.displayObject, index);
@@ -446,7 +449,7 @@ module fgui {
                             if (g == child)
                                 break;
 
-                            if (g.displayObject != null && g.displayObject.parent != null)
+                            if (g.displayObject && g.displayObject.parent)
                                 index++;
                         }
                         this._container.addChildAt(child.displayObject, index);
@@ -476,7 +479,7 @@ module fgui {
                     {
                         for (i = 0; i < cnt; i++) {
                             child = this._children[i];
-                            if (child.displayObject != null && child.internalVisible)
+                            if (child.displayObject && child.internalVisible)
                                 this._container.addChild(child.displayObject);
                         }
                     }
@@ -485,7 +488,7 @@ module fgui {
                     {
                         for (i = cnt - 1; i >= 0; i--) {
                             child = this._children[i];
-                            if (child.displayObject != null && child.internalVisible)
+                            if (child.displayObject && child.internalVisible)
                                 this._container.addChild(child.displayObject);
                         }
                     }
@@ -496,12 +499,12 @@ module fgui {
                         var apex: number = ToolSet.clamp(this._apexIndex, 0, cnt);
                         for (i = 0; i < apex; i++) {
                             child = this._children[i];
-                            if (child.displayObject != null && child.internalVisible)
+                            if (child.displayObject && child.internalVisible)
                                 this._container.addChild(child.displayObject);
                         }
                         for (i = cnt - 1; i >= apex; i--) {
                             child = this._children[i];
-                            if (child.displayObject != null && child.internalVisible)
+                            if (child.displayObject && child.internalVisible)
                                 this._container.addChild(child.displayObject);
                         }
                     }
@@ -539,14 +542,13 @@ module fgui {
                 if (child == obj) {
                     myIndex = i;
                 }
-                else if ((child instanceof GButton)
-                    && (<GButton><any>child).relatedController == c) {
+                else if ((child instanceof GButton) && child.relatedController == c) {
                     if (i > maxIndex)
                         maxIndex = i;
                 }
             }
             if (myIndex < maxIndex) {
-                if (this._applyingController != null)
+                if (this._applyingController)
                     this._children[maxIndex].handleControllerChanged(this._applyingController);
                 this.swapChildrenAt(myIndex, maxIndex);
             }
@@ -568,11 +570,11 @@ module fgui {
         }
 
         public isChildInView(child: GObject): boolean {
-            if (this._rootContainer.scrollRect != null) {
+            if (this._rootContainer.scrollRect) {
                 return child.x + child.width >= 0 && child.x <= this.width
                     && child.y + child.height >= 0 && child.y <= this.height;
             }
-            else if (this._scrollPane != null) {
+            else if (this._scrollPane) {
                 return this._scrollPane.isChildInView(child);
             }
             else
@@ -607,7 +609,7 @@ module fgui {
 
         public set margin(value: Margin) {
             this._margin.copy(value);
-            if (this._rootContainer.scrollRect != null) {
+            if (this._rootContainer.scrollRect) {
                 this._container.x = this._margin.left + this._alignOffset.x;
                 this._container.y = this._margin.top + this._alignOffset.y;
             }
@@ -700,7 +702,7 @@ module fgui {
 
             if (this._scrollPane)
                 this._scrollPane.onOwnerSizeChanged();
-            else if (this._rootContainer.scrollRect != null)
+            else if (this._rootContainer.scrollRect)
                 this.updateScrollRect();
 
             if (this._rootContainer.hitArea instanceof PixelHitTest) {
@@ -714,7 +716,7 @@ module fgui {
 
         protected handleGrayedChanged(): void {
             var c: Controller = this.getController("grayed");
-            if (c != null) {
+            if (c) {
                 c.selectedIndex = this.grayed ? 1 : 0;
                 return;
             }
@@ -729,7 +731,7 @@ module fgui {
         public handleControllerChanged(c: Controller): void {
             super.handleControllerChanged(c);
 
-            if (this._scrollPane != null)
+            if (this._scrollPane)
                 this._scrollPane.handleControllerChanged(c);
         }
 
@@ -810,28 +812,28 @@ module fgui {
         }
 
         public get viewWidth(): number {
-            if (this._scrollPane != null)
+            if (this._scrollPane)
                 return this._scrollPane.viewWidth;
             else
                 return this.width - this._margin.left - this._margin.right;
         }
 
         public set viewWidth(value: number) {
-            if (this._scrollPane != null)
+            if (this._scrollPane)
                 this._scrollPane.viewWidth = value;
             else
                 this.width = value + this._margin.left + this._margin.right;
         }
 
         public get viewHeight(): number {
-            if (this._scrollPane != null)
+            if (this._scrollPane)
                 return this._scrollPane.viewHeight;
             else
                 return this.height - this._margin.top - this._margin.bottom;
         }
 
         public set viewHeight(value: number) {
-            if (this._scrollPane != null)
+            if (this._scrollPane)
                 this._scrollPane.viewHeight = value;
             else
                 this.height = value + this._margin.top + this._margin.bottom;
@@ -929,7 +931,7 @@ module fgui {
         }
 
         public constructFromResource2(objectPool: Array<GObject>, poolIndex: number): void {
-            var contentItem:PackageItem = this.packageItem.getBranch();
+            var contentItem: PackageItem = this.packageItem.getBranch();
 
             if (!contentItem.decoded) {
                 contentItem.decoded = true;
@@ -1015,7 +1017,7 @@ module fgui {
                 dataLen = buffer.readShort();
                 curPos = buffer.position;
 
-                if (objectPool != null)
+                if (objectPool)
                     child = objectPool[poolIndex + i];
                 else {
                     buffer.seek(curPos, 0);
@@ -1032,15 +1034,15 @@ module fgui {
                         else
                             pkg = contentItem.owner;
 
-                        pi = pkg != null ? pkg.getItemById(src) : null;
+                        pi = pkg ? pkg.getItemById(src) : null;
                     }
 
-                    if (pi != null) {
+                    if (pi) {
                         child = UIObjectFactory.newObject(pi);
                         child.constructFromResource();
                     }
                     else
-                        child = UIObjectFactory.newObject2(type);
+                        child = UIObjectFactory.newObject(type);
                 }
 
                 child._underConstruct = true;
@@ -1095,7 +1097,7 @@ module fgui {
             i2 = buffer.readInt();
             if (hitTestId != null) {
                 pi = contentItem.owner.getItemById(hitTestId);
-                if (pi != null && pi.pixelHitTestData != null)
+                if (pi && pi.pixelHitTestData)
                     this._rootContainer.hitArea = new PixelHitTest(pi.pixelHitTestData, i1, i2);
             }
             else if (i1 != 0 && i2 != -1) {
@@ -1151,14 +1153,14 @@ module fgui {
             buffer.seek(beginPos, 4);
 
             var pageController: number = buffer.readShort();
-            if (pageController != null && this._scrollPane != null)
+            if (pageController != -1 && this._scrollPane)
                 this._scrollPane.pageController = this._parent.getControllerAt(pageController);
 
             var cnt: number = buffer.readShort();
             for (var i: number = 0; i < cnt; i++) {
                 var cc: Controller = this.getController(buffer.readS());
                 var pageId: string = buffer.readS();
-                if (cc != null)
+                if (cc)
                     cc.selectedPageId = pageId;
             }
 

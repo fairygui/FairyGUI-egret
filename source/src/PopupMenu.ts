@@ -4,7 +4,7 @@ module fgui {
         protected _contentPane: GComponent;
         protected _list: GList;
 
-        public constructor(resourceURL: string = null) {
+        public constructor(resourceURL?: string) {
             if (!resourceURL) {
                 resourceURL = UIConfig.popupMenu;
                 if (!resourceURL)
@@ -24,25 +24,25 @@ module fgui {
             this._contentPane.dispose();
         }
 
-        public addItem(caption: string, callback: Function = null): GButton {
+        public addItem(caption: string, callback?: (item?: ItemEvent) => void): GButton {
             var item: GButton = this._list.addItemFromPool().asButton;
             item.title = caption;
             item.data = callback;
             item.grayed = false;
             var c: Controller = item.getController("checked");
-            if (c != null)
+            if (c)
                 c.selectedIndex = 0;
             return item;
         }
 
-        public addItemAt(caption: string, index: number, callback: Function = null): GButton {
+        public addItemAt(caption: string, index: number, callback?: (item?: ItemEvent) => void): GButton {
             var item: GButton = this._list.getFromPool().asButton;
             this._list.addChildAt(item, index);
             item.title = caption;
             item.data = callback;
             item.grayed = false;
             var c: Controller = item.getController("checked");
-            if (c != null)
+            if (c)
                 c.selectedIndex = 0;
             return item;
         }
@@ -79,7 +79,7 @@ module fgui {
         public setItemCheckable(name: string, checkable: boolean) {
             var item: GButton = this._list.getChild(name).asButton;
             var c: Controller = item.getController("checked");
-            if (c != null) {
+            if (c) {
                 if (checkable) {
                     if (c.selectedIndex == 0)
                         c.selectedIndex = 1;
@@ -92,14 +92,14 @@ module fgui {
         public setItemChecked(name: string, checked: boolean) {
             var item: GButton = this._list.getChild(name).asButton;
             var c: Controller = item.getController("checked");
-            if (c != null)
+            if (c)
                 c.selectedIndex = checked ? 2 : 1;
         }
 
         public isItemChecked(name: string): boolean {
             var item: GButton = this._list.getChild(name).asButton;
             var c: Controller = item.getController("checked");
-            if (c != null)
+            if (c)
                 return c.selectedIndex == 2;
             else
                 return false;
@@ -107,7 +107,7 @@ module fgui {
 
         public removeItem(name: string): boolean {
             var item: GButton = <GButton>this._list.getChild(name);
-            if (item != null) {
+            if (item) {
                 var index: number = this._list.getChildIndex(item);
                 this._list.removeChildToPoolAt(index);
                 return true;
@@ -132,9 +132,9 @@ module fgui {
             return this._list;
         }
 
-        public show(target: GObject = null, downward: any = null) {
-            var r: GRoot = target != null ? target.root : GRoot.inst;
-            r.showPopup(this.contentPane, (target instanceof GRoot) ? null : target, downward);
+        public show(target?: GObject, dir?: PopupDirection | boolean) {
+            var r: GRoot = target ? target.root : GRoot.inst;
+            r.showPopup(this.contentPane, (target instanceof GRoot) ? null : target, dir);
         }
 
         private __clickItem(evt: ItemEvent): void {
@@ -150,7 +150,7 @@ module fgui {
                 return;
             }
             var c: Controller = item.getController("checked");
-            if (c != null && c.selectedIndex != 0) {
+            if (c && c.selectedIndex != 0) {
                 if (c.selectedIndex == 1)
                     c.selectedIndex = 2;
                 else
@@ -170,7 +170,6 @@ module fgui {
             this._list.selectedIndex = -1;
             this._list.resizeToFit(100000, 10);
         }
-
     }
 }
 
