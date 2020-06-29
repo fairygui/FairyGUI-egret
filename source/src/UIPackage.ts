@@ -73,27 +73,21 @@ module fgui {
                     return;
                 }
 
-                const asset = await RES.getResAsync(resKey);
+                const asset = await RES.getResAsync(getAssetResKey(resKey, "fui"));
                 pkg = new UIPackage();
                 pkg._resKey = resKey;
                 pkg.loadPackage(new ByteBuffer(asset));
                 let cnt: number = pkg._items.length;
-                let urls = [];
+                let tasks = [];
                 for (var i: number = 0; i < cnt; i++) {
                     var pi: PackageItem = pkg._items[i];
-                    if (pi.type == PackageItemType.Atlas || pi.type == PackageItemType.Sound)
-                        urls.push(pi.file);
-                }
-
-                if (urls.length > 0) {
-                    if (urls.length == 1)
-                        await RES.getResAsync(urls[0]);
-                    else {
-                        let group: string = "$UI_" + resKey;
-                        RES.createGroup(group, urls, true);
-                        await RES.loadGroup(group);
+                    if (pi.type == PackageItemType.Atlas || pi.type == PackageItemType.Sound) {
+                        tasks.push(RES.getResAsync(pi.file));
                     }
                 }
+
+                if (tasks.length > 0)
+                    await Promise.all(tasks);
 
                 UIPackage._instById[pkg.id] = pkg;
                 UIPackage._instByName[pkg.name] = pkg;
@@ -265,7 +259,10 @@ module fgui {
             buffer.seek(indexTablePos, 1);
 
             var pi: PackageItem;
-            var fileNamePrefix: string = this._resKey + "_";
+            var path: string = this._resKey;
+            let pos = path.indexOf('/');
+            let shortPath = pos == -1 ? "" : path.substr(0, pos + 1);
+            path = path + "_";
 
             cnt = buffer.readShort();
             for (i = 0; i < cnt; i++) {
@@ -335,7 +332,19 @@ module fgui {
                     case PackageItemType.Sound:
                     case PackageItemType.Misc:
                         {
-                            pi.file = fileNamePrefix + ToolSet.getFileName(pi.file);
+                            let pos = pi.file.lastIndexOf(".");
+                            pi.file = path + (pos == -1 ? pi.file : getAssetResKey(pi.file.substring(0, pos), pi.file.substring(pos + 1)));
+                            break;
+                        }
+
+                    case PackageItemType.Spine:
+                    case PackageItemType.DragonBones:
+                        {
+                            let pos = pi.file.lastIndexOf(".");
+                            pi.file = shortPath + (pos == -1 ? pi.file : pi.file.substring(0, pos));
+                            pi.skeletonAnchor = new egret.Point();
+                            pi.skeletonAnchor.x = buffer.readFloat();
+                            pi.skeletonAnchor.y = buffer.readFloat();
                             break;
                         }
                 }
@@ -493,9 +502,9 @@ module fgui {
                         var sprite: AtlasSprite = this._sprites[item.id];
                         if (sprite) {
                             var atlas: egret.Texture = <egret.Texture>this.getItemAsset(sprite.atlas);
-                            item.texture = new egret.Texture();
-                            item.texture.bitmapData = atlas.bitmapData;
-                            item.texture.$initData(atlas.$bitmapX + sprite.rect.x, atlas.$bitmapY + sprite.rect.y,
+                            item.asset = new egret.Texture();
+                            item.asset.bitmapData = atlas.bitmapData;
+                            item.asset.$initData(atlas.$bitmapX + sprite.rect.x, atlas.$bitmapY + sprite.rect.y,
                                 sprite.rect.width, sprite.rect.height,
                                 sprite.offset.x, sprite.offset.y,
                                 sprite.originalSize.x, sprite.originalSize.y,
@@ -503,25 +512,17 @@ module fgui {
                                 sprite.rotated);
                         }
                     }
-                    return item.texture;
+                    return item.asset;
 
                 case PackageItemType.Atlas:
-                    if (!item.decoded) {
-                        item.decoded = true;
-                        item.texture = RES.getRes(item.file);
-                        if (!item.texture)
-                            console.log("Resource '" + item.file + "' not found, please check default.res.json!");
-                    }
-                    return item.texture;
-
                 case PackageItemType.Sound:
                     if (!item.decoded) {
                         item.decoded = true;
-                        item.sound = RES.getRes(item.file);
-                        if (!item.sound)
+                        item.asset = RES.getRes(item.file);
+                        if (!item.asset)
                             console.log("Resource '" + item.file + "' not found, please check default.res.json!");
                     }
-                    return item.sound;
+                    return item.asset;
 
                 case PackageItemType.Font:
                     if (!item.decoded) {
@@ -545,6 +546,30 @@ module fgui {
 
                 default:
                     return null;
+            }
+        }
+
+        public getItemAssetAsync(item: PackageItem, onComplete?: (err: any, item: PackageItem) => void): void {
+            if (item.decoded) {
+                onComplete(null, item);
+                return;
+            }
+
+            if (item.loading) {
+                item.loading.push(onComplete);
+                return;
+            }
+
+            switch (item.type) {
+                case PackageItemType.DragonBones:
+                    item.loading = [onComplete];
+                    this.loadDragonBones(item);
+                    break;
+
+                default:
+                    this.getItemAsset(item);
+                    onComplete(null, item);
+                    break;
             }
         }
 
@@ -661,7 +686,7 @@ module fgui {
                         this.getItemAsset(charImg);
                         bg.width = charImg.width;
                         bg.height = charImg.height;
-                        bg.texture = charImg.texture;
+                        bg.texture = <egret.Texture>charImg.asset;
                     }
 
                     if (bg.advance == 0) {
@@ -679,6 +704,32 @@ module fgui {
                 buffer.position = nextPos;
             }
         }
+
+        private loadDragonBones(item: PackageItem): void {
+            let jsonFile = getAssetResKey(item.file, ["json", "dbbin"]);
+            let str = item.file.replace("_ske", "_tex");
+            let atlasFile = getAssetResKey(str, "json");
+            let texFile = getAssetResKey(str, "png");
+
+            let task1 = RES.getResAsync(jsonFile);
+            let task2 = RES.getResAsync(atlasFile);
+            let task3 = RES.getResAsync(texFile);
+
+            Promise.all([task1, task2, task3]).then(values => {
+                let egretFactory: dragonBones.EgretFactory = dragonBones.EgretFactory.factory;
+                item.asset = egretFactory.parseDragonBonesData(values[0]);
+                item.atlasAsset = egretFactory.parseTextureAtlasData(values[1], values[2]);
+                item.armatureName = item.asset.armatureNames[0];
+
+                let arr = item.loading;
+                delete item.loading;
+                arr.forEach(e => e(null, item));
+            }).catch((reason) => {
+                let arr = item.loading;
+                delete item.loading;
+                arr.forEach(e => e(reason, item));
+            });
+        }
     }
 
     interface AtlasSprite {
@@ -687,5 +738,22 @@ module fgui {
         offset: egret.Point;
         originalSize: egret.Point;
         rotated?: boolean;
+    }
+
+    function getAssetResKey(file: string, types: Array<string> | string): string {
+        if (Array.isArray(types)) {
+            for (var i: number = 0; i < types.length; i++) {
+                let key = file + "_" + types[i];
+                if (RES.hasRes(key))
+                    return key;
+            }
+            return file;
+        }
+        else {
+            let key = file + "_" + types;
+            if (RES.hasRes(key))
+                return key;
+            return file;
+        }
     }
 }

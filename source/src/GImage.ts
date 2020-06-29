@@ -117,7 +117,7 @@ module fgui {
 
             this.setSize(this.sourceWidth, this.sourceHeight);
 
-            this._content.texture = contentItem.texture;
+            this._content.texture = <egret.Texture>contentItem.asset;
         }
 
         protected handleXYChanged(): void {

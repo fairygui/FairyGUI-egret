@@ -255,11 +255,11 @@ module fgui {
                     this.setSize(this.sourceWidth, this.sourceHeight);
 
                 if (this._contentItem.type == PackageItemType.Image) {
-                    if (this._contentItem.texture == null) {
+                    if (this._contentItem.asset == null) {
                         this.setErrorState();
                     }
                     else {
-                        this._content.texture = this._contentItem.texture;
+                        this._content.texture = <egret.Texture>this._contentItem.asset;
                         this._content.scale9Grid = this._contentItem.scale9Grid;
                         if (this._contentItem.scaleByTile)
                             this._content.fillMode = egret.BitmapFillMode.REPEAT;
@@ -348,7 +348,7 @@ module fgui {
         }
 
         private updateLayout(): void {
-            if (this._content2 == null && this._content == null) {
+            if (!this._content2 && !this._content) {
                 if (this._autoSize) {
                     this._updatingLayout = true;
                     this.setSize(50, 30);

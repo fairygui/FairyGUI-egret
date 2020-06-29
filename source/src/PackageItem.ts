@@ -13,7 +13,9 @@ module fgui {
         public height: number = 0;
         public file: string;
         public decoded?: boolean;
+        public loading?: Array<Function>;
         public rawData?: ByteBuffer;
+        public asset?: egret.Texture | egret.Sound | dragonBones.DragonBonesData;
 
         public highResolution?: Array<string>;
         public branches?: Array<string>;
@@ -23,7 +25,6 @@ module fgui {
         public scaleByTile?: boolean;
         public tileGridIndice?: number;
         public smoothing?: boolean;
-        public texture?: egret.Texture;
         public pixelHitTestData?: PixelHitTestData;
 
         //movieclip
@@ -35,11 +36,13 @@ module fgui {
         //componenet
         public extensionType?: any;
 
-        //sound
-        public sound?: egret.Sound;
-
         //font 
         public bitmapFont?: BitmapFont;
+
+        //skeleton
+        public skeletonAnchor?: egret.Point;
+        public armatureName?: string;
+        public atlasAsset?: dragonBones.TextureAtlasData;
 
         public constructor() {
         }

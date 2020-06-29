@@ -3,21 +3,6 @@
 module fgui {
 
     export class ToolSet {
-
-        public static getFileName(source: string): string {
-            var i: number = source.lastIndexOf("/");
-            if (i != -1)
-                source = source.substr(i + 1);
-            i = source.lastIndexOf("\\");
-            if (i != -1)
-                source = source.substr(i + 1);
-            i = source.lastIndexOf(".");
-            if (i != -1)
-                return source.substring(0, i);
-            else
-                return source;
-        }
-
         public static startsWith(source: string, str: string, ignoreCase?: boolean): boolean {
             if (!source)
                 return false;

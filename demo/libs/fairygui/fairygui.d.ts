@@ -912,6 +912,57 @@ declare module fgui {
         setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
     }
 }
+declare namespace fgui {
+    class GLoader3D extends GObject {
+        private _url;
+        private _align;
+        private _verticalAlign;
+        private _autoSize;
+        private _fill;
+        private _shrinkOnly;
+        private _playing;
+        private _frame;
+        private _loop;
+        private _animationName;
+        private _skinName;
+        private _color;
+        private _contentItem;
+        private _container;
+        private _content;
+        private _updatingLayout;
+        constructor();
+        protected createDisplayObject(): void;
+        dispose(): void;
+        url: string;
+        icon: string;
+        align: AlignType;
+        verticalAlign: VertAlignType;
+        fill: LoaderFillType;
+        shrinkOnly: boolean;
+        autoSize: boolean;
+        playing: boolean;
+        frame: number;
+        animationName: string;
+        skinName: string;
+        loop: boolean;
+        color: number;
+        readonly content: dragonBones.EgretArmatureDisplay;
+        protected loadContent(): void;
+        protected loadFromPackage(itemURL: string): void;
+        private onLoaded;
+        setDragonBones(armatureName: string, dragonBonesName?: string, skinName?: string, textureAtlasName?: string, anchor?: egret.Point): void;
+        private onChange;
+        private onChangeDragonBones;
+        protected loadExternal(): void;
+        private updateLayout;
+        private clearContent;
+        protected handleSizeChanged(): void;
+        protected handleGrayedChanged(): void;
+        getProp(index: number): any;
+        setProp(index: number, value: any): void;
+        setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
+    }
+}
 declare module fgui {
     class GMovieClip extends GObject {
         private _content;
@@ -1311,22 +1362,25 @@ declare module fgui {
         height: number;
         file: string;
         decoded?: boolean;
+        loading?: Array<Function>;
         rawData?: ByteBuffer;
+        asset?: egret.Texture | egret.Sound | dragonBones.DragonBonesData;
         highResolution?: Array<string>;
         branches?: Array<string>;
         scale9Grid?: egret.Rectangle;
         scaleByTile?: boolean;
         tileGridIndice?: number;
         smoothing?: boolean;
-        texture?: egret.Texture;
         pixelHitTestData?: PixelHitTestData;
         interval?: number;
         repeatDelay?: number;
         swing?: boolean;
         frames?: Array<Frame>;
         extensionType?: any;
-        sound?: egret.Sound;
         bitmapFont?: BitmapFont;
+        skeletonAnchor?: egret.Point;
+        armatureName?: string;
+        atlasAsset?: dragonBones.TextureAtlasData;
         constructor();
         load(): Object;
         getBranch(): PackageItem;
@@ -1714,8 +1768,10 @@ declare module fgui {
         getItemByName(resName: string): PackageItem;
         getItemAssetByName(resName: string): Object;
         getItemAsset(item: PackageItem): Object;
+        getItemAssetAsync(item: PackageItem, onComplete?: (err: any, item: PackageItem) => void): void;
         private loadMovieClip;
         private loadFont;
+        private loadDragonBones;
     }
 }
 declare module fgui {
@@ -2369,7 +2425,6 @@ declare module fgui {
 }
 declare module fgui {
     class ToolSet {
-        static getFileName(source: string): string;
         static startsWith(source: string, str: string, ignoreCase?: boolean): boolean;
         static trimRight(targetString: string): string;
         static convertToHtmlColor(argb: number, hasAlpha?: boolean): string;
