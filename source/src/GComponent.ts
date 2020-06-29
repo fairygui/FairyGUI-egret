@@ -204,12 +204,12 @@ module fgui {
                     break;
 
                 if (i != cnt - 1) {
-                    if (!(gcom instanceof GComponent)) {
+                    if (!(obj instanceof GComponent)) {
                         obj = null;
                         break;
                     }
                     else
-                        gcom = <GComponent>obj;
+                        gcom = obj;
                 }
             }
 

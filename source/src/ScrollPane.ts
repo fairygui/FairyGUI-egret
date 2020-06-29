@@ -5,7 +5,7 @@ module fgui {
         private _owner: GComponent;
         private _container: egret.DisplayObjectContainer;
         private _maskContainer: egret.DisplayObjectContainer;
-        private _alignContainer: egret.DisplayObjectContainer;
+        private _alignContainer?: egret.DisplayObjectContainer;
 
         private _scrollType: number;
         private _scrollStep: number;
@@ -171,7 +171,8 @@ module fgui {
                     }
                 }
 
-                this._scrollBarDisplayAuto = scrollBarDisplay == ScrollBarDisplayType.Auto;
+                if (scrollBarDisplay == ScrollBarDisplayType.Auto)
+                    this._scrollBarDisplayAuto = true;
                 if (this._scrollBarDisplayAuto) {
                     if (this._vtScrollBar)
                         this._vtScrollBar.displayObject.visible = false;
@@ -202,7 +203,7 @@ module fgui {
             if (this._tweening != 0)
                 GTimers.inst.remove(this.tweenUpdate, this);
 
-            this._pageController = null;
+            delete this._pageController;
 
             if (this._hzScrollBar)
                 this._hzScrollBar.dispose();

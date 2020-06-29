@@ -2224,7 +2224,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 if (!obj)
                     break;
                 if (i != cnt - 1) {
-                    if (!(gcom instanceof GComponent)) {
+                    if (!(obj instanceof GComponent)) {
                         obj = null;
                         break;
                     }
@@ -11817,7 +11817,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                         this._owner._rootContainer.addChild(this._hzScrollBar.displayObject);
                     }
                 }
-                this._scrollBarDisplayAuto = scrollBarDisplay == fgui.ScrollBarDisplayType.Auto;
+                if (scrollBarDisplay == fgui.ScrollBarDisplayType.Auto)
+                    this._scrollBarDisplayAuto = true;
                 if (this._scrollBarDisplayAuto) {
                     if (this._vtScrollBar)
                         this._vtScrollBar.displayObject.visible = false;
@@ -11842,7 +11843,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         ScrollPane.prototype.dispose = function () {
             if (this._tweening != 0)
                 fgui.GTimers.inst.remove(this.tweenUpdate, this);
-            this._pageController = null;
+            delete this._pageController;
             if (this._hzScrollBar)
                 this._hzScrollBar.dispose();
             if (this._vtScrollBar)

@@ -1475,7 +1475,7 @@ declare module fgui {
         private _owner;
         private _container;
         private _maskContainer;
-        private _alignContainer;
+        private _alignContainer?;
         private _scrollType;
         private _scrollStep;
         private _decelerationRate;
