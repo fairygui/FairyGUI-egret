@@ -1493,6 +1493,7 @@ declare module fgui {
         private _pageMode?;
         private _inertiaDisabled?;
         private _floating?;
+        private _dontClipMargin?;
         private _xPos;
         private _yPos;
         private _viewSize;

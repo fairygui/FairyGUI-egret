@@ -11792,6 +11792,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 this._maskContainer.scrollRect = new egret.Rectangle();
             if ((flags & 1024) != 0)
                 this._floating = true;
+            if ((flags & 2048) != 0)
+                this._dontClipMargin = true;
             if (scrollBarDisplay == fgui.ScrollBarDisplayType.Default)
                 scrollBarDisplay = fgui.UIConfig.defaultScrollBarDisplay;
             if (scrollBarDisplay != fgui.ScrollBarDisplayType.Hidden) {
@@ -12304,25 +12306,36 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             }
         };
         ScrollPane.prototype.adjustMaskContainer = function () {
-            var mx, my;
-            if (this._displayOnLeft && this._vtScrollBar && !this._floating)
-                mx = Math.floor(this._owner.margin.left + this._vtScrollBar.width);
-            else
-                mx = Math.floor(this._owner.margin.left);
-            my = Math.floor(this._owner.margin.top);
+            var mx = 0, my = 0;
+            if (this._dontClipMargin) {
+                if (this._displayOnLeft && this._vtScrollBar && !this._floating)
+                    mx = this._vtScrollBar.width;
+            }
+            else {
+                if (this._displayOnLeft && this._vtScrollBar && !this._floating)
+                    mx = this._owner.margin.left + this._vtScrollBar.width;
+                else
+                    mx = this._owner.margin.left;
+                my = this._owner.margin.top;
+            }
             this._maskContainer.x = mx;
             this._maskContainer.y = my;
-            if (this._owner._alignOffset.x != 0 || this._owner._alignOffset.y != 0) {
-                if (this._alignContainer == null) {
+            mx = this._owner._alignOffset.x;
+            my = this._owner._alignOffset.y;
+            if (mx != 0 || my != 0 || this._dontClipMargin) {
+                if (!this._alignContainer) {
                     this._alignContainer = new egret.DisplayObjectContainer();
                     this._maskContainer.addChild(this._alignContainer);
                     this._alignContainer.addChild(this._container);
                 }
-                this._alignContainer.x = this._owner._alignOffset.x;
-                this._alignContainer.y = this._owner._alignOffset.y;
             }
-            else if (this._alignContainer) {
-                this._alignContainer.x = this._alignContainer.y = 0;
+            if (this._alignContainer) {
+                if (this._dontClipMargin) {
+                    mx += this._owner.margin.left;
+                    my += this._owner.margin.top;
+                }
+                this._alignContainer.x = mx;
+                this._alignContainer.y = my;
             }
         };
         ScrollPane.prototype.setSize = function (aWidth, aHeight) {
@@ -12450,6 +12463,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                     rect.width += this._vtScrollBar.width;
                 if (this._hScrollNone && this._hzScrollBar)
                     rect.height += this._hzScrollBar.height;
+                if (this._dontClipMargin) {
+                    rect.width += (this._owner.margin.left + this._owner.margin.right);
+                    rect.height += (this._owner.margin.top + this._owner.margin.bottom);
+                }
                 this._maskContainer.scrollRect = rect;
             }
             if (this._scrollType == fgui.ScrollType.Horizontal || this._scrollType == fgui.ScrollType.Both)

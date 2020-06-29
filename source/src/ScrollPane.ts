@@ -25,6 +25,7 @@ module fgui {
         private _pageMode?: boolean;
         private _inertiaDisabled?: boolean;
         private _floating?: boolean;
+        private _dontClipMargin?: boolean;
 
         private _xPos: number;
         private _yPos: number;
@@ -143,6 +144,7 @@ module fgui {
             if ((flags & 256) != 0) this._inertiaDisabled = true;
             if ((flags & 512) == 0) this._maskContainer.scrollRect = new egret.Rectangle();
             if ((flags & 1024) != 0) this._floating = true;
+            if ((flags & 2048) != 0) this._dontClipMargin = true;
 
             if (scrollBarDisplay == ScrollBarDisplayType.Default)
                 scrollBarDisplay = UIConfig.defaultScrollBarDisplay;
@@ -645,28 +647,40 @@ module fgui {
         }
 
         public adjustMaskContainer(): void {
-            var mx: number, my: number;
-            if (this._displayOnLeft && this._vtScrollBar && !this._floating)
-                mx = Math.floor(this._owner.margin.left + this._vtScrollBar.width);
-            else
-                mx = Math.floor(this._owner.margin.left);
-            my = Math.floor(this._owner.margin.top);
+            var mx: number = 0, my: number = 0;
+            if (this._dontClipMargin) {
+                if (this._displayOnLeft && this._vtScrollBar && !this._floating)
+                    mx = this._vtScrollBar.width;
+            }
+            else {
+                if (this._displayOnLeft && this._vtScrollBar && !this._floating)
+                    mx = this._owner.margin.left + this._vtScrollBar.width;
+                else
+                    mx = this._owner.margin.left;
+                my = this._owner.margin.top;
+            }
 
             this._maskContainer.x = mx;
             this._maskContainer.y = my;
 
-            if (this._owner._alignOffset.x != 0 || this._owner._alignOffset.y != 0) {
-                if (this._alignContainer == null) {
+            mx = this._owner._alignOffset.x;
+            my = this._owner._alignOffset.y;
+
+            if (mx != 0 || my != 0 || this._dontClipMargin) {
+                if (!this._alignContainer) {
                     this._alignContainer = new egret.DisplayObjectContainer();
                     this._maskContainer.addChild(this._alignContainer);
                     this._alignContainer.addChild(this._container);
                 }
-
-                this._alignContainer.x = this._owner._alignOffset.x;
-                this._alignContainer.y = this._owner._alignOffset.y;
             }
-            else if (this._alignContainer) {
-                this._alignContainer.x = this._alignContainer.y = 0;
+
+            if (this._alignContainer) {
+                if (this._dontClipMargin) {
+                    mx += this._owner.margin.left;
+                    my += this._owner.margin.top;
+                }
+                this._alignContainer.x = mx;
+                this._alignContainer.y = my;
             }
         }
 
@@ -815,6 +829,10 @@ module fgui {
                     rect.width += this._vtScrollBar.width;
                 if (this._hScrollNone && this._hzScrollBar)
                     rect.height += this._hzScrollBar.height;
+                if (this._dontClipMargin) {
+                    rect.width += (this._owner.margin.left + this._owner.margin.right);
+                    rect.height += (this._owner.margin.top + this._owner.margin.bottom);
+                }
                 this._maskContainer.scrollRect = rect;
             }
 
