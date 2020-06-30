@@ -19,7 +19,7 @@ module fgui {
         private _selectionMode: ListSelectionMode;
         private _align: AlignType;
         private _verticalAlign: VertAlignType;
-        private _selectionController: Controller;
+        private _selectionController?: Controller;
 
         private _lastSelectedIndex: number = 0;
         private _pool: GObjectPool;
@@ -287,8 +287,8 @@ module fgui {
             else {
                 var cnt: number = this._children.length;
                 for (i = 0; i < cnt; i++) {
-                    var obj: GButton = this._children[i].asButton;
-                    if (obj && obj.selected)
+                    var obj: GObject = this._children[i];
+                    if ((obj instanceof GButton) && obj.selected)
                         return i;
                 }
             }
@@ -328,8 +328,8 @@ module fgui {
             else {
                 var cnt: number = this._children.length;
                 for (i = 0; i < cnt; i++) {
-                    var obj: GButton = this._children[i].asButton;
-                    if (obj && obj.selected)
+                    var obj: GObject = this._children[i];
+                    if ((obj instanceof GButton) && obj.selected)
                         result.push(i);
                 }
             }
@@ -349,17 +349,17 @@ module fgui {
                 this.scrollToView(index);
 
             this._lastSelectedIndex = index;
-            var obj: GButton;
+            var obj: GObject;
             if (this._virtual) {
                 var ii: ItemInfo = this._virtualItems[index];
                 if (ii.obj)
-                    obj = ii.obj.asButton;
+                    obj = ii.obj;
                 ii.selected = true;
             }
             else
-                obj = this.getChildAt(index).asButton;
+                obj = this.getChildAt(index);
 
-            if (obj && !obj.selected) {
+            if ((obj instanceof GButton) && !obj.selected) {
                 obj.selected = true;
                 this.updateSelectionController(index);
             }
@@ -369,17 +369,17 @@ module fgui {
             if (this._selectionMode == ListSelectionMode.None)
                 return;
 
-            var obj: GButton;
+            var obj: GObject;
             if (this._virtual) {
                 var ii: ItemInfo = this._virtualItems[index];
                 if (ii.obj)
-                    obj = ii.obj.asButton;
+                    obj = ii.obj;
                 ii.selected = false;
             }
             else
-                obj = this.getChildAt(index).asButton;
+                obj = this.getChildAt(index);
 
-            if (obj)
+            if (obj instanceof GButton)
                 obj.selected = false;
         }
 
@@ -396,8 +396,8 @@ module fgui {
             else {
                 var cnt: number = this._children.length;
                 for (i = 0; i < cnt; i++) {
-                    var obj: GButton = this._children[i].asButton;
-                    if (obj)
+                    var obj: GObject = this._children[i];
+                    if (obj instanceof GButton)
                         obj.selected = false;
                 }
             }
@@ -418,8 +418,8 @@ module fgui {
             else {
                 var cnt: number = this._children.length;
                 for (i = 0; i < cnt; i++) {
-                    var obj: GButton = this._children[i].asButton;
-                    if (obj && obj != g)
+                    var obj: GObject = this._children[i];
+                    if ((obj instanceof GButton) && obj != g)
                         obj.selected = false;
                 }
             }
@@ -443,8 +443,8 @@ module fgui {
             else {
                 var cnt: number = this._children.length;
                 for (i = 0; i < cnt; i++) {
-                    var obj: GButton = this._children[i].asButton;
-                    if (obj && !obj.selected) {
+                    var obj: GObject = this._children[i];
+                    if ((obj instanceof GButton) && !obj.selected) {
                         obj.selected = true;
                         last = i;
                     }
@@ -478,8 +478,8 @@ module fgui {
             else {
                 var cnt: number = this._children.length;
                 for (i = 0; i < cnt; i++) {
-                    var obj: GButton = this._children[i].asButton;
-                    if (obj) {
+                    var obj: GObject = this._children[i];
+                    if (obj instanceof GButton) {
                         obj.selected = !obj.selected;
                         if (obj.selected)
                             last = i;
@@ -491,8 +491,7 @@ module fgui {
                 this.updateSelectionController(last);
         }
 
-
-        public handleArrowKey(dir?: number): void {
+        public handleArrowKey(dir: number): void {
             var index: number = this.selectedIndex;
             if (index == -1)
                 return;
@@ -673,8 +672,8 @@ module fgui {
                             }
                             else {
                                 for (i = min; i <= max; i++) {
-                                    var obj: GButton = this.getChildAt(i).asButton;
-                                    if (obj)
+                                    var obj: GObject = this.getChildAt(i);
+                                    if (obj instanceof GButton)
                                         obj.selected = true;
                                 }
                             }

@@ -882,10 +882,6 @@ module fgui {
             };
     }
 
-    function returns(value: LineInfo): void {
-        pool.push(value);
-    }
-
     function returnList(value: Array<LineInfo>): void {
         var length: number = value.length;
         for (var i: number = 0; i < length; i++) {

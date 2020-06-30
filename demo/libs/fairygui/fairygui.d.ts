@@ -279,7 +279,7 @@ declare module fgui {
         private _pixelSnapping?;
         private _disposed?;
         private _dragTesting?;
-        private _dragStartPoint?;
+        private _dragStartPos?;
         private _relations;
         private _group?;
         private _gears;
@@ -406,7 +406,7 @@ declare module fgui {
         private _reDispatch;
         draggable: boolean;
         dragBounds: egret.Rectangle;
-        startDrag(touchPointID?: number): void;
+        startDrag(touchPointID?: number, stageX?: number, stageY?: number): void;
         stopDrag(): void;
         readonly dragging: boolean;
         localToGlobal(ax?: number, ay?: number, result?: egret.Point): egret.Point;
@@ -759,7 +759,7 @@ declare module fgui {
         private _selectionMode;
         private _align;
         private _verticalAlign;
-        private _selectionController;
+        private _selectionController?;
         private _lastSelectedIndex;
         private _pool;
         private _virtual?;
@@ -807,7 +807,7 @@ declare module fgui {
         selectAll(): void;
         selectNone(): void;
         selectReverse(): void;
-        handleArrowKey(dir?: number): void;
+        handleArrowKey(dir: number): void;
         private __clickItem;
         protected dispatchItemEvent(evt: ItemEvent): void;
         private setSelectionOnEvent;

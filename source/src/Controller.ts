@@ -3,8 +3,8 @@ module fgui {
     var _nextPageId: number = 0;
 
     export class Controller extends egret.EventDispatcher {
-        private _selectedIndex: number = 0;
-        private _previousIndex: number = 0;
+        private _selectedIndex: number;
+        private _previousIndex: number;
         private _pageIds: Array<string>;
         private _pageNames: Array<string>;
         private _actions?: Array<ControllerAction>;
@@ -215,7 +215,8 @@ module fgui {
             buffer.seek(beginPos, 0);
 
             this.name = buffer.readS();
-            this.autoRadioGroupDepth = buffer.readBool();
+            if (buffer.readBool())
+                this.autoRadioGroupDepth = true;
 
             buffer.seek(beginPos, 1);
 

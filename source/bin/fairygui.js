@@ -213,8 +213,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         __extends(Controller, _super_1);
         function Controller() {
             var _this = _super_1.call(this) || this;
-            _this._selectedIndex = 0;
-            _this._previousIndex = 0;
             _this._pageIds = [];
             _this._pageNames = [];
             _this._selectedIndex = -1;
@@ -414,7 +412,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             var beginPos = buffer.position;
             buffer.seek(beginPos, 0);
             this.name = buffer.readS();
-            this.autoRadioGroupDepth = buffer.readBool();
+            if (buffer.readBool())
+                this.autoRadioGroupDepth = true;
             buffer.seek(beginPos, 1);
             var i;
             var nextPos;
@@ -1667,10 +1666,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             enumerable: true,
             configurable: true
         });
-        GObject.prototype.startDrag = function (touchPointID) {
+        GObject.prototype.startDrag = function (touchPointID, stageX, stageY) {
             if (this._displayObject.stage == null)
                 return;
-            this.dragBegin(null);
+            this.dragBegin(touchPointID, stageX, stageY);
         };
         GObject.prototype.stopDrag = function () {
             this.dragEnd();
@@ -1943,25 +1942,19 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             else
                 this.removeEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__begin, this);
         };
-        GObject.prototype.dragBegin = function (evt) {
+        GObject.prototype.dragBegin = function (touchPointID, stageX, stageY) {
             if (GObject.draggingObject) {
                 var tmp = GObject.draggingObject;
                 tmp.stopDrag();
                 GObject.draggingObject = null;
                 var dragEvent = new fgui.DragEvent(fgui.DragEvent.DRAG_END);
-                dragEvent.stageX = evt.stageX;
-                dragEvent.stageY = evt.stageY;
-                dragEvent.touchPointID = evt.touchPointID;
+                dragEvent.stageX = stageX || fgui.GRoot.mouseX;
+                dragEvent.stageY = stageY || fgui.GRoot.mouseY;
+                dragEvent.touchPointID = touchPointID || 0;
                 tmp.dispatchEvent(dragEvent);
             }
-            if (evt) {
-                sGlobalDragStart.x = evt.stageX;
-                sGlobalDragStart.y = evt.stageY;
-            }
-            else {
-                sGlobalDragStart.x = fgui.GRoot.mouseX;
-                sGlobalDragStart.y = fgui.GRoot.mouseY;
-            }
+            sGlobalDragStart.x = stageX || fgui.GRoot.mouseX;
+            sGlobalDragStart.y = stageY || fgui.GRoot.mouseY;
             this.localToGlobalRect(0, 0, this._width, this._height, sGlobalRect);
             this._dragTesting = true;
             GObject.draggingObject = this;
@@ -1980,10 +1973,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             fgui.GRoot.inst.nativeStage.removeEventListener(egret.TouchEvent.TOUCH_END, this.__end, this);
         };
         GObject.prototype.__begin = function (evt) {
-            if (this._dragStartPoint == null)
-                this._dragStartPoint = new egret.Point();
-            this._dragStartPoint.x = evt.stageX;
-            this._dragStartPoint.y = evt.stageY;
+            if (this._dragStartPos == null)
+                this._dragStartPos = new egret.Point();
+            this._dragStartPos.x = evt.stageX;
+            this._dragStartPos.y = evt.stageY;
             this._dragTesting = true;
             fgui.GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__moving, this);
             fgui.GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_END, this.__end, this);
@@ -1991,8 +1984,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         GObject.prototype.__moving = function (evt) {
             if (GObject.draggingObject != this && this._draggable && this._dragTesting) {
                 var sensitivity = fgui.UIConfig.touchDragSensitivity;
-                if (Math.abs(this._dragStartPoint.x - evt.stageX) < sensitivity
-                    && Math.abs(this._dragStartPoint.y - evt.stageY) < sensitivity)
+                if (this._dragStartPos
+                    && Math.abs(this._dragStartPos.x - evt.stageX) < sensitivity
+                    && Math.abs(this._dragStartPos.y - evt.stageY) < sensitivity)
                     return;
                 this._dragTesting = false;
                 var dragEvent = new fgui.DragEvent(fgui.DragEvent.DRAG_START);
@@ -2001,7 +1995,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 dragEvent.touchPointID = evt.touchPointID;
                 this.dispatchEvent(dragEvent);
                 if (!dragEvent.isDefaultPrevented())
-                    this.dragBegin(evt);
+                    this.dragBegin(evt.touchPointID, evt.stageX, evt.stageY);
             }
             if (GObject.draggingObject == this) {
                 var xx = evt.stageX - sGlobalDragStart.x + sGlobalRect.x;
@@ -5272,8 +5266,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 else {
                     var cnt = this._children.length;
                     for (i = 0; i < cnt; i++) {
-                        var obj = this._children[i].asButton;
-                        if (obj && obj.selected)
+                        var obj = this._children[i];
+                        if ((obj instanceof fgui.GButton) && obj.selected)
                             return i;
                     }
                 }
@@ -5313,8 +5307,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             else {
                 var cnt = this._children.length;
                 for (i = 0; i < cnt; i++) {
-                    var obj = this._children[i].asButton;
-                    if (obj && obj.selected)
+                    var obj = this._children[i];
+                    if ((obj instanceof fgui.GButton) && obj.selected)
                         result.push(i);
                 }
             }
@@ -5333,12 +5327,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             if (this._virtual) {
                 var ii = this._virtualItems[index];
                 if (ii.obj)
-                    obj = ii.obj.asButton;
+                    obj = ii.obj;
                 ii.selected = true;
             }
             else
-                obj = this.getChildAt(index).asButton;
-            if (obj && !obj.selected) {
+                obj = this.getChildAt(index);
+            if ((obj instanceof fgui.GButton) && !obj.selected) {
                 obj.selected = true;
                 this.updateSelectionController(index);
             }
@@ -5350,12 +5344,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             if (this._virtual) {
                 var ii = this._virtualItems[index];
                 if (ii.obj)
-                    obj = ii.obj.asButton;
+                    obj = ii.obj;
                 ii.selected = false;
             }
             else
-                obj = this.getChildAt(index).asButton;
-            if (obj)
+                obj = this.getChildAt(index);
+            if (obj instanceof fgui.GButton)
                 obj.selected = false;
         };
         GList.prototype.clearSelection = function () {
@@ -5371,8 +5365,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             else {
                 var cnt = this._children.length;
                 for (i = 0; i < cnt; i++) {
-                    var obj = this._children[i].asButton;
-                    if (obj)
+                    var obj = this._children[i];
+                    if (obj instanceof fgui.GButton)
                         obj.selected = false;
                 }
             }
@@ -5392,8 +5386,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             else {
                 var cnt = this._children.length;
                 for (i = 0; i < cnt; i++) {
-                    var obj = this._children[i].asButton;
-                    if (obj && obj != g)
+                    var obj = this._children[i];
+                    if ((obj instanceof fgui.GButton) && obj != g)
                         obj.selected = false;
                 }
             }
@@ -5415,8 +5409,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             else {
                 var cnt = this._children.length;
                 for (i = 0; i < cnt; i++) {
-                    var obj = this._children[i].asButton;
-                    if (obj && !obj.selected) {
+                    var obj = this._children[i];
+                    if ((obj instanceof fgui.GButton) && !obj.selected) {
                         obj.selected = true;
                         last = i;
                     }
@@ -5446,8 +5440,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             else {
                 var cnt = this._children.length;
                 for (i = 0; i < cnt; i++) {
-                    var obj = this._children[i].asButton;
-                    if (obj) {
+                    var obj = this._children[i];
+                    if (obj instanceof fgui.GButton) {
                         obj.selected = !obj.selected;
                         if (obj.selected)
                             last = i;
@@ -5626,8 +5620,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                             }
                             else {
                                 for (i = min; i <= max; i++) {
-                                    var obj = this.getChildAt(i).asButton;
-                                    if (obj)
+                                    var obj = this.getChildAt(i);
+                                    if (obj instanceof fgui.GButton)
                                         obj.selected = true;
                                 }
                             }
@@ -9180,9 +9174,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 text: null,
                 y: 0
             };
-    }
-    function returns(value) {
-        pool.push(value);
     }
     function returnList(value) {
         var length = value.length;
@@ -14606,12 +14597,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 (function (fgui) {
     var UIPackage = (function () {
         function UIPackage() {
-            this._items = new Array();
+            this._items = [];
             this._itemsById = {};
             this._itemsByName = {};
             this._sprites = {};
-            this._dependencies = Array();
-            this._branches = Array();
+            this._dependencies = [];
+            this._branches = [];
             this._branchIndex = -1;
         }
         Object.defineProperty(UIPackage, "branch", {
@@ -14823,7 +14814,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             buffer.seek(indexTablePos, 1);
             var pi;
             var path = this._resKey;
-            var pos = path.indexOf('/');
+            var pos = path.lastIndexOf('/');
             var shortPath = pos == -1 ? "" : path.substr(0, pos + 1);
             path = path + "_";
             cnt = buffer.readShort();
@@ -15412,8 +15403,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 this._modalWaitPane.setSize(this.width, this.height);
         };
         Window.prototype.closeModalWait = function (requestingCmd) {
-            if (requestingCmd === void 0) { requestingCmd = 0; }
-            if (requestingCmd != 0) {
+            if (requestingCmd != null && requestingCmd != 0) {
                 if (this._requestingCmd != requestingCmd)
                     return false;
             }
@@ -15502,7 +15492,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         };
         Window.prototype.__dragStart = function (evt) {
             evt.preventDefault();
-            this.startDrag(evt.touchPointID);
+            this.startDrag(evt.touchPointID, evt.stageX, evt.stageY);
         };
         return Window;
     }(fgui.GComponent));

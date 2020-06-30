@@ -181,8 +181,8 @@ module fgui {
                 this._modalWaitPane.setSize(this.width, this.height);
         }
 
-        public closeModalWait(requestingCmd: number = 0): boolean {
-            if (requestingCmd != 0) {
+        public closeModalWait(requestingCmd?: number): boolean {
+            if (requestingCmd != null && requestingCmd != 0) {
                 if (this._requestingCmd != requestingCmd)
                     return false;
             }
@@ -290,7 +290,7 @@ module fgui {
         private __dragStart(evt: DragEvent): void {
             evt.preventDefault();
 
-            this.startDrag(evt.touchPointID);
+            this.startDrag(evt.touchPointID, evt.stageX, evt.stageY);
         }
     }
 }

@@ -30,7 +30,7 @@ module fgui {
         private _pixelSnapping?: boolean;
         private _disposed?: boolean = false;
         private _dragTesting?: boolean;
-        private _dragStartPoint?: egret.Point;
+        private _dragStartPos?: egret.Point;
 
         private _relations: Relations;
         private _group?: GGroup;
@@ -837,11 +837,11 @@ module fgui {
             this._dragBounds = value;
         }
 
-        public startDrag(touchPointID?: number): void {
+        public startDrag(touchPointID?: number, stageX?: number, stageY?: number): void {
             if (this._displayObject.stage == null)
                 return;
 
-            this.dragBegin(null);
+            this.dragBegin(touchPointID, stageX, stageY);
         }
 
         public stopDrag(): void {
@@ -1162,27 +1162,22 @@ module fgui {
                 this.removeEventListener(egret.TouchEvent.TOUCH_BEGIN, this.__begin, this);
         }
 
-        private dragBegin(evt?: egret.TouchEvent): void {
+        private dragBegin(touchPointID?: number, stageX?: number, stageY?: number): void {
             if (GObject.draggingObject) {
                 let tmp: GObject = GObject.draggingObject;
                 tmp.stopDrag();
                 GObject.draggingObject = null;
 
                 var dragEvent: DragEvent = new DragEvent(DragEvent.DRAG_END);
-                dragEvent.stageX = evt.stageX;
-                dragEvent.stageY = evt.stageY;
-                dragEvent.touchPointID = evt.touchPointID;
+                dragEvent.stageX = stageX || GRoot.mouseX;
+                dragEvent.stageY = stageY || GRoot.mouseY;
+                dragEvent.touchPointID = touchPointID || 0;
                 tmp.dispatchEvent(dragEvent);
             }
 
-            if (evt) {
-                sGlobalDragStart.x = evt.stageX;
-                sGlobalDragStart.y = evt.stageY;
-            }
-            else {
-                sGlobalDragStart.x = GRoot.mouseX;
-                sGlobalDragStart.y = GRoot.mouseY;
-            }
+            sGlobalDragStart.x = stageX || GRoot.mouseX;
+            sGlobalDragStart.y = stageY || GRoot.mouseY;
+
             this.localToGlobalRect(0, 0, this._width, this._height, sGlobalRect);
             this._dragTesting = true;
             GObject.draggingObject = this;
@@ -1205,10 +1200,10 @@ module fgui {
         }
 
         private __begin(evt: egret.TouchEvent): void {
-            if (this._dragStartPoint == null)
-                this._dragStartPoint = new egret.Point();
-            this._dragStartPoint.x = evt.stageX;
-            this._dragStartPoint.y = evt.stageY;
+            if (this._dragStartPos == null)
+                this._dragStartPos = new egret.Point();
+            this._dragStartPos.x = evt.stageX;
+            this._dragStartPos.y = evt.stageY;
             this._dragTesting = true;
 
             GRoot.inst.nativeStage.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.__moving, this);
@@ -1218,8 +1213,9 @@ module fgui {
         private __moving(evt: egret.TouchEvent): void {
             if (GObject.draggingObject != this && this._draggable && this._dragTesting) {
                 var sensitivity: number = UIConfig.touchDragSensitivity;
-                if (Math.abs(this._dragStartPoint.x - evt.stageX) < sensitivity
-                    && Math.abs(this._dragStartPoint.y - evt.stageY) < sensitivity)
+                if (this._dragStartPos 
+                    && Math.abs(this._dragStartPos.x - evt.stageX) < sensitivity
+                    && Math.abs(this._dragStartPos.y - evt.stageY) < sensitivity)
                     return;
 
                 this._dragTesting = false;
@@ -1231,11 +1227,10 @@ module fgui {
                 this.dispatchEvent(dragEvent);
 
                 if (!dragEvent.isDefaultPrevented())
-                    this.dragBegin(evt);
+                    this.dragBegin(evt.touchPointID, evt.stageX, evt.stageY);
             }
 
             if (GObject.draggingObject == this) {
-
                 var xx: number = evt.stageX - sGlobalDragStart.x + sGlobalRect.x;
                 var yy: number = evt.stageY - sGlobalDragStart.y + sGlobalRect.y;
 
