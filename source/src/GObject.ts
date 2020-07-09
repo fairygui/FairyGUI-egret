@@ -1213,7 +1213,7 @@ module fgui {
         private __moving(evt: egret.TouchEvent): void {
             if (GObject.draggingObject != this && this._draggable && this._dragTesting) {
                 var sensitivity: number = UIConfig.touchDragSensitivity;
-                if (this._dragStartPos 
+                if (this._dragStartPos
                     && Math.abs(this._dragStartPos.x - evt.stageX) < sensitivity
                     && Math.abs(this._dragStartPos.y - evt.stageY) < sensitivity)
                     return;
@@ -1277,6 +1277,10 @@ module fgui {
                 dragEvent.stageY = evt.stageY;
                 dragEvent.touchPointID = evt.touchPointID;
                 this.dispatchEvent(dragEvent);
+            }
+            else if (this._dragTesting) {
+                this._dragTesting = false;
+                this.reset();
             }
         }
         //-------------------------------------------------------------------

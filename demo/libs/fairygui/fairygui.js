@@ -2038,6 +2038,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 dragEvent.touchPointID = evt.touchPointID;
                 this.dispatchEvent(dragEvent);
             }
+            else if (this._dragTesting) {
+                this._dragTesting = false;
+                this.reset();
+            }
         };
         GObject.XY_CHANGED = "__xyChanged";
         GObject.SIZE_CHANGED = "__sizeChanged";
