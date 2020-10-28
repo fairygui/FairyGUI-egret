@@ -7842,7 +7842,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         });
         Object.defineProperty(GLoader3D.prototype, "content", {
             get: function () {
-                return;
+                return this._content;
             },
             enumerable: true,
             configurable: true

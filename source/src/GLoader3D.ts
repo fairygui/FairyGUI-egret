@@ -190,7 +190,7 @@ namespace fgui {
         }
 
         public get content(): dragonBones.EgretArmatureDisplay {
-            return
+            return <dragonBones.EgretArmatureDisplay>this._content;
         }
 
         protected loadContent(): void {
