@@ -4630,7 +4630,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             if (buffer.version >= 2) {
                 this._excludeInvisibles = buffer.readBool();
                 this._autoSizeDisabled = buffer.readBool();
-                this._mainChildIndex = buffer.readInt();
+                this._mainGridIndex = buffer.readInt();
             }
         };
         GGroup.prototype.setup_afterAdd = function (buffer, beginPos) {
