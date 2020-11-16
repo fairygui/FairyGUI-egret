@@ -717,9 +717,12 @@ module fgui {
 
             Promise.all([task1, task2, task3]).then(values => {
                 let egretFactory: dragonBones.EgretFactory = dragonBones.EgretFactory.factory;
-                item.asset = egretFactory.parseDragonBonesData(values[0]);
-                item.atlasAsset = egretFactory.parseTextureAtlasData(values[1], values[2]);
-                item.armatureName = item.asset.armatureNames[0];
+                let asset = {
+                    data: egretFactory.parseDragonBonesData(values[0]),
+                    atlasData: egretFactory.parseTextureAtlasData(values[1], values[2])
+                };
+                item.asset = asset;
+                item.armatureName = asset.data.armatureNames[0];
 
                 let arr = item.loading;
                 delete item.loading;

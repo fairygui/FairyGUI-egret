@@ -15,7 +15,7 @@ module fgui {
         public decoded?: boolean;
         public loading?: Array<Function>;
         public rawData?: ByteBuffer;
-        public asset?: egret.Texture | egret.Sound | dragonBones.DragonBonesData;
+        public asset?: egret.Texture | egret.Sound | any;
 
         public highResolution?: Array<string>;
         public branches?: Array<string>;
@@ -42,7 +42,6 @@ module fgui {
         //skeleton
         public skeletonAnchor?: egret.Point;
         public armatureName?: string;
-        public atlasAsset?: dragonBones.TextureAtlasData;
 
         public constructor() {
         }

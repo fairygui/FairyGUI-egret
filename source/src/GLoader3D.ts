@@ -189,7 +189,7 @@ namespace fgui {
             }
         }
 
-        public get content(): dragonBones.EgretArmatureDisplay {
+        public get content(): egret.DisplayObject {
             return <dragonBones.EgretArmatureDisplay>this._content;
         }
 
@@ -231,12 +231,14 @@ namespace fgui {
             if (!this._contentItem.asset)
                 return;
 
-            if (this._contentItem.type == PackageItemType.DragonBones)
+            if (this._contentItem.type == PackageItemType.DragonBones) {
+                let asset = this._contentItem.asset;
                 this.setDragonBones(this._contentItem.armatureName,
-                    (<dragonBones.DragonBonesData>this._contentItem.asset).name,
-                    this._contentItem.atlasAsset.name,
+                    asset.data.name,
+                    asset.atlasData.name,
                     this._skinName,
                     this._contentItem.skeletonAnchor);
+            }
         }
 
         public setDragonBones(armatureName: string, dragonBonesName?: string, skinName?: string, textureAtlasName?: string, anchor?: egret.Point): void {

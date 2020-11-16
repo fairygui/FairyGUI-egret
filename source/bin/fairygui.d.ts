@@ -946,7 +946,7 @@ declare namespace fgui {
         skinName: string;
         loop: boolean;
         color: number;
-        readonly content: dragonBones.EgretArmatureDisplay;
+        readonly content: egret.DisplayObject;
         protected loadContent(): void;
         protected loadFromPackage(itemURL: string): void;
         private onLoaded;
@@ -1364,7 +1364,7 @@ declare module fgui {
         decoded?: boolean;
         loading?: Array<Function>;
         rawData?: ByteBuffer;
-        asset?: egret.Texture | egret.Sound | dragonBones.DragonBonesData;
+        asset?: egret.Texture | egret.Sound | any;
         highResolution?: Array<string>;
         branches?: Array<string>;
         scale9Grid?: egret.Rectangle;
@@ -1380,7 +1380,6 @@ declare module fgui {
         bitmapFont?: BitmapFont;
         skeletonAnchor?: egret.Point;
         armatureName?: string;
-        atlasAsset?: dragonBones.TextureAtlasData;
         constructor();
         load(): Object;
         getBranch(): PackageItem;

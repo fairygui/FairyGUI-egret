@@ -7876,8 +7876,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 console.warn(err);
             if (!this._contentItem.asset)
                 return;
-            if (this._contentItem.type == fgui.PackageItemType.DragonBones)
-                this.setDragonBones(this._contentItem.armatureName, this._contentItem.asset.name, this._contentItem.atlasAsset.name, this._skinName, this._contentItem.skeletonAnchor);
+            if (this._contentItem.type == fgui.PackageItemType.DragonBones) {
+                var asset = this._contentItem.asset;
+                this.setDragonBones(this._contentItem.armatureName, asset.data.name, asset.atlasData.name, this._skinName, this._contentItem.skeletonAnchor);
+            }
         };
         GLoader3D.prototype.setDragonBones = function (armatureName, dragonBonesName, skinName, textureAtlasName, anchor) {
             this.url = null;
@@ -15204,9 +15206,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             var task3 = RES.getResAsync(texFile);
             Promise.all([task1, task2, task3]).then(function (values) {
                 var egretFactory = dragonBones.EgretFactory.factory;
-                item.asset = egretFactory.parseDragonBonesData(values[0]);
-                item.atlasAsset = egretFactory.parseTextureAtlasData(values[1], values[2]);
-                item.armatureName = item.asset.armatureNames[0];
+                var asset = {
+                    data: egretFactory.parseDragonBonesData(values[0]),
+                    atlasData: egretFactory.parseTextureAtlasData(values[1], values[2])
+                };
+                item.asset = asset;
+                item.armatureName = asset.data.armatureNames[0];
                 var arr = item.loading;
                 delete item.loading;
                 arr.forEach(function (e) { return e(null, item); });
