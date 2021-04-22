@@ -235,8 +235,8 @@ namespace fgui {
                 let asset = this._contentItem.asset;
                 this.setDragonBones(this._contentItem.armatureName,
                     asset.data.name,
-                    asset.atlasData.name,
                     this._skinName,
+                    asset.atlasData.name,
                     this._contentItem.skeletonAnchor);
             }
         }
