@@ -4,6 +4,7 @@ module fgui {
     export class UIObjectFactory {
         public static extensions: { [index: string]: new () => GComponent } = {};
         public static loaderType: new () => GLoader;
+        public static loader3DType: new () => GLoader3D;
 
         public constructor() {
         }
@@ -25,6 +26,10 @@ module fgui {
 
         public static setLoaderExtension(type: new () => GLoader): void {
             UIObjectFactory.loaderType = type;
+        }
+
+        public static setLoader3DExtension(type: new () => GLoader3D): void {
+            UIObjectFactory.loader3DType = type;
         }
 
         public static resolvePackageItemExtension(pi: PackageItem): void {
@@ -95,7 +100,11 @@ module fgui {
                         return new GTree();
 
                     case ObjectType.Loader3D:
-                        return new GLoader3D();
+                        if (UIObjectFactory.loader3DType) {
+                            return new UIObjectFactory.loader3DType();
+                        } else {
+                            return new GLoader3D();
+                        }
 
                     default:
                         return null;
