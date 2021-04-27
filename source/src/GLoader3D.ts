@@ -37,6 +37,8 @@ namespace fgui {
         }
 
         public dispose(): void {
+            //防止龙骨内存泄漏(创建的骨架代理不再使用时，需要显式释放)
+            this.clearContent();
             super.dispose();
         }
 
