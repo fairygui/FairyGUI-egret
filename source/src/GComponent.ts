@@ -640,12 +640,18 @@ module fgui {
             }
         }
 
+        public reversedMask: boolean;
         public get mask(): egret.DisplayObject | egret.Rectangle {
             return this._rootContainer.mask;
         }
 
         public set mask(value: egret.DisplayObject | egret.Rectangle) {
             this._rootContainer.mask = value;
+            if (this.reversedMask) {
+                this._rootContainer.cacheAsBitmap = true;
+                (this.mask as egret.DisplayObject).blendMode = egret.BlendMode.ERASE;
+                this._rootContainer.mask = null;
+            }
         }
 
         public get baseUserData(): string {
@@ -1089,8 +1095,9 @@ module fgui {
             this.opaque = buffer.readBool();
             var maskId: number = buffer.readShort();
             if (maskId != -1) {
+                this.reversedMask = buffer.readBool(); //reversedMask
                 this.mask = this.getChildAt(maskId).displayObject;
-                buffer.readBool(); //reversedMask
+                
             }
             var hitTestId: string = buffer.readS();
             i1 = buffer.readInt();
